@@ -287,7 +287,14 @@ void RSDEval_print (RSDEval_t * RSDEval, void * RSDNeuralNetwork, RSDCommandLine
 	char muVar[STRING_SIZE] = "muVar";
 	char muSFS[STRING_SIZE] = "muSFS";
 	char muLD[STRING_SIZE] = "muLD";
-	char mu[STRING_SIZE] = "mu";	
+	char mu[STRING_SIZE] = "mu";
+	
+	double tprScrMuVar = 0.0;
+	double tprScrMuSfs = 0.0;
+	double tprScrMuLd = 0.0;
+	double tprScrMu = 0.0;
+	double tprScrNnPositiveClass0 = 0.0;
+	double tprScrNnPositiveClass1 = 0.0;	
 	
 	if(RSDNeuralNetwork!=NULL)
 	{
@@ -389,47 +396,47 @@ void RSDEval_print (RSDEval_t * RSDEval, void * RSDNeuralNetwork, RSDCommandLine
 	if(RSDEval->tprThresMuVar>0.0 || RSDEval->tprThresMuSfs>0.0 || RSDEval->tprThresMuLd>0.0 || RSDEval->tprThresMu>0.0 || 
 	   RSDEval->tprThresNnPositiveClass0>0.0 || RSDEval->tprThresNnPositiveClass1>0.0)
 	{
-		RSDEval->tprScrMuVar /= sets;
-		RSDEval->tprScrMuSfs /= sets;
-		RSDEval->tprScrMuLd /= sets;
-		RSDEval->tprScrMu /= sets;
+		tprScrMuVar = RSDEval->tprScrMuVar/sets;
+		tprScrMuSfs = RSDEval->tprScrMuSfs/sets;
+		tprScrMuLd = RSDEval->tprScrMuLd/sets;
+		tprScrMu = RSDEval->tprScrMu/sets;
 		
-		slen2=getStringLengthDouble5 (slen2, RSDEval->tprScrMuVar); 
-		slen2=getStringLengthDouble5 (slen2, RSDEval->tprScrMuSfs); 
-		slen2=getStringLengthDouble5 (slen2, RSDEval->tprScrMuLd); 
-		slen2=getStringLengthDouble5 (slen2, RSDEval->tprScrMu); 
+		slen2=getStringLengthDouble5 (slen2, tprScrMuVar); 
+		slen2=getStringLengthDouble5 (slen2, tprScrMuSfs); 
+		slen2=getStringLengthDouble5 (slen2, tprScrMuLd); 
+		slen2=getStringLengthDouble5 (slen2, tprScrMu); 
 	
 		if(RSDNeuralNetwork!=NULL)
 		{
-			RSDEval->tprScrNnPositiveClass0 /= sets;
-			RSDEval->tprScrNnPositiveClass1 /= sets;
+			tprScrNnPositiveClass0 = RSDEval->tprScrNnPositiveClass0/sets;
+			tprScrNnPositiveClass1 = RSDEval->tprScrNnPositiveClass1/sets;
 		
-			slen2=getStringLengthDouble5 (slen2, RSDEval->tprScrNnPositiveClass0); 
-			slen2=getStringLengthDouble5 (slen2, RSDEval->tprScrNnPositiveClass1);
+			slen2=getStringLengthDouble5 (slen2, tprScrNnPositiveClass0); 
+			slen2=getStringLengthDouble5 (slen2, tprScrNnPositiveClass1);
 		}
 					
 		fprintf(fpOut, "\n");
 		fprintf(fpOut, " TPR score(s) for FPR threshold(s)\n\n");
 		
 		if(RSDEval->tprThresMuVar>0.0)
-			fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, muVar, slen2, RSDEval->tprScrMuVar, RSDEval->tprThresMuVar);
+			fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, muVar, slen2, tprScrMuVar, RSDEval->tprThresMuVar);
 		
 		if(RSDEval->tprThresMuSfs>0.0)
-			fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, muSFS, slen2, RSDEval->tprScrMuSfs, RSDEval->tprThresMuSfs);			
+			fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, muSFS, slen2, tprScrMuSfs, RSDEval->tprThresMuSfs);			
 			
 		if(RSDEval->tprThresMuLd>0.0)
-			fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, muLD, slen2, RSDEval->tprScrMuLd, RSDEval->tprThresMuLd);			
+			fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, muLD, slen2, tprScrMuLd, RSDEval->tprThresMuLd);			
 			
 		if(RSDEval->tprThresMu>0.0)
-			fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, mu, slen2, RSDEval->tprScrMu, RSDEval->tprThresMu);
+			fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, mu, slen2, tprScrMu, RSDEval->tprThresMu);
 		
 		if(RSDNeuralNetwork!=NULL)
 		{	
 			if(RSDEval->tprThresNnPositiveClass0>0.0)
-				fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, nnPositiveClass0Label, slen2, RSDEval->tprScrNnPositiveClass0, RSDEval->tprThresNnPositiveClass0);
+				fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, nnPositiveClass0Label, slen2, tprScrNnPositiveClass0, RSDEval->tprThresNnPositiveClass0);
 				
 			if(RSDEval->tprThresNnPositiveClass1>0.0)
-				fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, nnPositiveClass1Label, slen2, RSDEval->tprScrNnPositiveClass1, RSDEval->tprThresNnPositiveClass1);		
+				fprintf(fpOut, " %-*s:\t%-*.5f (FPR threshold %.5f)\n", slen, nnPositiveClass1Label, slen2, tprScrNnPositiveClass1, RSDEval->tprThresNnPositiveClass1);		
 		}
 	}
 }
