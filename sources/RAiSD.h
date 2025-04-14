@@ -1111,6 +1111,9 @@ typedef struct
 	double 			muMaxLoc;
 	double			nnPositiveClass0MaxLoc;
 	double			nnPositiveClass1MaxLoc;
+	
+	float *		scrRefinementBuffer; // only used for reporting max
+	double *	locRefinementBuffer;
 
 } RSDResults_t;
 

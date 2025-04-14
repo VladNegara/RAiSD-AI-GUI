@@ -50,6 +50,8 @@ RSDResults_t * RSDResults_new (RSDCommandLine_t * RSDCommandLine)
 	RSDResults->muMaxLoc = -1.0;
 	RSDResults->nnPositiveClass0MaxLoc = -1.0;
 	RSDResults->nnPositiveClass1MaxLoc = -1.0;
+	RSDResults->scrRefinementBuffer = NULL;
+	RSDResults->locRefinementBuffer = NULL;
 		
 	return RSDResults;
 }
@@ -61,9 +63,14 @@ void RSDResults_setGridSize (RSDResults_t * RSDResults, RSDCommandLine_t * RSDCo
 		
 	assert(RSDCommandLine!=NULL);
 	
-	RSDResults->setGridSize = RSDCommandLine->gridSize;
-	
+	RSDResults->setGridSize = RSDCommandLine->gridSize;	
 	assert(RSDResults->setGridSize>=1);
+	
+	RSDResults->scrRefinementBuffer = rsd_malloc(sizeof(float)*RSDResults->setGridSize);
+	assert(RSDResults->scrRefinementBuffer!=NULL);
+	
+	RSDResults->locRefinementBuffer = rsd_malloc(sizeof(double)*RSDResults->setGridSize);
+	assert(RSDResults->locRefinementBuffer!=NULL);
 }
 
 void RSDResults_incrementSetCounter (RSDResults_t * RSDResults)
@@ -128,6 +135,18 @@ void RSDResults_free (RSDResults_t * RSDResults)
 		}
 		free(RSDResults->gridPointData);
 		RSDResults->gridPointData=NULL; 
+	}
+	
+	if(RSDResults->scrRefinementBuffer!=NULL)
+	{
+		free(RSDResults->scrRefinementBuffer);
+		RSDResults->scrRefinementBuffer=NULL;
+	}
+	
+	if(RSDResults->locRefinementBuffer!=NULL)
+	{
+		free(RSDResults->locRefinementBuffer);
+		RSDResults->locRefinementBuffer=NULL;
 	}		
 
 	free(RSDResults);
@@ -346,6 +365,46 @@ void RSDResults_getMaxScores (RSDResults_t * RSDResults, RSDGridPoint_t * RSDGri
 	}
 }
 
+void RSDResults_resetRefinementBuffers(RSDResults_t * RSDResults)
+{
+	assert(RSDResults!=NULL);	
+	
+	for(int i=0;i<RSDResults->setGridSize;i++)
+	{
+		RSDResults->scrRefinementBuffer[i]=0.0f;
+		RSDResults->locRefinementBuffer[i]=0.0;
+	}
+}
+
+void RSDResults_refineMaxScores(RSDResults_t * RSDResults)
+{
+	assert(RSDResults!=NULL);
+	
+	float e=0.0;
+	int len = 0, maxLen = 0, maxInd = 0; 
+	
+	for(int i=0;i<RSDResults->setGridSize;i++) 
+	{
+		if(!(fabs(RSDResults->nnPositiveClass0Max-RSDResults->scrRefinementBuffer[i])<=e))
+			len=0;
+		else
+			len++;
+			
+		if(len>maxLen)
+		{
+			maxLen=len;
+			maxInd=i;
+		}
+	}
+	
+	maxInd -= maxLen>>1;
+	
+	RSDResults->nnPositiveClass0Max = RSDResults->scrRefinementBuffer[maxInd];
+	RSDResults->nnPositiveClass0MaxLoc = RSDResults->locRefinementBuffer[maxInd];
+	
+	//printf("%d: %f %.9f \n", maxInd, RSDResults->locRefinementBuffer[maxInd], RSDResults->scrRefinementBuffer[maxInd]);
+}
+
 void RSDResults_processSet (RSDResults_t * RSDResults, RSDCommandLine_t * RSDCommandLine, RSDMuStat_t * RSDMuStat, int setIndex, int gridSize, int gridPointOffset)
 {
 	assert(RSDResults!=NULL);
@@ -353,7 +412,9 @@ void RSDResults_processSet (RSDResults_t * RSDResults, RSDCommandLine_t * RSDCom
 	assert(RSDMuStat!=NULL);
 	
 	if(gridPointOffset==0) // processing first chunk in set
-		RSDResults_resetMaxScores (RSDResults); 	
+		RSDResults_resetMaxScores (RSDResults);
+		
+	RSDResults_resetRefinementBuffers(RSDResults); 	
 	
 	for(int j=0;j<gridSize;j++) 
 	{
@@ -363,7 +424,12 @@ void RSDResults_processSet (RSDResults_t * RSDResults, RSDCommandLine_t * RSDCom
 		RSDGridPoint_reduce (RSDGridPoint, RSDCommandLine, 0 + RSDCommandLine->gridPointReductionMax); //0: avg, 1: max 		
 		RSDResults_getMaxScores (RSDResults, RSDGridPoint, RSDCommandLine);		
 		RSDGridPoint_write2File (RSDGridPoint, RSDMuStat);
+		
+		RSDResults->scrRefinementBuffer[j]=RSDGridPoint->nnPositiveClass0Reduced;
+		RSDResults->locRefinementBuffer[j]= RSDGridPoint->positionReduced;		
 	}
+	
+	RSDResults_refineMaxScores (RSDResults);
 }
 
 void RSDResults_writeOutput (RSDResults_t * RSDResults, RSDDataset_t * RSDDataset, RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, int setIndex, FILE * fpOut)
