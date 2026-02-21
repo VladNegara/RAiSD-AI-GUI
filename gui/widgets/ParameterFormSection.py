@@ -8,6 +8,7 @@ class ParameterFormSection(QWidget):
         pass
 
     def construct_section(self, parameter_form_section_widget:QWidget, parameter_group:ParameterGroup):
+        # TODO: Add section title with parameter group name
         form_layout = QFormLayout(parameter_form_section_widget)
         form_layout.setContentsMargins(0, 0, 0, 0)
         for parameter in parameter_group.get_parameters():
