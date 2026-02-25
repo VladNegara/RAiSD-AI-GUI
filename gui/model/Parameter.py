@@ -27,5 +27,5 @@ class Parameter(ABC, Generic[T]):
         self._value = self.default_value
 
     @abstractmethod
-    def get_flag_with_value(self) -> str:
+    def to_cli(self) -> str:
         pass
