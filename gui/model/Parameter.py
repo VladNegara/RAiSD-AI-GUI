@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
-class Parameter(ABC):
-    def __init__(self, name:str, description:str, default_value, flag:str):   
+T = TypeVar('T')
+
+class Parameter(ABC, Generic[T]):
+    def __init__(self, name:str, description:str, default_value:T, flag:str):   
         self.name = name
         self.description = description
         self.default_value = default_value
@@ -9,11 +12,11 @@ class Parameter(ABC):
         self.flag = flag
 
     @abstractmethod
-    def set_value(self, value):
+    def set_value(self, value:T) -> None:
         self.value = value
 
     @abstractmethod
-    def get_value(self):
+    def get_value(self) -> T:
         return self.value
     
     def reset_value(self):
