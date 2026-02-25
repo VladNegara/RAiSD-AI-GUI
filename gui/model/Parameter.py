@@ -8,19 +8,19 @@ class Parameter(ABC, Generic[T]):
         self.name = name
         self.description = description
         self.default_value = default_value
-        self.value = default_value
+        self._value = default_value
         self.flag = flag
 
-    @abstractmethod
-    def set_value(self, value:T) -> None:
-        self.value = value
-
-    @abstractmethod
-    def get_value(self) -> T:
+    @property
+    def value(self) -> T:
         return self.value
+
+    @value.setter
+    def value(self, new_value:T) -> None:
+        self._value = new_value
     
     def reset_value(self):
-        self.value = self.default_value
+        self._value = self.default_value
 
     @abstractmethod
     def get_flag_with_value(self):
