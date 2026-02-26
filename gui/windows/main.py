@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
         print("smth clicked")
 
     def build_parameter_form(self):
-        for parameter_group in self.parameter_group_list.get_parameter_groups():
+        for parameter_group in self.parameter_group_list.parameter_groups:
             parameter_form_section_widget = QWidget(self.ui.parameterFormWidget)
             width = self.ui.parameterFormWidget.size().width()
             height = self.ui.parameterFormWidget.size().height()
