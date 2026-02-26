@@ -5,6 +5,7 @@ from ui.uiMainWindow import Ui_MainWindow
 from gui.model.ParameterGroupList import ParameterGroupList
 from widgets.ParameterFormSection import ParameterFormSection
 
+
 class MainWindow(QMainWindow):
     def __init__(self, parameter_group_list:ParameterGroupList):
         super().__init__()
@@ -34,4 +35,3 @@ class MainWindow(QMainWindow):
             parameter_form_section_widget.setGeometry(QRect(0,0,width,height))
             parameter_form_section = ParameterFormSection.from_parameter_group(parameter_form_section_widget, parameter_group)
             self.ui.parameterFormVerticalLayout.addWidget(parameter_form_section_widget)
-

@@ -3,6 +3,7 @@ from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
+
 class Parameter(ABC, Generic[T]):
     def __init__(
             self,

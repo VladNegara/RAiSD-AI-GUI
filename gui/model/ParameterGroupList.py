@@ -3,6 +3,7 @@ from typing import Self
 from model.ParameterGroup import ParameterGroup
 from model.Parameter import Parameter
 
+
 class ParameterGroupList():
     def __init__(self, parameter_groups: list[ParameterGroup] | None = None):
         self._parameter_groups = parameter_groups or []

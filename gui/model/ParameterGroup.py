@@ -2,6 +2,7 @@ from typing import Any
 
 from model.Parameter import Parameter
 
+
 class ParameterGroup():
     def __init__(self, name: str, parameters: list[Parameter[Any]]):
         self.name = name

@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QWidget
 
 from model.Parameter import Parameter
 
+
 class ParameterWidget(ABC, QWidget):
     @classmethod
     def from_parameter(cls, parameter: Parameter) -> Self:

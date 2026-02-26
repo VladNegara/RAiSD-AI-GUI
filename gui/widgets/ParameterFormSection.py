@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QFormLayout
 from model.ParameterGroup import ParameterGroup
 from widgets.ParameterWidget import ParameterWidget
 
+
 class ParameterFormSection(QWidget):
     @classmethod
     def from_parameter_group(
