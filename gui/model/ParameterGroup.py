@@ -1,12 +1,15 @@
+from typing import Any
+
 from model.Parameter import Parameter
 
 class ParameterGroup():
-    def __init__(self, name:str):
+    def __init__(self, name: str, parameters: list[Parameter[Any]]):
         self.name = name
-        self.parameters = []
+        self._parameters = parameters or []
 
-    def add_parameter(self, parameter:Parameter):
-        self.parameters.append(parameter)
+    @property
+    def parameters(self) -> list[Parameter[Any]]:
+        return self._parameters
 
-    def get_parameters(self) -> list[Parameter]:
-        return self.parameters
+    def add_parameter(self, parameter: Parameter[Any]) -> None:
+        self._parameters.append(parameter)
