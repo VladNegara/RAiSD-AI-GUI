@@ -32,7 +32,6 @@ class MainWindow(QMainWindow):
             width = self.ui.parameterFormWidget.size().width()
             height = self.ui.parameterFormWidget.size().height()
             parameter_form_section_widget.setGeometry(QRect(0,0,width,height))
-            parameter_form_section = ParameterFormSection()
-            parameter_form_section.construct_section(parameter_form_section_widget, parameter_group)
+            parameter_form_section = ParameterFormSection.from_parameter_group(parameter_form_section_widget, parameter_group)
             self.ui.parameterFormVerticalLayout.addWidget(parameter_form_section_widget)
 
