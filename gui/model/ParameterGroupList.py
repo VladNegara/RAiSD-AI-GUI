@@ -1,7 +1,7 @@
 from model.ParameterGroup import ParameterGroup
 from model.Parameter import Parameter
 
-class ParameterGroupSet():
+class ParameterGroupList():
     def __init__(self, config_file_path:str):
         self.config_file_path = config_file_path
         self.parameter_groups = []

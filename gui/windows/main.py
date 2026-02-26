@@ -2,13 +2,13 @@ from PySide6.QtCore import QRect
 from PySide6.QtWidgets import QMainWindow, QWidget, QRadioButton
 
 from ui.uiMainWindow import Ui_MainWindow
-from model.ParameterGroupSet import ParameterGroupSet
+from gui.model.ParameterGroupList import ParameterGroupList
 from widgets.ParameterFormSection import ParameterFormSection
 
 class MainWindow(QMainWindow):
-    def __init__(self, parameter_group_set:ParameterGroupSet):
+    def __init__(self, parameter_group_list:ParameterGroupList):
         super().__init__()
-        self.parameter_group_set = parameter_group_set
+        self.parameter_group_list = parameter_group_list
         # Set up the user interface from Designer
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         self.ui.buttonBox.accepted.connect(self.click)
 
         # TODO: link execute button to command builder & executor
-            # TODO: make command builder (using parametergroupset)
+            # TODO: make command builder (using parametergrouplist)
             # TODO: make command executor for terminal commands and virtual environment
         # TODO: link execution done to update_history()
 
@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
         print("smth clicked")
 
     def build_parameter_form(self):
-        for parameter_group in self.parameter_group_set.get_parameter_groups():
+        for parameter_group in self.parameter_group_list.get_parameter_groups():
             parameter_form_section_widget = QWidget(self.ui.parameterFormWidget)
             width = self.ui.parameterFormWidget.size().width()
             height = self.ui.parameterFormWidget.size().height()
