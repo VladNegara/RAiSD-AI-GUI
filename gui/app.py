@@ -9,7 +9,9 @@ def main():
     app = QApplication(sys.argv)
     QApplication.setStyle(QStyleFactory.create("windowsvista"))
 
-    parameter_group_list = ParameterGroupList("gui/...") # TODO: implement config file and write path
+    parameter_group_list = ParameterGroupList.from_configuration_file(
+        "gui/..."
+    ) # TODO: implement config file and write path
 
     window = MainWindow(parameter_group_list=parameter_group_list)  
     window.show()
