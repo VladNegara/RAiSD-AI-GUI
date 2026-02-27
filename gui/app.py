@@ -3,7 +3,7 @@ import sys
 from PySide6.QtWidgets import QApplication, QStyleFactory
 
 from gui.model.ParameterGroupList import ParameterGroupList
-from windows.main import MainWindow
+from gui.windows.main import MainWindow
 
 
 def main():
