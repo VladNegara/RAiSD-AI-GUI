@@ -1,28 +1,37 @@
+# RAiSD-AI Graphical User Interface
 
+## Installation instructions
 
-# Installation Instructions
+This section contains instructions for creating a Conda environment with PySide6 and the Qt Widgets Designer installed.
 
-Installing pyside6 and the designer into a conda environment
-
-## Linux
+### Linux
 
 ```bash
 conda env create -f environment-raisd-ai-gui.yml
 conda activate raisd-ai-gui
 ```
 
-# Usage Instructions
 
-## Linux
+## Usage instructions
+
+This section contains instructions for running the GUI, as well as development tools.
+
+### Linux
 
 To run the GUI:
 
-`python -m gui.app`
+```bash
+python -m gui.app
+```
 
-To run the designer:
+To run the Qt Widgets Designer:
 
-`designer6`
+```bash
+designer6
+```
 
-To convert saved `.ui` files to `.py` python files:
+To convert saved `.ui` files to `.py` files:
 
-`uic -g python gui/ui/filename.ui -o gui/ui/filename.py`
+```bash
+uic -g python gui/ui/filename.ui -o gui/ui/filename.py
+```
