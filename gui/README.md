@@ -6,7 +6,10 @@ Installing pyside6 and the designer into a conda environment
 
 ## Linux
 
-`conda env create -f environment-raisd-ai-gui.yml`
+```bash
+conda env create -f environment-raisd-ai-gui.yml
+conda activate raisd-ai-gui
+```
 
 # Usage Instructions
 
