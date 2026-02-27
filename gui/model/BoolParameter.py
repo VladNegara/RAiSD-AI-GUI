@@ -1,4 +1,4 @@
-from model.Parameter import Parameter
+from gui.model.Parameter import Parameter
 
 
 class BoolParameter(Parameter[bool]):
