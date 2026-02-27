@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from PySide6.QtWidgets import QWidget
 
-from model.Parameter import Parameter
+from gui.model.Parameter import Parameter
 
 
 class ParameterWidget(QWidget):

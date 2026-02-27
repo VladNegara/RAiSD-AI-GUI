@@ -1,9 +1,9 @@
 from PySide6.QtCore import QRect
 from PySide6.QtWidgets import QMainWindow, QWidget, QRadioButton
 
-from ui.uiMainWindow import Ui_MainWindow
+from gui.ui.uiMainWindow import Ui_MainWindow
 from gui.model.ParameterGroupList import ParameterGroupList
-from widgets.ParameterFormSection import ParameterFormSection
+from gui.widgets.ParameterFormSection import ParameterFormSection
 
 
 class MainWindow(QMainWindow):

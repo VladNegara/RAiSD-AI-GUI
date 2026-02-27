@@ -6,27 +6,27 @@ Installing pyside6 and the designer into a virtual environment. Make sure to hav
 
 ## Windows
 
-`cd gui`
-
 `python3.13 -m venv venv`
 
 `.\venv\Scripts\activate`
 
-`pip install -r requirements.txt`
+`pip install -r gui/requirements.txt`
 
 ## Linux
-
-`cd gui`
 
 `python3.13 -m venv venv`
 
 `source venv/bin/activate`
 
-`pip install -r requirements.txt`
+`pip install -r gui/requirements.txt`
 
 # Usage Instructions
 
 ## Windows
+
+To run the GUI:
+
+`python -m gui.app`
 
 To run the designer:
 
@@ -37,6 +37,10 @@ To convert saved `.ui` files:
 `pyside6-uic "ui/filename.ui" -o "ui/filename.py"`
 
 ## Linux
+
+To run the GUI:
+
+`python -m gui.app`
 
 To run the designer:
 
