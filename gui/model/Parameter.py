@@ -27,6 +27,10 @@ class Parameter(ABC, Generic[T]):
     def reset_value(self) -> None:
         self._value = self.default_value
 
+    @property
+    def valid(self) -> bool:
+        return True
+
     @abstractmethod
     def to_cli(self) -> str:
         pass

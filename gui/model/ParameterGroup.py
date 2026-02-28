@@ -14,3 +14,7 @@ class ParameterGroup():
 
     def add_parameter(self, parameter: Parameter[Any]) -> None:
         self._parameters.append(parameter)
+    
+    @property
+    def valid(self) -> bool:
+        return all([param.valid for param in self.parameters])

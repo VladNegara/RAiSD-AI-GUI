@@ -20,3 +20,6 @@ class ParameterGroupList():
 
     def add_parameter_group(self, parameter_group: ParameterGroup):
         self._parameter_groups.append(parameter_group)
+
+    def valid(self) -> bool:
+        return all([group.valid for group in self.parameter_groups])
