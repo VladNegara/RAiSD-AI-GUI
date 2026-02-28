@@ -15,8 +15,8 @@ class ParameterFormSection(QWidget):
         form_layout = QFormLayout()
         form_layout.setContentsMargins(0, 0, 0, 0)
         for parameter in parameter_group.parameters:
-            parameter_widget = ParameterWidget.from_parameter(parameter)
-            form_layout.addWidget(parameter_widget)
+            label, widget = ParameterWidget.from_parameter(parameter)
+            form_layout.addRow(label, widget)
 
         parameter_form_section = cls()
         parameter_form_section.setLayout(form_layout)

@@ -1,9 +1,11 @@
-from typing import Self
+from typing import Any
 from abc import ABC, abstractmethod
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QCheckBox
 
 from gui.model.Parameter import Parameter
+from gui.model.BoolParameter import BoolParameter
 
 
 class ParameterWidget(QWidget):
@@ -16,10 +18,14 @@ class ParameterWidget(QWidget):
         return self._parameter        
 
     @classmethod
-    def from_parameter(cls, parameter: Parameter) -> Self:
-        print(parameter.name)
-        # TODO: implement selection of widget subclass using parameter type
-        raise NotImplementedError("ParameterWidget#from_parameter not implemented!")
+    def from_parameter(cls, parameter: Parameter[Any]) -> tuple[QWidget, "ParameterWidget"]:
+        label: QWidget = QLabel(parameter.name)
+
+        if isinstance(parameter, BoolParameter):
+            return label, BoolParameterWidget(parameter)
+
+        # TODO: implement selection of widget subclass for other parameter types
+        raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
 
 
 class BoolParameterWidget(ParameterWidget):
