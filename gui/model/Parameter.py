@@ -36,7 +36,7 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
     @value.setter
     def value(self, new_value: T) -> None:
         self._value = new_value
-        self.value_changed.emit(self.value, True)
+        self.value_changed.emit(self.value, self.valid)
 
     def reset_value(self) -> None:
         self._value = self.default_value
