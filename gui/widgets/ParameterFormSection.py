@@ -9,11 +9,10 @@ class ParameterFormSection(QWidget):
     @classmethod
     def from_parameter_group(
             cls,
-            parameter_form_section_widget: QWidget,
             parameter_group: ParameterGroup
     ) -> Self:
         # TODO: Add section title with parameter group name
-        form_layout = QFormLayout(parameter_form_section_widget)
+        form_layout = QFormLayout()
         form_layout.setContentsMargins(0, 0, 0, 0)
         for parameter in parameter_group.parameters:
             parameter_widget = ParameterWidget.from_parameter(parameter)

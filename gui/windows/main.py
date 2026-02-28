@@ -29,9 +29,5 @@ class MainWindow(QMainWindow):
 
     def build_parameter_form(self):
         for parameter_group in self.parameter_group_list.parameter_groups:
-            parameter_form_section_widget = QWidget(self.ui.parameterFormWidget)
-            width = self.ui.parameterFormWidget.size().width()
-            height = self.ui.parameterFormWidget.size().height()
-            parameter_form_section_widget.setGeometry(QRect(0,0,width,height))
-            parameter_form_section = ParameterFormSection.from_parameter_group(parameter_form_section_widget, parameter_group)
-            self.ui.parameterFormVerticalLayout.addWidget(parameter_form_section_widget)
+            parameter_form_section = ParameterFormSection.from_parameter_group(parameter_group)
+            self.ui.parameterFormVerticalLayout.addWidget(parameter_form_section)
