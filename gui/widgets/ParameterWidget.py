@@ -7,6 +7,14 @@ from gui.model.Parameter import Parameter
 
 
 class ParameterWidget(QWidget):
+    def __init__(self, parameter: Parameter[Any]):
+        super().__init__()
+        self._parameter = parameter
+
+    @property
+    def parameter(self) -> Parameter[Any]:
+        return self._parameter        
+
     @classmethod
     def from_parameter(cls, parameter: Parameter) -> Self:
         print(parameter.name)
