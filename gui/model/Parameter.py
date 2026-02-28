@@ -18,7 +18,7 @@ class Parameter(ABC, Generic[T]):
 
     @property
     def value(self) -> T:
-        return self.value
+        return self._value
 
     @value.setter
     def value(self, new_value: T) -> None:
