@@ -2,6 +2,7 @@ from typing import Self
 
 from gui.model.ParameterGroup import ParameterGroup
 from gui.model.Parameter import Parameter
+from gui.model.BoolParameter import BoolParameter
 
 
 class ParameterGroupList():
@@ -11,7 +12,26 @@ class ParameterGroupList():
     @classmethod
     def from_configuration_file(cls, file_path: str) -> Self:
         # TODO: Implement this method: make parameter_groups, add parameters, add groups to set
-        parameter_groups = []
+
+        # Create a dummy parameter
+        dummy_true_bool_param = BoolParameter(
+            'Make PDFs',
+            'If this is checked, PDFs of the output will be created.',
+            '-pdf',
+            True,
+        )
+        dummy_false_bool_param = BoolParameter(
+            'Print to console',
+            'If this is checked, output will be printed to console.',
+            '--print-to-console',
+            False,
+        )
+        parameter_groups = [
+            ParameterGroup(
+                'Important parameters',
+                [dummy_true_bool_param, dummy_false_bool_param],
+            )
+        ]
         return cls(parameter_groups)
 
     @property
