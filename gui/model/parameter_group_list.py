@@ -8,7 +8,12 @@ from gui.model.parameter import (
 
 
 class ParameterGroupList():
-    def __init__(self, parameter_groups: list[ParameterGroup] | None = None):
+    def __init__(
+            self,
+            command: str,
+            parameter_groups: list[ParameterGroup] | None = None,
+    ) -> None:
+        self.command = command
         self._parameter_groups = parameter_groups or []
 
     @classmethod
@@ -34,7 +39,7 @@ class ParameterGroupList():
                 [dummy_true_bool_param, dummy_false_bool_param],
             )
         ]
-        return cls(parameter_groups)
+        return cls("./RAiSD-AI", parameter_groups)
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:
@@ -45,3 +50,9 @@ class ParameterGroupList():
 
     def valid(self) -> bool:
         return all([group.valid for group in self.parameter_groups])
+
+    def to_cli(self) -> list[str]:
+        return [
+            f"{self.command} {param_group.to_cli()}"
+            for param_group in self.parameter_groups
+        ]
