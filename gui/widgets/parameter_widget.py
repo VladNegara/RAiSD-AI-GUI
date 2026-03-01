@@ -1,5 +1,5 @@
 from typing import Any
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QCheckBox
@@ -10,7 +10,15 @@ from gui.model.parameter import (
 )
 
 
-class ParameterWidget(QWidget):
+class AbstractQWidgetMeta(type(ABC), type(QWidget)):
+    """
+    Metaclass for an abstract base QWidget class.
+    """
+
+    pass
+
+
+class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
     def __init__(self, parameter: Parameter[Any]):
         super().__init__()
         self._parameter = parameter
