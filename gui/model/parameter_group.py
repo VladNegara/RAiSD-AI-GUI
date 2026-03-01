@@ -64,7 +64,6 @@ class ParameterGroup():
         :return: the command-line representation
         :rtype: str
         """
-        cli_params = " ".join([param.to_cli() for param in self.parameters])
-        if self.cli_option:
-            return f"{self.cli_option} {cli_params}"
-        return cli_params
+        cli_params = [self.cli_option] + [p.to_cli() for p in self.parameters]
+        nonempty_params = [p for p in cli_params if p]
+        return " ".join(nonempty_params)
