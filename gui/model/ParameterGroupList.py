@@ -1,8 +1,10 @@
 from typing import Self
 
 from gui.model.ParameterGroup import ParameterGroup
-from gui.model.Parameter import Parameter
-from gui.model.BoolParameter import BoolParameter
+from gui.model.Parameter import (
+    Parameter,
+    BoolParameter,
+)
 
 
 class ParameterGroupList():
