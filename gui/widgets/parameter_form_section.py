@@ -5,10 +5,27 @@ from gui.widgets.parameter_widget import ParameterWidget
 
 
 class ParameterFormSection(QWidget):
+    """
+    A section of the parameter form.
+
+    Every section corresponds to a `ParameterGroup` object.
+    """
+
     def __init__(
             self,
             parameter_group: ParameterGroup
     ) -> None:
+        """
+        Initialize a `ParameterFormSection` object.
+
+        The method creates a `ParameterWidget` object for each
+        parameter in the group by calling the `from_parameter` factory
+        method. The widgets are placed in a form layout along with their
+        labels.
+
+        :param parameter_group: the parameter group to reference
+        :type parameter_group: ParameterGroup
+        """
         super().__init__()
 
         self._parameter_group = parameter_group
