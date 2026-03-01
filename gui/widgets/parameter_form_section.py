@@ -1,23 +1,28 @@
 from typing import Self
-from PySide6.QtWidgets import QWidget, QFormLayout
+from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QVBoxLayout
 
 from gui.model.parameter_group import ParameterGroup
 from gui.widgets.parameter_widget import ParameterWidget
 
 
 class ParameterFormSection(QWidget):
-    @classmethod
-    def from_parameter_group(
-            cls,
+    def __init__(
+            self,
             parameter_group: ParameterGroup
-    ) -> Self:
-        # TODO: Add section title with parameter group name
-        form_layout = QFormLayout()
+    ) -> None:
+        super().__init__()
+
+        self._parameter_group = parameter_group
+
+        heading = QLabel(self._parameter_group.name)
+
+        form_body = QWidget()
+        form_layout = QFormLayout(form_body)
         form_layout.setContentsMargins(0, 0, 0, 0)
         for parameter in parameter_group.parameters:
             label, widget = ParameterWidget.from_parameter(parameter)
             form_layout.addRow(label, widget)
-
-        parameter_form_section = cls()
-        parameter_form_section.setLayout(form_layout)
-        return parameter_form_section
+        
+        layout = QVBoxLayout(self)
+        layout.addWidget(heading)
+        layout.addWidget(form_body)

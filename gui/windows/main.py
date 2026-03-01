@@ -29,5 +29,5 @@ class MainWindow(QMainWindow):
 
     def build_parameter_form(self) -> None:
         for parameter_group in self.parameter_group_list.parameter_groups:
-            parameter_form_section = ParameterFormSection.from_parameter_group(parameter_group)
+            parameter_form_section = ParameterFormSection(parameter_group)
             self.ui.parameterFormVerticalLayout.addWidget(parameter_form_section)
