@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
 
         # connect standard signals (buttons)
-        self.ui.buttonBox.accepted.connect(self.click)
+        self.ui.buttonBox.accepted.connect(self._accepted)
 
         # TODO: link execute button to command builder & executor
             # TODO: make command builder (using parametergrouplist)
@@ -24,8 +24,8 @@ class MainWindow(QMainWindow):
 
         self.build_parameter_form()
 
-    def click(self):
-        print("smth clicked")
+    def _accepted(self) -> None:
+        print(self.parameter_group_list.to_cli())
 
     def build_parameter_form(self):
         for parameter_group in self.parameter_group_list.parameter_groups:
