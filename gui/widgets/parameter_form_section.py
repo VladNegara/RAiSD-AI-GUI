@@ -1,4 +1,3 @@
-from typing import Self
 from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QVBoxLayout
 
 from gui.model.parameter_group import ParameterGroup
