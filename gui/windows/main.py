@@ -7,7 +7,7 @@ from gui.widgets.parameter_form_section import ParameterFormSection
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, parameter_group_list:ParameterGroupList):
+    def __init__(self, parameter_group_list: ParameterGroupList):
         super().__init__()
         self.parameter_group_list = parameter_group_list
         # Set up the user interface from Designer
@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
     def _accepted(self) -> None:
         print(self.parameter_group_list.to_cli())
 
-    def build_parameter_form(self):
+    def build_parameter_form(self) -> None:
         for parameter_group in self.parameter_group_list.parameter_groups:
             parameter_form_section = ParameterFormSection.from_parameter_group(parameter_group)
             self.ui.parameterFormVerticalLayout.addWidget(parameter_form_section)
