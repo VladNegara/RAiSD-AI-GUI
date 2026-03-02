@@ -2,6 +2,7 @@
 # Installs all necessary tools, including micromamba.
 
 # INSTALL Tools
+sudo apt-get update
 sudo apt install curl
 sudo apt install make
 sudo apt install build-essential
