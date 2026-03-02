@@ -1,9 +1,15 @@
-from PySide6.QtCore import QRect
-from PySide6.QtWidgets import QMainWindow, QWidget, QRadioButton
+from PySide6.QtCore import (
+    Slot,
+)
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QHBoxLayout,
+    QPushButton,
+)
 
-from gui.ui.uiMainWindow import Ui_MainWindow
 from gui.model.parameter_group_list import ParameterGroupList
-from gui.widgets.parameter_form_section import ParameterFormSection
+from gui.widgets.parameter_form import ParameterForm
 
 
 class MainWindow(QMainWindow):
@@ -14,31 +20,35 @@ class MainWindow(QMainWindow):
         """
         Initialize the main window.
 
-        :param parameter_group_list: the parameters to be filled in
-        by the user
+        :param parameter_group_list: the parameters to be filled in by
+        the user
         :type parameter_group_list: ParameterGroupList
         """
         super().__init__()
-        self.parameter_group_list = parameter_group_list
+        self._parameter_group_list = parameter_group_list
 
-        # Set up the user interface from Designer
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
+        # Create a central widget with a horizontal layout (i.e.
+        # sidebars to the left and right of the parameter form).
+        central_widget = QWidget()
+        layout = QHBoxLayout(central_widget)
 
-        # Connect standard signals (buttons)
-        self.ui.buttonBox.accepted.connect(self._accepted)
+        # Create the parameter form and add it to the layout.
+        parameter_form = ParameterForm(parameter_group_list)
+        layout.addWidget(parameter_form)
+
+        # Create the submit button and add it to the layout.
+        submit_button = QPushButton("Submit")
+        submit_button.clicked.connect(self._submit_button_clicked)
+        layout.addWidget(submit_button)
+
+        # Set the central widget.
+        self.setCentralWidget(central_widget)
 
         # TODO: link execute button to command executor
             # TODO: make command executor for terminal commands and
             # virtual environment
         # TODO: link execution done to update_history()
 
-        self._build_parameter_form()
-
-    def _accepted(self) -> None:
-        print(self.parameter_group_list.to_cli())
-
-    def _build_parameter_form(self) -> None:
-        for parameter_group in self.parameter_group_list.parameter_groups:
-            parameter_form_section = ParameterFormSection(parameter_group)
-            self.ui.parameterFormVerticalLayout.addWidget(parameter_form_section)
+    @Slot()
+    def _submit_button_clicked(self) -> None:
+        print(self._parameter_group_list.to_cli())
