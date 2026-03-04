@@ -104,6 +104,8 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         row = QWidget()
         layout = QHBoxLayout(row)
 
+        parameter_widget: ParameterWidget
+        reset_button = cls.ResetButton(parameter)
         label_header = QLabel(parameter.name)
         label_header.setAlignment(Qt.AlignmentFlag.AlignLeft)
         label_body = QLabel(parameter.description)
@@ -112,9 +114,6 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             label_body,
         )
         layout.addWidget(label, stretch=1)
-
-        parameter_widget: ParameterWidget
-        reset_button = cls.ResetButton(parameter)
 
         if isinstance(parameter, BoolParameter):
             parameter_widget = BoolParameterWidget(parameter)
