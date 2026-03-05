@@ -2,11 +2,12 @@ from typing import Any
 from abc import ABC
 
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QCheckBox
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QCheckBox, QLineEdit
 
 from gui.model.parameter import (
     Parameter,
     BoolParameter,
+    StringParameter,
 )
 
 
@@ -73,6 +74,8 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
 
         if isinstance(parameter, BoolParameter):
             return label, BoolParameterWidget(parameter)
+        if isinstance(parameter, StringParameter):
+            return label, StringParameterWidget(parameter)
 
         # TODO: implement selection of widget subclass for other parameter types
         raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
@@ -115,3 +118,47 @@ class BoolParameterWidget(ParameterWidget):
     @Slot(bool, bool)
     def _parameter_value_changed(self, new_value: bool, valid: bool) -> None:
         self._checkbox.setChecked(new_value)
+
+class StringParameterWidget(ParameterWidget):
+    """
+    A widget to edit a string parameter.
+    """
+
+    def __init__(self, parameter: Parameter[str]) -> None:
+        """
+        Initialize a `StringParameterWidget` object. If there is max_length information a label displaying this is added
+        below the QLineEdit field.
+
+        :param parameter: the string parameter to reference
+        :type parameter: Parameter[str]
+        """
+        super().__init__(parameter)
+
+        layout = QVBoxLayout(self)
+
+        self._line_edit = QLineEdit()
+        self._line_edit.setText(parameter.value)
+
+        if parameter.max_length is not None:
+            self._line_edit.setMaxLength(parameter.max_length)
+            hint = QLabel(f"Max length: {parameter.max_length}")
+            layout.addWidget(self._line_edit)
+            layout.addWidget(hint)
+        else:
+            layout.addWidget(self._line_edit)
+
+        self._line_edit.editingFinished.connect(self._editing_finished)
+        parameter.value_changed.connect(self._parameter_value_changed)
+
+    @Slot(str)
+    def _editing_finished(self) -> None:
+        self.parameter.value = self._line_edit.text()
+
+    @Slot(str, bool)
+    def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
+        if self._line_edit.text() != new_value:
+            self._line_edit.setText(new_value)
+        if valid: # Styling can be changed in the future
+            self._line_edit.setStyleSheet("QLineEdit { border: 1px solid green; }")
+        else:
+            self._line_edit.setStyleSheet("QLineEdit { border: 1px solid red; }")
