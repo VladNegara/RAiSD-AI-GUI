@@ -123,7 +123,7 @@ class BoolParameterWidget(ParameterWidget):
         self._checkbox.setChecked(new_value)
 
 
-class IntParameterWidget(ParameterWidget) :
+class IntParameterWidget(ParameterWidget):
 
     def __init__(self, parameter: IntParameter) -> None:
         
