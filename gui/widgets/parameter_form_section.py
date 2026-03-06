@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout
 
 from gui.model.parameter_group import ParameterGroup
 from gui.widgets.parameter_widget import ParameterWidget
@@ -33,11 +33,11 @@ class ParameterFormSection(QWidget):
         heading = QLabel(self._parameter_group.name)
 
         form_body = QWidget()
-        form_layout = QFormLayout(form_body)
+        form_layout = QVBoxLayout(form_body)
         form_layout.setContentsMargins(0, 0, 0, 0)
         for parameter in parameter_group.parameters:
-            label, widget = ParameterWidget.from_parameter(parameter)
-            form_layout.addRow(label, widget)
+            form_row = ParameterWidget.from_parameter(parameter)
+            form_layout.addWidget(form_row)
         
         layout = QVBoxLayout(self)
         layout.addWidget(heading)
