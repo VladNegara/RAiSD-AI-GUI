@@ -72,10 +72,13 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         """
         row = QWidget()
         layout = QHBoxLayout(row)
+        parameter.enabled_changed.connect(
+            lambda new_enabled: row.setVisible(new_enabled)
+        )
 
         label: QWidget = QLabel(parameter.name)
         layout.addWidget(label, stretch=1)
-        
+
         parameter_widget: ParameterWidget
 
         if isinstance(parameter, BoolParameter):
