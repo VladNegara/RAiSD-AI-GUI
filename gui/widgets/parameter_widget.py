@@ -2,7 +2,7 @@ from typing import Any
 from abc import ABC
 
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QCheckBox
+from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QCheckBox
 
 from gui.model.parameter import (
     Parameter,
@@ -50,10 +50,10 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         return self._parameter        
 
     @classmethod
-    def from_parameter(cls, parameter: Parameter[Any]) -> tuple[QWidget, "ParameterWidget"]:
+    def from_parameter(cls, parameter: Parameter[Any]) -> QWidget:
         """
         Create a suitable `ParameterWidget` for a given `Parameter`,
-        along with a label.
+        grouped horizontally with a label to be used as a form row.
 
         The method checks the type of the given parameter in order to
         create the suitable widget (e.g. a dropdown menu for an enum
@@ -61,21 +61,36 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         `ParameterWidget` object.
 
         The method also creates a label that displays the parameter's
-        name and returns it alongside the `ParameterWidget` object.
+        name and groups it in a horizontal layout alongside the
+        `ParameterWidget` object.
 
         :param parameter: the parameter
         :type parameter: Parameter[Any]
 
-        :return: the label and the widget
-        :rtype: tuple[QWidget, ParameterWidget]
+        :return: the label and the widget in a horizontal layout
+        :rtype: QWidget
         """
+        row = QWidget()
+        row.setVisible(parameter.enabled)
+        parameter.enabled_changed.connect(
+            lambda new_enabled: row.setVisible(new_enabled)
+        )
+        layout = QHBoxLayout(row)
+
         label: QWidget = QLabel(parameter.name)
+        layout.addWidget(label, stretch=1)
+
+        parameter_widget: ParameterWidget
 
         if isinstance(parameter, BoolParameter):
-            return label, BoolParameterWidget(parameter)
-
+            parameter_widget = BoolParameterWidget(parameter)
         # TODO: implement selection of widget subclass for other parameter types
-        raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
+        else:
+            raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
+
+        layout.addWidget(parameter_widget)
+
+        return row
 
 
 class BoolParameterWidget(ParameterWidget):
