@@ -135,7 +135,16 @@ class BoolParameterWidget(ParameterWidget):
         self._checkbox.setChecked(new_value)
 
 class ResetButtonWidget(ParameterWidget):
+    """
+    A button widget to reset the value of given parameter to default value.
+    """
     def __init__(self, parameter: Parameter[Any]) -> None:
+        """
+        Initialize a `ResetButtonWidget` object.
+
+        :param parameter: the parameter to reference
+        :type parameter: Parameter[Any]
+        """
         super().__init__(parameter)
         layout = QVBoxLayout(self)
 
