@@ -62,9 +62,7 @@ class ParameterEnabledEffect(Dependency.Effect):
     ) -> None:
         super().__init__(parent=parent)
         self._parameter = parameter
-        print("constructed an effect for ", parameter)
         
 
     def condition_changed(self, new_value: bool) -> None:
-        print("condition changed in effect")
         self._parameter.enabled = new_value
