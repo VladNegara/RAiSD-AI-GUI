@@ -3,6 +3,11 @@ from gui.model.parameter import (
     Parameter,
     BoolParameter,
 )
+from gui.model.dependency import (
+    Dependency,
+    BoolParameterTrueCondition,
+    ParameterEnabledEffect,
+)
 
 
 class ParameterGroupList():
@@ -17,6 +22,7 @@ class ParameterGroupList():
             self,
             command: str,
             parameter_groups: list[ParameterGroup] | None = None,
+            dependencies: list[Dependency] | None = None
     ) -> None:
         """
         Initialize a `ParameterGroupList` object.
@@ -29,6 +35,7 @@ class ParameterGroupList():
         """
         self.command = command
         self._parameter_groups = parameter_groups or []
+        self._dependencies = dependencies or []
 
     @classmethod
     def from_configuration_file(cls, file_path: str) -> "ParameterGroupList":
