@@ -69,6 +69,14 @@ class ParameterGroupList():
             '--print-to-console',
             False,
         )
+        dummy_dependency = Dependency(
+            BoolParameterTrueCondition(
+                dummy_true_bool_param,
+            ),
+            ParameterEnabledEffect(
+                dummy_false_bool_param,
+            ),
+        )
         other_dummy_param = BoolParameter(
             'Use PyTorch',
             'If this is checked, PyTorch will be used instead of TensorFlow',
@@ -87,7 +95,8 @@ class ParameterGroupList():
                 '-op=MDL_GEN',
             )
         ]
-        return cls("./RAiSD-AI", parameter_groups)
+        dependencies = [dummy_dependency]
+        return cls("./RAiSD-AI", parameter_groups, dependencies)
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:
