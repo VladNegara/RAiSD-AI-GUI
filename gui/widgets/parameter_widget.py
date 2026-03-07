@@ -119,18 +119,21 @@ class BoolParameterWidget(ParameterWidget):
     def _parameter_value_changed(self, new_value: bool, valid: bool) -> None:
         self._checkbox.setChecked(new_value)
 
+
 class StringParameterWidget(ParameterWidget):
     """
     A widget to edit a string parameter.
     """
 
-    def __init__(self, parameter: Parameter[str]) -> None:
+    def __init__(self, parameter: StringParameter) -> None:
         """
-        Initialize a `StringParameterWidget` object. If there is max_length information a label displaying this is added
-        below the QLineEdit field.
+        Initialize a `StringParameterWidget` object.
+
+        If the parameter has a maximum length, the length is enforced on
+        the input field and displayed to the user in a label.
 
         :param parameter: the string parameter to reference
-        :type parameter: Parameter[str]
+        :type parameter: StringParameter
         """
         super().__init__(parameter)
 
@@ -138,14 +141,12 @@ class StringParameterWidget(ParameterWidget):
 
         self._line_edit = QLineEdit()
         self._line_edit.setText(parameter.value)
+        layout.addWidget(self._line_edit)
 
         if parameter.max_length is not None:
             self._line_edit.setMaxLength(parameter.max_length)
             hint = QLabel(f"Max length: {parameter.max_length}")
-            layout.addWidget(self._line_edit)
             layout.addWidget(hint)
-        else:
-            layout.addWidget(self._line_edit)
 
         self._line_edit.editingFinished.connect(self._editing_finished)
         parameter.value_changed.connect(self._parameter_value_changed)
@@ -156,8 +157,7 @@ class StringParameterWidget(ParameterWidget):
 
     @Slot(str, bool)
     def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
-        if self._line_edit.text() != new_value:
-            self._line_edit.setText(new_value)
+        self._line_edit.setText(new_value)
         if valid: # Styling can be changed in the future
             self._line_edit.setStyleSheet("QLineEdit { border: 1px solid green; }")
         else:
