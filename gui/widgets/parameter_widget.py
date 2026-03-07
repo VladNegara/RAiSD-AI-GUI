@@ -143,13 +143,14 @@ class IntParameterWidget(ParameterWidget):
 
         match (parameter.lower_bound is None, parameter.upper_bound is None):
             case (False, False):
-                label = QLabel(f'lower bound: "{parameter.lower_bound}", upper bound: "{parameter.upper_bound}"')
+                label = QLabel(f'(between {parameter.lower_bound}'
+                               + f' and {parameter.upper_bound})')
                 layout.addWidget(label)
             case (False, True):
-                label = QLabel(f'lower bound: "{parameter.lower_bound}"')
+                label = QLabel(f'(minimum {parameter.lower_bound})')
                 layout.addWidget(label)
             case (True, False):
-                label = QLabel(f'upper bound: "{parameter.upper_bound}"')
+                label = QLabel(f'(maximum {parameter.upper_bound})')
                 layout.addWidget(label)
     
         self._lineedit.editingFinished.connect(self._text_changed)
@@ -183,13 +184,14 @@ class FloatParameterWidget(ParameterWidget):
 
         match (parameter.lower_bound is None, parameter.upper_bound is None):
             case (False, False):
-                label = QLabel(f'lower bound: "{parameter.lower_bound}", upper bound: "{parameter.upper_bound}"')
+                label = QLabel(f'(between {parameter.lower_bound}'
+                               + f' and {parameter.upper_bound})')
                 layout.addWidget(label)
             case (False, True):
-                label = QLabel(f'lower bound: "{parameter.lower_bound}"')
+                label = QLabel(f'(minimum {parameter.lower_bound})')
                 layout.addWidget(label)
             case (True, False):
-                label = QLabel(f'upper bound: "{parameter.upper_bound}"')
+                label = QLabel(f'(maximum {parameter.upper_bound})')
                 layout.addWidget(label)
     
         self._lineedit.editingFinished.connect(self._text_changed)
