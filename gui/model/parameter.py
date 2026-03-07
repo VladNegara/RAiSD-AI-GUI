@@ -117,7 +117,7 @@ class BoolParameter(Parameter[bool]):
         )
 
 
-X = TypeVar("X", bound=Real)
+X = TypeVar("X", bound=float)
 
 
 class NumberParameter(Parameter[X]):
