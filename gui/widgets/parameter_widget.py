@@ -32,6 +32,28 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
     through the `from_parameter` factory method.
     """
 
+    class ResetButton(QPushButton):
+        """
+        A button to reset the value of a given parameter to its default
+        value.
+        """
+
+        def __init__(self, parameter: Parameter[Any]) -> None:
+            """
+            Initialize a `ResetButtonWidget` object.
+
+            :param parameter: the parameter to reference
+            :type parameter: Parameter[Any]
+            """
+            super().__init__("Reset")
+            self._parameter = parameter
+
+            self.clicked.connect(self._clicked)
+
+        @Slot()
+        def _clicked(self) -> None:
+            self._parameter.reset_value()
+
     def __init__(self, parameter: Parameter[Any]):
         """
         Initialize a `ParameterWidget` object.
@@ -76,7 +98,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         layout.addWidget(label, stretch=1)
 
         parameter_widget: ParameterWidget
-        reset_button = ResetButtonWidget(parameter)
+        reset_button = cls.ResetButton(parameter)
 
         if isinstance(parameter, BoolParameter):
             parameter_widget = BoolParameterWidget(parameter)
@@ -126,25 +148,3 @@ class BoolParameterWidget(ParameterWidget):
     @Slot(bool, bool)
     def _parameter_value_changed(self, new_value: bool, valid: bool) -> None:
         self._checkbox.setChecked(new_value)
-
-class ResetButtonWidget(ParameterWidget):
-    """
-    A button widget to reset the value of given parameter to default value.
-    """
-    def __init__(self, parameter: Parameter[Any]) -> None:
-        """
-        Initialize a `ResetButtonWidget` object.
-
-        :param parameter: the parameter to reference
-        :type parameter: Parameter[Any]
-        """
-        super().__init__(parameter)
-        layout = QVBoxLayout(self)
-
-        self._button = QPushButton("Reset")
-        self._button.clicked.connect(self._reset_button_clicked)
-        layout.addWidget(self._button)
-
-    @Slot()
-    def _reset_button_clicked(self) -> None:
-        self.parameter.reset_value()
