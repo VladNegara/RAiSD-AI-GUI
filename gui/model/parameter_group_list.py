@@ -2,6 +2,8 @@ from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
     BoolParameter,
+    IntParameter,
+    FloatParameter
 )
 
 
@@ -68,6 +70,7 @@ class ParameterGroupList():
             '--use-pt',
             True,
         )
+
         parameter_groups = [
             ParameterGroup(
                 'Image generation',
@@ -78,7 +81,73 @@ class ParameterGroupList():
                 'Model training',
                 [other_dummy_param],
                 '-op=MDL_GEN',
-            )
+            ),
+            ParameterGroup(
+                'Grid size',
+                [
+                    IntParameter(
+                        'Unbounded int',
+                        'This int can take any value.',
+                        '--unbounded-int',
+                        5,
+                    ),
+                    IntParameter(
+                        'Lower bounded int',
+                        'Bla Bla Bla',
+                        '--lowerbounded-int',
+                        6,
+                        5,
+                    ),
+                    IntParameter(
+                        'Upper bounded int',
+                        'Bla Bla Bla',
+                        '--upperbounded-int',
+                        6,
+                        upper_bound = 50,
+                    ),                   
+                    IntParameter(
+                        'Bounded int',
+                        'This int can take any value.',
+                        '--bounded-int',
+                        5,
+                        1,
+                        10000,
+                    ),
+                ],
+            ),
+            ParameterGroup(
+                'Power size',
+                [
+                    FloatParameter(
+                        'Unbounded float',
+                        'This float can take any value.',
+                        '--unbounded-float',
+                        8.5,
+                    ),
+                    FloatParameter(
+                        'Lower bounded float',
+                        'Bla Bla Bla',
+                        '--lowerbounded-float',
+                        6.6,
+                        5.0,
+                    ),
+                    FloatParameter(
+                        'Upper bounded float',
+                        'Bla Bla Bla',
+                        '--upperbounded-float',
+                        6.9,
+                        upper_bound = 50.0,
+                    ),                   
+                    FloatParameter(
+                        'Bounded float',
+                        'This float can take any value.',
+                        '--bounded-float',
+                        5,
+                        1.67,
+                        10000,
+                    ),
+                ],
+            ),
         ]
         return cls("./RAiSD-AI", parameter_groups)
 
