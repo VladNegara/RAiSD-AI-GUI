@@ -2,6 +2,7 @@ from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
     BoolParameter,
+    EnumParameter,
 )
 
 
@@ -69,6 +70,23 @@ class ParameterGroupList():
             True,
         )
         parameter_groups = [
+            ParameterGroup(
+                'Additional options',
+                [
+                    EnumParameter(
+                        'Mode',
+                        'This option determines how fast the program will be.',
+                        '-m',
+                        [
+                            ('Slow', 'slow'),
+                            ('Regular', 'normal'),
+                            ('Fast', 'fast'),
+                            ('Super fast', 'very-fast'),
+                        ],
+                        1,
+                    ),
+                ],
+            ),
             ParameterGroup(
                 'Image generation',
                 [dummy_true_bool_param, dummy_false_bool_param],

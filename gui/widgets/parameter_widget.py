@@ -2,11 +2,12 @@ from typing import Any
 from abc import ABC
 
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QCheckBox
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QCheckBox, QComboBox
 
 from gui.model.parameter import (
     Parameter,
     BoolParameter,
+    EnumParameter,
 )
 
 
@@ -74,6 +75,9 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         if isinstance(parameter, BoolParameter):
             return label, BoolParameterWidget(parameter)
 
+        if isinstance(parameter, EnumParameter):
+            return label, EnumParameterWidget(parameter)
+
         # TODO: implement selection of widget subclass for other parameter types
         raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
 
@@ -115,3 +119,38 @@ class BoolParameterWidget(ParameterWidget):
     @Slot(bool, bool)
     def _parameter_value_changed(self, new_value: bool, valid: bool) -> None:
         self._checkbox.setChecked(new_value)
+
+
+class EnumParameterWidget(ParameterWidget):
+    """
+    A dropdown widget to edit an enumerated parameter.
+    """
+
+    def __init__(self, parameter: EnumParameter):
+        """
+        Initialize an `EnumParameterWidget` object.
+
+        :param parameter: the enum parameter to reference
+        :type parameter: EnumParameter
+        """
+        super().__init__(parameter)
+
+        layout = QVBoxLayout(self)
+
+        self._combo_box = QComboBox()
+        self._combo_box.addItems(parameter.options)
+        self._combo_box.setCurrentIndex(parameter.value)
+        layout.addWidget(self._combo_box)
+
+        self._combo_box.currentIndexChanged.connect(
+            self._combo_box_current_index_changed
+        )
+        parameter.value_changed.connect(self._parameter_value_changed)
+
+    @Slot(int)
+    def _combo_box_current_index_changed(self, new_index: int) -> None:
+        self.parameter.value = new_index
+
+    @Slot(int, bool)
+    def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
+        self._combo_box.setCurrentIndex(new_value)
