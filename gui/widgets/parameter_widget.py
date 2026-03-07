@@ -8,6 +8,7 @@ from gui.model.parameter import (
     Parameter,
     BoolParameter,
 )
+from gui.widgets.collapsible import Collapsible
 
 
 class AbstractQWidgetMeta(type(ABC), type(QWidget)):
@@ -69,7 +70,13 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         :return: the label and the widget
         :rtype: tuple[QWidget, ParameterWidget]
         """
-        label: QWidget = QLabel(parameter.name)
+        label_header = QLabel(parameter.name)
+        label_header.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        label_body = QLabel(parameter.description)
+        label: QWidget = Collapsible(
+            label_header,
+            label_body,
+        )
 
         if isinstance(parameter, BoolParameter):
             return label, BoolParameterWidget(parameter)
