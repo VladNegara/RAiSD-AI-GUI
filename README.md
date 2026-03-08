@@ -54,7 +54,6 @@ As of RAiSD version 2.0, the μ-statistic factors `μ_VAR` and `μ_SFS` are modi
 
 `μ_SFS`: The previous version of `μ_SFS` is multiplied by the (sample size) correcting factor of Watterson's θ: `Sum_i=1^(n-1) 1/i`, where `n` is the sample size. The values of `μ_SFS` are now distributed around 1.0 under neutrality. 
 
-
 Download and Compile
 --------------------
 
@@ -66,17 +65,24 @@ The following commands can be used to download and compile the source code.
     $ unzip master.zip
     $ cd RAiSD-AI-master
     $ ./compile-RAiSD-AI.sh
-    
+
 Command to directly copy to terminal:
-    
+
      mkdir RAiSD-AI; cd RAiSD-AI; wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-master; ./compile-RAiSD-AI.sh
-    
 
 The executable is placed in the path bin/release. A link to the executable is placed in the installation folder, i.e., RAiSD-AI-master. 
 
 RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values based on interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native grid-based implementation that is used with both the μ statistic and the CNN.  
 Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be found [here](https://github.com/pephco/RAiSD?tab=readme-ov-file#download-and-compile).
 
+### GUI Installation
+
+The following commands can be used to install all necessary tools (including micromamba for package management), create the environments, and build RAiSD-AI.
+
+```bash
+./setup-step-1.sh
+./setup-step-2.sh
+```
 
 Quick Test Run
 --------

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
+from re import Pattern, compile
 
 from PySide6.QtCore import QObject, Signal
 
@@ -111,6 +112,75 @@ class BoolParameter(Parameter[bool]):
             f'BoolParameter('
             + f'name: "{self.name}", '
             + f'description: "{self.description})", '
+            + f'value: {self.value}, '
+            + f'valid: {self.valid})'
+        )
+
+class StringParameter(Parameter[str]):
+    """
+    A string parameter in the GUI.
+
+    The parameter may optionally contain a maximum length and/or a
+    regex pattern the input must match.
+
+    The value is considered valid when both of the following hold:
+    - If a maximum length was specified, the value does not exceed it.
+    - If a regex pattern was specified, the value matches it.
+
+    If neither constraint is given, the value is always valid.
+    """
+
+    value_changed = Signal(str, bool)
+
+    def __init__(
+            self,
+            name: str, description: str, flag: str, default_value: str,
+            max_length: int | None = None,
+            pattern: Pattern | None = None,
+    ) -> None:
+        """
+        Initialize a `StringParameter` object.
+
+        :param name: the name of the parameter
+        :type name: str
+
+        :param description: a longer description of the parameter
+        :type description: str
+
+        :param flag: the command-line flag of the parameter
+        :type flag: str
+
+        :param default_value: the default value of the parameter
+        :type default_value: str
+
+        :param max_length: the maximum length of the string (optional)
+        :type max_length: int | None
+
+        :param pattern: the pattern the string must match (optional)
+        :type pattern: Pattern | None
+        """
+        super().__init__(name, description, flag, default_value)
+        self.max_length = max_length
+        self._pattern = pattern
+
+    @property
+    def valid(self) -> bool:
+        if self.max_length is not None and len(self.value) > self.max_length:
+            return False
+        if self._pattern is not None and not self._pattern.match(self.value):
+            return False
+        return True
+
+    def to_cli(self) -> str:
+        return f"{self.flag} {self.value}"
+
+    def __str__(self) -> str:
+        return (
+            f'String('
+            + f'name: "{self.name}", '
+            + f'description: "{self.description})", '
+            + f'max length: {self.max_length}, '
+            + f'pattern: {self._pattern}, '
             + f'value: {self.value}, '
             + f'valid: {self.valid})'
         )
