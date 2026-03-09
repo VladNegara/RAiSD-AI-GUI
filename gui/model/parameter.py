@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
+from pathlib import Path
+import os
 
 from PySide6.QtCore import QObject, Signal
 
@@ -114,3 +116,76 @@ class BoolParameter(Parameter[bool]):
             + f'value: {self.value}, '
             + f'valid: {self.valid})'
         )
+
+# --- Possible identified file types in the system ---
+#ms, vcf, fasta
+#angsd vcf
+#gz (vcf)
+#unordered vcf
+
+class FileParameter(Parameter[list[str]]):
+    """
+    A file path parameter in the GUI
+
+    Stores the list of file paths selected by the user. The file parameter accepts a list of
+    file parameters, and it has the option to allow single or multiple file inputs.
+
+    The value is valid when all the following holds:
+    - The value list is not empty.
+    - If it is not multiple (multiple = False), there should only be a single file in the list.
+    - Every file in the list exists and readable and their file extension is in the accepted_formats
+    """
+    value_changed = Signal(list, bool)
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        flag: str,
+        accepted_formats: list[str],
+        multiple: bool = False, #the flag indicating whether multiple files are allowed or not
+        default_value: list[str] | None = None,
+    ) -> None:
+        self.accepted_formats = [
+            ext if ext.startswith(".") else f".{ext}"
+            for ext in accepted_formats
+        ]
+        self.multiple = multiple
+        super().__init__(name, description, flag, default_value or [])
+
+    @property
+    def valid(self) -> bool:
+        if not self.value:
+            return False
+        if not self.multiple and len(self.value) > 1:
+            return False
+        return all(
+            Path(f).is_file()
+            and os.access(Path(f), os.R_OK)
+            and Path(f).suffix.lower() in self.accepted_formats
+            for f in self.value
+        )
+
+    @property
+    def file_extensions(self) -> list[str]:
+        return [Path(f).suffix.lower() for f in self.value if f]
+
+    @Parameter.value.setter
+    def value(self, new_value: list[str]) -> None:
+        self._value = new_value
+        self.value_changed.emit(self.value, self.valid)
+
+    def __str__(self) -> str:
+        return (
+            f'FileParameter('
+            f'name: "{self.name}", '
+            f'description: "{self.description}", '
+            f'accepted_formats: {self.accepted_formats}, '
+            f'value: "{self.value}", '
+            f'valid: {self.valid})'
+        )
+
+    def to_cli(self) -> str:
+        if self.valid:
+            return " ".join(f"{self.flag} {f}" for f in self.value)
+        return ""
