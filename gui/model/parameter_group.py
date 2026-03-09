@@ -10,7 +10,8 @@ class ParameterGroup():
 
     def __init__(
             self,
-            name: str,
+            name: list[str],
+            operations: [str],
             parameters: list[Parameter[Any]] | None = None,
             cli_option: str | None = None
     ) -> None:
@@ -27,8 +28,16 @@ class ParameterGroup():
         :type cli_option: str | None
         """
         self.name = name
+        self._operations = operations
         self._parameters = parameters or []
         self.cli_option = cli_option
+
+    @property
+    def operations(self) -> str:
+        """
+        The operations that a parametergroup belongs to.
+        """
+        return self._operations
 
     @property
     def parameters(self) -> list[Parameter[Any]]:
