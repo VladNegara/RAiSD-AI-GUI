@@ -95,6 +95,7 @@ class ParameterGroupList():
         parameter_groups = [
             ParameterGroup(
                 'Additional options',
+                ['RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'],
                 [
                     EnumParameter(
                         'Mode',
@@ -112,6 +113,7 @@ class ParameterGroupList():
             ),
             ParameterGroup(
                 'Personal data',
+                ['RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'],
                 [
                     StringParameter(
                         'Your name',
@@ -131,16 +133,19 @@ class ParameterGroupList():
             ),
             ParameterGroup(
                 'Image generation',
+                ['IMG-GEN'],
                 [dummy_true_bool_param, dummy_false_bool_param],
                 '-op=IMG_GEN',
             ),
             ParameterGroup(
                 'Model training',
+                ['MDL-GEN'],
                 [other_dummy_param],
                 '-op=MDL_GEN',
             ),
             ParameterGroup(
                 'Grid size',
+                ['RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'],
                 [
                     IntParameter(
                         'Unbounded int',
@@ -174,6 +179,7 @@ class ParameterGroupList():
             ),
             ParameterGroup(
                 'Power size',
+                ['RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'],
                 [
                     FloatParameter(
                         'Unbounded float',
