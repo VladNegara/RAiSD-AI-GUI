@@ -27,8 +27,9 @@ class ParameterGroupList():
     def __init__(
             self,
             command: str,
+            operations: dict[str, bool] | None,
             parameter_groups: list[ParameterGroup] | None = None,
-            dependencies: list[Dependency] | None = None
+            dependencies: list[Dependency] | None = None,
     ) -> None:
         """
         Initialize a `ParameterGroupList` object.
@@ -40,6 +41,7 @@ class ParameterGroupList():
         :type parameter_groups: list[ParameterGroup] | None
         """
         self.command = command
+        self._operations = operations
         self._parameter_groups = parameter_groups or []
         self._dependencies = dependencies or []
 
@@ -205,7 +207,30 @@ class ParameterGroupList():
             ),
         ]
         dependencies = [dummy_dependency]
-        return cls("./RAiSD-AI", parameter_groups, dependencies)
+        return cls("./RAiSD-AI", {'RSD-DEF': False, 'IMG-GEN': True, 'MDL-GEN': True, 'MDL-TST': False, 'SWP-SCN': False}, parameter_groups, dependencies)
+
+    @property
+    def operations(self) -> dict[str,bool]:
+        """
+        The active operations of the parameter list.
+
+        """
+        return self._operations
+
+    def set_operation(self, operation: str, value: bool) -> None:
+        """
+        Set an operation to active or not.
+
+        :param operation: the operation to set.
+        :type operation: str
+
+        :param value: the value to set the operation to.
+        :type value: bool
+        """
+        if operation in self._operations:
+            raise Exception(f"Setting an invalid operation: {operation}.")
+        self._operations[operation] = value
+
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:
