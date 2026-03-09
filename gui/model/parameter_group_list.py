@@ -6,7 +6,13 @@ from gui.model.parameter import (
     BoolParameter,
     IntParameter,
     FloatParameter,
+    EnumParameter,
     StringParameter,
+)
+from gui.model.dependency import (
+    Dependency,
+    BoolParameterTrueCondition,
+    ParameterEnabledEffect,
 )
 
 
@@ -22,6 +28,7 @@ class ParameterGroupList():
             self,
             command: str,
             parameter_groups: list[ParameterGroup] | None = None,
+            dependencies: list[Dependency] | None = None
     ) -> None:
         """
         Initialize a `ParameterGroupList` object.
@@ -34,6 +41,7 @@ class ParameterGroupList():
         """
         self.command = command
         self._parameter_groups = parameter_groups or []
+        self._dependencies = dependencies or []
 
     @classmethod
     def from_configuration_file(cls, file_path: str) -> "ParameterGroupList":
@@ -67,6 +75,14 @@ class ParameterGroupList():
             '--print-to-console',
             False,
         )
+        dummy_dependency = Dependency(
+            BoolParameterTrueCondition(
+                dummy_true_bool_param,
+            ),
+            ParameterEnabledEffect(
+                dummy_false_bool_param,
+            ),
+        )
         other_dummy_param = BoolParameter(
             'Use PyTorch',
             'If this is checked, PyTorch will be used instead of TensorFlow',
@@ -75,6 +91,23 @@ class ParameterGroupList():
         )
 
         parameter_groups = [
+            ParameterGroup(
+                'Additional options',
+                [
+                    EnumParameter(
+                        'Mode',
+                        'This option determines how fast the program will be.',
+                        '-m',
+                        [
+                            ('Slow', 'slow'),
+                            ('Regular', 'normal'),
+                            ('Fast', 'fast'),
+                            ('Super fast', 'very-fast'),
+                        ],
+                        1,
+                    ),
+                ],
+            ),
             ParameterGroup(
                 'Personal data',
                 [
@@ -171,7 +204,8 @@ class ParameterGroupList():
                 ],
             ),
         ]
-        return cls("./RAiSD-AI", parameter_groups)
+        dependencies = [dummy_dependency]
+        return cls("./RAiSD-AI", parameter_groups, dependencies)
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:

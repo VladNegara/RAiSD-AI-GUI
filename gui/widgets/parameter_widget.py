@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QLineEdit,
     QPushButton,
+    QComboBox,
 )
 from PySide6.QtGui import (
     QRegularExpressionValidator,
@@ -24,6 +25,7 @@ from gui.model.parameter import (
     BoolParameter,
     IntParameter,
     FloatParameter,
+    EnumParameter,
     StringParameter,
 )
 from gui.widgets.collapsible import Collapsible
@@ -94,7 +96,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
     def from_parameter(cls, parameter: Parameter[Any]) -> QWidget:
         """
         Create a suitable `ParameterWidget` for a given `Parameter`,
-        along with a label.
+        grouped horizontally with a label to be used as a form row.
 
         The method checks the type of the given parameter in order to
         create the suitable widget (e.g. a dropdown menu for an enum
@@ -102,15 +104,20 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         `ParameterWidget` object.
 
         The method also creates a label that displays the parameter's
-        name and returns it alongside the `ParameterWidget` object.
+        name and groups it in a horizontal layout alongside the
+        `ParameterWidget` object.
 
         :param parameter: the parameter
         :type parameter: Parameter[Any]
 
-        :return: the label and the widget
-        :rtype: tuple[QWidget, ParameterWidget]
+        :return: the label and the widget in a horizontal layout
+        :rtype: QWidget
         """
         row = QWidget()
+        row.setVisible(parameter.enabled)
+        parameter.enabled_changed.connect(
+            lambda new_enabled: row.setVisible(new_enabled)
+        )
         layout = QHBoxLayout(row)
 
         label_header = QLabel(parameter.name)
@@ -131,6 +138,8 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             parameter_widget = IntParameterWidget(parameter)
         elif isinstance(parameter, FloatParameter):
             parameter_widget = FloatParameterWidget(parameter)
+        elif isinstance(parameter, EnumParameter):
+            parameter_widget = EnumParameterWidget(parameter)
         elif isinstance(parameter, StringParameter):
             parameter_widget = StringParameterWidget(parameter)
         else:
@@ -284,6 +293,41 @@ class FloatParameterWidget(ParameterWidget):
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
         self._lineedit.setText(str(new_value))
+
+
+class EnumParameterWidget(ParameterWidget):
+    """
+    A dropdown widget to edit an enumerated parameter.
+    """
+
+    def __init__(self, parameter: EnumParameter):
+        """
+        Initialize an `EnumParameterWidget` object.
+
+        :param parameter: the enum parameter to reference
+        :type parameter: EnumParameter
+        """
+        super().__init__(parameter)
+
+        layout = QVBoxLayout(self)
+
+        self._combo_box = QComboBox()
+        self._combo_box.addItems(parameter.options)
+        self._combo_box.setCurrentIndex(parameter.value)
+        layout.addWidget(self._combo_box)
+
+        self._combo_box.currentIndexChanged.connect(
+            self._combo_box_current_index_changed
+        )
+        parameter.value_changed.connect(self._parameter_value_changed)
+
+    @Slot(int)
+    def _combo_box_current_index_changed(self, new_index: int) -> None:
+        self.parameter.value = new_index
+
+    @Slot(int, bool)
+    def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
+        self._combo_box.setCurrentIndex(new_value)
 
 
 class StringParameterWidget(ParameterWidget):
