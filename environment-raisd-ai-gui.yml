@@ -12,6 +12,7 @@ dependencies:
   - ca-certificates=2025.12.2=h06a4308_0
   - cairo=1.18.4=h44eff21_0
   - colorama=0.4.6=pyhd8ed1ab_1
+  - coverage=7.13.4=pyh7db6752_0
   - curl=7.88.1=hdc1c0ab_0
   - cyrus-sasl=2.1.28=h83b0a09_4
   - dbus=1.16.2=h5bd4931_0
@@ -97,6 +98,7 @@ dependencies:
   - pthread-stubs=0.3=h0ce48e5_1
   - pygments=2.19.2=pyhd8ed1ab_0
   - pytest=9.0.2=pyhcf101f3_0
+  - pytest-cov=7.0.0=pyhcf101f3_1
   - pytest-qt=4.5.0=pyhdecd6ff_0
   - python=3.10.8=0_native230_graalpy
   - python_abi=3.10=8_graalpy230_310_native
