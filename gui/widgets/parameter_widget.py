@@ -250,7 +250,7 @@ class FloatParameterWidget(ParameterWidget):
 
         self._lineedit = QLineEdit()
         self._lineedit.setText(str(parameter.value))
-        # Allow an arbitray length integer, optionally followed by a
+        # Allow an arbitrary length integer, optionally followed by a
         # decimal point and an arbitrary length fractional part.
         regex = QRegularExpression(
             R"^(-)?[0-9]*([.][0-9]*)?$"
