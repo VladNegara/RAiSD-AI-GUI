@@ -1,9 +1,12 @@
+from re import compile
+
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
     BoolParameter,
     IntParameter,
-    FloatParameter
+    FloatParameter,
+    StringParameter,
 )
 
 
@@ -72,6 +75,25 @@ class ParameterGroupList():
         )
 
         parameter_groups = [
+            ParameterGroup(
+                'Personal data',
+                [
+                    StringParameter(
+                        'Your name',
+                        'Enter your first and last name.',
+                        '--name',
+                        '',
+                    ),
+                    StringParameter(
+                        'Phone number',
+                        'Enter your phone number. Ten digits.',
+                        '--phone-number',
+                        '0123456789',
+                        10,
+                        compile(r"^\d{10}$"),
+                    )
+                ],
+            ),
             ParameterGroup(
                 'Image generation',
                 [dummy_true_bool_param, dummy_false_bool_param],

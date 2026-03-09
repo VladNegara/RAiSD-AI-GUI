@@ -2,13 +2,15 @@
 
 ## Installation instructions
 
-This section contains instructions for creating a Mamba environment with PySide6 and the Qt Widgets Designer installed.
+This section contains instructions for installing all necessary packages, installing Micromamba, creating a Mamba environment with PySide6 and the Qt Widgets Designer installed, and compiling RAiSD-AI.
+
+Run the following commands in the root directory:
 
 ### Linux
 
 ```bash
-micromamba env create -f environment-raisd-ai-gui.yml
-micromamba activate raisd-ai-gui
+./setup-step-1.sh
+./setup-step-2.sh
 ```
 
 ## Usage instructions
