@@ -50,7 +50,7 @@ class CommandExecutor(QObject):
         :param commands: the list of commands to be executed
         :type command: list[str]
         """
-        if len(commands) is 0:
+        if len(commands) == 0:
             raise Exception("Give at least 1 command")
         if self._process.state() is (QProcess.ProcessState.Starting or QProcess.ProcessState.Running):
             raise Exception("Execution is still running")
@@ -89,7 +89,7 @@ class CommandExecutor(QObject):
         :param command: the command to be executed in the process
         :type command: str
         """
-        self._process.start("bash", ["-c", command])
+        self._process.start("bash", ["-c micromamba run -n raisd-ai ", command])
 
     @Slot()
     def _stop_process(self) -> None:
@@ -133,6 +133,7 @@ class CommandExecutor(QObject):
         """
         data = self._process.readAllStandardOutput().data().decode()
         self.output.emit(data.strip())
+        print(self.output.emit(data.strip()))
         # TODO: filter output for substeps (self.sub_step_finished)
 
     @Slot()
