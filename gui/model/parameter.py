@@ -264,7 +264,7 @@ class StringParameter(Parameter[str]):
     def valid(self) -> bool:
         if self.max_length is not None and len(self.value) > self.max_length:
             return False
-        if self._pattern is not None and not self._pattern.match(self.value):
+        if self._pattern is not None and not self._pattern.fullmatch(self.value):
             return False
         return True
 
