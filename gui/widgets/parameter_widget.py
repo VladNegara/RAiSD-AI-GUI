@@ -17,6 +17,7 @@ from gui.model.parameter import (
     BoolParameter,
     StringParameter,
 )
+from gui.widgets.collapsible import Collapsible
 
 
 class AbstractQWidgetMeta(type(ABC), type(QWidget)):
@@ -103,7 +104,13 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         row = QWidget()
         layout = QHBoxLayout(row)
 
-        label: QWidget = QLabel(parameter.name)
+        label_header = QLabel(parameter.name)
+        label_header.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        label_body = QLabel(parameter.description)
+        label: QWidget = Collapsible(
+            label_header,
+            label_body,
+        )
         layout.addWidget(label, stretch=1)
 
         parameter_widget: ParameterWidget
