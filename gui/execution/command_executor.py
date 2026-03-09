@@ -44,7 +44,11 @@ class CommandExecutor(QObject):
     @Slot(list)
     def start_execution(self, commands:list[str]=[]) -> None:
         """
-        TODO
+        Starts exectution of a list of commands. Puts all the commands
+        in the command queue and starts the first process.
+
+        :param commands: the list of commands to be executed
+        :type command: list[str]
         """
         if len(commands) is 0:
             raise Exception("Give at least 1 command")
@@ -78,9 +82,12 @@ class CommandExecutor(QObject):
             self.execution_finished.emit()
 
     @Slot()
-    def _start_process(self, command) -> None:
+    def _start_process(self, command:str) -> None:
         """
         Starts a process with the given command.
+
+        :param command: the command to be executed in the process
+        :type command: str
         """
         self._process.start("bash", ["-c", command])
 
