@@ -1,4 +1,6 @@
 from re import compile
+from typing import Any
+from yaml import load, Loader
 
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
@@ -47,146 +49,91 @@ class ParameterGroupList():
         :return: the parameter list
         :rtype: Self
         """
-        # TODO: Implement this method:
-        # - make parameter_groups
-        # - add parameters
-        # - add groups to list
+        def parse_parameter(obj: dict) -> Parameter[Any]:
+            name = obj.get("name", "") or ""
 
-        # Create dummy parameters
-        dummy_true_bool_param = BoolParameter(
-            'Make PDFs',
-            'If this is checked, PDFs of the output will be created.',
-            '-pdf',
-            True,
-        )
-        dummy_false_bool_param = BoolParameter(
-            'Print to console',
-            'If this is checked, output will be printed to console.',
-            '--print-to-console',
-            False,
-        )
-        other_dummy_param = BoolParameter(
-            'Use PyTorch',
-            'If this is checked, PyTorch will be used instead of TensorFlow',
-            '--use-pt',
-            True,
-        )
+            description = obj.get("description", "") or ""
 
-        parameter_groups = [
-            ParameterGroup(
-                'Additional options',
-                [
-                    EnumParameter(
-                        'Mode',
-                        'This option determines how fast the program will be.',
-                        '-m',
-                        [
-                            ('Slow', 'slow'),
-                            ('Regular', 'normal'),
-                            ('Fast', 'fast'),
-                            ('Super fast', 'very-fast'),
-                        ],
-                        1,
-                    ),
-                ],
-            ),
-            ParameterGroup(
-                'Personal data',
-                [
-                    StringParameter(
-                        'Your name',
-                        'Enter your first and last name.',
-                        '--name',
-                        '',
-                    ),
-                    StringParameter(
-                        'Phone number',
-                        'Enter your phone number. Ten digits.',
-                        '--phone-number',
-                        '0123456789',
-                        10,
-                        compile(r"^\d{10}$"),
+            parameter_type: str
+            if "type" in obj:
+                parameter_type = obj["type"]
+            else:
+                raise ValueError("Parameter type missing.")
+
+            flag = obj.get("cli", "") or ""
+
+            match parameter_type:
+                case "int":
+                    if "default" in obj:
+                        default_value = obj["default"]
+                    else:
+                        raise ValueError(f"No default value provided for int parameter {name}")
+
+                    lower_bound = obj.get("min", None)
+                    upper_bound = obj.get("max", None)
+
+                    return IntParameter(
+                        name,
+                        description,
+                        flag,
+                        default_value,
+                        lower_bound=lower_bound,
+                        upper_bound=upper_bound
                     )
-                ],
-            ),
-            ParameterGroup(
-                'Image generation',
-                [dummy_true_bool_param, dummy_false_bool_param],
-                '-op=IMG_GEN',
-            ),
-            ParameterGroup(
-                'Model training',
-                [other_dummy_param],
-                '-op=MDL_GEN',
-            ),
-            ParameterGroup(
-                'Grid size',
-                [
-                    IntParameter(
-                        'Unbounded int',
-                        'This int can take any value.',
-                        '--unbounded-int',
-                        5,
-                    ),
-                    IntParameter(
-                        'Lower bounded int',
-                        'Bla Bla Bla',
-                        '--lowerbounded-int',
-                        6,
-                        5,
-                    ),
-                    IntParameter(
-                        'Upper bounded int',
-                        'Bla Bla Bla',
-                        '--upperbounded-int',
-                        6,
-                        upper_bound = 50,
-                    ),                   
-                    IntParameter(
-                        'Bounded int',
-                        'This int can take any value.',
-                        '--bounded-int',
-                        5,
-                        1,
-                        10000,
-                    ),
-                ],
-            ),
-            ParameterGroup(
-                'Power size',
-                [
-                    FloatParameter(
-                        'Unbounded float',
-                        'This float can take any value.',
-                        '--unbounded-float',
-                        8.5,
-                    ),
-                    FloatParameter(
-                        'Lower bounded float',
-                        'Bla Bla Bla',
-                        '--lowerbounded-float',
-                        6.6,
-                        5.0,
-                    ),
-                    FloatParameter(
-                        'Upper bounded float',
-                        'Bla Bla Bla',
-                        '--upperbounded-float',
-                        6.9,
-                        upper_bound = 50.0,
-                    ),                   
-                    FloatParameter(
-                        'Bounded float',
-                        'This float can take any value.',
-                        '--bounded-float',
-                        5,
-                        1.67,
-                        10000,
-                    ),
-                ],
-            ),
-        ]
-        return cls("./RAiSD-AI", parameter_groups)
+                case "float":
+                    if "default" in obj:
+                        default_value = obj["default"]
+                    else:
+                        raise ValueError(f"No default value provided for int parameter {name}")
+
+                    lower_bound = obj.get("min", None)
+                    upper_bound = obj.get("max", None)
+
+                    return FloatParameter(
+                        name,
+                        description,
+                        flag,
+                        default_value,
+                        lower_bound=lower_bound,
+                        upper_bound=upper_bound
+                    )
+                # case "enum":
+                #     # Get options
+                #     # Get default
+                #     # Make EnumParameter
+                #     pass
+                case _:
+                    raise ValueError(
+                        "Invalid parameter definition in configuration file."
+                    )
+
+        def parse_parameter_group(all_parameters: dict, obj: dict) -> ParameterGroup:
+            parameters = []
+            name = obj["name"] or ""
+            for parameter in obj["parameters"]:
+                try:
+                    parameters.append(parse_parameter(all_parameters[parameter]))
+                except ValueError:
+                    pass # This should not be ignored in the final code
+            return ParameterGroup(name, parameters)
+
+        with open(file_path) as f:
+            config_text = f.read()
+
+        config = load(config_text, Loader=Loader)
+        groups = []
+        modes = config["modes"]
+        for mode in modes:
+            parameter_groups = mode["parameter_groups"]
+            for parameter_group in parameter_groups:
+                groups.append(parse_parameter_group(config["parameters"], parameter_group))
+            operations = mode["operations"]
+            for operation in operations:
+                parameter_groups = operation["parameter_groups"]
+                for parameter_group in parameter_groups:
+                    groups.append(parse_parameter_group(config["parameters"], parameter_group))
+
+        return cls("./RAiSD-AI", groups)
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:
