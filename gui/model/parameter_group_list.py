@@ -37,12 +37,9 @@ class ParameterGroupList():
         self._parameter_groups = parameter_groups or []
 
     @classmethod
-    def from_configuration_file(cls, file_path: str) -> "ParameterGroupList":
+    def from_yaml(cls, file_path: str) -> "ParameterGroupList":
         """
-        Create a list of parameters from a configuration file.
-
-        Please note: this method is not currently implemented. Instead,
-        it returns mock data.
+        Create a list of parameters from a YAML file.
 
         :param file_path: the path to the configuration file
         :type file_path: str
