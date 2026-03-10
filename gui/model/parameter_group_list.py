@@ -5,6 +5,7 @@ from yaml import load, Loader
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
+    OptionalParameter,
     BoolParameter,
     IntParameter,
     FloatParameter,
@@ -126,7 +127,20 @@ class ParameterGroupList():
                         description,
                         flag,
                         options,
-                        default_value
+                        default_value,
+                    )
+                case "optional":
+                    if "default" in obj:
+                        default_value = obj["default"]
+                    else:
+                        raise ValueError(f"No default value provided for default parameter {name}")
+                    
+                    parameter = parse_parameter(obj.get("parameter"))
+                    return OptionalParameter(
+                        name,
+                        description,
+                        default_value,
+                        parameter,
                     )
                 case _:
                     raise ValueError(
