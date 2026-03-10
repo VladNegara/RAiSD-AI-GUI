@@ -169,6 +169,10 @@ class MultiParameter(Parameter[tuple[()]]):
     def parameters(self) -> list[Parameter[Any]]:
         return self._parameters
 
+    def reset_value(self) -> None:
+        for parameter in self.parameters:
+            parameter.reset_value()
+
     @property
     def valid(self) -> bool:
         return all([parameter.valid for parameter in self.parameters])
