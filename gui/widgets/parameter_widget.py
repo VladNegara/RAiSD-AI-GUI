@@ -137,8 +137,21 @@ class FileParameterWidget(ParameterWidget):
         layout.addWidget(self._path_label)
 
         mode = "multiple files" if parameter.multiple else "one file"
-        hint = QLabel(f"Select {mode} — Allowed types: {', '.join(parameter.accepted_formats)}")
-        layout.addWidget(hint)
+
+        if (parameter.hard_block is True) and (parameter.accepted_formats is not None):
+            allowed = ', '.join(parameter.accepted_formats)
+            hint = QLabel(f"Select {mode} — Allowed types: {allowed}")
+            layout.addWidget(hint)
+        elif (parameter.hard_block is False) and ((parameter.accepted_formats is None) and (parameter.expected_formats is not None)):
+            self._error_label = QLabel("")
+            self._error_label.setStyleSheet("QLabel { color: red; }")
+            layout.addWidget(self._error_label)
+            expected = ', '.join(parameter.expected_formats)
+            hint = QLabel(f"Select {mode} — Expected file types: {expected}. You can still upload a different file.")
+            layout.addWidget(hint)
+        elif (parameter.hard_block is False) and ((parameter.accepted_formats is None) and (parameter.expected_formats is None)):
+            hint = QLabel(f"Select {mode} — Allowed types: any type.")
+            layout.addWidget(hint)
 
         parameter.value_changed.connect(self._parameter_value_changed)
 
@@ -147,13 +160,21 @@ class FileParameterWidget(ParameterWidget):
 
         layout.addWidget(file_browse)
 
-
     @Slot(list, bool)
     def _parameter_value_changed(self, file_paths: list[str], valid: bool) -> None:
         if file_paths:
             self._path_label.setText("\n".join(file_paths))
         else:
             self._path_label.setText("No file selected")
+        if not valid and file_paths:
+            allowed = ', '.join(self._file_parameter.accepted_formats) if self._file_parameter.accepted_formats else ""
+            self._error_label.setText(f"Invalid file type. Allowed: {allowed}")
+        elif not self._file_parameter.matches_expected and file_paths:
+            expected = ', '.join(self._file_parameter.expected_formats)
+            self._error_label.setText(f"Warning: unexpected file type. Expected: {expected}. You can still proceed.")
+        else:
+            pass
+
 
     @Slot()
     def _open_file_dialog(self) -> None:
@@ -185,6 +206,8 @@ class FileParameterWidget(ParameterWidget):
         """
         Helper function to filter and show only allowed file types to the user
         """
+        if self._file_parameter.accepted_formats is None:
+            return "All files (*)"
         extensions = " ".join(f"*{ext}" for ext in self._file_parameter.accepted_formats)
         return f"Allowed files ({extensions})"
 
