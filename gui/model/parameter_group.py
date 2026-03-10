@@ -13,7 +13,6 @@ class ParameterGroup():
             name: list[str],
             operations: [str],
             parameters: list[Parameter[Any]] | None = None,
-            cli_option: str | None = None
     ) -> None:
         """
         Initialize a `ParameterGroup` object.
@@ -23,14 +22,10 @@ class ParameterGroup():
 
         :param parameters: the list of parameters in the group
         :type parameters: list[Parameter[Any]] | None
-
-        :param cli_option: the CLI option associated with the group
-        :type cli_option: str | None
         """
         self.name = name
         self._operations = operations
         self._parameters = parameters or []
-        self.cli_option = cli_option
 
     @property
     def operations(self) -> [str]:
@@ -73,7 +68,7 @@ class ParameterGroup():
         :return: the command-line representation
         :rtype: str
         """
-        cli_params = [self.cli_option] + [p.to_cli() for p in self.parameters]
+        cli_params = [p.to_cli() for p in self.parameters]
         nonempty_params = [p for p in cli_params if p]
         return " ".join(nonempty_params)
 

@@ -135,13 +135,11 @@ class ParameterGroupList():
                 'Image generation',
                 ['IMG-GEN'],
                 [dummy_true_bool_param, dummy_false_bool_param],
-                '-op=IMG_GEN',
             ),
             ParameterGroup(
                 'Model training',
                 ['MDL-GEN'],
                 [other_dummy_param],
-                '-op=MDL_GEN',
             ),
             ParameterGroup(
                 'Grid size',
