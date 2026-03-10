@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
-from numbers import Real
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 from re import Pattern, compile
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import (
+    QObject,
+    Signal,
+    Slot,
+)
 
 T = TypeVar("T")
 
@@ -89,6 +92,45 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
         :rtype: str
         """
         pass
+
+
+class OptionalParameter(Parameter[bool]):
+    """
+    An optional parameter in the GUI.
+
+    The class acts as a wrapper around a parameter of any type, making it
+    optional.
+    """
+
+    value_changed = Signal(bool, bool)
+
+    def __init__(
+            self,
+            name: str, description: str,
+            default_value: bool,
+            parameter: Parameter[Any],
+    ) -> None:
+        super().__init__(
+            name=name,
+            description=description,
+            flag="",
+            default_value=default_value,
+        )
+        self._parameter = parameter
+
+        self.value_changed.connect(self._value_changed)
+
+    @property
+    def parameter(self) -> Parameter[Any]:
+        return self._parameter
+
+    @property
+    def valid(self) -> bool:
+        return self.parameter.valid
+
+    @Slot(bool, bool)
+    def _value_changed(self, new_value, _):
+        self.parameter.enabled = new_value
 
 
 class BoolParameter(Parameter[bool]):
