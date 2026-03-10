@@ -1,7 +1,7 @@
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
-    BoolParameter,
+    BoolParameter, FileParameter,
 )
 
 
@@ -68,6 +68,16 @@ class ParameterGroupList():
             '--use-pt',
             True,
         )
+
+        dummy_file_selection_param = FileParameter(
+            "Browse",
+            "Input your files",
+            "",
+            ["vcf", "fasta", "pdf"],
+            False,
+            True,
+            None
+        )
         parameter_groups = [
             ParameterGroup(
                 'Image generation',
@@ -78,8 +88,14 @@ class ParameterGroupList():
                 'Model training',
                 [other_dummy_param],
                 '-op=MDL_GEN',
+            ),
+            ParameterGroup(
+                "Input files",
+              [dummy_file_selection_param],
+               "-"
             )
         ]
+
         return cls("./RAiSD-AI", parameter_groups)
 
     @property
