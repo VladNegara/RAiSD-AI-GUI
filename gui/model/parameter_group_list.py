@@ -97,11 +97,30 @@ class ParameterGroupList():
                         lower_bound=lower_bound,
                         upper_bound=upper_bound
                     )
-                # case "enum":
-                #     # Get options
-                #     # Get default
-                #     # Make EnumParameter
-                #     pass
+                case "enum":
+                    options_list = obj.get("options")
+                    options: list[tuple[str, str]]
+                    options = []
+                    for option in options_list:
+                        if "name" in option:
+                            option_name = option.get("name")
+                        else:
+                            raise ValueError(f"An enum option does not have a name for enum parameter {name}")
+                        cli = option.get("cli", "") or ""
+                        options.append([option_name, cli])
+
+                    if "default" in obj:
+                        default_value = obj["default"]
+                    else:
+                        raise ValueError(f"No default value provided for enum parameter {name}")
+                    
+                    return EnumParameter(
+                        name,
+                        description,
+                        flag,
+                        options,
+                        default_value
+                    )
                 case _:
                     raise ValueError(
                         "Invalid parameter definition in configuration file."
