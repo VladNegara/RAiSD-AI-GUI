@@ -7,11 +7,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-class ConfirmDialog(QDialog):
+class ConfirmDialog(QMessageBox):
     """
     A simple confirmation dialog that asks the user to confirm an action.
     """
-    def __init__(self, parent:QWidget, title:str, function:str):
+    def __init__(self, parent:QWidget, title:str, action:str):
         """
         Initializes the ConfirmDialog.
 
@@ -23,26 +23,18 @@ class ConfirmDialog(QDialog):
         :param title: the title of the dialog
         :type title: str
 
-        :param function: the function of the dialog
-        :type function: str
+        :param action: the action of the dialog
+        :type action: str
         """
         super().__init__(parent)
 
         self.setWindowTitle(title)
-
-        QBtn = (
-            QDialogButtonBox.StandardButton.Yes | QDialogButtonBox.StandardButton.Cancel
+        self.setText(f"You are about to {action}. Are you sure?")
+        self.setIcon(QMessageBox.Icon.Warning)
+        self.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel
         )
-
-        self.buttonBox = QDialogButtonBox(QBtn)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-
-        layout = QVBoxLayout()
-        message = QLabel(f"You are about to {function}. Are you sure?")
-        layout.addWidget(message)
-        layout.addWidget(self.buttonBox)
-        self.setLayout(layout)
+        self.setDefaultButton(QMessageBox.StandardButton.Cancel)
 
 class ErrorDialog(QMessageBox):
     """
@@ -65,4 +57,6 @@ class ErrorDialog(QMessageBox):
 
         self.setWindowTitle(title)
         self.setText(error)
-        self.exec()
+        self.setIcon(QMessageBox.Icon.Critical)
+        self.setStandardButtons(QMessageBox.StandardButton.Ok)
+        self.setDefaultButton(QMessageBox.StandardButton.Ok)

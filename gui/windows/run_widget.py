@@ -181,7 +181,7 @@ class RunWidget(QWidget):
         # TODO: self.command_executor.start_execution(self._parameter_group_list.to_cli())
         self.command_executor.start_execution([
             "echo No way!",
-            "ping utwente.nl -c 1",
+            "ping utwente.nl -c 1 35aasrg",
             "./RAiSD-AI -n TrainingData2DSNP -I datasets/train/msneutral1_100sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTR -f -frm -O",
             "echo Shaboom!",
         ])
@@ -272,7 +272,8 @@ class RunWidget(QWidget):
         print(f"Execution failed with exit code {exit_code}")
         self.execution_done()
         self.set_execution_view_indicator(self.current_process, "red")
-        self.error_dialog = ErrorDialog(self, f"Execution Failed ({exit_code})", f"Execution failed with exit code {exit_code}")
+        error_dialog = ErrorDialog(self, f"Execution Failed ({exit_code})", f"Execution failed with exit code {exit_code}")
+        error_dialog.exec()
         self.execution_output.append(f"Execution failed with exit code {exit_code}")
     
     @Slot(QProcess.ProcessError)
@@ -280,7 +281,8 @@ class RunWidget(QWidget):
         print(f"Execution failed with process error {process_error}")
         self.execution_done()
         self.set_execution_view_indicator(self.current_process, "red")
-        self.error_dialog = ErrorDialog(self, f"Execution Failed ({process_error})", f"Execution failed with process error {process_error}")
+        error_dialog = ErrorDialog(self, f"Execution Failed ({process_error})", f"Execution failed with process error {process_error}")
+        error_dialog.exec
         self.execution_output.append(f"Execution failed with process error {process_error}")
 
     @Slot(int)
