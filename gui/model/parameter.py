@@ -165,6 +165,8 @@ class MultiParameter(Parameter[tuple[()]]):
 
         self._parameters = parameters
 
+        self.enabled_changed.connect(self._enabled_changed)
+
     @property
     def parameters(self) -> list[Parameter[Any]]:
         return self._parameters
@@ -181,6 +183,11 @@ class MultiParameter(Parameter[tuple[()]]):
         cli_params = [self.flag] + [p.to_cli() for p in self.parameters]
         nonempty_params = [p for p in cli_params if p]
         return " ".join(nonempty_params)
+
+    @Slot(bool)
+    def _enabled_changed(self, new_enabled: bool) -> None:
+        for parameter in self.parameters:
+            parameter.enabled = new_enabled
 
 
 class BoolParameter(Parameter[bool]):
