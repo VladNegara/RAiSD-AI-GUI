@@ -48,7 +48,7 @@ class ParameterForm(QWidget):
     def _operations_changed(self, operations: bool) -> None:
         for parameter_form_section in self._parameter_form_sections:
             parameter_form_section.setVisible(False)
-            for operation in parameter_group.operations:
+            for operation in parameter_form_section.parameter_group.operations:
                 if operations[operation]: 
                     parameter_form_section.setVisible(True)
                     break

@@ -42,3 +42,7 @@ class ParameterFormSection(QWidget):
         layout = QVBoxLayout(self)
         layout.addWidget(heading)
         layout.addWidget(form_body)
+
+    @property
+    def parameter_group(self) -> ParameterGroup:
+        return self._parameter_group
