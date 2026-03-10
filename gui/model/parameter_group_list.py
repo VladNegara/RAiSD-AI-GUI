@@ -30,7 +30,7 @@ class ParameterGroupList(QObject):
     the operation mode they correspond to and how they relate.
     """
 
-    operations_changed = Signal(bool)
+    operations_changed = Signal()
 
     def __init__(
             self,
@@ -244,7 +244,7 @@ class ParameterGroupList(QObject):
             raise Exception(f"Setting an invalid operation: {operation}.")
         self._operations[operation] = value
 
-        operations_changed.emit(True)
+        self.operations_changed.emit()
 
 
     @property

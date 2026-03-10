@@ -44,11 +44,11 @@ class ParameterForm(QWidget):
                     break
 
 
-    @Slot(bool)
-    def _operations_changed(self, operations: bool) -> None:
+    @Slot()
+    def _operations_changed(self) -> None:
         for parameter_form_section in self._parameter_form_sections:
             parameter_form_section.setVisible(False)
             for operation in parameter_form_section.parameter_group.operations:
-                if operations[operation]: 
+                if self._parameter_group_list.operations[operation]: 
                     parameter_form_section.setVisible(True)
                     break
