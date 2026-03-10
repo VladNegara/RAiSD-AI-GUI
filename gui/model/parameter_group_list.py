@@ -6,6 +6,7 @@ from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
     OptionalParameter,
+    MultiParameter,
     BoolParameter,
     IntParameter,
     FloatParameter,
@@ -141,6 +142,19 @@ class ParameterGroupList():
                         description,
                         default_value,
                         parameter,
+                    )
+                case "multi":
+                    parameters_list = obj.get("parameters")
+                    parameters: list[Parameter[Any]] = []
+                    for parameter in parameters_list:
+                        parameters.append(parse_parameter(parameter))
+                    print(obj)
+
+                    return MultiParameter(
+                        name,
+                        description,
+                        flag,
+                        parameters,
                     )
                 case _:
                     raise ValueError(
