@@ -107,8 +107,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         # TODO: implement selection of widget subclass for other parameter types
         raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
 
-    @classmethod
-    def create_form_row(cls, parameter: Parameter[Any]) -> QWidget:
+    def build_form_row(self) -> QWidget:
         """
         Create a suitable `ParameterWidget` for a given `Parameter`,
         grouped horizontally with a label to be used as a form row.
@@ -129,25 +128,24 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         :rtype: QWidget
         """
         row = QWidget()
-        row.setVisible(parameter.enabled)
-        parameter.enabled_changed.connect(
+        row.setVisible(self.parameter.enabled)
+        self.parameter.enabled_changed.connect(
             lambda new_enabled: row.setVisible(new_enabled)
         )
         layout = QHBoxLayout(row)
 
-        label_header = QLabel(parameter.name)
+        label_header = QLabel(self.parameter.name)
         label_header.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        label_body = QLabel(parameter.description)
+        label_body = QLabel(self.parameter.description)
         label: QWidget = Collapsible(
             label_header,
             label_body,
         )
         layout.addWidget(label, stretch=1)
 
-        parameter_widget = cls.from_parameter(parameter)
-        layout.addWidget(parameter_widget)
+        layout.addWidget(self)
 
-        reset_button = cls.ResetButton(parameter)
+        reset_button = ParameterWidget.ResetButton(self.parameter)
         layout.addWidget(reset_button)
 
         return row
