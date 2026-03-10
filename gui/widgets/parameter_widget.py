@@ -146,6 +146,64 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
 
         return row
 
+
+class OptionalParameterWidget(ParameterWidget):
+    """
+    A widget to edit an optional parameter.
+    """
+
+    def __init__(self, parameter: OptionalParameter) -> None:
+        """
+        Initialize an `OptionalParameterWidget` object.
+
+        :param parameter: the optional parameter to reference
+        :type parameter: OptionalParameter
+        """
+        super().__init__(parameter)
+
+        layout = QVBoxLayout(self)
+        self._checkbox = QCheckBox()
+        self._checkbox.setCheckState(
+            Qt.CheckState.Checked
+            if parameter.value
+            else Qt.CheckState.Unchecked
+        )
+        layout.addWidget(self._checkbox)
+
+        self._checkbox.checkStateChanged.connect(self._check_state_changed)
+        parameter.value_changed.connect(self._parameter_value_changed)
+
+    def build_form_row(self) -> QWidget:
+        row = QWidget()
+        layout = QVBoxLayout(row)
+
+        own_row = super().build_form_row()
+        layout.addWidget(own_row)
+
+        # `self.parameter`` should always be of type OptionalParameter,
+        # even though the type checker doesn't agree.
+        child_widget = ParameterWidget.from_parameter(
+            self.parameter.parameter # type: ignore
+        )
+        child_row = child_widget.build_form_row()
+        layout.addWidget(child_row)
+
+        return row
+
+
+    @Slot(Qt.CheckState)
+    def _check_state_changed(self, new_check_state: Qt.CheckState) -> None:
+        match new_check_state:
+            case Qt.CheckState.Checked:
+                self.parameter.value = True
+            case Qt.CheckState.Unchecked:
+                self.parameter.value = False
+
+    @Slot(bool, bool)
+    def _parameter_value_changed(self, new_value: bool, valid: bool) -> None:
+        self._checkbox.setChecked(new_value)
+
+
 class BoolParameterWidget(ParameterWidget):
     """
     A widget to edit a boolean parameter.
