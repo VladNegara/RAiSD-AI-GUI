@@ -23,6 +23,7 @@ from PySide6.QtGui import (
 from gui.model.parameter import (
     Parameter,
     OptionalParameter,
+    MultiParameter,
     BoolParameter,
     IntParameter,
     FloatParameter,
@@ -111,6 +112,8 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         """
         if isinstance(parameter, OptionalParameter):
             return OptionalParameterWidget(parameter)
+        if isinstance(parameter, MultiParameter):
+            return MultiParameterWidget(parameter)
         if isinstance(parameter, BoolParameter):
             return BoolParameterWidget(parameter)
         if isinstance(parameter, IntParameter):
@@ -216,6 +219,31 @@ class OptionalParameterWidget(ParameterWidget):
     @Slot(bool, bool)
     def _parameter_value_changed(self, new_value: bool, valid: bool) -> None:
         self._checkbox.setChecked(new_value)
+
+
+class MultiParameterWidget(ParameterWidget):
+    """
+    A widget to edit a multi-value parameter.
+    """
+
+    def __init__(self, parameter: MultiParameter):
+        super().__init__(parameter)
+
+    def build_form_row(self) -> QWidget:
+        row = QWidget()
+        layout = QVBoxLayout(row)
+
+        own_row = super().build_form_row()
+        layout.addWidget(own_row)
+
+        # This should always work, since the constructor is given a
+        # MultiParameter object.
+        for child_parameter in self.parameter.parameters: # type: ignore
+            child_widget = ParameterWidget.from_parameter(child_parameter)
+            child_row = child_widget.build_form_row()
+            layout.addWidget(child_row)
+
+        return row
 
 
 class BoolParameterWidget(ParameterWidget):
