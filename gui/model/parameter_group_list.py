@@ -266,14 +266,29 @@ class ParameterGroupList():
         Produce command-line instructions for the current parameter
         values.
 
-        A separate instruction is produced for each parameter group. The
-        command is obtained by prepending the list's command to the
-        group's CLI representation.
+        A separate instruction is produced for each active operation. The
+        command is obtained by prepending the list command to the operations's 
+        command to the combination of applicable groups' CLI representations.
 
         :return: the list of instructions
         :rtype: list[str]
         """
-        return [
-            f"{self.command} {param_group.to_cli()}"
-            for param_group in self.parameter_groups
-        ]
+
+        instructions = []
+        operations = {operation: [] for operation in self._operations if self._operations[operation]}
+
+        # Add the paramgroups to all the operations they belong to
+        for param_group in self._parameter_groups:
+            for operation in param_group.operations:
+                if self._operations[operation]: 
+                    operations[operation].append(param_group)
+
+        # Create instruction for each 
+        # TODO use the output from one to set params for two (separate function?)
+        for operation in operations:
+            instruction = f"{self.command} {operation}"
+            for param_group in operations[operation]:
+                instruction = f"{instruction} {param_group.to_cli()}"
+            instructions.append(instruction)
+
+        return instructions
