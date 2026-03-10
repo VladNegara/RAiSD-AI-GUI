@@ -234,11 +234,13 @@ parameters:
       description: The chromosome size.
       cli: -B
       type: multi
-      values:
+      parameters:
         - type: int
           name: Region length in basepairs
+          default: 1 # ?
         - type: int
           name: Region length in SNPs
+          default: 1 # ?
       # selection target <= region length
       # selection target D threshold <= region length
   "-o":
