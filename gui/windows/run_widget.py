@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_form import ParameterForm
+from gui.windows.confirm_dialog import ConfirmDialog
 
 class RunWidget(QWidget):
     def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
@@ -197,6 +198,9 @@ class RunWidget(QWidget):
     @Slot()
     def _stop_execution(self):
         self.command_executor.stop_execution()
+        self.confirm_stop_execution_dialog = ConfirmDialog(self, "Stop Execution", "stop the current execution")
+        if self.confirm_stop_execution_dialog.exec():
+            self.command_executor.stop_execution()
 
     @Slot(str)
     def _command_executor_output(self, output: str) -> None:
@@ -255,6 +259,7 @@ class RunWidget(QWidget):
         print("Execution finished")
         self.set_execution_buttons(running=False)
         self.results_button.setEnabled(True)
+        self.confirm_stop_execution_dialog.close()
         self.step_stacked_widget_layout.setCurrentWidget(self.results_widget)
 
     @Slot()
@@ -293,3 +298,4 @@ class RunWidget(QWidget):
 
     def execution_done(self) -> None:
         self.set_execution_buttons(running=False)
+        self.confirm_stop_execution_dialog.close()
