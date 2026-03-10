@@ -48,6 +48,7 @@ class ParameterGroupList(QObject):
         :param parameter_groups: the groups of parameters
         :type parameter_groups: list[ParameterGroup] | None
         """
+        super().__init__()
         self.command = command
         self._operations = operations
         self._parameter_groups = parameter_groups or []

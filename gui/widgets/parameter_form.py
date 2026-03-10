@@ -25,6 +25,7 @@ class ParameterForm(QWidget):
         """
         super().__init__()
         self._parameter_group_list = parameter_group_list
+        self._parameter_group_list.operations_changed.connect(self._operations_changed)
         self._parameter_form_sections = []
         layout = QVBoxLayout(self)
 
