@@ -149,6 +149,34 @@ class OptionalParameter(Parameter[bool]):
         self.parameter.enabled = new_value
 
 
+class MultiParameter(Parameter[tuple[()]]):
+    """
+    A multi-value parameter in the GUI.
+    """
+
+    def __init__(
+            self,
+            name: str, description: str, flag: str,
+            parameters: list[Parameter[Any]],
+    ) -> None:
+        super().__init__(name, description, flag, ())
+
+        self._parameters = parameters
+
+    @property
+    def parameters(self) -> list[Parameter[Any]]:
+        return self._parameters
+
+    @property
+    def valid(self) -> bool:
+        return all([parameter.valid for parameter in self.parameters])
+
+    def to_cli(self) -> str:
+        cli_params = [self.flag] + [p.to_cli() for p in self.parameters]
+        nonempty_params = [p for p in cli_params if p]
+        return " ".join(nonempty_params)
+
+
 class BoolParameter(Parameter[bool]):
     """
     A boolean parameter in the GUI.
