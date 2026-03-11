@@ -235,7 +235,7 @@ class RunWidget(QWidget):
         """
         Stop the current execution after confirmation.
         """
-        self.confirm_stop_execution_dialog = ConfirmDialog(self, "Stop Execution", "stop the current execution")
+        self.confirm_stop_execution_dialog = ConfirmDialog(self, "Stop Execution", "You are about to stop the current execution, are you sure?")
         if self.confirm_stop_execution_dialog.exec():
             self.command_executor.stop_execution()
 
