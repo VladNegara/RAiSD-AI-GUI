@@ -85,6 +85,12 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         super().__init__()
         self._parameter = parameter
 
+    def _check_validity(self, widget: QWidget, valid: bool) -> None:
+        if valid:
+            widget.setStyleSheet("QLineEdit { border: 1px solid green; }")
+        else:
+            widget.setStyleSheet("QLineEdit { border: 1px solid red; }")
+
     @property
     def parameter(self) -> Parameter[Any]:
         """
@@ -239,7 +245,7 @@ class IntParameterWidget(ParameterWidget):
     @Slot(int, bool)
     def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
         self._lineedit.setText(str(new_value))
-
+        self._check_validity(self._lineedit, valid)
 
 class FloatParameterWidget(ParameterWidget):
     """
@@ -293,6 +299,8 @@ class FloatParameterWidget(ParameterWidget):
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
         self._lineedit.setText(str(new_value))
+        self._check_validity(self._lineedit, valid)
+
 
 
 class EnumParameterWidget(ParameterWidget):
@@ -349,26 +357,23 @@ class StringParameterWidget(ParameterWidget):
 
         layout = QVBoxLayout(self)
 
-        self._line_edit = QLineEdit()
-        self._line_edit.setText(parameter.value)
-        layout.addWidget(self._line_edit)
+        self._lineedit = QLineEdit()
+        self._lineedit.setText(parameter.value)
+        layout.addWidget(self._lineedit)
 
         if parameter.max_length is not None:
-            self._line_edit.setMaxLength(parameter.max_length)
+            self._lineedit.setMaxLength(parameter.max_length)
             hint = QLabel(f"Max length: {parameter.max_length}")
             layout.addWidget(hint)
 
-        self._line_edit.editingFinished.connect(self._editing_finished)
+        self._lineedit.editingFinished.connect(self._editing_finished)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(str)
     def _editing_finished(self) -> None:
-        self.parameter.value = self._line_edit.text()
+        self.parameter.value = self._lineedit.text()
 
     @Slot(str, bool)
     def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
-        self._line_edit.setText(new_value)
-        if valid: # Styling can be changed in the future
-            self._line_edit.setStyleSheet("QLineEdit { border: 1px solid green; }")
-        else:
-            self._line_edit.setStyleSheet("QLineEdit { border: 1px solid red; }")
+        self._lineedit.setText(new_value)
+        self._check_validity(self._lineedit, valid)
