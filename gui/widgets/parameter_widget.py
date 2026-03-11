@@ -1,5 +1,6 @@
 from typing import Any
 from abc import ABC
+from pathlib import Path
 
 from PySide6.QtCore import (
     Qt,
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QComboBox,
+    QFileDialog,
 )
 from PySide6.QtGui import (
     QRegularExpressionValidator,
@@ -29,6 +31,7 @@ from gui.model.parameter import (
     FloatParameter,
     EnumParameter,
     StringParameter,
+    FileParameter,
 )
 from gui.widgets.collapsible import Collapsible
 
@@ -124,7 +127,8 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             return EnumParameterWidget(parameter)
         if isinstance(parameter, StringParameter):
             return StringParameterWidget(parameter)
-        # TODO: implement selection of widget subclass for other parameter types
+        if isinstance(parameter, FileParameter):
+            return FileParameterWidget(parameter)
         raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
 
     def build_form_row(self) -> QWidget:
@@ -467,3 +471,119 @@ class StringParameterWidget(ParameterWidget):
             self._line_edit.setStyleSheet("QLineEdit { border: 1px solid green; }")
         else:
             self._line_edit.setStyleSheet("QLineEdit { border: 1px solid red; }")
+
+
+class FileParameterWidget(ParameterWidget):
+    """
+    A widget to edit a file parameter.
+
+    Provides a browse button that opens a file dialog that is filtered with
+    file types that are allowed file types. Depending on the state of multiple
+    flags, the file dialog enforces multiple or singular file selection.
+    Displays the currently selected file path(s).
+    """
+
+    def __init__(self, parameter: FileParameter) -> None:
+        super().__init__(parameter)
+        self.parameter: FileParameter
+
+        layout = QVBoxLayout(self)
+
+        self._path_label = QLabel("No file selected")
+        layout.addWidget(self._path_label)
+
+        mode = "multiple files" if parameter.multiple else "one file"
+
+        if parameter.strict and parameter.accepted_formats is not None:
+            allowed = ', '.join(parameter.accepted_formats)
+            hint = QLabel(f"Select {mode} — Allowed types: {allowed}")
+            layout.addWidget(hint)
+        elif (not parameter.strict
+              and parameter.accepted_formats is None
+              and parameter.expected_formats is not None):
+            self._error_label = QLabel("")
+            self._error_label.setStyleSheet("QLabel { color: red; }")
+            layout.addWidget(self._error_label)
+            expected = ', '.join(parameter.expected_formats)
+            hint = QLabel(f"Select {mode} — Expected file types: {expected}. "
+                          + f"You can still upload a different file.")
+            layout.addWidget(hint)
+        elif (parameter.strict is False
+              and parameter.accepted_formats is None
+              and parameter.expected_formats is None):
+            hint = QLabel(f"Select {mode} — Allowed types: any type.")
+            layout.addWidget(hint)
+
+        parameter.value_changed.connect(self._parameter_value_changed)
+
+        file_browse = QPushButton('Browse')
+        file_browse.clicked.connect(self._open_file_dialog)
+
+        layout.addWidget(file_browse)
+
+    @Slot(list, bool)
+    def _parameter_value_changed(
+        self,
+        file_paths: list[str],
+        valid: bool
+    ) -> None:
+        if file_paths:
+            self._path_label.setText("\n".join(file_paths))
+        else:
+            self._path_label.setText("No file selected")
+
+        if not valid and file_paths:
+            allowed = (
+                ', '.join(self.parameter.accepted_formats)
+                if self.parameter.accepted_formats
+                else ""
+            )
+            self._error_label.setText(f"Invalid file type. Allowed: {allowed}")
+        elif not self.parameter.matches_expected and file_paths:
+            expected = ', '.join(self.parameter.expected_formats)
+            self._error_label.setText(
+                f"Warning: unexpected file type. "
+                + f"Expected: {expected}. You can still proceed."
+            )
+        else:
+            pass
+
+
+    @Slot()
+    def _open_file_dialog(self) -> None:
+        """
+        Helper function that opens the OS file picker. If `multiple`
+        is `True`, it uses `getOpenFileNames` to allow for multiple
+        file selection. Otherwise, it uses `getOpenFileName` to allow
+        only a single file.
+        """
+        if self.parameter.multiple:
+            filenames, _ = QFileDialog.getOpenFileNames(
+                self,
+                "Select Files",
+                self.parameter.value[0] if self.parameter.value else "",
+                self._build_filter()
+            )
+        else:
+            single, _ = QFileDialog.getOpenFileName(
+                self,
+                "Select File",
+                self.parameter.value[0] if self.parameter.value else "",
+                self._build_filter()
+            )
+            filenames = [single] if single else []
+
+        if filenames:
+            self.parameter.value = [Path(f).as_posix() for f in filenames]
+
+    def _build_filter(self) -> str:
+        """
+        Helper function to filter and show only allowed file types to
+        the user.
+        """
+        if self.parameter.accepted_formats is None:
+            return "All files (*)"
+        extensions = " ".join(
+            f"*{ext}" for ext in self.parameter.accepted_formats
+        )
+        return f"Allowed files ({extensions})"

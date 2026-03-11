@@ -1,18 +1,21 @@
 from typing import Any
 
+from PySide6.QtCore import QObject, Signal, Slot
+
 from gui.model.parameter import Parameter
 
 
-class ParameterGroup():
+class ParameterGroup(QObject):
     """
     A group of `Parameter` objects associated with the same command.
     """
+
+    enabled_changed = Signal(bool)
 
     def __init__(
             self,
             name: str,
             parameters: list[Parameter[Any]] | None = None,
-            cli_option: str | None = None
     ) -> None:
         """
         Initialize a `ParameterGroup` object.
@@ -22,13 +25,15 @@ class ParameterGroup():
 
         :param parameters: the list of parameters in the group
         :type parameters: list[Parameter[Any]] | None
-
-        :param cli_option: the CLI option associated with the group
-        :type cli_option: str | None
         """
+        super().__init__()
         self.name = name
         self._parameters = parameters or []
-        self.cli_option = cli_option
+        self._enabled = False
+        for parameter in self._parameters:
+            parameter.enabled_changed.connect(self._parameter_enabled_changed)
+            if parameter.enabled:
+                self._enabled = True
 
     @property
     def parameters(self) -> list[Parameter[Any]]:
@@ -39,9 +44,10 @@ class ParameterGroup():
 
     def add_parameter(self, parameter: Parameter[Any]) -> None:
         """
-        Add a parameter to the group.
+        Add a parameter to the group and connect to its enabled_changed signal
         """
         self._parameters.append(parameter)
+        parameter.enabled_changed.connect(self._parameter_enabled_changed)
     
     @property
     def valid(self) -> bool:
@@ -53,7 +59,28 @@ class ParameterGroup():
         """
         return all([param.valid for param in self.parameters])
 
-    def to_cli(self) -> str:
+    @Slot(bool)
+    def _parameter_enabled_changed(self, new_value: bool) -> None:
+        """
+        Check if the parameter group is enabled.
+
+        :new_value param: the new value of enabled of the parameter
+        :new_value type: bool
+        """
+
+        # Check if any children are enabled
+        new_enabled = False
+        for parameter in self._parameters:
+            if parameter.enabled:
+                new_enabled = True
+                break
+
+        # If enabled changed, emit signal
+        if self._enabled != new_enabled:
+            self.enabled_changed.emit(new_enabled)
+            self._enabled = new_enabled
+
+    def to_cli(self, operation: str) -> str:
         """
         Represent the parameter group for the command line.
 
@@ -64,6 +91,9 @@ class ParameterGroup():
         :return: the command-line representation
         :rtype: str
         """
-        cli_params = [self.cli_option] + [p.to_cli() for p in self.parameters]
+        cli_params = [p.to_cli(operation) for p in self.parameters]
         nonempty_params = [p for p in cli_params if p]
         return " ".join(nonempty_params)
+
+    def __str__(self) -> str:
+        return f"{self.name}: {self.to_cli()}"

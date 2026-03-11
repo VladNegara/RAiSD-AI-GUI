@@ -4,6 +4,8 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
+from PySide6.QtCore import Slot
+
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.widgets.parameter_form_section import ParameterFormSection
 
@@ -23,7 +25,7 @@ class ParameterForm(QWidget):
         """
         super().__init__()
         self._parameter_group_list = parameter_group_list
-
+        self._parameter_form_sections = []
         layout = QVBoxLayout(self)
 
         heading = QLabel("RAiSD-AI parameters")
@@ -32,3 +34,5 @@ class ParameterForm(QWidget):
         for parameter_group in self._parameter_group_list.parameter_groups:
             parameter_form_section = ParameterFormSection(parameter_group)
             layout.addWidget(parameter_form_section)
+            self._parameter_form_sections.append(parameter_form_section)
+

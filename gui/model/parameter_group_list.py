@@ -2,6 +2,12 @@ from re import compile
 from typing import Any
 from yaml import load, Loader
 
+from PySide6.QtCore import (
+    QObject,
+    Signal,
+    Slot,
+)
+
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
@@ -12,6 +18,7 @@ from gui.model.parameter import (
     FloatParameter,
     EnumParameter,
     StringParameter,
+    FileParameter,
 )
 from gui.model.dependency import (
     Dependency,
@@ -20,7 +27,7 @@ from gui.model.dependency import (
 )
 
 
-class ParameterGroupList():
+class ParameterGroupList(QObject):
     """
     A list of parameters for a terminal command.
 
@@ -28,11 +35,14 @@ class ParameterGroupList():
     the operation mode they correspond to and how they relate.
     """
 
+    operations_changed = Signal()
+
     def __init__(
             self,
             command: str,
+            operations: dict[str, bool],
             parameter_groups: list[ParameterGroup] | None = None,
-            dependencies: list[Dependency] | None = None
+            dependencies: list[Dependency] | None = None,
     ) -> None:
         """
         Initialize a `ParameterGroupList` object.
@@ -43,7 +53,9 @@ class ParameterGroupList():
         :param parameter_groups: the groups of parameters
         :type parameter_groups: list[ParameterGroup] | None
         """
+        super().__init__()
         self.command = command
+        self._operations = operations
         self._parameter_groups = parameter_groups or []
         self._dependencies = dependencies or []
 
@@ -231,15 +243,6 @@ class ParameterGroupList():
         """
         return self._parameter_groups
 
-    def add_parameter_group(self, parameter_group: ParameterGroup) -> None:
-        """
-        Add a group of parameters to the list.
-
-        :param parameter_group: the group to be added
-        :type parameter_group: ParameterGroup
-        """
-        self._parameter_groups.append(parameter_group)
-
     @property
     def valid(self) -> bool:
         """
@@ -254,14 +257,22 @@ class ParameterGroupList():
         Produce command-line instructions for the current parameter
         values.
 
-        A separate instruction is produced for each parameter group. The
-        command is obtained by prepending the list's command to the
-        group's CLI representation.
+        A separate instruction is produced for each active operation. The
+        command is obtained by prepending the list command to the operations's 
+        command to the combination of applicable groups' CLI representations.
 
         :return: the list of instructions
         :rtype: list[str]
         """
-        return [
-            f"{self.command} {param_group.to_cli()}"
-            for param_group in self.parameter_groups
-        ]
+
+        instructions = []
+        operations = [operation for operation in self._operations if self._operations[operation]]
+        for operation in operations:
+            # For each operation get the cli representation from all param_groups
+            # The paramgroups handle the operation by passing it to the parameters
+            instruction = f"{self.command} -op {operation}"
+            for param_group in self._parameter_groups:
+                instruction = f"{instruction} {param_group.to_cli(operation)}"
+            instructions.append(instruction)
+
+        return instructions
