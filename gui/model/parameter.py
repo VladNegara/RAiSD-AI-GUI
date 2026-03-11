@@ -91,9 +91,12 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
         Whether the current value of the parameter is valid.
         """
         return True
+    
+    def in_cli(self, operation: str) -> bool:
+        return operation in self.operations and self.enabled
 
     @abstractmethod
-    def to_cli(self) -> str:
+    def to_cli(self, operation: str) -> str:
         """
         Represent the parameter for the command line, taking into
         account its current value.
@@ -113,10 +116,10 @@ class BoolParameter(Parameter[bool]):
 
     value_changed = Signal(bool, bool)
 
-    def to_cli(self) -> str:
+    def to_cli(self, operation: str) -> str:
         # A boolean parameter is represented in the command line by the
         # presence or absence of its flag.
-        if self.value:
+        if self.in_cli(operation) and self.value:
             return self.flag
         else:
             return ""
@@ -185,10 +188,12 @@ class NumberParameter(Parameter[X]):
             return False
         return True
 
-    def to_cli(self) -> str:
+    def to_cli(self, operation: str) -> str:
         # A numeric parameter is represented in the command line by
         # its flag and its value.
-        return f"{self.flag} {self.value}"   
+        if self.in_cli(operation):
+            return f"{self.flag} {self.value}"
+        else: return ""   
 
 
 class IntParameter(NumberParameter[int]):
@@ -286,8 +291,10 @@ class EnumParameter(Parameter[int]):
     def valid(self) -> bool:
         return self.value in range(len(self.options))
 
-    def to_cli(self) -> str:
-        return f"{self.flag} {self._options[self.value][1]}"
+    def to_cli(self, operation: str) -> str:
+        if self.in_cli(operation):
+            return f"{self.flag} {self._options[self.value][1]}"
+        else: return ""
 
     def __str__(self) -> str:
         return (
@@ -358,8 +365,10 @@ class StringParameter(Parameter[str]):
             return False
         return True
 
-    def to_cli(self) -> str:
-        return f"{self.flag} {self.value}"
+    def to_cli(self, operation: str) -> str:
+        if self.in_cli(operation):
+            return f"{self.flag} {self.value}"
+        else: return ""
 
     def __str__(self) -> str:
         return (

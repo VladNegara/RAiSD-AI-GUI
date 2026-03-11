@@ -48,7 +48,7 @@ class ParameterGroup():
         """
         return all([param.valid for param in self.parameters])
 
-    def to_cli(self) -> str:
+    def to_cli(self, operation: str) -> str:
         """
         Represent the parameter group for the command line.
 
@@ -59,7 +59,7 @@ class ParameterGroup():
         :return: the command-line representation
         :rtype: str
         """
-        cli_params = [p.to_cli() for p in self.parameters]
+        cli_params = [p.to_cli(operation) for p in self.parameters]
         nonempty_params = [p for p in cli_params if p]
         return " ".join(nonempty_params)
 
