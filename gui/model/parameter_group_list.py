@@ -155,8 +155,11 @@ class ParameterGroupList():
                     )
                 case "str":
                     default_value = obj.get("default", "") or ""
+
                     max_length = obj.get("max_length", None)
+
                     pattern = obj.get("pattern", None)
+                    compiled_pattern = None
                     if pattern:
                         compiled_pattern = compile(pattern)
 
