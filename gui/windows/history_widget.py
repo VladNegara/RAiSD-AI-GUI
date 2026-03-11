@@ -12,6 +12,5 @@ class HistoryWidget(QWidget):
     def _setup_ui(self):
         self.setStyleSheet("background-color: lightgreen;")
         layout = QHBoxLayout(self)
-        self.setLayout(layout)
         history_label = QLabel("History")
         layout.addWidget(history_label)
