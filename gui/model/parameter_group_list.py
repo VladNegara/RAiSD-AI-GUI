@@ -71,7 +71,6 @@ class ParameterGroupList(QObject):
         :rtype: Self
         """
         def parse_parameter(obj: dict, operations: set[str]) -> Parameter[Any]:
-            # TODO: pass operations to parameter constructor
             name = obj.get("name", "") or ""
 
             description = obj.get("description", "") or ""
@@ -108,6 +107,7 @@ class ParameterGroupList(QObject):
                         name,
                         description,
                         flag,
+                        parameter_operations,
                         default_value,
                         lower_bound=lower_bound,
                         upper_bound=upper_bound
@@ -125,6 +125,7 @@ class ParameterGroupList(QObject):
                         name,
                         description,
                         flag,
+                        parameter_operations,
                         default_value,
                         lower_bound=lower_bound,
                         upper_bound=upper_bound
@@ -139,19 +140,20 @@ class ParameterGroupList(QObject):
                         name,
                         description,
                         flag,
+                        parameter_operations,
                         default_value,
                     )
                 case "enum":
-                    options_list = obj.get("options")
+                    options_list = obj.get("options", [])
                     options: list[tuple[str, str]]
                     options = []
                     for option in options_list:
                         if "name" in option:
-                            option_name = option.get("name")
+                            option_name = option.get("name", "") or ""
                         else:
                             raise ValueError(f"An enum option does not have a name for enum parameter {name}")
                         cli = option.get("cli", "") or ""
-                        options.append([option_name, cli])
+                        options.append((option_name, cli))
 
                     if "default" in obj:
                         default_value = obj["default"]
@@ -162,6 +164,7 @@ class ParameterGroupList(QObject):
                         name,
                         description,
                         flag,
+                        parameter_operations,
                         options,
                         default_value,
                     )
@@ -179,6 +182,7 @@ class ParameterGroupList(QObject):
                         name,
                         description,
                         flag,
+                        parameter_operations,
                         default_value,
                         max_length,
                         compiled_pattern,
@@ -189,15 +193,16 @@ class ParameterGroupList(QObject):
                     else:
                         raise ValueError(f"No default value provided for default parameter {name}")
                     
-                    parameter = parse_parameter(obj.get("parameter"), operations)
+                    parameter = parse_parameter(obj.get("parameter", {}), operations)
                     return OptionalParameter(
                         name,
                         description,
+                        parameter_operations,
                         default_value,
                         parameter,
                     )
                 case "multi":
-                    parameters_list = obj.get("parameters")
+                    parameters_list = obj.get("parameters", []) or []
                     parameters: list[Parameter[Any]] = []
                     for parameter in parameters_list:
                         parameters.append(parse_parameter(parameter, operations))
@@ -230,11 +235,18 @@ class ParameterGroupList(QObject):
             config_text = f.read()
 
         config_obj = load(config_text, Loader=Loader)
+
+        operations = {}
+        mode_list = config_obj.get("modes", []) or []
+        for mode_obj in mode_list:
+            for operation in mode_obj:
+                operations[operation] = True
+
         parameter_groups = []
         for parameter_group_obj in config_obj["parameter_groups"]:
             parameter_groups.append(parse_parameter_group(parameter_group_obj))
 
-        return cls("./RAiSD-AI", parameter_groups)
+        return cls("./RAiSD-AI", operations, parameter_groups)
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:

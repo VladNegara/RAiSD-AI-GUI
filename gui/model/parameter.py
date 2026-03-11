@@ -122,6 +122,9 @@ class OptionalParameter(Parameter[bool]):
 
     The class acts as a wrapper around a parameter of any type, making it
     optional.
+
+    The resulting parameter belongs to the same operations as the inner
+    parameter.
     """
 
     value_changed = Signal(bool, bool)
@@ -129,6 +132,7 @@ class OptionalParameter(Parameter[bool]):
     def __init__(
             self,
             name: str, description: str,
+            operations: set[str],
             default_value: bool,
             parameter: Parameter[Any],
     ) -> None:
@@ -136,6 +140,7 @@ class OptionalParameter(Parameter[bool]):
             name=name,
             description=description,
             flag="",
+            operations=parameter.operations,
             default_value=default_value,
         )
         self._parameter = parameter
@@ -152,9 +157,9 @@ class OptionalParameter(Parameter[bool]):
     def valid(self) -> bool:
         return self.parameter.valid
 
-    def to_cli(self) -> str:
+    def to_cli(self, operation: str) -> str:
         if self.value:
-            return self.parameter.to_cli()
+            return self.parameter.to_cli(operation)
         return ""
 
     @Slot(bool, bool)
@@ -174,7 +179,13 @@ class MultiParameter(Parameter[tuple[()]]):
             name: str, description: str, flag: str,
             parameters: list[Parameter[Any]],
     ) -> None:
-        super().__init__(name, description, flag, ())
+        super().__init__(
+            name,
+            description,
+            flag,
+            set().union(*[param.operations for param in parameters]),
+            ()
+        )
 
         self._parameters = parameters
 
@@ -192,8 +203,8 @@ class MultiParameter(Parameter[tuple[()]]):
     def valid(self) -> bool:
         return all([parameter.valid for parameter in self.parameters])
 
-    def to_cli(self) -> str:
-        cli_params = [self.flag] + [p.to_cli() for p in self.parameters]
+    def to_cli(self, operation: str) -> str:
+        cli_params = [self.flag] + [p.to_cli(operation) for p in self.parameters]
         nonempty_params = [p for p in cli_params if p]
         return " ".join(nonempty_params)
 
