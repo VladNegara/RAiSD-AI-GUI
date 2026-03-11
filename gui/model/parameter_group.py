@@ -10,8 +10,7 @@ class ParameterGroup():
 
     def __init__(
             self,
-            name: list[str],
-            operations: [str],
+            name: str,
             parameters: list[Parameter[Any]] | None = None,
     ) -> None:
         """
@@ -24,15 +23,7 @@ class ParameterGroup():
         :type parameters: list[Parameter[Any]] | None
         """
         self.name = name
-        self._operations = operations
         self._parameters = parameters or []
-
-    @property
-    def operations(self) -> [str]:
-        """
-        The operations that a parametergroup belongs to.
-        """
-        return self._operations
 
     @property
     def parameters(self) -> list[Parameter[Any]]:
