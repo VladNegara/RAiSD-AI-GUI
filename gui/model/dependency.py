@@ -15,6 +15,23 @@ class Dependency(QObject):
     class Condition(ABC, QObject, metaclass=AbstractQObjectMeta):
         changed = Signal(bool)
 
+        def __init__(
+                self,
+                value: bool = False,
+                parent: QObject | None = None
+        ) -> None:
+            super().__init__(parent=parent)
+            self._value = value
+
+        @property
+        def value(self) -> bool:
+            return self._value
+
+        @value.setter
+        def value(self, new_value: bool) -> None:
+            self._value = new_value
+            self.changed.emit(self._value)
+
     class Effect(ABC, QObject, metaclass=AbstractQObjectMeta):
         @Slot(bool)
         @abstractmethod
