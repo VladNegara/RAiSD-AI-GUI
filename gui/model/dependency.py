@@ -58,7 +58,7 @@ class BoolParameterTrueCondition(Dependency.Condition):
             parameter: Parameter[bool],
             parent: QObject | None = None,
     ) -> None:
-        super().__init__(parent=parent)
+        super().__init__(value=parameter.value, parent=parent)
         self._parameter = parameter
 
         self._parameter.value_changed.connect(self._parameter_value_changed)
@@ -67,7 +67,7 @@ class BoolParameterTrueCondition(Dependency.Condition):
     def _parameter_value_changed(
         self,
         new_value: bool,
-        new_valid: bool,
+        _: bool,
     ) -> None:
         self.changed.emit(new_value)
 
