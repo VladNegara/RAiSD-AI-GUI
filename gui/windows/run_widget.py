@@ -26,7 +26,7 @@ class RunWidget(QWidget):
     """
 
     start_run = Signal()
-    run_started = Signal()
+    run_started = Signal(int)     # number of processes
     run_ended = Signal(bool)      # if run was successful
 
     def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
@@ -81,7 +81,7 @@ class RunWidget(QWidget):
         layout.addWidget(parameter_confirmation_button)
 
         self.execution_view_button = QPushButton("Run")
-        self.execution_view_button.clicked.connect(self._switch_to_execution_view_widget)
+        self.execution_view_button.clicked.connect(self._switch_to_run_view_widget)
         layout.addWidget(self.execution_view_button)
 
         self.results_button = QPushButton("Results")
@@ -108,12 +108,13 @@ class RunWidget(QWidget):
         layout.addWidget(self.parameter_confirmation_widget)
     
         # Run view widget
-        self.execution_view_widget = RunViewWidget(self._parameter_group_list, self._command_executor)
-        self.execution_view_widget.run_ended.connect(self.run_ended)
-        self.execution_view_widget.run_started.connect(self.run_started)
-        self.start_run.connect(self.execution_view_widget.start_run)
-        self.run_ended.connect(self.execution_view_widget.run_end)
-        layout.addWidget(self.execution_view_widget)
+        self.run_view_widget = RunViewWidget(self._parameter_group_list, self._command_executor)
+        self.run_view_widget.run_ended.connect(self.run_ended)
+        self.run_view_widget.run_started.connect(self.run_started)
+        self.start_run.connect(self.run_view_widget.start_run)
+        self.run_started.connect(self.run_view_widget.run_start)
+        self.run_ended.connect(self.run_view_widget.run_end)
+        layout.addWidget(self.run_view_widget)
 
         # Results widget
         self.run_results_widget = RunResultsWidget()
@@ -133,8 +134,8 @@ class RunWidget(QWidget):
         self.stacked_step_widget_layout.setCurrentWidget(self.parameter_confirmation_widget)
 
     @Slot()
-    def _switch_to_execution_view_widget(self) -> None:
-        self.stacked_step_widget_layout.setCurrentWidget(self.execution_view_widget)
+    def _switch_to_run_view_widget(self) -> None:
+        self.stacked_step_widget_layout.setCurrentWidget(self.run_view_widget)
 
     @Slot()
     def _switch_to_run_results_widget(self) -> None:
@@ -143,14 +144,14 @@ class RunWidget(QWidget):
     # ---------- Handle signals ----------
     @Slot()
     def _handle_run_start(self) -> None:
-        self._switch_to_execution_view_widget()
+        self._switch_to_run_view_widget()
 
     @Slot()
     def _handle_run_end(self, run_successful: bool) -> None:
         if run_successful:
             self._switch_to_run_results_widget()
         else:
-            self._switch_to_execution_view_widget()
+            self._switch_to_run_view_widget()
 
 
 class RunSubWidget(QWidget):
@@ -196,7 +197,7 @@ class OperationSelectionWidget(RunSubWidget):
         parameter_confirmation_label = QLabel("Operation Selection")
         layout.addWidget(parameter_confirmation_label)
 
-        # TODO:
+        # TODO: dynamicly add operation selection buttons
 
         return widget
 
@@ -289,8 +290,8 @@ class ParameterConfirmationWidget(RunSubWidget):
 
 class RunViewWidget(RunSubWidget):
 
-    run_started = Signal()
-    run_ended = Signal(bool)
+    run_started = Signal(int)   # Number of processes
+    run_ended = Signal(bool)    # Run successful
 
     def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
         self._parameter_group_list = parameter_group_list
@@ -349,6 +350,21 @@ class RunViewWidget(RunSubWidget):
     def start_run(self):
         self.clear_outputs()
         self._start_execution()
+
+    @Slot(int)
+    def run_start(self, number_of_processes: int) -> None:
+        self.setup_execution_indicators(number_of_processes)
+        self.stop_run_button.setEnabled(True)
+
+    @Slot(bool)
+    def run_end(self, run_successful: bool) -> None:
+        """
+        Update the execution buttons and close an open confirm dialog.
+        """
+        self.stop_run_button.setEnabled(False)
+        if hasattr(self, "confirm_stop_execution_dialog"):
+            if self.confirm_stop_execution_dialog is not None:
+                self.confirm_stop_execution_dialog.close()
 
     def _start_execution(self):
         # self._command_executor.start_execution(self._parameter_group_list.to_cli())
@@ -440,9 +456,7 @@ class RunViewWidget(RunSubWidget):
         Handle CommandExecutor.execution_started.
         """
         print("Execution started")
-        self.run_started.emit()
-        self.stop_run_button.setEnabled(True)
-        self.setup_execution_indicators(number_of_processes)
+        self.run_started.emit(number_of_processes)
 
     @Slot()
     def _execution_finished(self) -> None:
@@ -500,16 +514,7 @@ class RunViewWidget(RunSubWidget):
         """
         self.set_execution_view_indicator(index, "green")
     
-    @Slot(bool)
-    def run_end(self, run_successful: bool) -> None:
-        """
-        Update the execution buttons and close an open confirm dialog.
-        """
-        self.stop_run_button.setEnabled(False)
-        if hasattr(self, "confirm_stop_execution_dialog"):
-            if self.confirm_stop_execution_dialog is not None:
-                self.confirm_stop_execution_dialog.close()
-
+    
 class RunResultsWidget(RunSubWidget):
     
     def __init__(self):
