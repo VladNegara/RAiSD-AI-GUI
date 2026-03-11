@@ -489,6 +489,16 @@ parameter_groups:
               min: 0.0
               max: 1.0
               default: 0.0
+  - name: RAiSD-AI data generation
+    operations:
+      - IMG-GEN
+    parameters:
+      "-icl":
+        name: Image class label
+        description: A folder with this name will be created in RAiSD_Images.runID.
+        cli: "-icl"
+        type: str
+        pattern: ".+"
 dependencies:
   - condition:
       type: enum value
