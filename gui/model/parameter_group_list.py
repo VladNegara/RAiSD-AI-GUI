@@ -58,7 +58,7 @@ class ParameterGroupList():
         :return: the parameter list
         :rtype: Self
         """
-        def parse_parameter(obj: dict, operations: list[str]) -> Parameter[Any]:
+        def parse_parameter(obj: dict, operations: set[str]) -> Parameter[Any]:
             # TODO: pass operations to parameter constructor
             name = obj.get("name", "") or ""
 
@@ -71,6 +71,16 @@ class ParameterGroupList():
                 raise ValueError("Parameter type missing.")
 
             flag = obj.get("cli", "") or ""
+
+            parameter_operations = set(operations)
+
+            if "operations" in obj:
+                if "add" in obj["operations"]:
+                    for op in obj["operations"]["add"]:
+                        parameter_operations.add(op)
+                if "remove" in obj["operations"]:
+                    for op in obj["operations"]["remove"]:
+                        parameter_operations.remove(op)
 
             match parameter_type:
                 case "int":
@@ -169,7 +179,7 @@ class ParameterGroupList():
 
             for parameter_id, parameter_obj in obj["parameters"].items():
                 try:
-                    parameters.append(parse_parameter(parameter_obj, operations))
+                    parameters.append(parse_parameter(parameter_obj, set(operations)))
                 except ValueError:
                     pass # This should not be ignored in the final code
             return ParameterGroup(name, parameters)
