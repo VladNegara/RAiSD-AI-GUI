@@ -8,6 +8,7 @@ from gui.model.parameter import (
     FloatParameter,
     EnumParameter,
     StringParameter,
+    FileParameter,
 )
 from gui.model.dependency import (
     Dependency,
@@ -89,6 +90,15 @@ class ParameterGroupList():
             '--use-pt',
             True,
         )
+        dummy_file_selection_param = FileParameter(
+            "Browse",
+            "Input your files",
+            "",
+            ["vcf", "fasta", "pdf"],
+            False,
+            True,
+            None
+        )
 
         parameter_groups = [
             ParameterGroup(
@@ -136,6 +146,11 @@ class ParameterGroupList():
                 'Model training',
                 [other_dummy_param],
                 '-op=MDL_GEN',
+            ),
+            ParameterGroup(
+                "Input files",
+              [dummy_file_selection_param],
+               "-"
             ),
             ParameterGroup(
                 'Grid size',
