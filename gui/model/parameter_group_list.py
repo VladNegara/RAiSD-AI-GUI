@@ -58,7 +58,8 @@ class ParameterGroupList():
         :return: the parameter list
         :rtype: Self
         """
-        def parse_parameter(obj: dict) -> Parameter[Any]:
+        def parse_parameter(obj: dict, operations: list[str]) -> Parameter[Any]:
+            # TODO: pass operations to parameter constructor
             name = obj.get("name", "") or ""
 
             description = obj.get("description", "") or ""
@@ -136,7 +137,7 @@ class ParameterGroupList():
                     else:
                         raise ValueError(f"No default value provided for default parameter {name}")
                     
-                    parameter = parse_parameter(obj.get("parameter"))
+                    parameter = parse_parameter(obj.get("parameter"), operations)
                     return OptionalParameter(
                         name,
                         description,
@@ -147,7 +148,7 @@ class ParameterGroupList():
                     parameters_list = obj.get("parameters")
                     parameters: list[Parameter[Any]] = []
                     for parameter in parameters_list:
-                        parameters.append(parse_parameter(parameter))
+                        parameters.append(parse_parameter(parameter, operations))
 
                     return MultiParameter(
                         name,
@@ -160,12 +161,15 @@ class ParameterGroupList():
                         "Invalid parameter definition in configuration file."
                     )
 
-        def parse_parameter_group(all_parameters: dict, obj: dict) -> ParameterGroup:
+        def parse_parameter_group(obj: dict) -> ParameterGroup:
             parameters = []
             name = obj["name"] or ""
-            for parameter in obj["parameters"]:
+
+            operations = obj.get("operations", [])
+
+            for parameter_id, parameter_obj in obj["parameters"].items():
                 try:
-                    parameters.append(parse_parameter(all_parameters[parameter]))
+                    parameters.append(parse_parameter(parameter_obj, operations))
                 except ValueError:
                     pass # This should not be ignored in the final code
             return ParameterGroup(name, parameters)
@@ -173,20 +177,12 @@ class ParameterGroupList():
         with open(file_path) as f:
             config_text = f.read()
 
-        config = load(config_text, Loader=Loader)
-        groups = []
-        modes = config["modes"]
-        for mode in modes:
-            parameter_groups = mode["parameter_groups"]
-            for parameter_group in parameter_groups:
-                groups.append(parse_parameter_group(config["parameters"], parameter_group))
-            operations = mode["operations"]
-            for operation in operations:
-                parameter_groups = operation["parameter_groups"]
-                for parameter_group in parameter_groups:
-                    groups.append(parse_parameter_group(config["parameters"], parameter_group))
+        config_obj = load(config_text, Loader=Loader)
+        parameter_groups = []
+        for parameter_group_obj in config_obj["parameter_groups"]:
+            parameter_groups.append(parse_parameter_group(parameter_group_obj))
 
-        return cls("./RAiSD-AI", groups)
+        return cls("./RAiSD-AI", parameter_groups)
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:
