@@ -286,20 +286,11 @@ class ParameterGroupList(QObject):
         """
 
         instructions = []
-        operations = {operation: [] for operation in self._operations if self._operations[operation]}
-
-        # Add the paramgroups to all the operations they belong to
-        for param_group in self._parameter_groups:
-            for operation in param_group.operations:
-                if self._operations[operation]: 
-                    operations[operation].append(param_group)
-
-        # Create instruction for each 
-        # TODO use the output from one to set params for two (separate function?)
+        operations = [operation for operation in self._operations if self._operations[operation]]
         for operation in operations:
             instruction = f"{self.command} -op {operation}"
-            for param_group in operations[operation]:
-                instruction = f"{instruction} {param_group.to_cli()}"
+            for param_group in self._parameter_groups:
+                instruction = f"{instruction} {param_group.to_cli(operation)}"
             instructions.append(instruction)
 
         return instructions
