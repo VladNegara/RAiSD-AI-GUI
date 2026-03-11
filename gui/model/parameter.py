@@ -117,32 +117,34 @@ class BoolParameter(Parameter[bool]):
             + f'valid: {self.valid})'
         )
 
-# --- Possible identified file types in the system ---
-#ms, vcf, fasta
-#angsd vcf
-#gz (vcf)
-#unordered vcf
 
 class FileParameter(Parameter[list[str]]):
     """
     A file path parameter in the GUI
 
-    Stores the list of file paths selected by the user. The file parameter accepts a list of
-    file parameters, and it has the option to allow single or multiple file inputs.
+    Stores the list of file paths selected by the user. The file
+    parameter accepts a list of file parameters, and it has the option
+    to allow single or multiple file inputs.
 
     The value is valid when all the following holds:
     - The value list is not empty.
-    - If it is not multiple (multiple = False), there should only be a single file in the list.
-    - Every file in the list exists and readable and their file extension is in the accepted_formats
+    - If it is not a multiple-file parameter, (`multiple` = False),
+    there should only be a single file in the list.
+    - Every file in the list exists and readable, and their file
+    extension is in `accepted_formats`.
 
-    Three different modes are there:
-    1. accepted_formats is filled:
-        a. hard_block is True -> This will result in user only being able to select the files that match the type in accepted_formats
-        b. hard_block is False -> User can select any file, but a warning will be displayed if the file type does not match the ones in accepted formats.
-    2. accepted_formats is None:
-        a. hard_block is False -> User can upload any file. The system notifies the user any file type is accepted here.
-        b. hard_block is True -> No, need to use this configuration. Yet, user can upload any file. But user is not notified.
+    There are three different levels of strictness for file types:
+
+    1. If `accepted_formats` is given and `strict` is `True`, the user
+    is only able to select files that match the types in
+    `accepted_formats`.
+    2. If `accepted_formats` is given and `strict` is `True`, the user
+    can select any file, but a warning is displayed if the file type
+    does not match the ones in `accepted_formats`.
+    3. If `accepted_formats` is `None`, the user can select any file.
+    The value of `strict` is expected to be `False`.
     """
+
     value_changed = Signal(list, bool)
 
     def __init__(
@@ -150,21 +152,23 @@ class FileParameter(Parameter[list[str]]):
         name: str,
         description: str,
         flag: str,
-        accepted_formats: list[str] | None = None, #set this for hard-blocking the user from selecting different files "vasta", "vcf", "ms"
-        hard_block: bool = False, #the flag indicating whether the accepted format is hard block for the user
-        multiple: bool = False, #the flag indicating whether multiple files are allowed or not
+        accepted_formats: list[str] | None = None,
+        strict: bool = False,
+        multiple: bool = False,
         default_value: list[str] | None = None,
     ) -> None:
-        self.hard_block = hard_block
-        if hard_block:
+        self.strict = strict
+        if strict:
             self.accepted_formats = (
-                [ext if ext.startswith(".") else f".{ext}" for ext in accepted_formats]
+                [ext if ext.startswith(".") else f".{ext}"
+                    for ext in accepted_formats]
                 if accepted_formats is not None else None
             )
             self.expected_formats = None
-        if not hard_block:
+        if not strict:
             self.expected_formats = (
-                [ext if ext.startswith(".") else f".{ext}" for ext in accepted_formats]
+                [ext if ext.startswith(".") else f".{ext}"
+                    for ext in accepted_formats]
                 if accepted_formats is not None else None
             )
             self.accepted_formats = None
@@ -180,7 +184,9 @@ class FileParameter(Parameter[list[str]]):
         return all(
             Path(f).is_file()
             and os.access(Path(f), os.R_OK)
-            and (self.accepted_formats is None or Path(f).suffix.lower() in self.accepted_formats or Path(f).suffix.lower() in self.expected_formats)
+            and (self.accepted_formats is None
+                 or Path(f).suffix.lower() in self.accepted_formats
+                 or Path(f).suffix.lower() in self.expected_formats)
             for f in self.value)
 
     @property
