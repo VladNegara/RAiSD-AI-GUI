@@ -11,7 +11,7 @@ class ConfirmDialog(QMessageBox):
     """
     A simple confirmation dialog that asks the user to confirm an action.
     """
-    def __init__(self, parent:QWidget, title:str, action:str):
+    def __init__(self, parent: QWidget, title: str, action: str):
         """
         Initialize a `ConfirmDialog` object.
 
