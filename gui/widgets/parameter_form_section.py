@@ -1,5 +1,7 @@
 from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout
 
+from PySide6.QtCore import Signal, Slot
+
 from gui.model.parameter_group import ParameterGroup
 from gui.widgets.parameter_widget import ParameterWidget
 
@@ -29,6 +31,7 @@ class ParameterFormSection(QWidget):
         super().__init__()
 
         self._parameter_group = parameter_group
+        self._parameter_group.enabled_changed.connect(self._parameter_group_enabled_changed)
 
         heading = QLabel(self._parameter_group.name)
 
@@ -46,3 +49,7 @@ class ParameterFormSection(QWidget):
     @property
     def parameter_group(self) -> ParameterGroup:
         return self._parameter_group
+    
+    @Slot(bool)
+    def _parameter_group_enabled_changed(self, new_value: bool) -> None:
+        self.setVisible(new_value)
