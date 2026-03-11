@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
         central_layout.addWidget(main_widget)
         self._setup_main_widget(self.main_widget_layout)
 
-    def _setup_left_sidebar(self, layout:QVBoxLayout):
+    def _setup_left_sidebar(self, layout: QVBoxLayout):
         logo_widget = QWidget()
         logo_widget.setFixedSize(40, 40)
         logo_widget.setStyleSheet("background-color: lightgray;")
@@ -84,7 +84,7 @@ class MainWindow(QMainWindow):
 
         layout.addStretch()
 
-    def _setup_main_widget(self, layout:QStackedLayout):
+    def _setup_main_widget(self, layout: QStackedLayout):
         self.run_widget = RunWidget(self._parameter_group_list, self.command_executor)
         self.history_widget = HistoryWidget()
         self.settings_widget = SettingsWidget()

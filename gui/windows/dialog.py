@@ -11,25 +11,23 @@ class ConfirmDialog(QMessageBox):
     """
     A simple confirmation dialog that asks the user to confirm an action.
     """
-    def __init__(self, parent:QWidget, title:str, action:str):
+    def __init__(self, parent: QWidget, title: str, text: str):
         """
-        Initializes the ConfirmDialog.
-
-        Write function like a git commit
+        Initialize a `ConfirmDialog` object.
         
         :param parent: the parent of the dialog
-        :type parent: Qwidget
+        :type parent: QWidget
 
         :param title: the title of the dialog
         :type title: str
 
-        :param action: the action of the dialog
-        :type action: str
+        :param text: the text in the dialog
+        :type text: str
         """
         super().__init__(parent)
 
         self.setWindowTitle(title)
-        self.setText(f"You are about to {action}. Are you sure?")
+        self.setText(text)
         self.setIcon(QMessageBox.Icon.Warning)
         self.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel
@@ -42,10 +40,10 @@ class ErrorDialog(QMessageBox):
     """
     def __init__(self, parent:QWidget, title:str, error:str):
         """
-        Initializes the ErrorDialog.
+        Initialize an `ErrorDialog` object.
 
         :param parent: the parent of the dialog
-        :type parent: Qwidget
+        :type parent: QWidget
 
         :param title: the title of the dialog
         :type title: str

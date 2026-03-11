@@ -14,6 +14,7 @@ from gui.model.parameter import (
     FloatParameter,
     EnumParameter,
     StringParameter,
+    FileParameter,
 )
 from gui.model.dependency import (
     Dependency,
@@ -103,6 +104,15 @@ class ParameterGroupList(QObject):
             ['MDL-GEN'],
             True,
         )
+        dummy_file_selection_param = FileParameter(
+            "Browse",
+            "Input your files",
+            "",
+            ["vcf", "fasta", "pdf"],
+            False,
+            True,
+            None
+        )
 
         parameter_groups = [
             ParameterGroup(
@@ -151,6 +161,11 @@ class ParameterGroupList(QObject):
             ParameterGroup(
                 'Model training',
                 [other_dummy_param],
+            ),
+            ParameterGroup(
+                "Input files",
+              [dummy_file_selection_param],
+               "-"
             ),
             ParameterGroup(
                 'Grid size',
