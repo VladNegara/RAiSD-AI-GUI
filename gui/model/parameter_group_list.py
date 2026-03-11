@@ -288,6 +288,8 @@ class ParameterGroupList(QObject):
         instructions = []
         operations = [operation for operation in self._operations if self._operations[operation]]
         for operation in operations:
+            # For each operation get the cli representation from all param_groups
+            # The paramgroups handle the operation by passing it to the parameters
             instruction = f"{self.command} -op {operation}"
             for param_group in self._parameter_groups:
                 instruction = f"{instruction} {param_group.to_cli(operation)}"

@@ -63,6 +63,9 @@ class ParameterGroup(QObject):
     def _parameter_enabled_changed(self, new_value: bool) -> None:
         """
         Check if the parameter group is enabled.
+
+        :new_value param: the new value of enabled of the parameter
+        :new_value type: bool
         """
 
         # Check if any children are enabled

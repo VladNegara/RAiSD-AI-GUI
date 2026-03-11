@@ -33,6 +33,7 @@ class ParameterFormSection(QWidget):
         self._parameter_group = parameter_group
         self._parameter_group.enabled_changed.connect(self._parameter_group_enabled_changed)
 
+        # Make widgets
         heading = QLabel(self._parameter_group.name)
 
         form_body = QWidget()
@@ -48,8 +49,18 @@ class ParameterFormSection(QWidget):
 
     @property
     def parameter_group(self) -> ParameterGroup:
+        """
+        The ParameterGroup of the ParameterFormSection.
+        """
         return self._parameter_group
     
     @Slot(bool)
     def _parameter_group_enabled_changed(self, new_value: bool) -> None:
+        """
+        Handle an enabled_changed from the ParameterGroup by setting 
+        visibility accordingly.
+        
+        :new_value param: the new value of enabled of the ParameterGroup
+        :new_value type: bool
+        """
         self.setVisible(new_value)

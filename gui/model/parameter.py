@@ -93,6 +93,10 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
         return True
     
     def in_cli(self, operation: str) -> bool:
+        """
+        Check if the parameter should be represented in a cli representation
+        based on a mode and whether it is enabled.
+        """
         return operation in self.operations and self.enabled
 
     @abstractmethod
