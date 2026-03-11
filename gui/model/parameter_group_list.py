@@ -148,7 +148,6 @@ class ParameterGroupList():
                     parameters: list[Parameter[Any]] = []
                     for parameter in parameters_list:
                         parameters.append(parse_parameter(parameter))
-                    print(obj)
 
                     return MultiParameter(
                         name,
