@@ -1,9 +1,11 @@
 from typing import Any
 
+from PySide6.QtCore import QObject, Signal, Slot
+
 from gui.model.parameter import Parameter
 
 
-class ParameterGroup():
+class ParameterGroup(QObject):
     """
     A group of `Parameter` objects associated with the same command.
     """
@@ -22,6 +24,7 @@ class ParameterGroup():
         :param parameters: the list of parameters in the group
         :type parameters: list[Parameter[Any]] | None
         """
+        super().__init__()
         self.name = name
         self._parameters = parameters or []
 
