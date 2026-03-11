@@ -153,6 +153,15 @@ class ParameterGroupList():
                         options,
                         default_value,
                     )
+                case "str":
+                    default_value = obj.get("default", "") or ""
+
+                    return StringParameter(
+                        name,
+                        description,
+                        flag,
+                        default_value,
+                    )
                 case "optional":
                     if "default" in obj:
                         default_value = obj["default"]
