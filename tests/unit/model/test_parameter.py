@@ -173,6 +173,7 @@ class TestFloatParameter:
             name="testfloat", 
             description="Test float parameter", 
             flag="--testfloat", 
+            operations={'IMG-GEN', 'MDL-GEN'},
             default_value=0.0, 
             lower_bound=-10.0, 
             upper_bound=10.0
@@ -184,6 +185,7 @@ class TestFloatParameter:
         assert param.name == "testfloat"
         assert param.description == "Test float parameter"
         assert param.flag == "--testfloat"
+        assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == 0.0
         assert param.default_value == 0.0
         assert param.lower_bound == -10.0
@@ -216,9 +218,12 @@ class TestFloatParameter:
     def test_to_cli(self):
         """Test FloatParameter command-line representation."""
         param = self.float_param
-        assert param.to_cli() == f"{param.flag} {param.value}"
+        assert param.to_cli('IMG-GEN') == f"{param.flag} {param.value}"
         param.value = new_value = 5.0
-        assert param.to_cli() == f"{param.flag} {new_value}"
+        assert param.to_cli('MDL-GEN') == f"{param.flag} {new_value}"
+        assert param.to_cli('SWP-SCN') == ""
+        param.enabled = False
+        assert param.to_cli('IMG-GEN') == ""
 
     def test_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when FloatParameter value changes."""
