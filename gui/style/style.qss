@@ -1,0 +1,53 @@
+*{
+    font-size: 16px;
+}
+
+/* LEFT SIDE BAR */
+QWidget#left_sidebar, QWidget#central_widget{
+    background-color: #fff;
+}
+QWidget#logo_widget{
+    border-image: url("gui/style/resources/RAiSD-AI_logo.png") 0 0 0 0 stretch stretch;
+}
+QPushButton#run_button{
+    border-image: url("gui/style/resources/run_icon.svg") 0 0 0 0 stretch stretch;
+}
+QPushButton#history_button{
+    border-image: url("gui/style/resources/history_icon.svg") 0 0 0 0 stretch stretch;
+}
+QPushButton#settings_button{ /* Not possible to change color apparently */
+    border-image: url("gui/style/resources/settings_icon.svg") 0 0 0 0 stretch stretch;
+}
+
+/* PARAMETER INPUT VIEW */
+QWidget#parameter_input_widget{
+    background-color: #d7dbe9;
+}
+QWidget#parameter_input_widget QLabel{
+    color: #0a0d4f;
+}
+QLabel#parameter_input_label{
+    font-size: 24px;
+    font-weight: 800;
+    margin-left: 20px;
+    margin-top: 20px;
+}
+QScrollArea#parameter_form_scroll{
+    background: transparent;
+}
+QScrollBar{
+    width: 0px;
+    height: 0px;
+}
+
+QWidget#parameter_form{
+    background: transparent;
+    padding: 16px;
+}
+
+QWidget#parameter_form_section{
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+}
