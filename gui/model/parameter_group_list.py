@@ -22,6 +22,7 @@ from gui.model.parameter import (
 )
 from gui.model.dependency import (
     Dependency,
+    AndCondition,
     OrCondition,
 )
 
@@ -93,7 +94,8 @@ class ParameterGroupList(QObject):
         :rtype: Self
         """
 
-        id_to_parameter: dict[str, Parameter] = {}
+        id_to_parameter: dict[str, Parameter[Any]] = {}
+        parameter_to_condition_objs: dict[Parameter[Any], list[dict]] = {}
 
         def parse_parameter(
                 obj: dict,
@@ -248,6 +250,10 @@ class ParameterGroupList(QObject):
                         f"Invalid parameter definition for parameter {name} in configuration file (type: {parameter_type})."
                     )
 
+            condition_objs = obj.get("conditions", [])
+
+            parameter_to_condition_objs[parameter] = condition_objs
+
             return parameter
 
         def parse_parameter_group(obj: dict) -> ParameterGroup:
@@ -266,6 +272,48 @@ class ParameterGroupList(QObject):
                     pass # This should not be ignored in the final code
             return ParameterGroup(name, parameters)
 
+        def parse_condition(obj: dict) -> Dependency.Condition:
+            if "type" not in obj:
+                raise ValueError("Parameter condition has no type.")
+            
+            condition_type = obj["type"]
+
+            match condition_type:
+                case "bool":
+                    if "parameter" not in obj:
+                        raise ValueError("Parameter condition has no target parameter.")
+                    parameter_id = obj["parameter"]
+                    parameter = id_to_parameter[parameter_id]
+                    if not isinstance(parameter, BoolParameter):
+                        raise ValueError("Bool condition is referencing a non-bool parameter.")
+
+                    if "value" not in obj:
+                        raise ValueError("Bool condition has no target value.")
+                    target_value = obj["value"]
+
+                    return BoolParameter.Condition(
+                        parameter,
+                        target_value,
+                    )
+                case "enum":
+                    if "parameter" not in obj:
+                        raise ValueError("Parameter condition has no target parameter.")
+                    parameter_id = obj["parameter"]
+                    parameter = id_to_parameter[parameter_id]
+                    if not isinstance(parameter, EnumParameter):
+                        raise ValueError("Enum condition is referencing a non-enum parameter.")
+
+                    if "values" not in obj:
+                        raise ValueError("Enum condition has no list of target values.")
+                    target_values = obj["values"]
+
+                    return EnumParameter.Condition(
+                        parameter,
+                        target_values,
+                    )
+                case _:
+                    raise ValueError(f"Invalid condition type '{condition_type}'.")
+
         with open(file_path) as f:
             config_text = f.read()
 
@@ -283,23 +331,33 @@ class ParameterGroupList(QObject):
 
         result = cls("./RAiSD-AI", operations, parameter_groups)
 
-        for group in result.parameter_groups:
-            for param in group.parameters:
-                single_operation_conditions = []
-                for operation in param.operations:
-                    single_operation_conditions.append(
-                            cls.OperationEnabledCondition(
-                            result,
-                            operation,
-                            parent=result,
-                        )
-                    )
-                operation_condition = OrCondition(single_operation_conditions)
-                Dependency(
-                    operation_condition,
-                    Parameter.EnabledEffect(param),
-                    result,
+        parameter_conditions: dict[Parameter[Any], list[Dependency.Condition]] = {}
+
+        for param in id_to_parameter.values():
+            parameter_conditions[param] = []
+            for condition_obj in parameter_to_condition_objs[param]:
+                parameter_conditions[param].append(
+                    parse_condition(condition_obj)
                 )
+
+            single_operation_conditions = []
+            for operation in param.operations:
+                single_operation_conditions.append(
+                        cls.OperationEnabledCondition(
+                        result,
+                        operation,
+                        parent=result,
+                    )
+                )
+            parameter_conditions[param].append(
+                OrCondition(single_operation_conditions)
+            )
+
+            Dependency(
+                AndCondition(parameter_conditions[param]),
+                Parameter.EnabledEffect(param),
+                result,
+            )
 
         return result
 
