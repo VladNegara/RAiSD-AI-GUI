@@ -518,6 +518,63 @@ parameter_groups:
               min: 0.0
               max: 1.0
               default: 0.0
+  - name: FASTA to VCF conversion
+    operations:
+      - FASTA-VCF
+      - RSD-DEF
+      - IMG-GEN
+      - SWP-SCN
+    parameters:
+      "-C":
+        name: Provide outgroup name
+        description: Provide the outgroup to be used for the ancestral states. The first ingroup sequence is used if the outgroup is not given or found.
+        type: optional
+        default: false
+        parameter:
+          name: Outgroup name
+          description: The outgroup to be used.
+          cli: -C
+          type: str
+          default: ""
+          pattern: ".+"
+      "-C2": # No clue if this should be allowed without C.
+        name: Provide a second outgroup name
+        description: Provide the second outgroup to be used for the ancestral states.
+        type: optional
+        default: false
+        parameter:
+          name: Outgroup name
+          description: The outgroup to be used.
+          cli: -C2
+          type: str
+          default: ""
+          pattern: ".+"
+      "-H":
+        name: Chromosome name
+        description: Provide the chromosome name.
+        cli: -H
+        type: str
+        default: "chrom"
+        pattern: ".+"
+  - name: VCF to ms conversion
+    operations:
+      - VCF-MS
+      - RSD-DEF
+      - IMG-GEN
+      - SWP-SCN
+    parameters:
+      "-Q": # What is the relation to L?
+        name: Convert VCF to ms
+        description: Converts an input VCF to ms.
+        type: optional
+        default: false
+        parameter:
+          name: Memory size
+          description: The memory size to be allocated for the conversion.
+          cli: -Q
+          type: int
+          min: 1
+          default: 8
   - name: RAiSD-AI data generation
     operations:
       - IMG-GEN
