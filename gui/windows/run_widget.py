@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QTextEdit,
     QCheckBox,
+    QMessageBox,
 )
 
 from gui.model.parameter_group_list import ParameterGroupList
@@ -355,7 +356,9 @@ class RunViewWidget(RunSubWidget):
         self._command_executor.execution_finished.connect(self._execution_finished)
         self._command_executor.execution_stopped.connect(self._execution_stopped)
         self._command_executor.execution_failed.connect(self._execution_failed)
+        # process_started and process_finished are connected to the indicator widgets
         self._command_executor.process_failed.connect(self._process_failed)
+        self._command_executor.process_stopped.connect(self._process_stopped)
 
         return widget
 
@@ -405,7 +408,8 @@ class RunViewWidget(RunSubWidget):
         Stop the current execution after confirmation.
         """
         self.confirm_stop_execution_dialog = ConfirmDialog(self, "Stop Execution", "You are about to stop the current execution. Are you sure?")
-        if self.confirm_stop_execution_dialog.exec():
+        button = self.confirm_stop_execution_dialog.exec()
+        if button == QMessageBox.StandardButton.Yes:
             self._command_executor.stop_execution()
 
     @Slot(str)
@@ -472,7 +476,7 @@ class RunViewWidget(RunSubWidget):
         self.error_output.clear()
     
     # SLOTS
-    @Slot()
+    @Slot(int)
     def _execution_started(self, number_of_processes: int) -> None:
         """
         Handle CommandExecutor.execution_started.
@@ -488,46 +492,31 @@ class RunViewWidget(RunSubWidget):
         print("Execution finished")
         self.run_ended.emit(True)
 
-    @Slot()
-    def _execution_stopped(self) -> None:
-        """
-        Handle CommandExecutor.execution_stopped.
-        """
-        print("Execution stopped")
-        self.run_ended.emit(False)
-        self.set_execution_view_indicator(self.current_process, "purple")
-
     @Slot(int)
     def _execution_failed(self, exit_code: int) -> None:
         """
         Handle CommandExecutor.execution_failed.
         """
-        print(f"Execution failed with exit code {exit_code}")
+        print(f"Execution failed with exit code '{exit_code}'")
         self.run_ended.emit(False)
-        self.set_execution_view_indicator(self.current_process, "red")
-        error_dialog = ErrorDialog(self, f"Execution Failed ({exit_code})", f"Execution failed with exit code {exit_code}")
-        error_dialog.exec()
-        self.execution_output.append(f"Execution failed with exit code {exit_code}")
+        self.execution_output.append(f"Execution failed with exit code '{exit_code}'")
+        self.execution_error_dialog = ErrorDialog(self, f"Execution Failed ({exit_code})", f"Execution failed with exit code '{exit_code}'")
+        self.execution_error_dialog.exec()
     
-    @Slot(QProcess.ProcessError)
-    def _process_failed(self, process_error: QProcess.ProcessError) -> None:
+    @Slot()
+    def _execution_stopped(self) -> None:
         """
-        Handle CommandExecutor.process_failed.
+        Handle CommandExecutor.execution_stopped.
         """
-        print(f"Execution failed with process error {process_error}")
-
-        self.set_execution_view_indicator(self.current_process, "red")
-        self.execution_output.append(f"Execution failed with process error {process_error}")
-        error_dialog = ErrorDialog(self, f"Execution Failed ({process_error})", f"Execution failed with process error {process_error}")
-        error_dialog.exec()
+        print("Execution stopped.")
+        self.run_ended.emit(False)
 
     @Slot(int)
-    def _process_started(self, index: int) -> None:
+    def _process_started(self, process_index: int) -> None:
         """
         Handle CommandExecutor.process_started.
         """
-        self.set_execution_view_indicator(index, "yellow")
-        self.current_process = index
+        self.set_execution_view_indicator(process_index, "yellow")
 
     @Slot(int)
     def _process_finished(self, index: int) -> None:
@@ -535,6 +524,26 @@ class RunViewWidget(RunSubWidget):
         Handle CommandExecutor.process_finished.
         """
         self.set_execution_view_indicator(index, "green")
+
+    @Slot(int, QProcess.ProcessError)
+    def _process_failed(self, process_index: int, process_error: QProcess.ProcessError) -> None:
+        """
+        Handle CommandExecutor.process_failed.
+        """
+        self.set_execution_view_indicator(process_index, "red")
+
+        if process_error is not None:
+            print(f"Process '{process_index}' failed with process error '{process_error}'")
+            self.execution_output.append(f"Process '{process_index}' failed with process error '{process_error}'")
+            process_error_dialog = ErrorDialog(self, f"Process Failed ({process_error})", f"Process '{process_index}' failed with process error '{process_error}'")
+            process_error_dialog.exec()
+
+    @Slot(int)
+    def _process_stopped(self, process_index: int) -> None:
+        """
+        Handle CommandExecutor.process_stopped.
+        """
+        self.set_execution_view_indicator(process_index, "purple")
     
 class RunResultsWidget(RunSubWidget):
     def __init__(self):
