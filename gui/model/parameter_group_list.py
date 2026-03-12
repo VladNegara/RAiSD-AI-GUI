@@ -22,6 +22,7 @@ from gui.model.parameter import (
 )
 from gui.model.dependency import (
     Dependency,
+    OrCondition,
     BoolParameterTrueCondition,
     ParameterEnabledEffect,
 )
@@ -268,7 +269,51 @@ class ParameterGroupList(QObject):
         for parameter_group_obj in config_obj["parameter_groups"]:
             parameter_groups.append(parse_parameter_group(parameter_group_obj))
 
-        return cls("./RAiSD-AI", operations, parameter_groups)
+        result = cls("./RAiSD-AI", operations, parameter_groups)
+
+        for group in result.parameter_groups:
+            for param in group.parameters:
+                dependencies = []
+                for operation in param.operations:
+                    dependencies.append(
+                            cls.OperationEnabledCondition(
+                            result,
+                            operation,
+                            result,
+                        )
+                    )
+                Dependency(
+                    OrCondition(dependencies),
+                    ParameterEnabledEffect(param),
+                    result,
+                )
+
+        return result
+
+    @property
+    def operations(self) -> dict[str, bool]:
+        """
+        The active operations of the parameter list.
+
+        """
+        return self._operations
+
+    def set_operation(self, operation: str, value: bool) -> None:
+        """
+        Set an operation to active or not.
+
+        :param operation: the operation to set.
+        :type operation: str
+
+        :param value: the value to set the operation to.
+        :type value: bool
+        """
+
+        if not operation in self._operations:
+            raise Exception(f"Setting an invalid operation: {operation}.")
+        self._operations[operation] = value
+
+        self.operations_changed.emit()
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:
