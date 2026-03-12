@@ -159,11 +159,22 @@ parameter_groups:
         type: int
         min: 1
         default: 1
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 0
       "-S":
         name: Sample file
         description: A file containing the list of samples to be processed for VCF files.
         cli: -S
         type: file
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+              - 4
       "-m":
         name: maf # What?
         description: The threshold value for excluding SNPs with minor allele frequency.
@@ -222,12 +233,24 @@ parameter_groups:
               default: 1 # ?
           # selection target <= region length
           # selection target D threshold <= region length
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
       "-o":
         name: Order VCF
         description: Enables dataset check and reordering of the input VCF file (only for unzipped VCF files).
         cli: -o
         type: bool
         default: false
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+              - 4
+              # Only if unzipped, though
   - name: Sliding window and mu statistic
     operations:
       - RSD-DEF
@@ -323,6 +346,12 @@ parameter_groups:
         cli: -p
         type: bool
         default: false
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+              - 4
       "-O":
         name: Display progress
         description: Show progress on the display device (at SNP set granularity).
@@ -499,52 +528,3 @@ parameter_groups:
         cli: "-icl"
         type: str
         pattern: ".+"
-dependencies:
-  - condition:
-      type: enum value
-      parameter: input-file-type
-      value: 0
-    effect:
-      type: enable
-      parameter: -L
-  - condition:
-      type: enum value in
-      parameter: input-file-type
-      value:
-        - 3
-        - 4
-    effect:
-      type: enable
-      parameter: -S
-  - condition:
-      type: enum value
-      parameter: input-file-type
-      value: 3
-    effect:
-      type: enable
-      parameter: -B
-  - condition:
-      type: enum value in
-      parameter: input-file-type
-      value:
-        - 3
-        - 4
-    effect:
-      type: enable
-      parameter: -o # only if unzipped
-  - condition:
-      type: bool value
-      parameter: use-grid
-      value: true
-    effect:
-      type: enable
-      parameter: -G
-  - condition:
-      type: enum value in
-      parameter: input-file-type
-      value:
-        - 3
-        - 4
-    effect:
-      type: enable
-      parameter: -p
