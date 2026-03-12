@@ -51,3 +51,22 @@ QWidget#parameter_form_section{
     padding: 16px;
     margin-bottom: 10px;
 }
+
+/* STEP BUTTON BAR */
+QWidget#step_button_bar QPushButton{
+    padding: 20px 10px;
+    background-color: white;
+    color: #9a9a9a;
+    border: 2px solid #9a9a9a;
+    border-radius: 10px;
+}
+
+QWidget#step_button_bar QPushButton[step_role="active"]{
+    background-color: #f3af56;
+    color: white;
+}
+
+QWidget#step_button_bar QPushButton[step_role="past_step"]{
+    background-color: #3b3687;
+    color: white;
+}

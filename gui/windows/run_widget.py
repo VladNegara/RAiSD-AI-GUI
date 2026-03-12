@@ -51,6 +51,7 @@ class RunWidget(QWidget):
 
         # Step button bar
         step_button_bar = QWidget()
+        step_button_bar.setObjectName("step_button_bar")
         step_button_bar_layout = QHBoxLayout(step_button_bar)
         layout.addWidget(step_button_bar)
         self._setup_step_button_bar(step_button_bar_layout)
@@ -65,17 +66,17 @@ class RunWidget(QWidget):
         """
         Setup the step button bar.
         """
-        operation_selection_button = QPushButton("Operation Selection")
-        operation_selection_button.clicked.connect(self._switch_to_operation_selection_widget)
-        layout.addWidget(operation_selection_button)
+        self.operation_selection_button = QPushButton("Operation Selection")
+        self.operation_selection_button.clicked.connect(self._switch_to_operation_selection_widget)
+        layout.addWidget(self.operation_selection_button)
 
-        parameter_input_button = QPushButton("Parameter Input")
-        parameter_input_button.clicked.connect(self._switch_to_parameter_input_widget)
-        layout.addWidget(parameter_input_button)
+        self.parameter_input_button = QPushButton("Parameter Input")
+        self.parameter_input_button.clicked.connect(self._switch_to_parameter_input_widget)
+        layout.addWidget(self.parameter_input_button)
 
-        parameter_confirmation_button = QPushButton("Parameter Confirmation")
-        parameter_confirmation_button.clicked.connect(self._switch_to_parameter_confirmation_widget)
-        layout.addWidget(parameter_confirmation_button)
+        self.parameter_confirmation_button = QPushButton("Parameter Confirmation")
+        self.parameter_confirmation_button.clicked.connect(self._switch_to_parameter_confirmation_widget)
+        layout.addWidget(self.parameter_confirmation_button)
 
         self.execution_view_button = QPushButton("Run")
         self.execution_view_button.clicked.connect(self._switch_to_run_view_widget)
@@ -84,6 +85,30 @@ class RunWidget(QWidget):
         self.results_button = QPushButton("Results")
         self.results_button.clicked.connect(self._switch_to_run_results_widget)
         layout.addWidget(self.results_button)
+
+        self._step_buttons = [
+            self.operation_selection_button,
+            self.parameter_input_button,
+            self.parameter_confirmation_button,
+            self.execution_view_button,
+            self.results_button,
+        ]
+
+    def _set_active_step(self, active_index: int) -> None:
+        """
+        Update the step_role dynamic property on each step button
+        and force Qt to re-evaluate stylesheets.
+        """
+        for i, button in enumerate(self._step_buttons):
+            if i < active_index:
+                role = "past_step"
+            elif i == active_index:
+                role = "active"
+            else:
+                role = "default"
+            button.setProperty("step_role", role)
+            button.style().unpolish(button) #Required to apply styling dynamically
+            button.style().polish(button)
 
     def _setup_stacked_step_widget(self, layout: QStackedLayout):
         """
@@ -121,22 +146,27 @@ class RunWidget(QWidget):
     @Slot()
     def _switch_to_operation_selection_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.operation_selection_widget)
+        self._set_active_step(0)
 
     @Slot()
     def _switch_to_parameter_input_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.parameter_input_widget)
+        self._set_active_step(1)
 
     @Slot()
     def _switch_to_parameter_confirmation_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.parameter_confirmation_widget)
+        self._set_active_step(2)
 
     @Slot()
     def _switch_to_run_view_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.run_view_widget)
+        self._set_active_step(3)
 
     @Slot()
     def _switch_to_run_results_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.run_results_widget)
+        self._set_active_step(4)
 
     # ---------- Handle signals ----------
     @Slot()
