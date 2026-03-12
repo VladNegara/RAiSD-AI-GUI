@@ -181,7 +181,8 @@ parameter_groups:
         cli: -m
         type: float
         min: 0.0
-        max: 0.1
+        max: 1.0
+        default: 0.0
       "-y":
         name: Ploidy
         description: The ploidy used to correctly represent missing data.
