@@ -266,6 +266,7 @@ class TestStringParameter:
             name="teststring",
             description="Test string parameter",
             flag="--teststring",
+            operations={'IMG-GEN', 'MDL-GEN'},
             default_value="default",
             max_length=20,
             pattern=re.compile(r"\b[a-z]+\b")
@@ -277,6 +278,7 @@ class TestStringParameter:
         assert param.name == "teststring"
         assert param.description == "Test string parameter"
         assert param.flag == "--teststring"
+        assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == "default"
         assert param.default_value == "default"
         assert param.max_length == 20
@@ -315,9 +317,12 @@ class TestStringParameter:
     def test_to_cli(self):
         """Test StringParameter command-line representation."""
         param = self.string_param
-        assert param.to_cli() == f"{param.flag} {param.value}"
+        assert param.to_cli('IMG-GEN') == f"{param.flag} {param.value}"
         param.value = new_value = "new_value"
-        assert param.to_cli() == f"{param.flag} {new_value}"
+        assert param.to_cli('MDL-GEN') == f"{param.flag} {new_value}"
+        assert param.to_cli('SWP-SCN') == ""
+        param.enabled = False
+        assert param.to_cli('IMG-GEN') == ""
 
     def test_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when StringParameter value changes."""
