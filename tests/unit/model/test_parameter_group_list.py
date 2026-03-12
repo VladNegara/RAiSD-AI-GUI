@@ -3,7 +3,7 @@ import re
 
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.model.parameter_group import ParameterGroup
-
+from gui.model.parameter import StringParameter
 
 class TestParameterGroupList:
     """Tests for ParameterGroupList class."""
@@ -13,7 +13,20 @@ class TestParameterGroupList:
         self.parameter_groups = [
             ParameterGroup(
                 name='img',
-                parameters=[])
+                parameters=[]),
+            ParameterGroup(
+                name='mdl',
+                parameters=[
+                    StringParameter(
+                        name='name',
+                        description='description',
+                        flag='-flag',
+                        operations={'MDL-GEN'},
+                        default_value='default',
+                        pattern=re.compile(r"\b[a-z]+\b")
+                    )
+                ]
+            )
         ]
         self.parameter_group_list = ParameterGroupList(
             command="./RAiSD-AI",
