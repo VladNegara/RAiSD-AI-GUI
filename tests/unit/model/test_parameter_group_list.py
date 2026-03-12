@@ -90,3 +90,23 @@ class TestParameterGroupList:
 
         # assert
         assert self.signals_emitted == 2
+
+    def test_valid(self):
+        list = self.parameter_group_list
+        assert list.valid
+        list.parameter_groups[1].parameters[0].value = "invalid value"
+        assert not list.valid
+        
+    def test_to_cli(self):
+        # arrange
+        list = self.parameter_group_list
+
+        # act
+        instructions = list.to_cli()
+
+        # assert
+        assert len(instructions) == 2
+        assert instructions == [
+            './RAiSD-AI -op IMG-GEN',
+            './RAiSD-AI -op MDL-GEN -flag default'
+        ]
