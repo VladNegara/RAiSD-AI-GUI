@@ -57,19 +57,26 @@ class TestBoolParameter:
 
     def test_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when BoolParameter value changes."""
+        # arrange
         param = self.bool_param
         self.signal_emitted = False
         self.new_value = True
+        self.value = False
+        self.valid = False
 
+        # act
         def on_value_changed(value, valid):
-            self.signal_emitted
             self.signal_emitted = True
-            assert value == self.new_value
-            assert valid is True
+            self.value = value
+            self.valid = valid
 
         param.value_changed.connect(on_value_changed)
         param.value = self.new_value
+
+        # arrange
         assert self.signal_emitted is True
+        assert self.value == self.new_value
+        assert self.valid == True
 
 class TestIntParameter:
     """Tests for IntParameter class."""
@@ -134,35 +141,50 @@ class TestIntParameter:
 
     def test_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when IntParameter value changes."""
+        # arrange
         param = self.int_param
         self.signal_emitted = False
+        self.value = 1
         self.new_value = 5
+        self.valid = False
 
+        # act
         def on_value_changed(value, valid):
-            self.signal_emitted
             self.signal_emitted = True
-            assert value == self.new_value
-            assert valid is True
+            self.value = value
+            self.valid = valid
 
         param.value_changed.connect(on_value_changed)
         param.value = self.new_value
+
+        # assert
         assert self.signal_emitted is True
+        assert self.value == self.new_value
+        assert self.valid == True
 
     def test_invalid_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when IntParameter value changes."""
+        # arrange
         param = self.int_param
         self.signal_emitted = False
+        self.value = 1
         self.new_value = 15
+        self.valid = True
 
+        # act
         def on_value_changed(value, valid):
             self.signal_emitted
             self.signal_emitted = True
-            assert value == self.new_value
-            assert valid is False
+            self.value = value
+            self.valid = valid
 
         param.value_changed.connect(on_value_changed)
         param.value = self.new_value
+
+        # assert
         assert self.signal_emitted is True
+        assert self.value == self.new_value
+        assert self.valid == False
 
 class TestFloatParameter:
     """Tests for FloatParameter class."""
@@ -227,35 +249,49 @@ class TestFloatParameter:
 
     def test_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when FloatParameter value changes."""
+        # arrange
         param = self.float_param
         self.signal_emitted = False
+        self.value = 1.0
         self.new_value = 5.0
+        self.valid = False
 
+        # act
         def on_value_changed(value, valid):
-            self.signal_emitted
             self.signal_emitted = True
-            assert value == self.new_value
-            assert valid is True
+            self.value = value
+            self.valid = valid
 
         param.value_changed.connect(on_value_changed)
         param.value = self.new_value
+
+        # assert
         assert self.signal_emitted is True
+        assert self.value == self.new_value
+        assert self.valid == True
 
     def test_invalid_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when FloatParameter value changes."""
+        # arrange
         param = self.float_param
         self.signal_emitted = False
+        self.value = 1.0
         self.new_value = 15.0
+        self.valid = True
 
+        # act
         def on_value_changed(value, valid):
-            self.signal_emitted
             self.signal_emitted = True
-            assert value == self.new_value
-            assert valid is False
+            self.value = value
+            self.valid = valid
 
         param.value_changed.connect(on_value_changed)
         param.value = self.new_value
+
+        # assert
         assert self.signal_emitted is True
+        assert self.value == self.new_value
+        assert self.valid == False
 
 class TestStringParameter:
     """Tests for StringParameter class."""
@@ -326,32 +362,46 @@ class TestStringParameter:
 
     def test_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when StringParameter value changes."""
+        # arrange
         param = self.string_param
         self.signal_emitted = False
+        self.value = ""
         self.new_value = "newvalue"
+        self.valid = False
 
+        # act
         def on_value_changed(value, valid):
-            self.signal_emitted
             self.signal_emitted = True
-            assert value == self.new_value
-            assert valid is True
+            self.value = value
+            self.valid = valid
 
         param.value_changed.connect(on_value_changed)
         param.value = self.new_value
+
+        # assert
         assert self.signal_emitted is True
+        assert self.value == self.new_value
+        assert self.valid == True
 
     def test_invalid_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when StringParameter value changes."""
+        # arrange
         param = self.string_param
         self.signal_emitted = False
+        self.value = "a"
         self.new_value = "invalid value"
+        self.valid = True
 
+        # act
         def on_value_changed(value, valid):
-            self.signal_emitted
             self.signal_emitted = True
-            assert value == self.new_value
-            assert valid is False
+            self.value = value
+            self.valid = valid
 
         param.value_changed.connect(on_value_changed)
         param.value = self.new_value
+
+        # assert
         assert self.signal_emitted is True
+        assert self.value == self.new_value
+        assert self.valid == False
