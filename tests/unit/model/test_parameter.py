@@ -80,6 +80,7 @@ class TestIntParameter:
             name="testint", 
             description="Test int parameter", 
             flag="--testint", 
+            operations={'IMG-GEN', 'MDL-GEN'},
             default_value=0, 
             lower_bound=-10, 
             upper_bound=10
@@ -91,6 +92,7 @@ class TestIntParameter:
         assert param.name == "testint"
         assert param.description == "Test int parameter"
         assert param.flag == "--testint"
+        assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == 0
         assert param.default_value == 0
         assert param.lower_bound == -10
@@ -123,9 +125,12 @@ class TestIntParameter:
     def test_to_cli(self):
         """Test IntParameter command-line representation."""
         param = self.int_param
-        assert param.to_cli() == f"{param.flag} {param.value}"
+        assert param.to_cli('IMG-GEN') == f"{param.flag} {param.value}"
         param.value = new_value = 5
-        assert param.to_cli() == f"{param.flag} {new_value}"
+        assert param.to_cli('MDL-GEN') == f"{param.flag} {new_value}"
+        assert param.to_cli('SWP_SCN') == ""
+        param.enabled = False
+        assert param.to_cli('IMG-GEN') == ""
 
     def test_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when IntParameter value changes."""
