@@ -562,18 +562,19 @@ parameter_groups:
       - RSD-DEF
       - IMG-GEN
       - SWP-SCN
-    "-Q": # What is the relation to L?
-      name: Convert VCF to ms
-      description: Converts an input VCF to ms.
-      type: optional
-      default: false
-      parameter:
-        name: Memory size
-        description: The memory size to be allocated for the conversion.
-        cli: -Q
-        type: int
-        min: 1
-        default: 8
+    parameters:
+      "-Q": # What is the relation to L?
+        name: Convert VCF to ms
+        description: Converts an input VCF to ms.
+        type: optional
+        default: false
+        parameter:
+          name: Memory size
+          description: The memory size to be allocated for the conversion.
+          cli: -Q
+          type: int
+          min: 1
+          default: 8
   - name: RAiSD-AI data generation
     operations:
       - IMG-GEN
