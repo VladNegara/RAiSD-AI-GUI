@@ -382,6 +382,30 @@ class EnumParameter(Parameter[int]):
     A parameter with enumerated values in the GUI.
     """
 
+    class Condition(Dependency.Condition):
+        def __init__(
+                self,
+                parameter: "EnumParameter",
+                target_values: list[int],
+                parent: QObject | None = None,
+        ) -> None:
+            self._parameter = parameter
+            self._target_values = target_values
+            super().__init__(
+                value=self._parameter.value in self._target_values,
+                parent=parent,
+            )
+
+            self._parameter.value_changed.connect(self._parameter_value_changed)
+
+        @Slot(int, bool)
+        def _parameter_value_changed(
+            self,
+            new_value: int,
+            _: bool,
+        ) -> None:
+            self.value = new_value in self._target_values
+
     value_changed = Signal(int, bool)
 
     def __init__(
