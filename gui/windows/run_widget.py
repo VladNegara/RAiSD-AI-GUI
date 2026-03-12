@@ -262,10 +262,12 @@ class ParameterInputWidget(RunSubWidget):
 
     @Slot()
     def _img_gen_checkbox_clicked(self, state) -> None:
-        if state == Qt.Checked:
+        if state == Qt.CheckState.Checked:
             self._parameter_group_list.set_operation("IMG-GEN", True)
-        elif state == Qt.Unchecked:
+            print("IMG-GEN checked")
+        elif state == Qt.CheckState.Unchecked:
             self._parameter_group_list.set_operation("IMG-GEN", False)
+            print("IMG-GEN unchecked")
         
     @Slot()
     def _submit_button_clicked(self) -> None:
