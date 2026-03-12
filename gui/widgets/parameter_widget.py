@@ -382,10 +382,7 @@ class StringParameterWidget(ParameterWidget):
     def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
         self._line_edit.setText(new_value)
         self._show_validity(self._line_edit, valid)
-        if valid: # Styling can be changed in the future
-            self._line_edit.setStyleSheet("QLineEdit { border: 1px solid green; }")
-        else:
-            self._line_edit.setStyleSheet("QLineEdit { border: 1px solid red; }")
+
 
 
 class FileParameterWidget(ParameterWidget):
