@@ -1,5 +1,11 @@
 from re import compile
 
+from PySide6.QtCore import (
+    QObject,
+    Signal,
+    Slot,
+)
+
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
@@ -8,6 +14,7 @@ from gui.model.parameter import (
     FloatParameter,
     EnumParameter,
     StringParameter,
+    FileParameter,
 )
 from gui.model.dependency import (
     Dependency,
@@ -16,7 +23,7 @@ from gui.model.dependency import (
 )
 
 
-class ParameterGroupList():
+class ParameterGroupList(QObject):
     """
     A list of parameters for a terminal command.
 
@@ -24,11 +31,14 @@ class ParameterGroupList():
     the operation mode they correspond to and how they relate.
     """
 
+    operations_changed = Signal()
+
     def __init__(
             self,
             command: str,
+            operations: dict[str, bool],
             parameter_groups: list[ParameterGroup] | None = None,
-            dependencies: list[Dependency] | None = None
+            dependencies: list[Dependency] | None = None,
     ) -> None:
         """
         Initialize a `ParameterGroupList` object.
@@ -39,7 +49,9 @@ class ParameterGroupList():
         :param parameter_groups: the groups of parameters
         :type parameter_groups: list[ParameterGroup] | None
         """
+        super().__init__()
         self.command = command
+        self._operations = operations
         self._parameter_groups = parameter_groups or []
         self._dependencies = dependencies or []
 
@@ -67,12 +79,14 @@ class ParameterGroupList():
             'Make PDFs',
             'If this is checked, PDFs of the output will be created.',
             '-pdf',
+            {'IMG-GEN'},
             True,
         )
         dummy_false_bool_param = BoolParameter(
             'Print to console',
             'If this is checked, output will be printed to console.',
             '--print-to-console',
+            {'IMG-GEN'},
             False,
         )
         dummy_dependency = Dependency(
@@ -87,7 +101,18 @@ class ParameterGroupList():
             'Use PyTorch',
             'If this is checked, PyTorch will be used instead of TensorFlow',
             '--use-pt',
+            {'MDL-GEN'},
             True,
+        )
+        dummy_file_selection_param = FileParameter(
+            "Browse",
+            "Input your files",
+            "",
+            {'MDL-GEN'},
+            ["vcf", "fasta", "pdf"],
+            False,
+            True,
+            None
         )
 
         parameter_groups = [
@@ -98,6 +123,7 @@ class ParameterGroupList():
                         'Mode',
                         'This option determines how fast the program will be.',
                         '-m',
+                        {'RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'},
                         [
                             ('Slow', 'slow'),
                             ('Regular', 'normal'),
@@ -115,12 +141,14 @@ class ParameterGroupList():
                         'Your name',
                         'Enter your first and last name.',
                         '--name',
+                        {'SWP-SCN'},
                         '',
                     ),
                     StringParameter(
                         'Phone number',
                         'Enter your phone number. Ten digits.',
                         '--phone-number',
+                        {'SWP-SCN'},
                         '0123456789',
                         10,
                         compile(r"^\d{10}$"),
@@ -130,12 +158,14 @@ class ParameterGroupList():
             ParameterGroup(
                 'Image generation',
                 [dummy_true_bool_param, dummy_false_bool_param],
-                '-op=IMG_GEN',
             ),
             ParameterGroup(
                 'Model training',
                 [other_dummy_param],
-                '-op=MDL_GEN',
+            ),
+            ParameterGroup(
+                "Input files",
+              [dummy_file_selection_param],
             ),
             ParameterGroup(
                 'Grid size',
@@ -144,12 +174,14 @@ class ParameterGroupList():
                         'Unbounded int',
                         'This int can take any value.',
                         '--unbounded-int',
+                        {'RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'},
                         5,
                     ),
                     IntParameter(
                         'Lower bounded int',
                         'Bla Bla Bla',
                         '--lowerbounded-int',
+                        {'RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'},
                         6,
                         5,
                     ),
@@ -157,6 +189,7 @@ class ParameterGroupList():
                         'Upper bounded int',
                         'Bla Bla Bla',
                         '--upperbounded-int',
+                        {'RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'},
                         6,
                         upper_bound = 50,
                     ),                   
@@ -164,6 +197,7 @@ class ParameterGroupList():
                         'Bounded int',
                         'This int can take any value.',
                         '--bounded-int',
+                        {'RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'},
                         5,
                         1,
                         10000,
@@ -177,12 +211,14 @@ class ParameterGroupList():
                         'Unbounded float',
                         'This float can take any value.',
                         '--unbounded-float',
+                        {'RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'},
                         8.5,
                     ),
                     FloatParameter(
                         'Lower bounded float',
                         'Bla Bla Bla',
                         '--lowerbounded-float',
+                        {'RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'},
                         6.6,
                         5.0,
                     ),
@@ -190,6 +226,7 @@ class ParameterGroupList():
                         'Upper bounded float',
                         'Bla Bla Bla',
                         '--upperbounded-float',
+                        {'RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'},
                         6.9,
                         upper_bound = 50.0,
                     ),                   
@@ -197,6 +234,7 @@ class ParameterGroupList():
                         'Bounded float',
                         'This float can take any value.',
                         '--bounded-float',
+                        {'RSD-DEF', 'IMG-GEN', 'MDL-GEN', 'MDL-TST', 'SWP-SCN'},
                         5,
                         1.67,
                         10000,
@@ -205,7 +243,33 @@ class ParameterGroupList():
             ),
         ]
         dependencies = [dummy_dependency]
-        return cls("./RAiSD-AI", parameter_groups, dependencies)
+        return cls("./RAiSD-AI", {'RSD-DEF': False, 'IMG-GEN': True, 'MDL-GEN': True, 'MDL-TST': False, 'SWP-SCN': False}, parameter_groups, dependencies)
+
+    @property
+    def operations(self) -> dict[str, bool]:
+        """
+        The active operations of the parameter list.
+
+        """
+        return self._operations
+
+    def set_operation(self, operation: str, value: bool) -> None:
+        """
+        Set an operation to active or not.
+
+        :param operation: the operation to set.
+        :type operation: str
+
+        :param value: the value to set the operation to.
+        :type value: bool
+        """
+
+        if not operation in self._operations:
+            raise Exception(f"Setting an invalid operation: {operation}.")
+        self._operations[operation] = value
+
+        self.operations_changed.emit()
+
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:
@@ -213,15 +277,6 @@ class ParameterGroupList():
         The list of groups in the parameter list.
         """
         return self._parameter_groups
-
-    def add_parameter_group(self, parameter_group: ParameterGroup) -> None:
-        """
-        Add a group of parameters to the list.
-
-        :param parameter_group: the group to be added
-        :type parameter_group: ParameterGroup
-        """
-        self._parameter_groups.append(parameter_group)
 
     @property
     def valid(self) -> bool:
@@ -237,14 +292,22 @@ class ParameterGroupList():
         Produce command-line instructions for the current parameter
         values.
 
-        A separate instruction is produced for each parameter group. The
-        command is obtained by prepending the list's command to the
-        group's CLI representation.
+        A separate instruction is produced for each active operation. The
+        command is obtained by prepending the list command to the operations's 
+        command to the combination of applicable groups' CLI representations.
 
         :return: the list of instructions
         :rtype: list[str]
         """
-        return [
-            f"{self.command} {param_group.to_cli()}"
-            for param_group in self.parameter_groups
-        ]
+
+        instructions = []
+        operations = [operation for operation in self._operations if self._operations[operation]]
+        for operation in operations:
+            # For each operation get the cli representation from all param_groups
+            # The paramgroups handle the operation by passing it to the parameters
+            instruction = f"{self.command} -op {operation}"
+            for param_group in self._parameter_groups:
+                instruction = f"{instruction} {param_group.to_cli(operation)}"
+            instructions.append(instruction)
+
+        return instructions
