@@ -51,6 +51,23 @@ class Dependency(QObject):
         self._source.changed.connect(self._target.condition_changed)
 
 
+class AndCondition(Dependency.Condition):
+    def __init__(
+            self,
+            conditions: list[Dependency.Condition],
+            parent: QObject | None = None,
+    ) -> None:
+        self._conditions = conditions
+        super().__init__(all([condition.value for condition in self._conditions]), parent)
+
+        for condition in self._conditions:
+            condition.changed.connect(self._condition_changed)
+
+    @Slot(bool)
+    def _condition_changed(self, _: bool) -> None:
+        self.value = all([condition.value for condition in self._conditions])
+
+
 class OrCondition(Dependency.Condition):
     def __init__(
             self,
