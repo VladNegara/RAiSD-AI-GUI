@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QLabel,
     QTextEdit,
+    QCheckBox,
 )
 
 from gui.model.parameter_group_list import ParameterGroupList
@@ -222,6 +223,20 @@ class ParameterInputWidget(RunSubWidget):
         parameter_input_label = QLabel("Parameter Input")
         layout.addWidget(parameter_input_label)
 
+        ## Add checkbox for imgage gen selection
+        mode_select_widget = QWidget()
+        mode_select_layout = QHBoxLayout(mode_select_widget)
+        layout.addWidget(mode_select_widget)
+        
+        img_gen_checkbox = QCheckBox()
+        img_gen_checkbox.setChecked(True)
+        mode_select_layout.addWidget(img_gen_checkbox)
+
+        img_gen_label = QLabel("Perform IMG-GEN")
+        mode_select_layout.addWidget(img_gen_label, 1)
+
+        img_gen_checkbox.checkStateChanged.connect(self._img_gen_checkbox_clicked)
+
         parameter_form = ParameterForm(self._parameter_group_list)
 
         parameter_form_scroll = QScrollArea()
@@ -245,6 +260,13 @@ class ParameterInputWidget(RunSubWidget):
         # TODO: Implement
         # raise NotImplementedError
 
+    @Slot()
+    def _img_gen_checkbox_clicked(self, state) -> None:
+        if state == Qt.Checked:
+            self._parameter_group_list.set_operation("IMG-GEN", True)
+        elif state == Qt.Unchecked:
+            self._parameter_group_list.set_operation("IMG-GEN", False)
+        
     @Slot()
     def _submit_button_clicked(self) -> None:
         # TODO: Check input valid

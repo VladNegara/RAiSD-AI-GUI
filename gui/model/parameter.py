@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from numbers import Real
 from typing import Generic, TypeVar
 from re import Pattern, compile
+from pathlib import Path
+import os
 
 from PySide6.QtCore import QObject, Signal
 
@@ -24,7 +26,10 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
 
     def __init__(
             self,
-            name: str, description: str, flag: str,
+            name: str, 
+            description: str, 
+            flag: str,
+            operations: set[str],
             default_value: T,
             enabled: bool = True,
     ) -> None:
@@ -46,9 +51,10 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
         super().__init__(self)
         self.name = name
         self.description = description
+        self.flag = flag
+        self.operations = operations
         self.default_value = default_value
         self._value = default_value
-        self.flag = flag
         self._enabled = enabled
 
     @property
@@ -87,9 +93,16 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
         Whether the current value of the parameter is valid.
         """
         return True
+    
+    def in_cli(self, operation: str) -> bool:
+        """
+        Check if the parameter should be represented in a cli representation
+        based on a mode and whether it is enabled.
+        """
+        return operation in self.operations and self.enabled
 
     @abstractmethod
-    def to_cli(self) -> str:
+    def to_cli(self, operation: str) -> str:
         """
         Represent the parameter for the command line, taking into
         account its current value.
@@ -109,10 +122,10 @@ class BoolParameter(Parameter[bool]):
 
     value_changed = Signal(bool, bool)
 
-    def to_cli(self) -> str:
+    def to_cli(self, operation: str) -> str:
         # A boolean parameter is represented in the command line by the
         # presence or absence of its flag.
-        if self.value:
+        if self.in_cli(operation) and self.value:
             return self.flag
         else:
             return ""
@@ -140,7 +153,10 @@ class NumberParameter(Parameter[X]):
 
     def __init__(
             self,
-            name: str, description: str, flag: str,
+            name: str, 
+            description: str, 
+            flag: str,
+            operations: set[str],
             default_value: X,
             lower_bound: X | None = None,
             upper_bound: X | None = None,
@@ -166,7 +182,7 @@ class NumberParameter(Parameter[X]):
         :param upper_bound: the upper bound of the parameter (optional)
         :type upper_bound: X | None
         """
-        super().__init__(name, description, flag, default_value)
+        super().__init__(name, description, flag, operations, default_value)
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
@@ -178,10 +194,12 @@ class NumberParameter(Parameter[X]):
             return False
         return True
 
-    def to_cli(self) -> str:
+    def to_cli(self, operation: str) -> str:
         # A numeric parameter is represented in the command line by
         # its flag and its value.
-        return f"{self.flag} {self.value}"   
+        if self.in_cli(operation):
+            return f"{self.flag} {self.value}"
+        else: return ""   
 
 
 class IntParameter(NumberParameter[int]):
@@ -231,7 +249,10 @@ class EnumParameter(Parameter[int]):
 
     def __init__(
             self,
-            name: str, description: str, flag: str,
+            name: str, 
+            description: str, 
+            flag: str,
+            operations: set[str],
             options: list[tuple[str, str]],
             default_value: int,
     ) -> None:
@@ -258,7 +279,7 @@ class EnumParameter(Parameter[int]):
         :param default_value: the index of the default option
         :type default_value: int
         """
-        super().__init__(name, description, flag, default_value)
+        super().__init__(name, description, flag, operations, default_value)
         self._options = options
 
     @property
@@ -276,8 +297,10 @@ class EnumParameter(Parameter[int]):
     def valid(self) -> bool:
         return self.value in range(len(self.options))
 
-    def to_cli(self) -> str:
-        return f"{self.flag} {self._options[self.value][1]}"
+    def to_cli(self, operation: str) -> str:
+        if self.in_cli(operation):
+            return f"{self.flag} {self._options[self.value][1]}"
+        else: return ""
 
     def __str__(self) -> str:
         return (
@@ -307,7 +330,11 @@ class StringParameter(Parameter[str]):
 
     def __init__(
             self,
-            name: str, description: str, flag: str, default_value: str,
+            name: str, 
+            description: str, 
+            flag: str, 
+            operations: set[str],
+            default_value: str,
             max_length: int | None = None,
             pattern: Pattern | None = None,
     ) -> None:
@@ -332,7 +359,7 @@ class StringParameter(Parameter[str]):
         :param pattern: the pattern the string must match (optional)
         :type pattern: Pattern | None
         """
-        super().__init__(name, description, flag, default_value)
+        super().__init__(name, description, flag, operations, default_value)
         self.max_length = max_length
         self._pattern = pattern
 
@@ -344,8 +371,10 @@ class StringParameter(Parameter[str]):
             return False
         return True
 
-    def to_cli(self) -> str:
-        return f"{self.flag} {self.value}"
+    def to_cli(self, operation: str) -> str:
+        if self.in_cli(operation):
+            return f"{self.flag} {self.value}"
+        else: return ""
 
     def __str__(self) -> str:
         return (
@@ -357,3 +386,121 @@ class StringParameter(Parameter[str]):
             + f'value: {self.value}, '
             + f'valid: {self.valid})'
         )
+
+
+class FileParameter(Parameter[list[str]]):
+    """
+    A file path parameter in the GUI
+
+    Stores the list of file paths selected by the user. The file
+    parameter accepts a list of file parameters, and it has the option
+    to allow single or multiple file inputs.
+
+    The value is valid when all the following holds:
+    - The value list is not empty.
+    - If it is not a multiple-file parameter, (`multiple` = False),
+    there should only be a single file in the list.
+    - Every file in the list exists and readable, and their file
+    extension is in `accepted_formats`.
+
+    There are three different levels of strictness for file types:
+
+    1. If `accepted_formats` is given and `strict` is `True`, the user
+    is only able to select files that match the types in
+    `accepted_formats`.
+    2. If `accepted_formats` is given and `strict` is `True`, the user
+    can select any file, but a warning is displayed if the file type
+    does not match the ones in `accepted_formats`.
+    3. If `accepted_formats` is `None`, the user can select any file.
+    The value of `strict` is expected to be `False`.
+    """
+
+    value_changed = Signal(list, bool)
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        flag: str,
+        operations: set[str],
+        accepted_formats: list[str] | None = None,
+        strict: bool = False,
+        multiple: bool = False,
+        default_value: list[str] | None = None,
+    ) -> None:
+        self.strict = strict
+        if strict:
+            self.accepted_formats = (
+                [ext if ext.startswith(".") else f".{ext}"
+                    for ext in accepted_formats]
+                if accepted_formats is not None else None
+            )
+            self.expected_formats = None
+        if not strict:
+            self.expected_formats = (
+                [ext if ext.startswith(".") else f".{ext}"
+                    for ext in accepted_formats]
+                if accepted_formats is not None else None
+            )
+            self.accepted_formats = None
+        self.multiple = multiple
+        super().__init__(
+            name,
+            description,
+            flag,
+            operations,
+            default_value or []
+        )
+
+    @property
+    def valid(self) -> bool:
+        if not self.value:
+            return False
+        if not self.multiple and len(self.value) > 1:
+            return False
+        return all(
+            Path(f).is_file()
+            and os.access(Path(f), os.R_OK)
+            and (self.accepted_formats is None
+                 or self.accepted_formats
+                 and Path(f).suffix.lower() in self.accepted_formats
+                 or self.expected_formats
+                 and Path(f).suffix.lower() in self.expected_formats)
+            for f in self.value)
+
+    @property
+    def file_extensions(self) -> list[str]:
+        return [Path(f).suffix.lower() for f in self.value if f]
+
+    @property
+    def matches_expected(self) -> bool:
+        if not self.value or self.expected_formats is None:
+            return True
+        return all(
+            Path(f).suffix.lower() in self.expected_formats
+            for f in self.value
+        )
+
+    @property
+    def value(self) -> list[str]:
+        return super().value
+
+    @value.setter
+    def value(self, new_value: list[str]) -> None:
+        self._value = new_value
+        self.value_changed.emit(self.value, self.valid)
+
+    def __str__(self) -> str:
+        return (
+            f'FileParameter('
+            f'name: "{self.name}", '
+            f'description: "{self.description}", '
+            f'accepted_formats: {self.accepted_formats}, '
+            f'value: "{self.value}", '
+            f'valid: {self.valid})'
+        )
+
+    def to_cli(self, operation: str) -> str:
+        if self.in_cli(operation):
+            return " ".join(f"{self.flag} {f}" for f in self.value)
+        return ""
