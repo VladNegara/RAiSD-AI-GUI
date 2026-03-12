@@ -1,4 +1,4 @@
-from pytest import fixture
+from pytest import fixture, raises
 import re
 
 from gui.model.parameter_group_list import ParameterGroupList
@@ -45,7 +45,7 @@ class TestParameterGroupList:
         # TODO when config file parsing is implemented
         pass
 
-    def test_operations(self):
+    def test_set_operations(self):
         # arrange
         list = self.parameter_group_list
 
@@ -56,3 +56,24 @@ class TestParameterGroupList:
         # assert
         assert list.operations['MDL-TST'] == True
         assert list.operations ['IMG-GEN'] == False
+        with raises(Exception, match="Setting an invalid operation: invalid op"):
+            list.set_operation('invalid op', True)
+
+    def test_operations_changed_signal_emitted(self):
+        # arrange
+        list = self.parameter_group_list
+        self.signals_emitted = 0
+
+        def on_operations_changed():
+            self.signals_emitted += 1
+
+        list.operations_changed.connect(on_operations_changed)
+
+        # act
+        list.set_operation('MDL-TST', True)
+        list.set_operation('IMG-GEN', False)
+        with raises(Exception):
+            list.set_operation('invalid op', True)
+
+        # assert
+        assert self.signals_emitted == 2
