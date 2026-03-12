@@ -112,8 +112,8 @@ class RunWidget(QWidget):
         self.run_view_widget.run_ended.connect(self.run_ended)
         self.run_view_widget.run_started.connect(self.run_started)
         self.start_run.connect(self.run_view_widget.start_run)
-        self.run_started.connect(self.run_view_widget.run_started)
-        self.run_ended.connect(self.run_view_widget.run_ended)
+        self.run_started.connect(self.run_view_widget.run_start)
+        self.run_ended.connect(self.run_view_widget.run_end)
         layout.addWidget(self.run_view_widget)
 
         # Results widget
@@ -374,12 +374,12 @@ class RunViewWidget(RunSubWidget):
         self._start_execution()
 
     @Slot(int)
-    def run_started(self, number_of_processes: int) -> None:
+    def run_start(self, number_of_processes: int) -> None:
         self.setup_execution_indicators(number_of_processes)
         self.stop_run_button.setEnabled(True)
 
     @Slot(bool)
-    def run_ended(self, run_successful: bool) -> None:
+    def run_end(self, run_successful: bool) -> None:
         """
         Update the execution buttons and close an open confirm dialog.
         """
