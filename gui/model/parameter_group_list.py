@@ -92,7 +92,13 @@ class ParameterGroupList(QObject):
         :return: the parameter list
         :rtype: Self
         """
-        def parse_parameter(obj: dict, operations: set[str]) -> Parameter[Any]:
+
+        id_to_parameter: dict[str, Parameter] = {}
+
+        def parse_parameter(
+                obj: dict,
+                operations: set[str]
+        ) -> Parameter[Any]:
             name = obj.get("name", "") or ""
 
             description = obj.get("description", "") or ""
@@ -115,6 +121,8 @@ class ParameterGroupList(QObject):
                     for op in obj["operations"]["remove"]:
                         parameter_operations.remove(op)
 
+            parameter: Parameter
+
             match parameter_type:
                 case "int":
                     if "default" in obj:
@@ -125,7 +133,7 @@ class ParameterGroupList(QObject):
                     lower_bound = obj.get("min", None)
                     upper_bound = obj.get("max", None)
 
-                    return IntParameter(
+                    parameter = IntParameter(
                         name,
                         description,
                         flag,
@@ -143,7 +151,7 @@ class ParameterGroupList(QObject):
                     lower_bound = obj.get("min", None)
                     upper_bound = obj.get("max", None)
 
-                    return FloatParameter(
+                    parameter = FloatParameter(
                         name,
                         description,
                         flag,
@@ -158,7 +166,7 @@ class ParameterGroupList(QObject):
                     else:
                         raise ValueError(f"No default value provided for bool parameter {name}")
                     
-                    return BoolParameter(
+                    parameter = BoolParameter(
                         name,
                         description,
                         flag,
@@ -182,7 +190,7 @@ class ParameterGroupList(QObject):
                     else:
                         raise ValueError(f"No default value provided for enum parameter {name}")
                     
-                    return EnumParameter(
+                    parameter = EnumParameter(
                         name,
                         description,
                         flag,
@@ -200,7 +208,7 @@ class ParameterGroupList(QObject):
                     if pattern:
                         compiled_pattern = compile(pattern)
 
-                    return StringParameter(
+                    parameter = StringParameter(
                         name,
                         description,
                         flag,
@@ -215,30 +223,32 @@ class ParameterGroupList(QObject):
                     else:
                         raise ValueError(f"No default value provided for default parameter {name}")
                     
-                    parameter = parse_parameter(obj.get("parameter", {}), operations)
-                    return OptionalParameter(
+                    inner_parameter = parse_parameter(obj.get("parameter", {}), operations)
+                    parameter = OptionalParameter(
                         name,
                         description,
                         parameter_operations,
                         default_value,
-                        parameter,
+                        inner_parameter,
                     )
                 case "multi":
                     parameters_list = obj.get("parameters", []) or []
-                    parameters: list[Parameter[Any]] = []
-                    for parameter in parameters_list:
-                        parameters.append(parse_parameter(parameter, operations))
+                    inner_parameters: list[Parameter[Any]] = []
+                    for inner_parameter_obj in parameters_list:
+                        inner_parameters.append(parse_parameter(inner_parameter_obj, operations))
 
-                    return MultiParameter(
+                    parameter = MultiParameter(
                         name,
                         description,
                         flag,
-                        parameters,
+                        inner_parameters,
                     )
                 case _:
                     raise ValueError(
                         f"Invalid parameter definition for parameter {name} in configuration file (type: {parameter_type})."
                     )
+
+            return parameter
 
         def parse_parameter_group(obj: dict) -> ParameterGroup:
             parameters = []
@@ -248,7 +258,10 @@ class ParameterGroupList(QObject):
 
             for parameter_id, parameter_obj in obj["parameters"].items():
                 try:
-                    parameters.append(parse_parameter(parameter_obj, set(operations)))
+                    parameter = parse_parameter(parameter_obj, set(operations))
+                    parameters.append(parameter)
+                    id_to_parameter[parameter_id] = parameter
+
                 except ValueError:
                     pass # This should not be ignored in the final code
             return ParameterGroup(name, parameters)
