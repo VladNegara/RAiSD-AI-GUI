@@ -18,13 +18,13 @@ from gui.execution.command_executor import CommandExecutor
 from gui.windows.run_widget import RunWidget
 from gui.windows.history_widget import HistoryWidget
 from gui.windows.settings_widget import SettingsWidget
-
+from gui.model.run_result import RunResult
  
 class MainWindow(QMainWindow):
     """
     The main window of the RAiSD-AI GUI application.
     """
-    def __init__(self, parameter_group_list: ParameterGroupList):
+    def __init__(self, run_result: RunResult):
         """
         Initialize the main window.
 
@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
         :type parameter_group_list: ParameterGroupList
         """
         super().__init__()
-        self._parameter_group_list = parameter_group_list
+        self._run_result = run_result
         self.command_executor = CommandExecutor()
         self._setup_ui()
 
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         layout.addStretch()
 
     def _setup_main_widget(self, layout: QStackedLayout):
-        self.run_widget = RunWidget(self._parameter_group_list, self.command_executor)
+        self.run_widget = RunWidget(self._run_result, self.command_executor)
         self.history_widget = HistoryWidget()
         self.settings_widget = SettingsWidget()
 

@@ -15,12 +15,13 @@ from PySide6.QtCore import (
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.widgets.parameter_form import ParameterForm
 from gui.widgets.collapsible import Collapsible
+from gui.model.run_result import RunResult
 
 class ResultsWidget(QWidget):
     """
     The results of a completed execution shown.
     """
-    def __init__(self, parameter_group_list: ParameterGroupList):
+    def __init__(self, run_result: RunResult):
         """
         Initialize a `ResultsWidget` object.
 
@@ -29,7 +30,7 @@ class ResultsWidget(QWidget):
         :type parameter_group_list: ParameterGroupList
         """
         super().__init__()
-        self._parameter_group_list = parameter_group_list
+        self._run_result = run_result
         layout = QVBoxLayout(self)
 
         # Summary widget
@@ -49,6 +50,6 @@ class ResultsWidget(QWidget):
 
         # Parameter widget
         parameters_header = QLabel("Parameters used")
-        parameter_form = ParameterForm(self._parameter_group_list)
+        parameter_form = ParameterForm(self._run_result.parameter_group_list)
         parameters_collapsible = Collapsible(parameters_header, parameter_form)
         layout.addWidget(parameters_collapsible)

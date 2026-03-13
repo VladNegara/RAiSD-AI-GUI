@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.model.parameter_group_list import ParameterGroupList
+from gui.model.run_result import RunResult
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
@@ -31,12 +32,12 @@ class RunWidget(QWidget):
     run_started = Signal(int)     # number of processes
     run_ended = Signal(bool)      # if run was successful
 
-    def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
+    def __init__(self, run_result: RunResult, command_executor: CommandExecutor):
         """
         Initialize a `RunWidget` object.
         """
         super().__init__()
-        self._parameter_group_list = parameter_group_list
+        self._run_result = run_result
         self._command_executor = command_executor
         self._setup_ui()
         self.run_started.connect(self._handle_run_start)
@@ -98,7 +99,7 @@ class RunWidget(QWidget):
         layout.addWidget(self.operation_selection_widget)
 
         # Parameter input widget
-        self.parameter_input_widget = ParameterInputWidget(parameter_group_list=self._parameter_group_list)
+        self.parameter_input_widget = ParameterInputWidget(run_result=self._run_result)
         self.parameter_input_widget.start_run.connect(self.start_run)
         self.run_started.connect(self.parameter_input_widget.run_start)
         self.run_ended.connect(self.parameter_input_widget.run_end)
@@ -109,7 +110,7 @@ class RunWidget(QWidget):
         layout.addWidget(self.parameter_confirmation_widget)
     
         # Run view widget
-        self.run_view_widget = RunViewWidget(self._parameter_group_list, self._command_executor)
+        self.run_view_widget = RunViewWidget(self._run_result, self._command_executor)
         self.run_view_widget.run_ended.connect(self.run_ended)
         self.run_view_widget.run_started.connect(self.run_started)
         self.start_run.connect(self.run_view_widget.start_run)
@@ -118,6 +119,7 @@ class RunWidget(QWidget):
         layout.addWidget(self.run_view_widget)
 
         # Results widget
+        self.run_results_widget = RunResultsWidget(self._run_result)
         self.run_results_widget = RunResultsWidget(self._parameter_group_list)
         layout.addWidget(self.run_results_widget)
 
@@ -210,8 +212,9 @@ class ParameterInputWidget(RunSubWidget):
 
     start_run = Signal()
     
-    def __init__(self, parameter_group_list: ParameterGroupList):
-        self._parameter_group_list = parameter_group_list
+    def __init__(self, run_result: RunResult):
+        self._run_result = run_result
+        self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
         
     def _setup_widget(self) -> QWidget:
@@ -315,8 +318,9 @@ class RunViewWidget(RunSubWidget):
     run_started = Signal(int)   # Number of processes
     run_ended = Signal(bool)    # Run successful
 
-    def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
-        self._parameter_group_list = parameter_group_list
+    def __init__(self, run_result: RunResult, command_executor: CommandExecutor):
+        self._run_result = run_result
+        self._parameter_group_list = self._run_result.parameter_group_list
         self._command_executor = command_executor
         super().__init__()
 
@@ -537,8 +541,8 @@ class RunViewWidget(RunSubWidget):
         self.set_execution_view_indicator(index, "green")
     
 class RunResultsWidget(RunSubWidget):
-    def __init__(self, parameter_group_list: ParameterGroupList):
-        self._parameter_group_list = parameter_group_list
+    def __init__(self, run_result: RunResult):
+        self._run_result = run_result
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -546,16 +550,16 @@ class RunResultsWidget(RunSubWidget):
         widget.setStyleSheet("background-color: lightblue;")
         layout = QVBoxLayout(widget)
 
-        parameter_confirmation_label = QLabel("Run Results")
-        layout.addWidget(parameter_confirmation_label)
+        run_results_label = QLabel("Run Results")
+        layout.addWidget(run_results_label)
 
-        results_widget = ResultsWidget(self._parameter_group_list)
+        self.results_widget = ResultsWidget(self._run_result)
 
         results_scroll = QScrollArea()
         results_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         results_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         results_scroll.setWidgetResizable(True)
-        results_scroll.setWidget(results_widget )
+        results_scroll.setWidget(self.results_widget )
         layout.addWidget(results_scroll, 1)
         return widget
 
