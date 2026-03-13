@@ -145,7 +145,7 @@ class TestParameterGroupListFromYaml:
                         description: A bool parameter that is false by default.
                         cli: --false-bool
                         type: bool
-                        default: true
+                        default: false
                   - name: Integer parameters
                     operations:
                       - first-op
