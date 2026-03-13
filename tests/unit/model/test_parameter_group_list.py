@@ -478,7 +478,7 @@ class TestParameterGroupListFromYaml:
                             min: 0
                       bool-float-file-enum:
                         name: Mixed parameter
-                        descriptions: A parameter with four values.
+                        description: A parameter with four values.
                         cli: "-4"
                         type: multi
                         parameters:
