@@ -93,7 +93,7 @@ class RunWidget(QWidget):
         Set up the stacked step widget.
         """
         # Operation selection widget
-        self.operation_selection_widget = OperationSelectionWidget()
+        self.operation_selection_widget = OperationSelectionWidget(parameter_group_list=self._parameter_group_list)
         layout.addWidget(self.operation_selection_widget)
 
         # Parameter input widget
@@ -186,7 +186,8 @@ class NavigationButtonsWidget(QWidget):
 
 class OperationSelectionWidget(RunSubWidget):
     
-    def __init__(self):
+    def __init__(self, parameter_group_list: ParameterGroupList):
+        self._parameter_group_list = parameter_group_list
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -198,6 +199,8 @@ class OperationSelectionWidget(RunSubWidget):
         layout.addWidget(operation_selection_label)
 
         # TODO: dynamicly add operation selection buttons
+        operation_selection_widget = self._setup_operation_selection_widget()
+        layout.addWidget(operation_selection_widget, 1)
 
         return widget
 
@@ -205,6 +208,38 @@ class OperationSelectionWidget(RunSubWidget):
         return QWidget()
         # TODO: Implement
         # raise NotImplementedError
+
+    def _setup_operation_selection_widget(self) -> QWidget:
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+
+        for operation in self._parameter_group_list.operations:
+            operation_selector = self._operation_selector(operation, f"perform: {operation}") # TODO: Set description.
+            layout.addWidget(operation_selector)
+            
+        return widget 
+
+    def _operation_selector(self, operation: str, description: str) -> QWidget:
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
+
+        operation_button = QCheckBox(operation)
+        operation_button.checkStateChanged.connect(
+            lambda s: self._operation_selector_clicked(operation, s)
+            )
+        layout.addWidget(operation_button)
+        
+        description_label = QLabel(description)
+        layout.addWidget(description_label, 1)
+
+        return widget
+    
+    def _operation_selector_clicked(self, operation: str, state: Qt.CheckState) -> None:
+        if state == Qt.CheckState.Checked:
+            self._parameter_group_list.set_operation(operation, True)
+        elif state == Qt.CheckState.Unchecked:
+            self._parameter_group_list.set_operation(operation, False)
+
 
 class ParameterInputWidget(RunSubWidget):
 
