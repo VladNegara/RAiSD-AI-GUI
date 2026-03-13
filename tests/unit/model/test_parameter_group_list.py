@@ -129,6 +129,23 @@ class TestParameterGroupListFromYaml:
                         description: The operation that comes after.
                         cli: -op 2
                 parameter_groups:
+                  - name: Boolean parameters
+                    operations:
+                      - first-op
+                      - second-op
+                    parameters:
+                      true-bool:
+                        name: True bool
+                        description: This boolean parameter is true by default.
+                        cli: --true-bool
+                        type: bool
+                        default: true
+                      false-bool:
+                        name: False bool
+                        description: A bool parameter that is false by default.
+                        cli: --false-bool
+                        type: bool
+                        default: true
                   - name: Integer parameters
                     operations:
                       - first-op
@@ -235,4 +252,4 @@ class TestParameterGroupListFromYaml:
         list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert len(list.parameter_groups) == 2
+        assert len(list.parameter_groups) == 3
