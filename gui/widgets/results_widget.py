@@ -4,7 +4,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QLabel,
     QFileSystemModel,
-    QTreeView
+    QTreeView,
+    QHeaderView
 )
 
 from PySide6.QtCore import (
@@ -12,6 +13,8 @@ from PySide6.QtCore import (
 )
 
 from gui.model.parameter_group_list import ParameterGroupList
+from gui.widgets.parameter_form import ParameterForm
+from gui.widgets.collapsible import Collapsible
 
 class ResultsWidget(QWidget):
     """
@@ -41,4 +44,11 @@ class ResultsWidget(QWidget):
         folder_widget = QTreeView()
         folder_widget.setModel(folder_structure)
         folder_widget.setRootIndex(folder_structure.index(QDir.currentPath()))
-        layout.addWidget(folder_widget)
+        folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        layout.addWidget(folder_widget, 1)
+
+        # Parameter widget
+        parameters_header = QLabel("Parameters used")
+        parameter_form = ParameterForm(self._parameter_group_list)
+        parameters_collapsible = Collapsible(parameters_header, parameter_form)
+        layout.addWidget(parameters_collapsible)
