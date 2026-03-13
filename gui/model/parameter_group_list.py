@@ -410,11 +410,27 @@ class ParameterGroupList(QObject):
             return parameter
 
         def parse_parameter_group(obj: dict) -> ParameterGroup:
-            parameters = []
-            name = obj["name"] or ""
+            name = obj.get("name", "") or ""
+            if not isinstance(name, str):
+                raise ValueError(
+                    f"Invalid name for parameter group: {name}. Expected "
+                    + "string or null."
+                )
 
             operations = obj.get("operations", [])
+            if not isinstance(operations, list):
+                raise ValueError(
+                    f"Invalid operations list for parameter group {name}: "
+                    + f"{operations}. Expected list or null."
+                )
+            for operation in operations:
+                if not isinstance(operation, str):
+                    raise ValueError(
+                        f"Invalid operation for parameter group {name}: "
+                        + f"{operation}. Expected string."
+                    )
 
+            parameters: list[Parameter[Any]] = []
             for parameter_id, parameter_obj in obj["parameters"].items():
                 try:
                     parameter = parse_parameter(parameter_obj, set(operations))
