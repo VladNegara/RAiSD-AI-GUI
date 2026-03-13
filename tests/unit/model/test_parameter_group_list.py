@@ -54,10 +54,6 @@ class TestParameterGroupList:
         assert list.parameter_groups == groups
         assert list._dependencies == []
 
-    def test_from_config_file(self):
-        # TODO when config file parsing is implemented
-        pass
-
     def test_set_operations(self):
         # arrange
         list = self.parameter_group_list
@@ -110,3 +106,66 @@ class TestParameterGroupList:
             './RAiSD-AI -op IMG-GEN',
             './RAiSD-AI -op MDL-GEN -flag default'
         ]
+
+
+class TestParameterGroupListFromYaml:
+    """Tests for the `ParameterGroupList#from_yaml` class method."""
+
+    def test_correct(self, mocker):
+        # arrange
+        mocker.patch(
+            "builtins.open",
+            mocker.mock_open(
+                read_data= """
+                modes:
+                  - name: standard
+                    operations:
+                      first-op:
+                        name: First operation
+                        description: The first operation in the sequence.
+                        cli: -op 1
+                      second-op:
+                        name: Second operation
+                        description: The operation that comes after.
+                        cli: -op 2
+                parameter_groups:
+                  - name: Integer parameters
+                    operations:
+                      - first-op
+                      - second-op
+                    parameters:
+                      any-int-1:
+                        name: Unbounded int
+                        description: This integer can take any value.
+                        cli: --unbounded-int
+                        type: int
+                        default: 0
+                      any-int-2:
+                        name: Another unbounded int
+                        description: This time, the bounds are explicitly null.
+                        cli: --int-unrestricted
+                        min: null
+                        max: null
+                        default: 100
+                      min-int-1:
+                        name: Lower-bounded int
+                        description: This integer must be at least 50.
+                        cli: -i50
+                        min: 50
+                        default: 75
+                      min-int-2:
+                        name: Another lower-bounded int
+                        description: Values 30+, upper bound is null.
+                        cli: -i30
+                        min: 30
+                        max: null
+                        default: 1300
+            """
+            )
+        )
+
+        # act
+        list = ParameterGroupList.from_yaml('path')
+
+        # assert
+        assert len(list.parameter_groups) == 1
