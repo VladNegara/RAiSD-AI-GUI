@@ -25,7 +25,6 @@ class CommandExecutor(QObject):
     process_finished = Signal(int)                  # process_index
     process_failed = Signal(int, QProcess.ProcessError)  # process_index, process_error
     process_stopped = Signal(int)                   # process_index
-    sub_step_finished = Signal(int, int)            # process_index, step_number
 
     def __init__(self):
         """
