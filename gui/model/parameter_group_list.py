@@ -211,7 +211,8 @@ class ParameterGroupList(QObject):
                             + f"for float parameter {name}."
                         )
                     default_value = obj["default"]
-                    if not isinstance(default_value, float):
+                    if (not isinstance(default_value, int)
+                        and not isinstance(default_value, float)):
                         raise ValueError(
                             f"Invalid default value for float parameter {name}"
                             + f": {default_value}. Expected float."
@@ -219,6 +220,7 @@ class ParameterGroupList(QObject):
 
                     lower_bound = obj.get("min", None)
                     if (lower_bound is not None
+                        and not isinstance(lower_bound, int)
                         and not isinstance(lower_bound, float)):
                         raise ValueError(
                             f"Invalid minimum for float parameter {name}: "
@@ -226,6 +228,7 @@ class ParameterGroupList(QObject):
                         )
                     upper_bound = obj.get("max", None)
                     if (upper_bound is not None
+                        and not isinstance(upper_bound, int)
                         and not isinstance(upper_bound, float)):
                         raise ValueError(
                             f"Invalid maximum for float parameter {name}: "
