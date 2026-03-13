@@ -32,13 +32,37 @@ class RunResult():
         pass
 
     @property
+    def run_completed(self) -> bool:
+        return self._run_completed
+
+    @run_completed.setter
+    def run_completed(self, run_completed: bool) -> None:
+        self._run_completed = run_completed
+
+    @property
     def path(self) -> str:
         return self._results_path
+    
+    @path.setter 
+    def path(self, path: str) -> None:
+        self._results_path = path
     
     @property
     def info_files(self) -> list[str]:
         return self._info_files
     
+    @info_files.setter
+    def info_files(self, files: list[str]) -> None:
+        self._info_files = files
+
+    @property
+    def commands(self) -> list[str]:
+        return self._commands
+    
+    @commands.setter
+    def commands(self, commands: list[str]) -> None:
+        self._commands = commands
+
     @property
     def parameter_group_list(self) -> ParameterGroupList:
         return self._parameter_group_list
