@@ -503,6 +503,49 @@ class TestParameterGroupListFromYaml:
                                 - name: Option 0
                                 - name: Option 1
                                 - name: Option 2
+                  - name: Nested parameters
+                    operations:
+                      - first-op
+                    parameters:
+                      opt-multi:
+                        name: Optional multi-value
+                        description: An optional parameter with two values.
+                        type: optional
+                        default: true
+                        parameter:
+                          name: null
+                          description: The inner, multi-value parameter.
+                          type: multi
+                          parameters:
+                            - name: A float
+                              type: float
+                              min: 0.0
+                              max: 1.0
+                              default: 0.99
+                            - name: A string
+                              description: Type anything
+                              type: str
+                      multi-opt:
+                        name: Multiple optionals
+                        description: A multi parameter where some are optional.
+                        type: multi
+                        parameters:
+                          - type: optional
+                            default: false
+                            parameter:
+                              type: int
+                              default: 6
+                          - description: This float is required.
+                            type: float
+                            max: 2.5
+                            default: 2.5
+                          - name: Another float?
+                            type: optional
+                            default: true
+                            parameter:
+                              name: The second float
+                              type: float
+                              default: 100.8
             """
             )
         )
@@ -511,4 +554,4 @@ class TestParameterGroupListFromYaml:
         list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert len(list.parameter_groups) == 8
+        assert len(list.parameter_groups) == 9
