@@ -3,6 +3,7 @@ from PySide6.QtCore import (
     QProcess,
     Signal,
     Slot,
+    QDir
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -120,7 +121,7 @@ class RunWidget(QWidget):
 
         # Results widget
         self.run_results_widget = RunResultsWidget(self._run_result)
-        self.run_results_widget = RunResultsWidget(self._parameter_group_list)
+        self.run_ended.connect(self.run_results_widget.run_end)
         layout.addWidget(self.run_results_widget)
 
     # ---------- step button bar switch methods ----------
@@ -562,6 +563,12 @@ class RunResultsWidget(RunSubWidget):
         results_scroll.setWidget(self.results_widget )
         layout.addWidget(results_scroll, 1)
         return widget
+
+    @Slot(bool)
+    def run_end(self, run_successful: bool) -> None:
+        self._run_result.run_completed = run_successful
+        if (run_successful):
+            self.results_widget.show_results()
 
     def _setup_navigation_buttons(self) -> QWidget:
         return QWidget()
