@@ -324,6 +324,63 @@ class TestParameterGroupListFromYaml:
                         type: str
                         max: 20
                         default: Hello
+                  - name: File parameters
+                    operations:
+                      - first-op
+                      - second-op
+                    parameters:
+                      any-file:
+                        name: Any file
+                        description: This allows one file of any type.
+                        cli: --any-file
+                        type: file
+                      any-files:
+                        name: Any files
+                        description: This allows many files of any type.
+                        cli: --any-files
+                        type: file
+                        multiple: true
+                      not-strict:
+                        name: Expected type file
+                        description: One file of any type, image expected.
+                        cli: --image
+                        type: file
+                        formats:
+                          - .png
+                          - .jpg
+                          - .jpeg
+                          - .gif
+                          - .webp
+                      not-strict-multiple:
+                        name: Expected type files
+                        description: Multiple files, videos expected.
+                        cli: --images
+                        type: file
+                        formats:
+                          - .mp4
+                          - .webm
+                        multiple: true
+                      strict:
+                        name: Specific type file
+                        description: One audio file.
+                        cli: --song
+                        type: file
+                        formats:
+                          - .mp3
+                          - .wav
+                        strict: true
+                      strict-multiple:
+                        name: Specific type files
+                        description: Multiple document files.
+                        cli: --docs
+                        type: file
+                        formats:
+                          - .doc
+                          - .docx
+                          - .odf
+                          - .pdf
+                        strict: true
+                        multiple: true
             """
             )
         )
@@ -332,4 +389,4 @@ class TestParameterGroupListFromYaml:
         list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert len(list.parameter_groups) == 5
+        assert len(list.parameter_groups) == 6
