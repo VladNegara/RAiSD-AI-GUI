@@ -260,6 +260,34 @@ class TestParameterGroupListFromYaml:
                         min: 0.0
                         max: 1.0
                         default: 0
+                  - name: Enum parameters
+                    operations:
+                      - first-op
+                      - second-op
+                    parameters:
+                      cli-enum:
+                        name: Enum parameter
+                        description: Choose from a list of four values.
+                        cli: --enum
+                        type: enum
+                        options:
+                          - name: First option
+                            cli: one
+                          - name: Second option
+                            cli: two
+                          - name: Third option
+                            cli: three
+                          - name: Fourth option
+                            cli: four
+                        default: 2
+                      no-cli-enum:
+                        name: Dummy enum parameter
+                        description: This parameter will not be in the CLI.
+                        type: enum
+                        options:
+                            - name: Choose this...
+                            - name: ...or this!
+                            - name: Or even this.
             """
             )
         )
@@ -268,4 +296,4 @@ class TestParameterGroupListFromYaml:
         list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert len(list.parameter_groups) == 3
+        assert len(list.parameter_groups) == 4
