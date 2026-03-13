@@ -448,17 +448,78 @@ class ParameterGroupList(QObject):
             condition_type = obj["type"]
 
             match condition_type:
+                case "or":
+                    if "conditions" not in obj:
+                        raise ValueError(
+                            "Missing list of child conditions for 'or' "
+                            + "condition."
+                        )
+                    conditions_list = obj["conditions"]
+                    if not isinstance(conditions_list, list):
+                        raise ValueError(
+                            "Invalid child condition list for 'or' condition: "
+                            + f"{conditions_list}. Expected a list."
+                        )
+
+                    conditions: list[Dependency.Condition] = []
+                    for condition_obj in conditions_list:
+                        conditions.append(
+                            parse_condition(condition_obj)
+                        )
+
+                    return OrCondition(
+                        conditions,
+                    )
+                case "enabled":
+                    if "parameter" not in obj:
+                        raise ValueError(
+                            "Enabled condition has no target parameter."
+                        )
+                    parameter_id = obj["parameter"]
+                    if not isinstance(parameter_id, str):
+                        raise ValueError(
+                            "Invalid target parameter ID for enabled condition"
+                            + f": {parameter_id}. Expected string."
+                        )
+
+                    parameter = id_to_parameter[parameter_id]
+
+                    target_value = obj.get("value", True)
+                    if not isinstance(target_value, bool):
+                        raise ValueError(
+                            "Invalid target value for enabled condition: "
+                            + f"{target_value}. Expected bool or null."
+                        )
+                    
+                    return Parameter.EnabledCondition(
+                        parameter,
+                        target_value,
+                    )
                 case "bool":
                     if "parameter" not in obj:
-                        raise ValueError("Parameter condition has no target parameter.")
+                        raise ValueError(
+                            "Bool condition has no target parameter."
+                        )
                     parameter_id = obj["parameter"]
+                    if not isinstance(parameter_id, str):
+                        raise ValueError(
+                            "Invalid target parameter ID for bool condition: "
+                            + f"{parameter_id}. Expected string."
+                        )
+
                     parameter = id_to_parameter[parameter_id]
                     if not isinstance(parameter, BoolParameter):
-                        raise ValueError("Bool condition is referencing a non-bool parameter.")
+                        raise ValueError(
+                            "Bool condition references non-bool parameter "
+                            + f"{parameter_id}."
+                        )
 
-                    if "value" not in obj:
-                        raise ValueError("Bool condition has no target value.")
-                    target_value = obj["value"]
+                    target_value = obj.get("value", True)
+                    if not isinstance(target_value, bool):
+                        raise ValueError(
+                            "Invalid target value for bool condition: "
+                            + f"{target_value}. Expected bool or null."
+                        )
 
                     return BoolParameter.Condition(
                         parameter,
@@ -466,7 +527,7 @@ class ParameterGroupList(QObject):
                     )
                 case "enum":
                     if "parameter" not in obj:
-                        raise ValueError("Parameter condition has no target parameter.")
+                        raise ValueError("Enum condition has no target parameter.")
                     parameter_id = obj["parameter"]
                     parameter = id_to_parameter[parameter_id]
                     if not isinstance(parameter, EnumParameter):
