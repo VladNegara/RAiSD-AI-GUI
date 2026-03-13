@@ -538,8 +538,8 @@ class RunViewWidget(RunSubWidget):
     
 class RunResultsWidget(RunSubWidget):
     def __init__(self, parameter_group_list: ParameterGroupList):
-        super().__init__()
         self._parameter_group_list = parameter_group_list
+        super().__init__()
 
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
@@ -549,8 +549,8 @@ class RunResultsWidget(RunSubWidget):
         parameter_confirmation_label = QLabel("Run Results")
         layout.addWidget(parameter_confirmation_label)
 
-        results_widget = ResultsWidget()
-        layout.addWidget(results_widget)
+        results_widget = ResultsWidget(self._parameter_group_list)
+        layout.addWidget(results_widget, 1)
         return widget
 
     def _setup_navigation_buttons(self) -> QWidget:
