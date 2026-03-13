@@ -453,6 +453,56 @@ class TestParameterGroupListFromYaml:
                         parameter:
                             type: file
                             multiple: true
+                  - name: Multi-value parameters
+                    operations:
+                      - first-op
+                      - second-op
+                    parameters:
+                      int-int-int:
+                        name: Three integers
+                        descriptions: A parameter with three integer values.
+                        cli: -3i
+                        type: multi
+                        parameters:
+                          - name: First integer
+                            type: int
+                            default: 0
+                          - name: Second integer
+                            type: int
+                            min: 0
+                            max: 10
+                            default: 0
+                          - name: Third integer
+                            type: int
+                            default: 0
+                            min: 0
+                      bool-float-file-enum:
+                        name: Mixed parameter
+                        descriptions: A parameter with four values.
+                        cli: "-4"
+                        type: multi
+                        parameters:
+                          - name: The bool
+                            type: bool
+                            default: true
+                          - name: The float
+                            description: null
+                            type: float
+                            min: 0.0
+                            default: 1.0
+                          - name: The file
+                            type: file
+                            formats:
+                              - .ms
+                              - .vcf
+                          - name: The enum
+                            description: Choose one.
+                            type: enum
+                            default: 1
+                            options:
+                                - name: Option 0
+                                - name: Option 1
+                                - name: Option 2
             """
             )
         )
@@ -461,4 +511,4 @@ class TestParameterGroupListFromYaml:
         list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert len(list.parameter_groups) == 7
+        assert len(list.parameter_groups) == 8
