@@ -288,6 +288,42 @@ class TestParameterGroupListFromYaml:
                             - name: Choose this...
                             - name: ...or this!
                             - name: Or even this.
+                  - name: String parameters
+                    operations:
+                      - first-op
+                      - second-op
+                    parameters:
+                      any-string:
+                        name: String
+                        description: Enter a string. Anything goes!
+                        cli: -s
+                        type: str
+                      max-len-str:
+                        name: Bounded string
+                        description: Type at most 4 characters.
+                        cli: --s-max4
+                        type: str
+                        max_length: 4
+                      pattern-str:
+                        name: Pattern string
+                        description: This parameter must be only A and B
+                        cli: --sAB
+                        type: str
+                        pattern: (A|B)*
+                      max-len-pattern-str:
+                        name: Bounded pattern string
+                        description: This parameter must be at most 10 digits.
+                        cli: --phone-number
+                        type: str
+                        max_length: 10
+                        pattern: '\\d*'
+                      default-str:
+                        name: Default value string
+                        description: This string already has a default value.
+                        cli: --default-str
+                        type: str
+                        max: 20
+                        default: Hello
             """
             )
         )
@@ -296,4 +332,4 @@ class TestParameterGroupListFromYaml:
         list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert len(list.parameter_groups) == 4
+        assert len(list.parameter_groups) == 5
