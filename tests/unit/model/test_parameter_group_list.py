@@ -144,6 +144,7 @@ class TestParameterGroupListFromYaml:
                         name: Another unbounded int
                         description: This time, the bounds are explicitly null.
                         cli: --int-unrestricted
+                        type: int
                         min: null
                         max: null
                         default: 100
@@ -151,15 +152,81 @@ class TestParameterGroupListFromYaml:
                         name: Lower-bounded int
                         description: This integer must be at least 50.
                         cli: -i50
+                        type: int
                         min: 50
                         default: 75
                       min-int-2:
                         name: Another lower-bounded int
                         description: Values 30+, upper bound is null.
                         cli: -i30
+                        type: int
                         min: 30
                         max: null
                         default: 1300
+                      max-int-1:
+                        name: Upper-bounded int
+                        description: This integer must be no more than 10.
+                        cli: -i10
+                        type: int
+                        max: 10
+                        default: -19
+                      max-int-2:
+                        name: Another upper-bounded int
+                        description: No more than 15. Lower bound is null.
+                        cli: -i15
+                        type: int
+                        min: null
+                        max: 15
+                        default: 15
+                  - name: Floating-point parameters
+                    operations:
+                      - first-op
+                      - second-op
+                    parameters:
+                      any-float-1:
+                        name: Unbounded float
+                        description: This float can take any value.
+                        cli: --unbounded-float
+                        type: float
+                        default: -3.14159
+                      any-float-2:
+                        name: Another unbounded float
+                        description: This time, the bounds are explicitly null.
+                        cli: --float-unrestricted
+                        type: float
+                        min: null
+                        max: null
+                        default: 123.456
+                      min-float-1:
+                        name: Lower-bounded float
+                        description: This float must be at least 1.5.
+                        cli: -f1.5
+                        type: float
+                        min: 1.5
+                        default: 1.9
+                      min-float-2:
+                        name: Another lower-bounded float
+                        description: Values 3.1+, upper bound is null.
+                        cli: -f3.1
+                        type: float
+                        min: 3.1
+                        max: null
+                        default: 1300
+                      max-float-1:
+                        name: Upper-bounded float
+                        description: This float must be no more than -190.45.
+                        cli: -f-190.45
+                        type: float
+                        max: -190.45
+                        default: -199
+                      max-float-2:
+                        name: Another upper-bounded float
+                        description: No more than 13.13. Lower bound is null.
+                        cli: -f13.13
+                        type: int
+                        min: null
+                        max: 13.3
+                        default: -23094.0
             """
             )
         )
