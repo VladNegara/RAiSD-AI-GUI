@@ -263,7 +263,7 @@ parameter_groups:
       "-w":
         operations:
           remove:
-            -IMG-GEN
+            - IMG-GEN
         name: Window size
         description: The window size. The default value is empirically determined.
         cli: -w
@@ -625,10 +625,12 @@ parameter_groups:
             description: The column indices for positions.
             type: int
             min: 1
+            default: 1
           - name: SweeD score index # ?
             description: The SweeD scores.
             type: int
             min: 1
+            default: 1
             #position index != score index
           - name: RAiSD report
             description: The RAiSD report to be used for common outlier analysis. The report must not contain a header.
@@ -636,9 +638,11 @@ parameter_groups:
           - name: RAiSD position index #Are these the same as the ones above?
             description: The position index for the RAiSD report. 
             type: int
+            default: 1
           - name: RAiSD column index
             description: The index of the column you want to use, depending on the RAiSD report. To use the mu-statistic, set X=2 if RAiSD was invoked with the default parameters, or set Y=7 if -R was explicitly provided or implicitly activated through some other command-line parameter.
             type: int
+            default: 1
       "-COT":
         name: Cut-off threshold
         description: The cut-off threshold for identifying top outliers per report.
