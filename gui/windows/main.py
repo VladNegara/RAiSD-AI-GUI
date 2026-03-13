@@ -58,6 +58,8 @@ class MainWindow(QMainWindow):
         self._setup_main_widget(self.main_widget_layout)
 
     def _setup_left_sidebar(self, layout: QVBoxLayout):
+        layout.setContentsMargins(0,20,0,0)
+
         logo_widget = QWidget()
         logo_widget.setFixedSize(40, 40)
         logo_widget.setObjectName("logo_widget")
