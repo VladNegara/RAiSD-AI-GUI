@@ -223,7 +223,7 @@ class TestParameterGroupListFromYaml:
                         name: Another upper-bounded float
                         description: No more than 13.13. Lower bound is null.
                         cli: -f13.13
-                        type: int
+                        type: float
                         min: null
                         max: 13.3
                         default: -23094.0
@@ -235,4 +235,4 @@ class TestParameterGroupListFromYaml:
         list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert len(list.parameter_groups) == 1
+        assert len(list.parameter_groups) == 2
