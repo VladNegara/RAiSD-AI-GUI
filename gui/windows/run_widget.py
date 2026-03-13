@@ -252,7 +252,6 @@ class ParameterInputWidget(RunSubWidget):
         layout.addWidget(self._validity_label)
 
         self.submit_button = QPushButton("Submit")
-      #  self.submit_button.setEnabled(self._parameter_group_list.valid)
         self._update_submit_button_state()
         for group in self._parameter_group_list.parameter_groups:
             for parameter in group.parameters:
