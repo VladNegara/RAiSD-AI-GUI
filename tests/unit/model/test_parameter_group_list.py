@@ -381,6 +381,78 @@ class TestParameterGroupListFromYaml:
                           - .pdf
                         strict: true
                         multiple: true
+                  - name: Optional parameters
+                    operations:
+                      - first-op
+                      - second-op
+                    parameters:
+                      opt-bool:
+                        name: Optional bool
+                        description: An optional bool parameter.
+                        cli: --opt-bool
+                        type: optional
+                        parameter:
+                          name: Inner bool
+                          description: The inner parameter.
+                          type: bool
+                          default: false
+                      opt-int:
+                        name: Optional int
+                        description: An optional int parameter, default true.
+                        cli: --opt-int
+                        type: optional
+                        default: true
+                        parameter:
+                          name: Inner int parameter
+                          description: null
+                          type: int
+                          min: 1
+                          default: 1
+                      opt-float:
+                        name: Optional float
+                        description: An optional float parameter.
+                        cli: --opt-float
+                        type: optional
+                        default: false
+                        parameter:
+                          name: Inner float parameter
+                          type: float
+                          min: null
+                          max: null
+                          default: -1.1
+                      opt-enum:
+                        name: Optional enum
+                        description: An optional enum parameter.
+                        cli: --opt-enum
+                        type: optional
+                        parameter:
+                          description: An inner enum parameter with no name.
+                          type: enum
+                          options:
+                            - name: A
+                            - name: B
+                            - name: C
+                          default: 1
+                      opt-str:
+                        name: Optional string
+                        description: An optional string parameter.
+                        cli: --opt-str
+                        type: optional
+                        default: null
+                        parameter:
+                          name: null
+                          description: The string.
+                          type: str
+                          default: example
+                          max_length: 20
+                      opt-file:
+                        name: Optional files
+                        description: An optional multi-file parameter.
+                        cli: --opt-files
+                        type: optional
+                        parameter:
+                            type: file
+                            multiple: true
             """
             )
         )
@@ -389,4 +461,4 @@ class TestParameterGroupListFromYaml:
         list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert len(list.parameter_groups) == 6
+        assert len(list.parameter_groups) == 7
