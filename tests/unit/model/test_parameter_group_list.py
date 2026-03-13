@@ -195,6 +195,14 @@ class TestParameterGroupListFromYaml:
                         min: null
                         max: 15
                         default: 15
+                      bounded-int-1:
+                        name: Bounded int
+                        description: This int is from 1 to 10.
+                        cli: -i1-10
+                        type: int
+                        min: 1
+                        max: 10
+                        default: 7
                   - name: Floating-point parameters
                     operations:
                       - first-op
@@ -244,6 +252,14 @@ class TestParameterGroupListFromYaml:
                         min: null
                         max: 13.3
                         default: -23094.0
+                      bounded-float:
+                        name: Bounded float
+                        description: This float is between 0 and 1.
+                        cli: -f0-1
+                        type: float
+                        min: 0.0
+                        max: 1.0
+                        default: 0
             """
             )
         )
