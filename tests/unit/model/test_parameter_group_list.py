@@ -315,7 +315,7 @@ class TestParameterGroupListFromYaml:
                         max_length: 4
                       pattern-str:
                         name: Pattern string
-                        description: This parameter must be only A and B
+                        description: This parameter must be only As and Bs.
                         cli: --sAB
                         type: str
                         pattern: (A|B)*
@@ -331,7 +331,7 @@ class TestParameterGroupListFromYaml:
                         description: This string already has a default value.
                         cli: --default-str
                         type: str
-                        max: 20
+                        max_length: 20
                         default: Hello
                   - name: File parameters
                     operations:
@@ -806,3 +806,67 @@ class TestParameterGroupListFromYaml:
             "...or this!",
             "Or even this.",
         ]
+
+        # String
+        string_group = parameter_list.parameter_groups[4]
+        assert string_group.name == "String parameters"
+        assert len(string_group.parameters) == 5
+
+        any_str = string_group.parameters[0]
+        assert isinstance(any_str, StringParameter)
+        assert any_str.name == "String"
+        assert (
+            any_str.description
+            == "Enter a string. Anything goes!"
+        )
+        assert any_str.flag == "-s"
+        assert any_str.default_value == ""
+        assert any_str.max_length is None
+
+        max_len_str = string_group.parameters[1]
+        assert isinstance(max_len_str, StringParameter)
+        assert max_len_str.name == "Bounded string"
+        assert (
+            max_len_str.description
+            == "Type at most 4 characters."
+        )
+        assert max_len_str.flag == "--s-max4"
+        assert max_len_str.default_value == ""
+        assert max_len_str.max_length == 4
+
+        pattern_str = string_group.parameters[2]
+        assert isinstance(pattern_str, StringParameter)
+        assert pattern_str.name == "Pattern string"
+        assert (
+            pattern_str.description
+            == "This parameter must be only As and Bs."
+        )
+        assert pattern_str.flag == "--sAB"
+        assert pattern_str.default_value == ""
+        assert pattern_str.max_length is None
+        pattern_str.value = "C"
+        assert not pattern_str.valid
+
+        max_len_pattern_str = string_group.parameters[3]
+        assert isinstance(max_len_pattern_str, StringParameter)
+        assert max_len_pattern_str.name == "Bounded pattern string"
+        assert (
+            max_len_pattern_str.description
+            == "This parameter must be at most 10 digits."
+        )
+        assert max_len_pattern_str.flag == "--phone-number"
+        assert max_len_pattern_str.default_value == ""
+        assert max_len_pattern_str.max_length == 10
+        max_len_pattern_str.value = "invalid"
+        assert not max_len_pattern_str.valid
+
+        default_str = string_group.parameters[4]
+        assert isinstance(default_str, StringParameter)
+        assert default_str.name == "Default value string"
+        assert (
+            default_str.description
+            == "This string already has a default value."
+        )
+        assert default_str.flag == "--default-str"
+        assert default_str.default_value == "Hello"
+        assert default_str.max_length == 20
