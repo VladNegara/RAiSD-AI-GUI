@@ -1,9 +1,18 @@
-from pytest import fixture, raises
+from pytest import approx, fixture, raises
 import re
 
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.model.parameter_group import ParameterGroup
-from gui.model.parameter import StringParameter
+from gui.model.parameter import (
+    OptionalParameter,
+    MultiParameter,
+    BoolParameter,
+    IntParameter,
+    FloatParameter,
+    EnumParameter,
+    StringParameter,
+    FileParameter,
+)
 
 class TestParameterGroupList:
     """Tests for ParameterGroupList class."""
@@ -551,7 +560,213 @@ class TestParameterGroupListFromYaml:
         )
 
         # act
-        list = ParameterGroupList.from_yaml('path')
+        parameter_list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert len(list.parameter_groups) == 9
+        assert parameter_list.operations == {
+            "first-op": True,
+            "second-op": True,
+        }
+        assert len(parameter_list.parameter_groups) == 9
+
+        # Bool
+        bool_group = parameter_list.parameter_groups[0]
+        assert bool_group.name == "Boolean parameters"
+        assert len(bool_group.parameters) == 2
+
+        true_bool = bool_group.parameters[0]
+        assert isinstance(true_bool, BoolParameter)
+        assert true_bool.name == "True bool"
+        assert (
+            true_bool.description
+            == "This boolean parameter is true by default."
+        )
+        assert true_bool.flag == "--true-bool"
+        assert true_bool.default_value == True
+
+        false_bool = bool_group.parameters[1]
+        assert isinstance(false_bool, BoolParameter)
+        assert false_bool.name == "False bool"
+        assert (
+            false_bool.description
+            == "A bool parameter that is false by default."
+        )
+        assert false_bool.flag == "--false-bool"
+        assert false_bool.default_value == False
+
+        # Int
+        int_group = parameter_list.parameter_groups[1]
+        assert int_group.name == "Integer parameters"
+        assert len(int_group.parameters) == 7
+
+        any_int_1 = int_group.parameters[0]
+        assert isinstance(any_int_1, IntParameter)
+        assert any_int_1.name == "Unbounded int"
+        assert (
+            any_int_1.description
+            == "This integer can take any value."
+        )
+        assert any_int_1.flag == "--unbounded-int"
+        assert any_int_1.default_value == 0
+        assert any_int_1.lower_bound is None
+        assert any_int_1.upper_bound is None
+
+        any_int_2 = int_group.parameters[1]
+        assert isinstance(any_int_2, IntParameter)
+        assert any_int_2.name == "Another unbounded int"
+        assert (
+            any_int_2.description
+            == "This time, the bounds are explicitly null."
+        )
+        assert any_int_2.flag == "--int-unrestricted"
+        assert any_int_2.default_value == 100
+        assert any_int_2.lower_bound is None
+        assert any_int_2.upper_bound is None
+
+        min_int_1 = int_group.parameters[2]
+        assert isinstance(min_int_1, IntParameter)
+        assert min_int_1.name == "Lower-bounded int"
+        assert (
+            min_int_1.description
+            == "This integer must be at least 50."
+        )
+        assert min_int_1.flag == "-i50"
+        assert min_int_1.default_value == 75
+        assert min_int_1.lower_bound == 50
+        assert min_int_1.upper_bound is None
+
+        min_int_2 = int_group.parameters[3]
+        assert isinstance(min_int_2, IntParameter)
+        assert min_int_2.name == "Another lower-bounded int"
+        assert (
+            min_int_2.description
+            == "Values 30+, upper bound is null."
+        )
+        assert min_int_2.flag == "-i30"
+        assert min_int_2.default_value == 1300
+        assert min_int_2.lower_bound == 30
+        assert min_int_2.upper_bound is None
+
+        max_int_1 = int_group.parameters[4]
+        assert isinstance(max_int_1, IntParameter)
+        assert max_int_1.name == "Upper-bounded int"
+        assert (
+            max_int_1.description
+            == "This integer must be no more than 10."
+        )
+        assert max_int_1.flag == "-i10"
+        assert max_int_1.default_value == -19
+        assert max_int_1.lower_bound is None
+        assert max_int_1.upper_bound == 10
+
+        max_int_2 = int_group.parameters[5]
+        assert isinstance(max_int_2, IntParameter)
+        assert max_int_2.name == "Another upper-bounded int"
+        assert (
+            max_int_2.description
+            == "No more than 15. Lower bound is null."
+        )
+        assert max_int_2.flag == "-i15"
+        assert max_int_2.default_value == 15
+        assert max_int_2.lower_bound is None
+        assert max_int_2.upper_bound == 15
+
+        bounded_int = int_group.parameters[6]
+        assert isinstance(bounded_int, IntParameter)
+        assert bounded_int.name == "Bounded int"
+        assert (
+            bounded_int.description
+            == "This int is from 1 to 10."
+        )
+        assert bounded_int.flag == "-i1-10"
+        assert bounded_int.default_value == 7
+        assert bounded_int.lower_bound == 1
+        assert bounded_int.upper_bound == 10
+
+        #Float
+        float_group = parameter_list.parameter_groups[2]
+        assert float_group.name == "Floating-point parameters"
+        assert len(float_group.parameters) == 7
+
+        any_float_1 = float_group.parameters[0]
+        assert isinstance(any_float_1, FloatParameter)
+        assert any_float_1.name == "Unbounded float"
+        assert (
+            any_float_1.description
+            == "This float can take any value."
+        )
+        assert any_float_1.flag == "--unbounded-float"
+        assert any_float_1.default_value == approx(-3.14159)
+        assert any_float_1.lower_bound is None
+        assert any_float_1.upper_bound is None
+
+        any_float_2 = float_group.parameters[1]
+        assert isinstance(any_float_2, FloatParameter)
+        assert any_float_2.name == "Another unbounded float"
+        assert (
+            any_float_2.description
+            == "This time, the bounds are explicitly null."
+        )
+        assert any_float_2.flag == "--float-unrestricted"
+        assert any_float_2.default_value == approx(123.456)
+        assert any_float_2.lower_bound is None
+        assert any_float_2.upper_bound is None
+
+        min_float_1 = float_group.parameters[2]
+        assert isinstance(min_float_1, FloatParameter)
+        assert min_float_1.name == "Lower-bounded float"
+        assert (
+            min_float_1.description
+            == "This float must be at least 1.5."
+        )
+        assert min_float_1.flag == "-f1.5"
+        assert min_float_1.default_value == approx(1.9)
+        assert min_float_1.lower_bound == approx(1.5)
+        assert min_float_1.upper_bound is None
+
+        min_float_2 = float_group.parameters[3]
+        assert isinstance(min_float_2, FloatParameter)
+        assert (
+            min_float_2.description
+            == "Values 3.1+, upper bound is null."
+        )
+        assert min_float_2.flag == "-f3.1"
+        assert min_float_2.default_value == approx(1300)
+        assert min_float_2.lower_bound == approx(3.1)
+        assert min_float_2.upper_bound is None
+
+        max_float_1 = float_group.parameters[4]
+        assert isinstance(max_float_1, FloatParameter)
+        assert max_float_1.name == "Upper-bounded float"
+        assert (
+            max_float_1.description
+            == "This float must be no more than -190.45."
+        )
+        assert max_float_1.flag == "-f-190.45"
+        assert max_float_1.default_value == approx(-199)
+        assert max_float_1.lower_bound is None
+        assert max_float_1.upper_bound == approx(-190.45)
+
+        max_float_2 = float_group.parameters[5]
+        assert isinstance(max_float_2, FloatParameter)
+        assert max_float_2.name == "Another upper-bounded float"
+        assert (
+            max_float_2.description
+            == "No more than 13.13. Lower bound is null."
+        )
+        assert max_float_2.flag == "-f13.13"
+        assert max_float_2.default_value == approx(-23094)
+        assert max_float_2.lower_bound is None
+        assert max_float_2.upper_bound == approx(13.13)
+
+        bounded_float = float_group.parameters[6]
+        assert isinstance(bounded_float, FloatParameter)
+        assert bounded_float.name == "Bounded float"
+        assert (
+            bounded_float.description
+            == "This float is between 0 and 1."
+        )
+        assert bounded_float.flag == "-f0-1"
+        assert bounded_float.default_value == approx(0)
+        assert bounded_float.lower_bound == approx(0)
+        assert bounded_float.upper_bound == approx(1)
