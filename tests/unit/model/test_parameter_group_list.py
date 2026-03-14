@@ -259,7 +259,7 @@ class TestParameterGroupListFromYaml:
                         cli: -f13.13
                         type: float
                         min: null
-                        max: 13.3
+                        max: 13.13
                         default: -23094.0
                       bounded-float:
                         name: Bounded float
