@@ -9,8 +9,14 @@ from PySide6.QtWidgets import (
 )
 
 from PySide6.QtCore import (
-    QDir
+    QDir,
+    Slot,
+    QUrl
 )
+
+from PySide6.QtGui import QDesktopServices
+
+import subprocess
 
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.widgets.parameter_form import ParameterForm
@@ -46,6 +52,7 @@ class ResultsWidget(QWidget):
         # Folder widget
         self.folder_structure = QFileSystemModel()
         self.folder_widget = QTreeView()
+        self.folder_widget.doubleClicked.connect(self._on_double_click)
         layout.addWidget(self.folder_widget, 1)
 
         # Parameter widget
@@ -65,3 +72,8 @@ class ResultsWidget(QWidget):
         self.folder_widget.setModel(self.folder_structure)
         self.folder_widget.setRootIndex(self.folder_structure.index(QDir.currentPath()))
         self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+    @Slot(int)
+    def _on_double_click(self, index) -> None:
+        path = self.folder_structure.filePath(index)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
