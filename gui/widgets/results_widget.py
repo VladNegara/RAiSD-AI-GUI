@@ -75,5 +75,6 @@ class ResultsWidget(QWidget):
 
     @Slot(int)
     def _on_double_click(self, index) -> None:
-        path = self.folder_structure.filePath(index)
-        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+        if not self.folder_structure.isDir(index):
+            path = self.folder_structure.filePath(index)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(path))
