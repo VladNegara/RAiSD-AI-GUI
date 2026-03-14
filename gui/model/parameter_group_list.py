@@ -1,4 +1,5 @@
 from re import compile
+from typing import Iterator
 
 from PySide6.QtCore import (
     QObject,
@@ -311,3 +312,9 @@ class ParameterGroupList(QObject):
             instructions.append(instruction)
 
         return instructions
+
+    def __iter__(self) -> Iterator[ParameterGroup]:
+        return iter(self.parameter_groups)
+
+    def __getitem__(self, i) -> ParameterGroup:
+        return self.parameter_groups[i]

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Iterator
 
 from PySide6.QtCore import QObject, Signal, Slot
 
@@ -97,3 +97,9 @@ class ParameterGroup(QObject):
 
     def __str__(self) -> str:
         return f"{self.name}: {self.to_cli()}"
+
+    def __iter__(self) -> Iterator[Parameter[Any]]:
+        return iter(self.parameters)
+
+    def __getitem__(self, i) -> Parameter[Any]:
+        return self.parameters[i]
