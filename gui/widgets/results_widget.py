@@ -50,10 +50,15 @@ class ResultsWidget(QWidget):
         layout.addWidget(info__files_widget)
 
         # Folder widget
+        files_widget = QWidget()
+        files_layout = QVBoxLayout(files_widget)
+        files_label = QLabel("Files in the generated directory")
+        files_layout.addWidget(files_label)
         self.folder_structure = QFileSystemModel()
         self.folder_widget = QTreeView()
         self.folder_widget.doubleClicked.connect(self._on_double_click)
-        layout.addWidget(self.folder_widget, 1)
+        files_layout.addWidget(self.folder_widget)
+        layout.addWidget(files_widget, 1)
 
         # Parameter widget
         parameters_header = QLabel("Parameters used")
