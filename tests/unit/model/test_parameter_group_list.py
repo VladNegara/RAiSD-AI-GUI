@@ -770,3 +770,39 @@ class TestParameterGroupListFromYaml:
         assert bounded_float.default_value == approx(0)
         assert bounded_float.lower_bound == approx(0)
         assert bounded_float.upper_bound == approx(1)
+
+        # Enum
+        enum_group = parameter_list.parameter_groups[3]
+        assert enum_group.name == "Enum parameters"
+        assert len(enum_group.parameters) == 2
+
+        cli_enum = enum_group.parameters[0]
+        assert isinstance(cli_enum, EnumParameter)
+        assert cli_enum.name == "Enum parameter"
+        assert (
+            cli_enum.description
+            == "Choose from a list of four values."
+        )
+        assert cli_enum.flag == "--enum"
+        assert cli_enum.default_value == 2
+        assert cli_enum.options == [
+            "First option",
+            "Second option",
+            "Third option",
+            "Fourth option",
+        ]
+
+        no_cli_enum = enum_group.parameters[1]
+        assert isinstance(no_cli_enum, EnumParameter)
+        assert no_cli_enum.name == "Dummy enum parameter"
+        assert (
+            no_cli_enum.description
+            == "This parameter will not be in the CLI."
+        )
+        assert no_cli_enum.flag == ""
+        assert no_cli_enum.default_value == 0
+        assert no_cli_enum.options == [
+            "Choose this...",
+            "...or this!",
+            "Or even this.",
+        ]
