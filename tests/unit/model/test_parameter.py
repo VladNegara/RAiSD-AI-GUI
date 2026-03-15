@@ -1,7 +1,7 @@
 from pytest import fixture
 import re
 
-from gui.model.parameter import Parameter, BoolParameter, IntParameter, FloatParameter, StringParameter, EnumParameter
+from gui.model.parameter import Parameter, BoolParameter, IntParameter, FloatParameter, StringParameter, EnumParameter, FileParameter
 
 class TestBoolParameter:
     """Tests for BoolParameter class."""
@@ -489,6 +489,97 @@ class TestEnumParameter:
         self.signal_emitted = False
         self.value = 0
         self.new_value = 5
+        self.valid = True
+
+        def on_value_changed(value, valid):
+            self.signal_emitted = True
+            self.value = value
+            self.valid = valid
+
+        param.value_changed.connect(on_value_changed)
+
+        # act
+        param.value = self.new_value
+
+        # assert
+        assert self.signal_emitted
+        assert self.value == self.new_value
+        assert not self.valid
+
+class TestFileParameter:
+    """Tests for FileParameter class."""
+
+    @fixture(autouse=True)
+    def set_file_param(self):
+        self.file_param = FileParameter(
+            name="testfile",
+            description="Test file parameter",
+            flag="--testfile",
+            operations={'IMG-GEN', 'MDL-GEN'},
+            accepted_formats=["txt"],
+            strict=True,
+            multiple=True,
+            default_value=["testfile.txt", "filetest.txt"],
+        )
+
+    def test_init_values(self):
+        """Test FileParameter initialization with default value."""
+        param = self.file_param
+        assert param.name == "testfile"
+        assert param.description == "Test file parameter"
+        assert param.flag == "--testfile"
+        assert param.operations == {'IMG-GEN', 'MDL-GEN'}
+        assert param.accepted_formats == [".txt"]
+        assert param.value == ["testfile.txt", "filetest.txt"]
+        assert param.default_value == ["testfile.txt", "filetest.txt"]
+        assert param.strict
+        assert param.multiple
+
+    def test_set_value(self):
+        """Test setting FileParameter value."""
+        param = self.file_param
+        param.value = ["newfile.txt"]
+        assert param.value == ["newfile.txt"]
+
+    def test_reset_value(self):
+        """Test resetting FileParameter value to default."""
+        param = self.file_param
+        param.value = ["newfile.txt"]
+        param.reset_value()
+        assert param.value == ["testfile.txt", "filetest.txt"]
+
+    def test_valid_format(self):
+        """Test FileParameter format validity."""
+        param = self.file_param
+        # How to initialize FileParameter with valid value?
+        # assert param.valid
+        param.value = ["invalid.md"]
+        assert not param.valid
+
+    def test_valid_file_count(self):
+        """Test FileParameter validity when no file is selected."""
+        param = self.file_param
+        param.value = []
+        assert not param.valid
+
+    def test_to_cli(self):
+        """Test FileParameter command-line representation."""
+        param = self.file_param
+        # Doesn't make much sense, but it's expected behavior.
+        assert (
+            param.to_cli('IMG-GEN')
+            == "--testfile testfile.txt --testfile filetest.txt"
+        )
+        param.value = ["newfile.txt"]
+
+    def test_value_changed_emitted(self):
+        """Test that value_changed signal is emitted when FileParameter value changes."""
+        # For now, no way to test for valid value. Maybe we make a temp file?
+        # arrange
+        param = self.file_param
+        self.signal_emitted = False
+        self.value = []
+        self.new_value = ["invalid.md"]
         self.valid = True
 
         def on_value_changed(value, valid):
