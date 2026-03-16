@@ -86,12 +86,12 @@ class TestIntParameterWidget:
 
     def test_initial_value_displayed(self):
         """Line edit should show the default value."""
-        assert self.widget._lineedit.text() == "5"
+        assert self.widget._line_edit.text() == "5"
 
-    def test_parameter_updates_lineedit(self):
+    def test_parameter_updates_line_edit(self):
         """Setting the parameter value should update the line edit."""
         self.param.value = 8
-        assert self.widget._lineedit.text() == "8"
+        assert self.widget._line_edit.text() == "8"
 
     def test_valid_value_accepted(self):
         """A value within bounds should be valid."""
@@ -108,11 +108,11 @@ class TestIntParameterWidget:
         self.param.value = 11
         assert self.param.valid is False
 
-    def test_reset_updates_lineedit(self):
+    def test_reset_updates_line_edit(self):
         """Resetting the parameter should update the line edit."""
         self.param.value = 8
         self.param.reset_value()
-        assert self.widget._lineedit.text() == "5"
+        assert self.widget._line_edit.text() == "5"
 
     def test_bounds_label_shown(self):
         """A label showing bounds should be present in the layout."""
@@ -139,11 +139,11 @@ class TestFloatParameterWidget:
         self.widget = FloatParameterWidget(self.param)
 
     def test_initial_value_displayed(self):
-        assert self.widget._lineedit.text() == "5.0"
+        assert self.widget._line_edit.text() == "5.0"
 
-    def test_parameter_updates_lineedit(self):
+    def test_parameter_updates_line_edit(self):
         self.param.value = 7.5
-        assert self.widget._lineedit.text() == "7.5"
+        assert self.widget._line_edit.text() == "7.5"
 
     def test_valid_value(self):
         self.param.value = 3.14
@@ -157,10 +157,10 @@ class TestFloatParameterWidget:
         self.param.value = 10.1
         assert self.param.valid is False
 
-    def test_reset_updates_lineedit(self):
+    def test_reset_updates_line_edit(self):
         self.param.value = 9.9
         self.param.reset_value()
-        assert self.widget._lineedit.text() == "5.0"
+        assert self.widget._line_edit.text() == "5.0"
 
 
 class TestEnumParameterWidget:
@@ -412,7 +412,7 @@ class TestParameterWidgetFromParameter:
     def test_enabled_changed_hides_row(self, app):
         """Setting enabled=False should hide the row widget."""
         param = BoolParameter("b", "b", "--b", {"TEST"}, False)
-        row = ParameterWidget.from_parameter(param)
+        row = ParameterWidget.from_parameter(param).build_form_row()
         row.show()
         param.enabled = False
         assert not row.isVisible()
@@ -431,15 +431,15 @@ class TestIntParameterWidgetTextChanged:
 
     def test_text_changed_valid_input(self):
         """Typing a valid integer should update the parameter."""
-        self.widget._lineedit.setText("9")
+        self.widget._line_edit.setText("9")
         self.widget._text_changed()
         assert self.param.value == 9
 
     def test_text_changed_invalid_input_restores(self):
         """Typing an unparseable value should restore the previous value."""
-        self.widget._lineedit.setText("")
+        self.widget._line_edit.setText("")
         self.widget._text_changed()
-        assert self.widget._lineedit.text() == "5"
+        assert self.widget._line_edit.text() == "5"
 
 
 class TestFloatParameterWidgetTextChanged:
@@ -454,15 +454,15 @@ class TestFloatParameterWidgetTextChanged:
 
     def test_text_changed_valid_input(self):
         """Typing a valid float should update the parameter."""
-        self.widget._lineedit.setText("7.5")
+        self.widget._line_edit.setText("7.5")
         self.widget._text_changed()
         assert self.param.value == 7.5
 
     def test_text_changed_invalid_input_restores(self):
         """Typing an unparseable value should restore the previous value."""
-        self.widget._lineedit.setText("")
+        self.widget._line_edit.setText("")
         self.widget._text_changed()
-        assert self.widget._lineedit.text() == "3.0"
+        assert self.widget._line_edit.text() == "3.0"
 
 
 class TestFileParameterWidgetDialog:
