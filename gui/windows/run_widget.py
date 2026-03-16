@@ -515,8 +515,9 @@ class RunViewWidget(RunSubWidget):
         """
         print(f"Execution failed with exit code '{exit_code}'")
 
+        self.run_ended.emit(False)        
+
         if process_error is None: # otherwise _process_failed will show an error dialog:
-            self.run_ended.emit(False)
             self.execution_output.append(f"Execution failed with exit code '{exit_code}'")
             self.execution_error_dialog = ErrorDialog(self, f"Execution Failed ({exit_code})", f"Execution failed with exit code '{exit_code}'")
             self.execution_error_dialog.exec()
