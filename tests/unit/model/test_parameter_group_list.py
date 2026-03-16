@@ -976,3 +976,91 @@ class TestParameterGroupListFromYaml:
         ]
         assert strict_multiple_files.expected_formats is None
         assert strict_multiple_files.multiple
+
+        # Optional
+        optional_group = parameter_list.parameter_groups[6]
+        assert optional_group.name == "Optional parameters"
+        assert len(optional_group.parameters) == 6
+
+        opt_bool = optional_group.parameters[0]
+        assert isinstance(opt_bool, OptionalParameter)
+        assert opt_bool.name == "Optional bool"
+        assert opt_bool.description == "An optional bool parameter."
+        assert not opt_bool.default_value
+        inner_bool = opt_bool.parameter
+        assert isinstance(inner_bool, BoolParameter)
+        assert inner_bool.name == "Inner bool"
+        assert inner_bool.description == "The inner parameter."
+        assert inner_bool.flag == "--opt-bool"
+        assert not inner_bool.default_value
+
+        opt_int = optional_group.parameters[1]
+        assert isinstance(opt_int, OptionalParameter)
+        assert opt_int.name == "Optional int"
+        assert (
+            opt_int.description
+            == "An optional int parameter, default true."
+        )
+        assert opt_int.default_value
+        inner_int = opt_int.parameter
+        assert isinstance(inner_int, IntParameter)
+        assert inner_int.name == "Inner int parameter"
+        assert inner_int.description == ""
+        assert inner_int.flag == "--opt-int"
+        assert inner_int.default_value == 1
+        assert inner_int.lower_bound == 1
+        assert inner_int.upper_bound is None
+
+        opt_float = optional_group.parameters[2]
+        assert isinstance(opt_float, OptionalParameter)
+        assert opt_float.name == "Optional float"
+        assert opt_float.description == "An optional float parameter."
+        assert not opt_float.default_value
+        inner_float = opt_float.parameter
+        assert isinstance(inner_float, FloatParameter)
+        assert inner_float.name == "Inner float parameter"
+        assert inner_float.description == ""
+        assert inner_float.default_value == approx(-1.1)
+        assert inner_float.lower_bound is None
+        assert inner_float.upper_bound is None
+
+        opt_enum = optional_group.parameters[3]
+        assert isinstance(opt_enum, OptionalParameter)
+        assert opt_enum.name == "Optional enum"
+        assert opt_enum.description == "An optional enum parameter."
+        assert not opt_enum.default_value
+        inner_enum = opt_enum.parameter
+        assert isinstance(inner_enum, EnumParameter)
+        assert inner_enum.name == ""
+        assert (
+            inner_enum.description
+            == "An inner enum parameter with no name."
+        )
+        assert inner_enum.flag == "--opt-enum"
+        assert inner_enum.default_value == 1
+        assert inner_enum.options == ["A", "B", "C"]
+
+        opt_str = optional_group.parameters[4]
+        assert isinstance(opt_str, OptionalParameter)
+        assert opt_str.name == "Optional string"
+        assert opt_str.description == "An optional string parameter."
+        inner_str = opt_str.parameter
+        assert isinstance(inner_str, StringParameter)
+        assert inner_str.name == ""
+        assert inner_str.description == "The string."
+        assert inner_str.flag == "--opt-str"
+        assert inner_str.default_value == "example"
+        assert inner_str.max_length == 20
+
+        opt_file = optional_group.parameters[5]
+        assert isinstance(opt_file, OptionalParameter)
+        assert opt_file.name == "Optional files"
+        assert opt_file.description == "An optional multi-file parameter."
+        inner_file = opt_file.parameter
+        assert isinstance(inner_file, FileParameter)
+        assert inner_file.name == ""
+        assert inner_file.description == ""
+        assert inner_file.flag == "--opt-files"
+        assert inner_file.default_value == []
+        assert not inner_file.strict
+        assert inner_file.multiple
