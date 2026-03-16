@@ -22,14 +22,15 @@ from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
 
+
 class RunWidget(QWidget):
     """
     A widget for all steps of running RAiSD-AI.
     """
 
     start_run = Signal()
-    run_started = Signal(int)     # number of processes
-    run_ended = Signal(bool)      # if run was successful
+    run_started = Signal(int)  # number of processes
+    run_ended = Signal(bool)  # if run was successful
 
     def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
         """
@@ -65,7 +66,7 @@ class RunWidget(QWidget):
         layout.addWidget(stacked_step_widget, 1)
         self._setup_stacked_step_widget(self.stacked_step_widget_layout)
 
-    def _setup_step_button_bar(self, layout:QHBoxLayout):
+    def _setup_step_button_bar(self, layout: QHBoxLayout):
         """
         Setup the step button bar.
         """
@@ -112,7 +113,7 @@ class RunWidget(QWidget):
         self.run_started.connect(self.parameter_confirmation_widget.run_start)
         self.run_ended.connect(self.parameter_confirmation_widget.run_end)
         layout.addWidget(self.parameter_confirmation_widget)
-    
+
         # Run view widget
         self.run_view_widget = RunViewWidget(self._parameter_group_list, self._command_executor)
         self.run_view_widget.results_button.clicked.connect(self._switch_to_run_results_widget)
@@ -163,7 +164,6 @@ class RunWidget(QWidget):
             self._switch_to_run_view_widget()
 
 
-# TODO: IMPLEMENT   
 class NavigationButtonsWidget(QWidget):
     def __init__(self, left_button: QPushButton | None = None, middle_button: QPushButton | None = None, right_button: QPushButton | None = None):
         super().__init__()
@@ -202,7 +202,7 @@ class RunSubWidget(QWidget):
 
 
 class OperationSelectionWidget(RunSubWidget):
-    
+
     def __init__(self):
         super().__init__()
 
@@ -227,7 +227,7 @@ class ParameterInputWidget(RunSubWidget):
     def __init__(self, parameter_group_list: ParameterGroupList):
         self._parameter_group_list = parameter_group_list
         super().__init__()
-        
+
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
         widget.setStyleSheet("background-color: lightblue;")
@@ -235,11 +235,11 @@ class ParameterInputWidget(RunSubWidget):
         parameter_input_label = QLabel("Parameter Input")
         layout.addWidget(parameter_input_label)
 
-        ## Add checkbox for imgage gen selection
+        ## Add checkbox for image gen selection
         mode_select_widget = QWidget()
         mode_select_layout = QHBoxLayout(mode_select_widget)
         layout.addWidget(mode_select_widget)
-        
+
         img_gen_checkbox = QCheckBox()
         img_gen_checkbox.setChecked(True)
         mode_select_layout.addWidget(img_gen_checkbox)
@@ -258,6 +258,10 @@ class ParameterInputWidget(RunSubWidget):
         parameter_form_scroll.setWidget(parameter_form)
         layout.addWidget(parameter_form_scroll)
 
+        self._validity_label = QLabel("")
+        self._validity_label.setStyleSheet("QLabel { color: red; }")
+        layout.addWidget(self._validity_label)
+
         check_param_button = QPushButton("Check parameters")
         check_param_button.clicked.connect(self._check_param_button_clicked)
         layout.addWidget(check_param_button)
@@ -266,7 +270,24 @@ class ParameterInputWidget(RunSubWidget):
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.back_button = QPushButton("Back")
         self.next_button = QPushButton("Next")
+        
+        self.update_next_button_state()
+         for group in self._parameter_group_list.parameter_groups:
+            for parameter in group.parameters:
+                parameter.value_changed.connect(self._update_next_button_state)
+                
         return NavigationButtonsWidget(left_button=self.back_button, right_button=self.next_button)
+
+    def _update_next_button_state(self) -> None:
+        """
+        Helper function to display the error that makes the next_button inactive
+        """
+        valid = self._parameter_group_list.valid
+        self.next_button.setEnabled(valid)
+        if valid:
+            self._validity_label.setText("")
+        else:
+            self._validity_label.setText("Cannot continue: one or more parameters are invalid.")
 
     @Slot()
     def _img_gen_checkbox_clicked(self, state) -> None:
@@ -325,10 +346,10 @@ class ParameterConfirmationWidget(RunSubWidget):
         self.run_button.setEnabled(True)
         self.run_button.setText("Submit")
 
-class RunViewWidget(RunSubWidget):
 
-    run_started = Signal(int)   # Number of processes
-    run_ended = Signal(bool)    # Run successful
+class RunViewWidget(RunSubWidget):
+    run_started = Signal(int)  # Number of processes
+    run_ended = Signal(bool)  # Run successful
 
     def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
         self._parameter_group_list = parameter_group_list
@@ -432,7 +453,7 @@ class RunViewWidget(RunSubWidget):
         Append the output from the command_executor to execution_output.
         """
         self.execution_output.append(output)
-        
+
     @Slot(str)
     def _command_executor_err_output(self, output: str) -> None:
         """
@@ -488,7 +509,7 @@ class RunViewWidget(RunSubWidget):
         """
         self.execution_output.clear()
         self.error_output.clear()
-    
+
     # SLOTS
     @Slot(int)
     def _execution_started(self, number_of_processes: int) -> None:
