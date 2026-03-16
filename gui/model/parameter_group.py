@@ -59,6 +59,13 @@ class ParameterGroup(QObject):
         """
         return all([param.valid for param in self.parameters])
 
+    @property
+    def enabled(self) -> bool:
+        """
+        Whether the parameter group is enabled.
+        """
+        return self._enabled
+
     @Slot(bool)
     def _parameter_enabled_changed(self, new_value: bool) -> None:
         """

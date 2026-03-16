@@ -13,9 +13,7 @@ def main():
     app = QApplication(sys.argv)
     QApplication.setStyle(QStyleFactory.create("windowsvista"))
 
-    parameter_group_list = ParameterGroupList.from_configuration_file(
-        "gui/..."
-    ) # TODO: implement config file and write path
+    parameter_group_list = ParameterGroupList.from_yaml("gui/config.yaml")
 
     run_result = RunResult(parameter_group_list, QDir.currentPath())
 

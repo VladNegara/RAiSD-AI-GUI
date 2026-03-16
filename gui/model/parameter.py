@@ -1,13 +1,17 @@
 from abc import ABC, abstractmethod
-from numbers import Real
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 from re import Pattern, compile
 from pathlib import Path
 import os
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import (
+    QObject,
+    Signal,
+    Slot,
+)
 
 from gui.model.meta import AbstractQObjectMeta
+from gui.model.dependency import Dependency
 
 T = TypeVar("T")
 
@@ -20,6 +24,59 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
     to use the signal mechanism and from `Generic` to add type hints
     based on the type of value that the parameter stores.
     """
+
+    class EnabledCondition(Dependency.Condition):
+        """
+        A condition that tracks whether a parameter is enabled.
+        """
+
+        def __init__(
+                self,
+                parameter: "Parameter[Any]",
+                target_value: bool = True,
+                parent: QObject | None = None,
+        ) -> None:
+            """
+            Initialize a `Parameter.EnabledCondition` object.
+
+            :param parameter: the parameter to track
+            :type parameter: "Parameter[Any]"
+
+            :param target_value: the target value
+            :type target_value: bool
+
+            :param parent: the parent of this `QObject`
+            :type parent: QObject | None
+            """
+            self._parameter = parameter
+            self._target_value = target_value
+            super().__init__(
+                value=self._parameter.enabled == self._target_value,
+                parent=parent,
+            )
+
+            self._parameter.enabled_changed.connect(
+                self._parameter_enabled_changed
+            )
+        
+        @Slot(bool)
+        def _parameter_enabled_changed(
+            self,
+            new_enabled: bool,
+        ) -> None:
+            self.value = new_enabled == self._target_value
+
+    class EnabledEffect(Dependency.Effect):
+        def __init__(
+                self,
+                parameter: "Parameter[Any]",
+                parent: QObject | None = None,
+        ) -> None:
+            super().__init__(parent=parent)
+            self._parameter = parameter
+
+        def condition_changed(self, new_value: bool) -> None:
+            self._parameter.enabled = new_value
 
     value_changed: Signal
     enabled_changed = Signal(bool)
@@ -113,12 +170,154 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
         pass
 
 
+class OptionalParameter(Parameter[bool]):
+    """
+    An optional parameter in the GUI.
+
+    The class acts as a wrapper around a parameter of any type, making it
+    optional.
+
+    The resulting parameter belongs to the same operations as the inner
+    parameter.
+    """
+
+    value_changed = Signal(bool, bool)
+
+    def __init__(
+            self,
+            name: str, description: str,
+            operations: set[str],
+            default_value: bool,
+            parameter: Parameter[Any],
+    ) -> None:
+        super().__init__(
+            name=name,
+            description=description,
+            flag="",
+            operations=parameter.operations,
+            default_value=default_value,
+        )
+        self._parameter = parameter
+
+        self._parameter.enabled = self.value
+
+        self.value_changed.connect(self._value_changed)
+
+    @property
+    def parameter(self) -> Parameter[Any]:
+        return self._parameter
+
+    @property
+    def valid(self) -> bool:
+        if not self.value:
+            return True
+        return self.parameter.valid
+
+    def to_cli(self, operation: str) -> str:
+        if self.value:
+            return self.parameter.to_cli(operation)
+        return ""
+
+    @Slot(bool, bool)
+    def _value_changed(self, new_value, _):
+        self.parameter.enabled = new_value
+
+
+class MultiParameter(Parameter[tuple[()]]):
+    """
+    A multi-value parameter in the GUI.
+    """
+
+    value_changed = Signal(tuple[()], bool)
+
+    def __init__(
+            self,
+            name: str, description: str, flag: str,
+            parameters: list[Parameter[Any]],
+    ) -> None:
+        super().__init__(
+            name,
+            description,
+            flag,
+            set().union(*[param.operations for param in parameters]),
+            ()
+        )
+
+        self._parameters = parameters
+
+        self.enabled_changed.connect(self._enabled_changed)
+
+    @property
+    def parameters(self) -> list[Parameter[Any]]:
+        return self._parameters
+
+    def reset_value(self) -> None:
+        for parameter in self.parameters:
+            parameter.reset_value()
+
+    @property
+    def valid(self) -> bool:
+        if not self.enabled:
+            return True
+        return all([parameter.valid for parameter in self.parameters])
+
+    def to_cli(self, operation: str) -> str:
+        cli_params = [self.flag] + [p.to_cli(operation) for p in self.parameters]
+        nonempty_params = [p for p in cli_params if p]
+        return " ".join(nonempty_params)
+
+    @Slot(bool)
+    def _enabled_changed(self, new_enabled: bool) -> None:
+        for parameter in self.parameters:
+            parameter.enabled = new_enabled
+
+
 class BoolParameter(Parameter[bool]):
     """
     A boolean parameter in the GUI.
 
     The value of a boolean parameter is always valid.
     """
+
+    class Condition(Dependency.Condition):
+        """
+        A condition that tracks whether a bool parameter has a given
+        value.
+        """
+
+        def __init__(
+                self,
+                parameter: "BoolParameter",
+                target_value: bool = True,
+                parent: QObject | None = None,
+        ) -> None:
+            """
+            Initialize a `BoolParameter.Condition` object.
+
+            :param parameter: the bool parameter to track
+            :type parameter: BoolParameter
+
+            :param target_value: the target value of the bool parameter
+            :type target_value: bool
+
+            :param parent: the parent of this `QObject`
+            :type parent: QObject | None
+            """
+            super().__init__(
+                value=parameter.value==target_value,
+                parent=parent)
+            self._parameter = parameter
+            self._target_value = target_value
+
+            self._parameter.value_changed.connect(self._parameter_value_changed)
+
+        @Slot(bool, bool)
+        def _parameter_value_changed(
+            self,
+            new_value: bool,
+            _: bool,
+        ) -> None:
+            self.value = new_value == self._target_value
 
     value_changed = Signal(bool, bool)
 
@@ -188,6 +387,8 @@ class NumberParameter(Parameter[X]):
 
     @property
     def valid(self):
+        if not self.enabled:
+            return True
         if self.lower_bound is not None and self.value < self.lower_bound:
             return False
         if self.upper_bound is not None and self.value > self.upper_bound:
@@ -245,6 +446,47 @@ class EnumParameter(Parameter[int]):
     A parameter with enumerated values in the GUI.
     """
 
+    class Condition(Dependency.Condition):
+        """
+        A condition that tracks whether an enum parameter's value is in
+        a given set of values.
+        """
+
+        def __init__(
+                self,
+                parameter: "EnumParameter",
+                target_values: list[int],
+                parent: QObject | None = None,
+        ) -> None:
+            """
+            Initialize an `EnumParameter.Condition` object.
+
+            :param parameter: the enum parameter to track
+            :type parameter: EnumParameter
+
+            :param target_values: the set of target values
+            :type target_values: list[int]
+
+            :param parent: the parent of this `QObject`
+            :type parent: QObject | None
+            """
+            self._parameter = parameter
+            self._target_values = target_values
+            super().__init__(
+                value=self._parameter.value in self._target_values,
+                parent=parent,
+            )
+
+            self._parameter.value_changed.connect(self._parameter_value_changed)
+
+        @Slot(int, bool)
+        def _parameter_value_changed(
+            self,
+            new_value: int,
+            _: bool,
+        ) -> None:
+            self.value = new_value in self._target_values
+
     value_changed = Signal(int, bool)
 
     def __init__(
@@ -295,6 +537,8 @@ class EnumParameter(Parameter[int]):
 
     @property
     def valid(self) -> bool:
+        if not self.enabled:
+            return True
         return self.value in range(len(self.options))
 
     def to_cli(self, operation: str) -> str:
@@ -365,6 +609,8 @@ class StringParameter(Parameter[str]):
 
     @property
     def valid(self) -> bool:
+        if not self.enabled:
+            return True
         if self.max_length is not None and len(self.value) > self.max_length:
             return False
         if self._pattern is not None and not self._pattern.fullmatch(self.value):
@@ -454,6 +700,8 @@ class FileParameter(Parameter[list[str]]):
 
     @property
     def valid(self) -> bool:
+        if not self.enabled:
+            return True
         if not self.value:
             return False
         if not self.multiple and len(self.value) > 1:
