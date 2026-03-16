@@ -260,15 +260,6 @@ class ParameterInputWidget(RunSubWidget):
         mode_select_widget = QWidget()
         mode_select_layout = QHBoxLayout(mode_select_widget)
         layout.addWidget(mode_select_widget)
-        
-        img_gen_checkbox = QCheckBox()
-        img_gen_checkbox.setChecked(True)
-        mode_select_layout.addWidget(img_gen_checkbox)
-
-        img_gen_label = QLabel("Perform IMG-GEN")
-        mode_select_layout.addWidget(img_gen_label, 1)
-
-        img_gen_checkbox.checkStateChanged.connect(self._img_gen_checkbox_clicked)
 
         parameter_form = ParameterForm(self._parameter_group_list)
 
@@ -292,15 +283,6 @@ class ParameterInputWidget(RunSubWidget):
         return QWidget()
         # TODO: Implement
         # raise NotImplementedError
-
-    @Slot()
-    def _img_gen_checkbox_clicked(self, state) -> None:
-        if state == Qt.CheckState.Checked:
-            self._parameter_group_list.set_operation("IMG-GEN", True)
-            print("IMG-GEN checked")
-        elif state == Qt.CheckState.Unchecked:
-            self._parameter_group_list.set_operation("IMG-GEN", False)
-            print("IMG-GEN unchecked")
         
     @Slot()
     def _submit_button_clicked(self) -> None:
