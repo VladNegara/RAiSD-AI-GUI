@@ -618,7 +618,7 @@ class ParameterGroupList(QObject):
         mode_list = config_obj.get("modes", []) or []
         for mode_obj in mode_list:
             for operation in mode_obj["operations"]:
-                operations[operation] = True
+                operations[operation] = False
 
         parameter_groups = []
         for parameter_group_obj in config_obj["parameter_groups"]:
