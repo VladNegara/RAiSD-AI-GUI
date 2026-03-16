@@ -698,5 +698,56 @@ parameter_groups:
       "-poc": 
         name: Construct position-centered windows
         description: Changes the data-generation mode from using SNP-driven windows to constructing position-centered windows. When SNP-driven windows are used, the SNP located to the image target site position becomes the central SNP in the window and an equal number of SNPs are placed on both sides. When position-centered windows are used, the image target site position is (as close as possible to) the midpoint between the leftmost and rightmost SNPs per window.
+        cli: "-poc"
         type: bool
         default: false
+      "-ips":
+        name: Images per simulation
+        description: Provides the number of images to be created per simulation.
+        cli: "-ips"
+        type: int
+        min: 1
+        default: 1
+      "-iws":
+        name: Image window step
+        description: Provides the windo step for creating images.
+        cli: "-iws"
+        type: int
+        min: 1
+        default: 1
+      "-bin":
+        name: Convert image data to .snp
+        description: Converts image data to custom binary format (.snp). ONly supported by the PyTorch implementation.
+        cli: "-bin"
+        type: bool
+        default: false
+      "-typ":
+        name: Data type
+        description: 
+        cli: "-typ"
+        type: enum
+        options:
+          - name: Raw data in all channels
+            cli: "0"
+          - name: Raw data in one channel and pairwise snp distances in the other channels
+            cli: "1"
+          - name: Raw data in one channel and mu-var-scaled values in the other channels
+            cli: "2"
+        conditions:
+          - type: bool
+            parameter: "-bin"
+            value: false
+      "-typ-bin":
+        name: Data type
+        description: 
+        cli: "-typ"
+        type: enum
+        options:
+          - name: Raw snp data and positions
+            cli: "0"
+          - name: Derived allele frequencies and positions
+            cli: "1"
+        conditions:
+          - type: bool
+            parameter: "-bin"
+            value: true
