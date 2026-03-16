@@ -1,0 +1,702 @@
+executable: ./RAiSD-AI
+modes:
+  - name: Standard RAiSD
+    operations:
+      RSD-DEF:
+        name: Sweep scan
+        description: Do a sweep scan with standard RAiSD.
+        cli: ""
+        input:
+          - multiple: false
+            extension:
+              - ms
+              - mbs
+              - VCF
+              - FASTA
+        output: report # What and how?
+  - name: RAiSD-AI
+    operations:
+      IMG-GEN:
+        name: Data formatting
+        description: Make raw data into PNGs.
+        cli: -op IMG_GEN
+        input:
+          - multiple: false
+            extension:
+              - ms
+              - mbs
+              - VCF
+              - FASTA
+        output:
+          - multiple: true
+            extension:
+              - png
+      MDL-GEN:
+        name: Model training
+        description: Train a sweep detection CNN model.
+        cli: -op MDL_GEN
+        input:
+          - multiple: true
+            extension:
+              - png
+        output:
+          - multiple: false
+            extension:
+              - pt
+              - keras
+      MDL-TST:
+        name: Model testing
+        description: Evaluate a model.
+        cli: -op MDL_TST
+        input:
+          - multiple: false
+            extension:
+              - pt
+              - keras
+          - multiple: true
+            extension:
+              - png
+        output: testing report # What and how?
+      SWP-SCN:
+        name: Sweep scan
+        description: Use a trained model to scan for selective sweeps.
+        cli: -op SWP_SCN
+        input:
+          - multiple: false
+            extension:
+              - pt
+              - keras
+          - multiple: true # Can you do multiple?
+            extension:
+              - ms
+              - mbs
+              - VCF
+              - FASTA
+        output: report # What and how?
+  - name: Common outlier analysis
+    operations:
+      CO:
+        name: Common outlier analysis
+        description: Perform common outlier analysis for a completed RAiSD run.
+        cli: ""
+        input:
+          - multiple: false
+            extension:
+              - sweed # Whatever file this produces
+          - multiple: false
+            extensoion:
+              - raisd # Whatever file RAiSD produces
+        output: common outlier report # What?
+  - name: File conversion
+    operations:
+      FASTA-VCF:
+        name: FASTA to VCF
+        cli: -E
+        input:
+          - multiple: false
+            extension:
+              - FASTA
+        output:
+          - multiple: false
+            extension:
+              - VCF
+      VCF-MS:
+        name: VCF to ms
+        cli: ""
+        input:
+          - multiple: false
+            expension:
+              - VCF
+        output:
+          - multiple: false
+            extension:
+              - ms
+parameter_groups:
+  - name: General
+    operations:
+      - RSD-DEF
+      - IMG-GEN
+      - MDL-GEN
+      - MDL-TST
+      - SWP-SCN
+      - CO
+      - FASTA-VCF
+      - VCF-MS
+    parameters:
+      "-n":
+        name: Run name
+        description: A unique run ID that is used to name the output files.
+        cli: -n
+        type: str
+      # Where to handle -I?
+      input-file-type:
+        name: Input file type
+        description: The type of the input file. This may change which parameters can be filled in.
+        cli: null
+        type: enum
+        options:
+          - name: ms
+            cli: null
+          - name: mbs
+            cli: null
+          - name: FASTA
+            cli: null
+          - name: Single-chromosome VCF
+            cli: null
+          - name: Multiple-chromosome VCF
+        default: 0
+  - name: SNP and sample handling
+    operations:
+      - RSD-DEF
+      - IMG-GEN
+      - MDL-GEN
+      - MDL-TST
+      - SWP-SCN
+    parameters:
+      "-L":
+        name: Region length
+        description: The size of the region (in basepairs) for ms file. If not provided, it will be extracted at runtime.
+        cli: -L
+        type: int
+        min: 1
+        default: 1
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 0
+      "-S":
+        name: Sample file
+        description: A file containing the list of samples to be processed for VCF files.
+        cli: -S
+        type: file
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+              - 4
+      "-m":
+        name: maf # What?
+        description: The threshold value for excluding SNPs with minor allele frequency.
+        cli: -m
+        type: float
+        min: 0.0
+        max: 1.0
+        default: 0.0
+      "-y":
+        name: Ploidy
+        description: The ploidy used to correctly represent missing data.
+        cli: -y
+        type: int
+        min: 1
+        default: 2
+      "-M":
+        name: Missing data handling strategy
+        description: How to handle missing data.
+        cli: -M
+        type: enum
+        options:
+          - name: Discard SNP
+            cli: "0"
+          - name: Impute N per SNP
+            cli: "1"
+          - name: Represent N through a mask
+            cli: "2"
+          - name: Ignore allele pairs with N
+            cli: "3"
+        default: 0
+      "-X":
+        name: Exclude regions
+        description: Exclude regions from the analysis.
+        type: optional
+        default: false
+        parameter:
+          name: Excluded regions file
+          description: "A tab-delimited file that contains regions per chromosome (one per line) to be excluded from the analysis (Format: chromosome [tab] regionStart [tab] regionStop)."
+          cli: -X
+          type: file
+      "-B":
+        name: Provide chromosome size
+        description: For VCF files with a single chromosome. If not provided, the values will be determined at runtime by parsing each chromosome in its entirety before processing, leading to slightly longer overall execution time. # Not very good description
+        type: optional
+        default: false
+        parameter:
+          name: Chromosome size
+          description: The chromosome size.
+          cli: -B
+          type: multi
+          parameters:
+            - type: int
+              name: Region length in basepairs
+              default: 1 # ?
+            - type: int
+              name: Region length in SNPs
+              default: 1 # ?
+          # selection target <= region length
+          # selection target D threshold <= region length
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+      "-o":
+        name: Order VCF
+        description: Enables dataset check and reordering of the input VCF file (only for unzipped VCF files).
+        cli: -o
+        type: bool
+        default: false
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+              - 4
+              # Only if unzipped, though
+  - name: Sliding window and mu statistic
+    operations:
+      - RSD-DEF
+      - IMG-GEN
+      - MDL-GEN
+      - MDL-TST
+      - SWP-SCN
+    parameters:
+      "-w":
+        operations:
+          remove:
+            - IMG-GEN
+        name: Window size
+        description: The window size. The default value is empirically determined.
+        cli: -w
+        type: int # Must be even!
+        min: 6
+        default: 50
+      "-c":
+        name: SFS slack
+        description: The slack for the SFS edges to be used for the calculation of mu_SFS.
+        cli: -c
+        type: int
+        min: 1
+        default: 1
+      "-G":
+        name: Report grid scores
+        description: Report mu statistic scores at equidistant locations between the first and last SNPs.
+        type: optional
+        default: false
+        parameter:
+          name: Grid size
+          description: The total number of evaluation points across the data.
+          cli: -G
+          type: int
+          min: 3
+          default: -1 # ?!
+      "-VAREXP":
+        name: mu-var exponent
+        description: The exponent for the mu-var factor.
+        cli: -VAREXP
+        type: float
+        min: 0.0 # Exclusive!
+        max: 10.0 # Exclusive!
+        default: 1.0
+      "-SFSEXP":
+        name: mu-sfs exponent
+        description: The exponent for the mu-sfs factor.
+        cli: -SFSEXP
+        type: float
+        min: 0.0 # Exclusive!
+        max: 10.0 # Exclusive!
+        default: 1.0
+      "-LDEXP":
+        name: mu-ld exponent
+        description: The exponent for the mu-ld factor.
+        cli: -LDEXP
+        type: float
+        min: 0.0 # Exclusive!
+        max: 10.0 # Exclusive!
+        default: 1.0
+  - name: Standard output and reports
+    operations:
+      - RSD-DEF
+      - IMG-GEN
+      - MDL-GEN
+      - MDL-TST
+      - SWP-SCN
+    parameters:
+      "-f":
+        name: Overwrite output
+        description: Overwrite existing run files under the same run ID.
+        cli: -f
+        type: bool
+        default: false
+        operations:
+          add:
+            - FASTA-VCF
+            - VCF-MS
+        # We probably don't want this as a normal parameter
+      "-s":
+        name: Split output
+        description: Generate a separate report file per set.
+        cli: -s
+        type: bool
+        default: false
+      "-t":
+        name: Remove set separator
+        description: Remove the set separator from the report(s).
+        cli: -t
+        type: bool
+        default: false
+      "-p":
+        name: Print sample list
+        description: Generate the output
+        cli: -p
+        type: bool
+        default: false
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+              - 4
+      "-O":
+        name: Display progress
+        description: Show progress on the display device (at SNP set granularity).
+        cli: -O
+        type: bool
+        default: false
+        # Probably don't offer this to the user?
+      "-R":
+        name: Full report
+        description: Include additional information in the report file(s), i.e. window start and end, and the mu-statistic factors for variation, SFS and LD.
+        cli: -R
+        type: bool
+        default: false
+      "-P":
+        name: Create plots
+        description: Generate four plots (for the three mu-statistic factors and the final score) in one PDF file per set of SNPs in the input file using Rscript. # Activates -s, -t, -R
+        cli: -P
+        type: bool
+        default: false
+      "-D":
+        name: Generate a site report
+        description: Generate a site report, e.g. total, discarded, imputed etc.
+        cli: -D
+        type: bool
+        default: false
+      "-A":
+        name: Create Manhattan plot
+        description: Generate a Manhattan plot for the final mu-statistic score using Rscript.
+        type: optional
+        default: false
+        parameter:
+          name: Probability value
+          description: Provide a probability value to be used for the quantile function in R.
+          cli: -A
+          type: float
+          min: 0.0
+          max: 1.0
+          default: 0.9999
+  - name: Accuracy and sensitivity evaluation
+    operations:
+      - RSD-DEF
+      - IMG-GEN
+      - MDL-GEN
+      - MDL-TST
+      - SWP-SCN
+    parameters:
+      "-Td":
+        name: Calculate average distance
+        description: Calculate the average distance (over all datasets in the input file) between the selection target and the reported locations.
+        type: optional
+        default: false
+        parameter:
+          name: null
+          description: null
+          type: multi
+          parameters:
+            - name: Selection target
+              description: Provide the selection target (in basepairs).
+              cli: -T
+              type: int
+              min: 1
+              default: 1 # Source: I made it up
+            - name: Set maximum distance
+              description: 
+              type: optional
+              default: false
+              parameter:
+                name: Maximum distance
+                description:
+                cli: -d
+                type: int
+                min: 1
+                default: 1 # Made up
+      "-k": # May be wrong!
+        name: Report score
+        description: Report the corresponding reported score after sorting reported locations for all the datasets in the input file.
+        type: optional
+        default: false
+        parameter:
+          name: False positive rate
+          description: The false positive rate to use.
+          cli: -k
+          type: float
+          min: 0.0
+          max: 1.0
+          default: 0.05
+      "-l":
+        name: Thresholds
+        description: Fill in these thresholds using the values reported by a previous RAiSD-AI run with "Report score" activated.
+        cli: -l # There also has to be an integer that says how many of the thresholds are provided!
+        # The CLI representation here needs more thought
+        type: multi
+        parameters:
+          # Are the thresholds 0-1?
+          - name: Provide var threshold
+            description: null
+            type: optional
+            default: false
+            parameter:
+              name: var threshold
+              description: null
+              cli: "var="
+              type: float
+              min: 0.0
+              max: 1.0
+              default: 0.0
+          - name: Provide sfs threshold
+            description: null
+            type: optional
+            default: false
+            parameter:
+              name: sfs threshold
+              description: null
+              cli: "sfs="
+              type: float
+              min: 0.0
+              max: 1.0
+              default: 0.0
+          - name: Provide ld threshold
+            description: null
+            type: optional
+            default: false
+            parameter:
+              name: ld threshold
+              description: null
+              cli: "ld="
+              type: float
+              min: 0.0
+              max: 1.0
+              default: 0.0
+          - name: Provide mu threshold
+            description: null
+            type: optional
+            default: false
+            parameter:
+              name: mu threshold
+              description: null
+              cli: "mu="
+              type: float
+              min: 0.0
+              max: 1.0
+              default: 0.0
+          - name: Provide pcl0 threshold
+            description: null
+            type: optional
+            default: false
+            parameter:
+              name: pcl0 threshold
+              description: null
+              cli: "pcl0="
+              type: float
+              min: 0.0
+              max: 1.0
+              default: 0.0
+          - name: Provide pcl1 threshold
+            description: null
+            type: optional
+            default: false
+            parameter:
+              name: pcl1 threshold
+              description: null
+              cli: "pcl1="
+              type: float
+              min: 0.0
+              max: 1.0
+              default: 0.0
+  - name: FASTA to VCF conversion
+    operations:
+      - FASTA-VCF
+      - RSD-DEF
+      - IMG-GEN
+      - SWP-SCN
+    parameters:
+      "-C":
+        name: Provide outgroup name
+        description: Provide the outgroup to be used for the ancestral states. The first ingroup sequence is used if the outgroup is not given or found.
+        type: optional
+        default: false
+        parameter:
+          name: Outgroup name
+          description: The outgroup to be used.
+          cli: -C
+          type: str
+          default: ""
+          pattern: ".+"
+      "-C2": # No clue if this should be allowed without C.
+        name: Provide a second outgroup name
+        description: Provide the second outgroup to be used for the ancestral states.
+        type: optional
+        default: false
+        parameter:
+          name: Outgroup name
+          description: The outgroup to be used.
+          cli: -C2
+          type: str
+          default: ""
+          pattern: ".+"
+      "-H":
+        name: Chromosome name
+        description: Provide the chromosome name.
+        cli: -H
+        type: str
+        default: "chrom"
+        pattern: ".+"
+  - name: VCF to ms conversion
+    operations:
+      - VCF-MS
+      - RSD-DEF
+      - IMG-GEN
+      - SWP-SCN
+    parameters:
+      "-Q": # What is the relation to L?
+        name: Convert VCF to ms
+        description: Converts an input VCF to ms.
+        type: optional
+        default: false
+        parameter:
+          name: Memory size
+          description: The memory size to be allocated for the conversion.
+          cli: -Q
+          type: int
+          min: 1
+          default: 8
+  - name: Common outlier analysis
+    operations:
+      - CO
+      - RSD-DEF
+      - SWP-SCN
+    parameters:
+      "-CO":
+        operations:
+          remove:
+            - CO
+        name: Perform common outlier analysis
+        description: Do stuff #
+        type: optional
+        default: false
+        parameter:
+          name: Options
+          description: options for CO #
+          type: multi
+          parameters:
+          - name: SweeD report
+            description: The SweeD report file. The report must not contain a header.
+            type: file
+          - name: SweeD position index # ?
+            description: The column indices for positions.
+            default: 0 #Probably wrong
+            type: int
+          - name: SweeD score index # ?
+            description: The SweeD scores.
+            type: int
+            default: 0 #Probably wrong
+      "-CO-already-run": # This is wrong
+        operations:
+          remove:
+          - RSD-DEF
+          - SWP-SCN   
+        name: Common outlier analysis options 
+        description: options for CO # TO DO
+        type: multi
+        parameters:
+          - name: SweeD report
+            description: The SweeD report file. The report must not contain a header.
+            type: file
+          - name: SweeD position index # ?
+            description: The column indices for positions.
+            type: int
+            min: 1
+            default: 1
+          - name: SweeD score index # ?
+            description: The SweeD scores.
+            type: int
+            min: 1
+            default: 1
+            #position index != score index
+          - name: RAiSD report
+            description: The RAiSD report to be used for common outlier analysis. The report must not contain a header.
+            type: file
+          - name: RAiSD position index #Are these the same as the ones above?
+            description: The position index for the RAiSD report. 
+            type: int
+            default: 1
+          - name: RAiSD column index
+            description: The index of the column you want to use, depending on the RAiSD report. To use the mu-statistic, set X=2 if RAiSD was invoked with the default parameters, or set Y=7 if -R was explicitly provided or implicitly activated through some other command-line parameter.
+            type: int
+            default: 1
+      "-COT":
+        name: Cut-off threshold
+        description: The cut-off threshold for identifying top outliers per report.
+        cli: "-COT"
+        type: float
+        min: 0.0
+        max: 1.0
+        default: 0.05
+        conditions:
+          - type: or
+            conditions:
+              - type: enabled
+                parameter: -CO
+                value: true
+              - type: enabled
+                parameter: -CO-already-run
+                value: true
+      "-COD": # typically 100-400
+        name: Maximum distance
+        description: Provides the maximum distance (in number of sites) between outlier points in th eprovided reports to identify matching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD and RAiSD, typically between 100 and 400.
+        cli: "-COD"
+        type: int
+        min: 0
+        default: 1
+        conditions:
+          - type: or
+            conditions:
+              - type: enabled
+                parameter: -CO
+                value: true
+              - type: enabled
+                parameter: -CO-already-run
+                value: true
+  - name: RAiSD-AI data generation
+    operations:
+      - IMG-GEN
+    parameters:
+      "-icl":
+        name: Image class label
+        description: A folder with this name will be created in RAiSD_Images.runID.
+        cli: "-icl"
+        type: str
+        pattern: ".+"
+      "-its":
+        name: Image target site
+        description: The target site position for generating images, corresponding to the center of the first generated image. Should be smaller than region length
+        cli: "-its"
+        type: int
+        min: 1
+        # max: < region_length
+        default: 1
+      "-poc": 
+        name: Construct position-centered windows
+        description: Changes the data-generation mode from using SNP-driven windows to constructing position-centered windows. When SNP-driven windows are used, the SNP located to the image target site position becomes the central SNP in the window and an equal number of SNPs are placed on both sides. When position-centered windows are used, the image target site position is (as close as possible to) the midpoint between the leftmost and rightmost SNPs per window.
+        type: bool
+        default: false

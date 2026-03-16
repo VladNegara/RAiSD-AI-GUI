@@ -12,6 +12,5 @@ class SettingsWidget(QWidget):
     def _setup_ui(self):
         self.setStyleSheet("background-color: lightyellow;")
         layout = QVBoxLayout(self)
-        self.setLayout(layout)
         settings_label = QLabel("Settings")
         layout.addWidget(settings_label)
