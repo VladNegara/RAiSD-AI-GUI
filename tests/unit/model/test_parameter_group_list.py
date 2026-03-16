@@ -1064,3 +1064,74 @@ class TestParameterGroupListFromYaml:
         assert inner_file.default_value == []
         assert not inner_file.strict
         assert inner_file.multiple
+
+        # Multi-value
+        multi_group = parameter_list.parameter_groups[7]
+        assert multi_group.name == "Multi-value parameters"
+        assert len(multi_group.parameters) == 2
+
+        int_int_int = multi_group.parameters[0]
+        assert isinstance(int_int_int, MultiParameter)
+        assert int_int_int.name == "Three integers"
+        assert (
+            int_int_int.description
+            == "A parameter with three integer values."
+        )
+        assert int_int_int.flag == "-3i"
+        first_int = int_int_int.parameters[0]
+        assert isinstance(first_int, IntParameter)
+        assert first_int.name == "First integer"
+        assert first_int.description == ""
+        assert first_int.default_value == 0
+        assert first_int.lower_bound is None
+        assert first_int.upper_bound is None
+        second_int = int_int_int.parameters[1]
+        assert isinstance(second_int, IntParameter)
+        assert second_int.name == "Second integer"
+        assert second_int.description == ""
+        assert second_int.default_value == 0
+        assert second_int.lower_bound == 0
+        assert second_int.upper_bound == 10
+        third_int = int_int_int.parameters[2]
+        assert isinstance(third_int, IntParameter)
+        assert third_int.name == "Third integer"
+        assert third_int.description == ""
+        assert third_int.default_value == 0
+        assert third_int.lower_bound == 0
+        assert third_int.upper_bound is None
+
+        bool_float_file_enum = multi_group.parameters[1]
+        assert isinstance(bool_float_file_enum, MultiParameter)
+        assert bool_float_file_enum.name == "Mixed parameter"
+        assert (
+            bool_float_file_enum.description
+            == "A parameter with four values."
+        )
+        assert bool_float_file_enum.flag == "-4"
+        bool_child = bool_float_file_enum.parameters[0]
+        assert isinstance(bool_child, BoolParameter)
+        assert bool_child.name == "The bool"
+        assert bool_child.description == ""
+        assert bool_child.default_value
+        float_child = bool_float_file_enum.parameters[1]
+        assert isinstance(float_child, FloatParameter)
+        assert float_child.name == "The float"
+        assert float_child.description == ""
+        assert float_child.default_value == approx(1.0)
+        assert float_child.lower_bound == approx(0.0)
+        assert float_child.upper_bound is None
+        file_child = bool_float_file_enum.parameters[2]
+        assert isinstance(file_child, FileParameter)
+        assert file_child.name == "The file"
+        assert file_child.description == ""
+        assert file_child.default_value == []
+        assert not file_child.strict
+        assert file_child.accepted_formats is None
+        assert file_child.expected_formats == [".ms", ".vcf"]
+        assert not file_child.multiple
+        enum_child = bool_float_file_enum.parameters[3]
+        assert isinstance(enum_child, EnumParameter)
+        assert enum_child.name == "The enum"
+        assert enum_child.description == "Choose one."
+        assert enum_child.default_value == 1
+        assert enum_child.options == ["Option 0", "Option 1", "Option 2"]
