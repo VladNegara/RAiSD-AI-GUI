@@ -469,7 +469,7 @@ class TestParameterGroupListFromYaml:
                     parameters:
                       int-int-int:
                         name: Three integers
-                        descriptions: A parameter with three integer values.
+                        description: A parameter with three integer values.
                         cli: -3i
                         type: multi
                         parameters:
