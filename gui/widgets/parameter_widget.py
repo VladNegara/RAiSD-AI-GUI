@@ -88,6 +88,12 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         super().__init__()
         self._parameter = parameter
 
+    def _show_validity(self, widget: QWidget, valid: bool) -> None:
+        if valid:
+            widget.setStyleSheet("QLineEdit { border: 1px solid green; }")
+        else:
+            widget.setStyleSheet("QLineEdit { border: 1px solid red; }")
+
     @property
     def parameter(self) -> Parameter[Any]:
         """
@@ -211,13 +217,13 @@ class IntParameterWidget(ParameterWidget):
 
         layout = QVBoxLayout(self)
 
-        self._lineedit = QLineEdit()
-        self._lineedit.setText(str(parameter.value))
+        self._line_edit = QLineEdit()
+        self._line_edit.setText(str(parameter.value))
         # Allow an arbitrary length integer.
         regex = QRegularExpression(R"^(-)?[0-9]*$")
         validator = QRegularExpressionValidator(regex)
-        self._lineedit.setValidator(validator)
-        layout.addWidget(self._lineedit)
+        self._line_edit.setValidator(validator)
+        layout.addWidget(self._line_edit)
 
         match (parameter.lower_bound is None, parameter.upper_bound is None):
             case (False, False):
@@ -231,20 +237,20 @@ class IntParameterWidget(ParameterWidget):
                 label = QLabel(f'(maximum {parameter.upper_bound})')
                 layout.addWidget(label)
     
-        self._lineedit.editingFinished.connect(self._text_changed)
+        self._line_edit.editingFinished.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(str)
     def _text_changed(self) -> None:
         try: 
-            self.parameter.value = int(self._lineedit.text())
+            self.parameter.value = int(self._line_edit.text())
         except:
-            self._lineedit.setText(str(self.parameter.value))
+            self._line_edit.setText(str(self.parameter.value))
 
     @Slot(int, bool)
     def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
-        self._lineedit.setText(str(new_value))
-
+        self._line_edit.setText(str(new_value))
+        self._show_validity(self._line_edit, valid)
 
 class FloatParameterWidget(ParameterWidget):
     """
@@ -262,16 +268,16 @@ class FloatParameterWidget(ParameterWidget):
 
         layout = QVBoxLayout(self)
 
-        self._lineedit = QLineEdit()
-        self._lineedit.setText(str(parameter.value))
+        self._line_edit = QLineEdit()
+        self._line_edit.setText(str(parameter.value))
         # Allow an arbitrary length integer, optionally followed by a
         # decimal point and an arbitrary length fractional part.
         regex = QRegularExpression(
             R"^(-)?[0-9]*([.][0-9]*)?$"
         )
         validator = QRegularExpressionValidator(regex)
-        self._lineedit.setValidator(validator)
-        layout.addWidget(self._lineedit)
+        self._line_edit.setValidator(validator)
+        layout.addWidget(self._line_edit)
 
         match (parameter.lower_bound is None, parameter.upper_bound is None):
             case (False, False):
@@ -285,19 +291,21 @@ class FloatParameterWidget(ParameterWidget):
                 label = QLabel(f'(maximum {parameter.upper_bound})')
                 layout.addWidget(label)
     
-        self._lineedit.editingFinished.connect(self._text_changed)
+        self._line_edit.editingFinished.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(str)
     def _text_changed(self) -> None:
         try:
-            self.parameter.value = float(self._lineedit.text())
+            self.parameter.value = float(self._line_edit.text())
         except:
-            self._lineedit.setText(str(self.parameter.value))
+            self._line_edit.setText(str(self.parameter.value))
 
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
-        self._lineedit.setText(str(new_value))
+        self._line_edit.setText(str(new_value))
+        self._show_validity(self._line_edit, valid)
+
 
 
 class EnumParameterWidget(ParameterWidget):
@@ -373,10 +381,8 @@ class StringParameterWidget(ParameterWidget):
     @Slot(str, bool)
     def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
         self._line_edit.setText(new_value)
-        if valid: # Styling can be changed in the future
-            self._line_edit.setStyleSheet("QLineEdit { border: 1px solid green; }")
-        else:
-            self._line_edit.setStyleSheet("QLineEdit { border: 1px solid red; }")
+        self._show_validity(self._line_edit, valid)
+
 
 
 class FileParameterWidget(ParameterWidget):

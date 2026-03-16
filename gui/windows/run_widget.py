@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QTextEdit,
     QCheckBox,
+    QMessageBox,
 )
 
 from gui.model.parameter_group_list import ParameterGroupList
@@ -21,14 +22,15 @@ from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
 
+
 class RunWidget(QWidget):
     """
     A widget for all steps of running RAiSD-AI.
     """
 
     start_run = Signal()
-    run_started = Signal(int)     # number of processes
-    run_ended = Signal(bool)      # if run was successful
+    run_started = Signal(int)  # number of processes
+    run_ended = Signal(bool)  # if run was successful
 
     def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
         """
@@ -64,7 +66,7 @@ class RunWidget(QWidget):
         layout.addWidget(stacked_step_widget, 1)
         self._setup_stacked_step_widget(self.stacked_step_widget_layout)
 
-    def _setup_step_button_bar(self, layout:QHBoxLayout):
+    def _setup_step_button_bar(self, layout: QHBoxLayout):
         """
         Setup the step button bar.
         """
@@ -106,7 +108,7 @@ class RunWidget(QWidget):
         # Parameter confirmation widget
         self.parameter_confirmation_widget = ParameterConfirmationWidget()
         layout.addWidget(self.parameter_confirmation_widget)
-    
+
         # Run view widget
         self.run_view_widget = RunViewWidget(self._parameter_group_list, self._command_executor)
         self.run_view_widget.run_ended.connect(self.run_ended)
@@ -174,7 +176,8 @@ class RunSubWidget(QWidget):
     def _setup_navigation_buttons(self) -> QWidget:
         raise NotImplementedError
 
-# TODO: IMPLEMENT   
+
+# TODO: IMPLEMENT
 class NavigationButtonsWidget(QWidget):
     def __init__(self):
         super().__init__()
@@ -183,6 +186,7 @@ class NavigationButtonsWidget(QWidget):
     def _setup_layout(self) -> None:
         layout = QHBoxLayout(self)
         pass
+
 
 class OperationSelectionWidget(RunSubWidget):
     
@@ -204,7 +208,7 @@ class OperationSelectionWidget(RunSubWidget):
 
         return widget
 
-    def _setup_navigation_buttons(self) -> QWidget: # TODO: change to NavigationButtonsWidget when implemented
+    def _setup_navigation_buttons(self) -> QWidget:  # TODO: change to NavigationButtonsWidget when implemented
         return QWidget()
         # TODO: Implement
         # raise NotImplementedError
@@ -242,13 +246,12 @@ class OperationSelectionWidget(RunSubWidget):
 
 
 class ParameterInputWidget(RunSubWidget):
-
     start_run = Signal()
-    
+
     def __init__(self, parameter_group_list: ParameterGroupList):
         self._parameter_group_list = parameter_group_list
         super().__init__()
-        
+
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
         widget.setStyleSheet("background-color: lightblue;")
@@ -256,7 +259,7 @@ class ParameterInputWidget(RunSubWidget):
         parameter_input_label = QLabel("Parameter Input")
         layout.addWidget(parameter_input_label)
 
-        ## Add checkbox for imgage gen selection
+        ## Add checkbox for image gen selection
         mode_select_widget = QWidget()
         mode_select_layout = QHBoxLayout(mode_select_widget)
         layout.addWidget(mode_select_widget)
@@ -270,7 +273,15 @@ class ParameterInputWidget(RunSubWidget):
         parameter_form_scroll.setWidget(parameter_form)
         layout.addWidget(parameter_form_scroll)
 
+        self._validity_label = QLabel("")
+        self._validity_label.setStyleSheet("QLabel { color: red; }")
+        layout.addWidget(self._validity_label)
+
         self.submit_button = QPushButton("Submit")
+        self._update_submit_button_state()
+        for group in self._parameter_group_list.parameter_groups:
+            for parameter in group.parameters:
+                parameter.value_changed.connect(self._update_submit_button_state)
         self.submit_button.clicked.connect(self._submit_button_clicked)
         layout.addWidget(self.submit_button)
 
@@ -278,7 +289,18 @@ class ParameterInputWidget(RunSubWidget):
         check_param_button.clicked.connect(self._check_param_button_clicked)
         layout.addWidget(check_param_button)
         return widget
-    
+
+    def _update_submit_button_state(self) -> None:
+        """
+        Helper function to display the error that makes the submit button inactive
+        """
+        valid = self._parameter_group_list.valid
+        self.submit_button.setEnabled(valid)
+        if valid:
+            self._validity_label.setText("")
+        else:
+            self._validity_label.setText("Cannot submit: one or more parameters are invalid.")
+
     def _setup_navigation_buttons(self) -> QWidget:
         return QWidget()
         # TODO: Implement
@@ -308,6 +330,7 @@ class ParameterInputWidget(RunSubWidget):
         self.submit_button.setEnabled(True)
         self.submit_button.setText("Submit")
 
+
 class ParameterConfirmationWidget(RunSubWidget):
     def __init__(self):
         super().__init__()
@@ -327,10 +350,10 @@ class ParameterConfirmationWidget(RunSubWidget):
         # TODO: Implement
         # raise NotImplementedError
 
-class RunViewWidget(RunSubWidget):
 
-    run_started = Signal(int)   # Number of processes
-    run_ended = Signal(bool)    # Run successful
+class RunViewWidget(RunSubWidget):
+    run_started = Signal(int)  # Number of processes
+    run_ended = Signal(bool)  # Run successful
 
     def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
         self._parameter_group_list = parameter_group_list
@@ -372,7 +395,9 @@ class RunViewWidget(RunSubWidget):
         self._command_executor.execution_finished.connect(self._execution_finished)
         self._command_executor.execution_stopped.connect(self._execution_stopped)
         self._command_executor.execution_failed.connect(self._execution_failed)
+        # process_started and process_finished are connected to the indicator widgets
         self._command_executor.process_failed.connect(self._process_failed)
+        self._command_executor.process_stopped.connect(self._process_stopped)
 
         return widget
 
@@ -422,7 +447,8 @@ class RunViewWidget(RunSubWidget):
         Stop the current execution after confirmation.
         """
         self.confirm_stop_execution_dialog = ConfirmDialog(self, "Stop Execution", "You are about to stop the current execution. Are you sure?")
-        if self.confirm_stop_execution_dialog.exec():
+        button = self.confirm_stop_execution_dialog.exec()
+        if button == QMessageBox.StandardButton.Yes:
             self._command_executor.stop_execution()
 
     @Slot(str)
@@ -431,7 +457,7 @@ class RunViewWidget(RunSubWidget):
         Append the output from the command_executor to execution_output.
         """
         self.execution_output.append(output)
-        
+
     @Slot(str)
     def _command_executor_err_output(self, output: str) -> None:
         """
@@ -487,9 +513,9 @@ class RunViewWidget(RunSubWidget):
         """
         self.execution_output.clear()
         self.error_output.clear()
-    
+
     # SLOTS
-    @Slot()
+    @Slot(int)
     def _execution_started(self, number_of_processes: int) -> None:
         """
         Handle CommandExecutor.execution_started.
@@ -505,46 +531,33 @@ class RunViewWidget(RunSubWidget):
         print("Execution finished")
         self.run_ended.emit(True)
 
+    @Slot(int, QProcess.ProcessError)
+    def _execution_failed(self, exit_code: int, process_error: QProcess.ProcessError) -> None:
+        """
+        Handle CommandExecutor.execution_failed.
+        """
+        print(f"Execution failed with exit code '{exit_code}'")
+
+        if process_error is None: # otherwise _process_failed will show an error dialog:
+            self.run_ended.emit(False)
+            self.execution_output.append(f"Execution failed with exit code '{exit_code}'")
+            self.execution_error_dialog = ErrorDialog(self, f"Execution Failed ({exit_code})", f"Execution failed with exit code '{exit_code}'")
+            self.execution_error_dialog.exec()
+    
     @Slot()
     def _execution_stopped(self) -> None:
         """
         Handle CommandExecutor.execution_stopped.
         """
-        print("Execution stopped")
+        print("Execution stopped.")
         self.run_ended.emit(False)
-        self.set_execution_view_indicator(self.current_process, "purple")
 
     @Slot(int)
-    def _execution_failed(self, exit_code: int) -> None:
-        """
-        Handle CommandExecutor.execution_failed.
-        """
-        print(f"Execution failed with exit code {exit_code}")
-        self.run_ended.emit(False)
-        self.set_execution_view_indicator(self.current_process, "red")
-        error_dialog = ErrorDialog(self, f"Execution Failed ({exit_code})", f"Execution failed with exit code {exit_code}")
-        error_dialog.exec()
-        self.execution_output.append(f"Execution failed with exit code {exit_code}")
-    
-    @Slot(QProcess.ProcessError)
-    def _process_failed(self, process_error: QProcess.ProcessError) -> None:
-        """
-        Handle CommandExecutor.process_failed.
-        """
-        print(f"Execution failed with process error {process_error}")
-
-        self.set_execution_view_indicator(self.current_process, "red")
-        self.execution_output.append(f"Execution failed with process error {process_error}")
-        error_dialog = ErrorDialog(self, f"Execution Failed ({process_error})", f"Execution failed with process error {process_error}")
-        error_dialog.exec()
-
-    @Slot(int)
-    def _process_started(self, index: int) -> None:
+    def _process_started(self, process_index: int) -> None:
         """
         Handle CommandExecutor.process_started.
         """
-        self.set_execution_view_indicator(index, "yellow")
-        self.current_process = index
+        self.set_execution_view_indicator(process_index, "yellow")
 
     @Slot(int)
     def _process_finished(self, index: int) -> None:
@@ -552,6 +565,26 @@ class RunViewWidget(RunSubWidget):
         Handle CommandExecutor.process_finished.
         """
         self.set_execution_view_indicator(index, "green")
+
+    @Slot(int, QProcess.ProcessError)
+    def _process_failed(self, process_index: int, process_error: QProcess.ProcessError) -> None:
+        """
+        Handle CommandExecutor.process_failed.
+        """
+        self.set_execution_view_indicator(process_index, "red")
+
+        if process_error is not None:
+            print(f"Process '{process_index}' failed with process error '{process_error}'")
+            self.execution_output.append(f"Process '{process_index}' failed with process error '{process_error}'")
+            process_error_dialog = ErrorDialog(self, f"Process Failed ({process_error})", f"Process '{process_index}' failed with process error '{process_error}'")
+            process_error_dialog.exec()
+
+    @Slot(int)
+    def _process_stopped(self, process_index: int) -> None:
+        """
+        Handle CommandExecutor.process_stopped.
+        """
+        self.set_execution_view_indicator(process_index, "purple")
     
 class RunResultsWidget(RunSubWidget):
     def __init__(self):
