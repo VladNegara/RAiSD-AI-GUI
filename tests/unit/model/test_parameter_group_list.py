@@ -398,44 +398,44 @@ class TestParameterGroupListFromYaml:
                       opt-bool:
                         name: Optional bool
                         description: An optional bool parameter.
-                        cli: --opt-bool
                         type: optional
                         parameter:
                           name: Inner bool
                           description: The inner parameter.
+                          cli: --opt-bool
                           type: bool
                           default: false
                       opt-int:
                         name: Optional int
                         description: An optional int parameter, default true.
-                        cli: --opt-int
                         type: optional
                         default: true
                         parameter:
                           name: Inner int parameter
                           description: null
+                          cli: --opt-int
                           type: int
                           min: 1
                           default: 1
                       opt-float:
                         name: Optional float
                         description: An optional float parameter.
-                        cli: --opt-float
                         type: optional
                         default: false
                         parameter:
                           name: Inner float parameter
                           type: float
+                          cli: --opt-float
                           min: null
                           max: null
                           default: -1.1
                       opt-enum:
                         name: Optional enum
                         description: An optional enum parameter.
-                        cli: --opt-enum
                         type: optional
                         parameter:
                           description: An inner enum parameter with no name.
+                          cli: --opt-enum
                           type: enum
                           options:
                             - name: A
@@ -445,23 +445,23 @@ class TestParameterGroupListFromYaml:
                       opt-str:
                         name: Optional string
                         description: An optional string parameter.
-                        cli: --opt-str
                         type: optional
                         default: null
                         parameter:
                           name: null
                           description: The string.
+                          cli: --opt-str
                           type: str
                           default: example
                           max_length: 20
                       opt-file:
                         name: Optional files
                         description: An optional multi-file parameter.
-                        cli: --opt-files
                         type: optional
                         parameter:
-                            type: file
-                            multiple: true
+                          cli: --opt-files
+                          type: file
+                          multiple: true
                   - name: Multi-value parameters
                     operations:
                       - first-op
