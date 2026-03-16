@@ -550,7 +550,6 @@ class RunViewWidget(RunSubWidget):
         self.set_execution_view_indicator(process_index, "red")
 
         if process_error is not None:
-            play_error_sound(self)
             print(f"Process '{process_index}' failed with process error '{process_error}'")
             self.execution_output.append(f"Process '{process_index}' failed with process error '{process_error}'")
             process_error_dialog = ErrorDialog(self, f"Process Failed ({process_error})", f"Process '{process_index}' failed with process error '{process_error}'")
