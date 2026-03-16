@@ -126,7 +126,6 @@ class RunWidget(QWidget):
         self.parameter_input_widget.back_button.clicked.connect(self._switch_to_operation_selection_widget)
         self.parameter_input_widget.next_button.clicked.connect(self._switch_to_parameter_confirmation_widget)
         layout.addWidget(self.parameter_input_widget)
-        self._setup_parameter_input_widget(parameter_input_layout)
 
         # Parameter confirmation widget
         self.parameter_confirmation_widget = ParameterConfirmationWidget(parameter_group_list=self._parameter_group_list)
@@ -319,7 +318,7 @@ class OperationSelectionWidget(RunSubWidget):
         operation_button = QCheckBox(operation)
         operation_button.checkStateChanged.connect(
             lambda s: self._operation_selector_clicked(operation, s)
-        )
+            )
         layout.addWidget(operation_button)
 
         description_label = QLabel(description)
