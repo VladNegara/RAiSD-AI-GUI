@@ -27,7 +27,7 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
 
     class EnabledCondition(Dependency.Condition):
         """
-        A condition that track whether a parameter is enabled.
+        A condition that tracks whether a parameter is enabled.
         """
 
         def __init__(
@@ -209,6 +209,8 @@ class OptionalParameter(Parameter[bool]):
 
     @property
     def valid(self) -> bool:
+        if not self.value:
+            return True
         return self.parameter.valid
 
     def to_cli(self, operation: str) -> str:
@@ -255,6 +257,8 @@ class MultiParameter(Parameter[tuple[()]]):
 
     @property
     def valid(self) -> bool:
+        if not self.enabled:
+            return True
         return all([parameter.valid for parameter in self.parameters])
 
     def to_cli(self, operation: str) -> str:
@@ -383,6 +387,8 @@ class NumberParameter(Parameter[X]):
 
     @property
     def valid(self):
+        if not self.enabled:
+            return True
         if self.lower_bound is not None and self.value < self.lower_bound:
             return False
         if self.upper_bound is not None and self.value > self.upper_bound:
@@ -531,6 +537,8 @@ class EnumParameter(Parameter[int]):
 
     @property
     def valid(self) -> bool:
+        if not self.enabled:
+            return True
         return self.value in range(len(self.options))
 
     def to_cli(self, operation: str) -> str:
@@ -601,6 +609,8 @@ class StringParameter(Parameter[str]):
 
     @property
     def valid(self) -> bool:
+        if not self.enabled:
+            return True
         if self.max_length is not None and len(self.value) > self.max_length:
             return False
         if self._pattern is not None and not self._pattern.fullmatch(self.value):
@@ -690,6 +700,8 @@ class FileParameter(Parameter[list[str]]):
 
     @property
     def valid(self) -> bool:
+        if not self.enabled:
+            return True
         if not self.value:
             return False
         if not self.multiple and len(self.value) > 1:
@@ -697,12 +709,13 @@ class FileParameter(Parameter[list[str]]):
         return all(
             Path(f).is_file()
             and os.access(Path(f), os.R_OK)
-            and (self.accepted_formats is None
-                 or self.accepted_formats
-                 and Path(f).suffix.lower() in self.accepted_formats
-                 or self.expected_formats
-                 and Path(f).suffix.lower() in self.expected_formats)
-            for f in self.value)
+            and (
+                    not self.strict
+                    or self.accepted_formats is None
+                    or Path(f).suffix.lower() in self.accepted_formats
+            )
+            for f in self.value
+        )
 
     @property
     def file_extensions(self) -> list[str]:

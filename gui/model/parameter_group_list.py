@@ -476,8 +476,23 @@ class ParameterGroupList(QObject):
                         + f"{operation}. Expected string."
                     )
 
+            if "parameters" not in obj:
+                raise ValueError(
+                    f"Parameter group {name} does has no parameters object."
+                )
+            parameters_obj = obj["parameters"]
+            if not isinstance(parameters_obj, dict):
+                raise ValueError(
+                    f"Invalid parameters field of parameter group {name}: "
+                    + f" {parameters_obj}. Expected an object."
+                )
             parameters: list[Parameter[Any]] = []
             for parameter_id, parameter_obj in obj["parameters"].items():
+                if not isinstance(parameter_id, str):
+                    raise ValueError(
+                        f"Invalid parameter id: {parameter_id}. Expected "
+                        + "string."
+                    )
                 parameter = parse_parameter(parameter_obj, set(operations))
                 parameters.append(parameter)
                 id_to_parameter[parameter_id] = parameter
@@ -527,6 +542,8 @@ class ParameterGroupList(QObject):
                     parameter = id_to_parameter[parameter_id]
 
                     target_value = obj.get("value", True)
+                    if target_value is None:
+                        target_value = True
                     if not isinstance(target_value, bool):
                         raise ValueError(
                             "Invalid target value for enabled condition: "
@@ -557,6 +574,8 @@ class ParameterGroupList(QObject):
                         )
 
                     target_value = obj.get("value", True)
+                    if target_value is None:
+                        target_value = True
                     if not isinstance(target_value, bool):
                         raise ValueError(
                             "Invalid target value for bool condition: "
@@ -578,6 +597,17 @@ class ParameterGroupList(QObject):
                     if "values" not in obj:
                         raise ValueError("Enum condition has no list of target values.")
                     target_values = obj["values"]
+                    if not isinstance(target_values, list):
+                        raise ValueError(
+                            "Invalid target value list for enum condition: "
+                            + f"{target_values}. Expected a list of ints."
+                        )
+                    for target_value in target_values:
+                        if not isinstance(target_value, int):
+                            raise ValueError(
+                                f"Invalid target value for enum condition: "
+                                + f"{target_value}. Expected int."
+                            )
 
                     return EnumParameter.Condition(
                         parameter,
@@ -591,17 +621,25 @@ class ParameterGroupList(QObject):
 
         config_obj = load(config_text, Loader=Loader)
 
+        if "executable" not in config_obj:
+            raise ValueError("Config file is missing executable name.")
+        executable = config_obj["executable"]
+        if not isinstance(executable, str):
+            raise ValueError(
+                f"Invalid executable name: {executable}. Expected string."
+            )
+
         operations = {}
         mode_list = config_obj.get("modes", []) or []
         for mode_obj in mode_list:
             for operation in mode_obj["operations"]:
-                operations[operation] = True
+                operations[operation] = False
 
         parameter_groups = []
         for parameter_group_obj in config_obj["parameter_groups"]:
             parameter_groups.append(parse_parameter_group(parameter_group_obj))
 
-        result = cls("./RAiSD-AI", operations, parameter_groups)
+        result = cls(executable, operations, parameter_groups)
 
         parameter_conditions: dict[Parameter[Any], list[Dependency.Condition]] = {}
 

@@ -47,6 +47,8 @@ class ParameterFormSection(QWidget):
         layout.addWidget(heading)
         layout.addWidget(form_body)
 
+        self.setVisible(self._parameter_group.enabled)
+
     @property
     def parameter_group(self) -> ParameterGroup:
         """

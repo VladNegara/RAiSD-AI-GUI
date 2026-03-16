@@ -1,7 +1,7 @@
 from pytest import fixture
 import re
 
-from gui.model.parameter import Parameter, BoolParameter, IntParameter, FloatParameter, StringParameter
+from gui.model.parameter import Parameter, BoolParameter, IntParameter, FloatParameter, StringParameter, EnumParameter, FileParameter
 
 class TestBoolParameter:
     """Tests for BoolParameter class."""
@@ -64,16 +64,17 @@ class TestBoolParameter:
         self.value = False
         self.valid = False
 
-        # act
         def on_value_changed(value, valid):
             self.signal_emitted = True
             self.value = value
             self.valid = valid
 
         param.value_changed.connect(on_value_changed)
+
+        # act
         param.value = self.new_value
 
-        # arrange
+        # assert
         assert self.signal_emitted is True
         assert self.value == self.new_value
         assert self.valid == True
@@ -148,13 +149,14 @@ class TestIntParameter:
         self.new_value = 5
         self.valid = False
 
-        # act
         def on_value_changed(value, valid):
             self.signal_emitted = True
             self.value = value
             self.valid = valid
 
         param.value_changed.connect(on_value_changed)
+
+        # act
         param.value = self.new_value
 
         # assert
@@ -171,13 +173,12 @@ class TestIntParameter:
         self.new_value = 15
         self.valid = True
 
-        # act
         def on_value_changed(value, valid):
-            self.signal_emitted
             self.signal_emitted = True
             self.value = value
             self.valid = valid
 
+        # act
         param.value_changed.connect(on_value_changed)
         param.value = self.new_value
 
@@ -256,13 +257,14 @@ class TestFloatParameter:
         self.new_value = 5.0
         self.valid = False
 
-        # act
         def on_value_changed(value, valid):
             self.signal_emitted = True
             self.value = value
             self.valid = valid
 
         param.value_changed.connect(on_value_changed)
+
+        # act
         param.value = self.new_value
 
         # assert
@@ -279,13 +281,14 @@ class TestFloatParameter:
         self.new_value = 15.0
         self.valid = True
 
-        # act
         def on_value_changed(value, valid):
             self.signal_emitted = True
             self.value = value
             self.valid = valid
 
         param.value_changed.connect(on_value_changed)
+
+        # act
         param.value = self.new_value
 
         # assert
@@ -369,13 +372,14 @@ class TestStringParameter:
         self.new_value = "newvalue"
         self.valid = False
 
-        # act
         def on_value_changed(value, valid):
             self.signal_emitted = True
             self.value = value
             self.valid = valid
 
         param.value_changed.connect(on_value_changed)
+
+        # act
         param.value = self.new_value
 
         # assert
@@ -392,16 +396,203 @@ class TestStringParameter:
         self.new_value = "invalid value"
         self.valid = True
 
-        # act
         def on_value_changed(value, valid):
             self.signal_emitted = True
             self.value = value
             self.valid = valid
 
         param.value_changed.connect(on_value_changed)
+
+        # act
         param.value = self.new_value
 
         # assert
         assert self.signal_emitted is True
         assert self.value == self.new_value
         assert self.valid == False
+
+class TestEnumParameter:
+    """Tests for EnumParameter class."""
+
+    @fixture(autouse=True)
+    def set_enum_param(self):
+        self.enum_param = EnumParameter(
+            name="testenum",
+            description="Test enum parameter",
+            flag="--testenum",
+            operations={'IMG-GEN', 'MDL-GEN'},
+            options=[("discard SNP", "D"), ("input N per SNP", "I"), ("represent N through a mask", "M 2"), ("ignore allele pairs with N", "A")],
+            default_value= 0,
+        )
+
+    def test_init_values(self):
+        """Test EnumParameter initialization with default value"""
+        param = self.enum_param
+        assert param.name == "testenum"
+        assert param.description == "Test enum parameter"
+        assert param.flag == "--testenum"
+        assert param.operations == {'IMG-GEN', 'MDL-GEN'}
+        assert param.options[1] == "input N per SNP"
+        assert param.default_value == 0
+
+    def test_set_value(self):
+        """Test setting EnumParameter value."""
+        param = self.enum_param
+        param.value = 1
+        assert param.value == 1
+    
+    def rest_reset_value(self):
+        """Test resetting EnumParameter value."""
+        param = self.enum_param
+        param.value = 1
+        param.reset_value()
+        assert param.value == 0
+    
+    def test_to_cli(self):
+        """Test EnumParameter command-line representation."""
+        param = self.enum_param
+        assert param.to_cli('IMG-GEN') == "--testenum D"
+        param.value = new_value = 3
+        assert param.to_cli('MDL-GEN') == "--testenum A"
+        assert param.to_cli('SWP-SCN') == ""
+        param.enabled = False
+        assert param.to_cli('IMG-GEN') == ""
+
+    def test_value_changed_signal_emitted(self):
+        """Test that value_changed signal is emitted when EnumParameter value changes."""
+        # arrange
+        param = self.enum_param
+        self.signal_emitted = False
+        self.value = 5
+        self.new_value = 3
+        self.valid = False
+
+        def on_value_changed(value, valid):
+            self.signal_emitted = True
+            self.value = value
+            self.valid = valid
+
+        param.value_changed.connect(on_value_changed)
+
+        # act
+        param.value = self.new_value
+
+        # assert
+        assert self.signal_emitted
+        assert self.value == self.new_value
+        assert self.valid
+
+    def test_invalid_value_changed_signal_emitted(self):
+        """Test that value_changed signal is emitted when EnumParameter value changes."""
+        # arrange
+        param = self.enum_param
+        self.signal_emitted = False
+        self.value = 0
+        self.new_value = 5
+        self.valid = True
+
+        def on_value_changed(value, valid):
+            self.signal_emitted = True
+            self.value = value
+            self.valid = valid
+
+        param.value_changed.connect(on_value_changed)
+
+        # act
+        param.value = self.new_value
+
+        # assert
+        assert self.signal_emitted
+        assert self.value == self.new_value
+        assert not self.valid
+
+class TestFileParameter:
+    """Tests for FileParameter class."""
+
+    @fixture(autouse=True)
+    def set_file_param(self):
+        self.file_param = FileParameter(
+            name="testfile",
+            description="Test file parameter",
+            flag="--testfile",
+            operations={'IMG-GEN', 'MDL-GEN'},
+            accepted_formats=["txt"],
+            strict=True,
+            multiple=True,
+            default_value=["testfile.txt", "filetest.txt"],
+        )
+
+    def test_init_values(self):
+        """Test FileParameter initialization with default value."""
+        param = self.file_param
+        assert param.name == "testfile"
+        assert param.description == "Test file parameter"
+        assert param.flag == "--testfile"
+        assert param.operations == {'IMG-GEN', 'MDL-GEN'}
+        assert param.accepted_formats == [".txt"]
+        assert param.value == ["testfile.txt", "filetest.txt"]
+        assert param.default_value == ["testfile.txt", "filetest.txt"]
+        assert param.strict
+        assert param.multiple
+
+    def test_set_value(self):
+        """Test setting FileParameter value."""
+        param = self.file_param
+        param.value = ["newfile.txt"]
+        assert param.value == ["newfile.txt"]
+
+    def test_reset_value(self):
+        """Test resetting FileParameter value to default."""
+        param = self.file_param
+        param.value = ["newfile.txt"]
+        param.reset_value()
+        assert param.value == ["testfile.txt", "filetest.txt"]
+
+    def test_valid_format(self):
+        """Test FileParameter format validity."""
+        param = self.file_param
+        # How to initialize FileParameter with valid value?
+        # assert param.valid
+        param.value = ["invalid.md"]
+        assert not param.valid
+
+    def test_valid_file_count(self):
+        """Test FileParameter validity when no file is selected."""
+        param = self.file_param
+        param.value = []
+        assert not param.valid
+
+    def test_to_cli(self):
+        """Test FileParameter command-line representation."""
+        param = self.file_param
+        # Doesn't make much sense, but it's expected behavior.
+        assert (
+            param.to_cli('IMG-GEN')
+            == "--testfile testfile.txt --testfile filetest.txt"
+        )
+        param.value = ["newfile.txt"]
+
+    def test_value_changed_emitted(self):
+        """Test that value_changed signal is emitted when FileParameter value changes."""
+        # For now, no way to test for valid value. Maybe we make a temp file?
+        # arrange
+        param = self.file_param
+        self.signal_emitted = False
+        self.value = []
+        self.new_value = ["invalid.md"]
+        self.valid = True
+
+        def on_value_changed(value, valid):
+            self.signal_emitted = True
+            self.value = value
+            self.valid = valid
+
+        param.value_changed.connect(on_value_changed)
+
+        # act
+        param.value = self.new_value
+
+        # assert
+        assert self.signal_emitted
+        assert self.value == self.new_value
+        assert not self.valid

@@ -1,3 +1,4 @@
+executable: ./RAiSD-AI
 modes:
   - name: Standard RAiSD
     operations:
