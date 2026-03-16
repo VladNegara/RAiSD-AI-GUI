@@ -532,7 +532,7 @@ class TestParameterGroupListFromYaml:
                               max: 1.0
                               default: 0.99
                             - name: A string
-                              description: Type anything
+                              description: Type anything.
                               type: str
                       multi-opt:
                         name: Multiple optionals
@@ -1137,3 +1137,81 @@ class TestParameterGroupListFromYaml:
         assert enum_child.description == "Choose one."
         assert enum_child.default_value == 1
         assert enum_child.options == ["Option 0", "Option 1", "Option 2"]
+
+        # Nested
+        nested_group = parameter_list.parameter_groups[8]
+        assert nested_group.name == "Nested parameters"
+        assert len(nested_group.parameters) == 2
+
+        opt_multi = nested_group.parameters[0]
+        assert isinstance(opt_multi, OptionalParameter)
+        assert opt_multi.name == "Optional multi-value"
+        assert (
+            opt_multi.description
+            == "An optional parameter with two values."
+        )
+        assert opt_multi.default_value
+        multi_child = opt_multi.parameter
+        assert isinstance(multi_child, MultiParameter)
+        assert multi_child.name == ""
+        assert (
+            multi_child.description
+            == "The inner, multi-value parameter."
+        )
+        assert len(multi_child.parameters) == 2
+        float_grandchild = multi_child.parameters[0]
+        assert isinstance(float_grandchild, FloatParameter)
+        assert float_grandchild.name == "A float"
+        assert float_grandchild.description == ""
+        assert float_grandchild.default_value == approx(0.99)
+        assert float_grandchild.lower_bound == approx(0)
+        assert float_grandchild.upper_bound == approx(1)
+        str_grandchild = multi_child.parameters[1]
+        assert isinstance(str_grandchild, StringParameter)
+        assert str_grandchild.name == "A string"
+        assert str_grandchild.description == "Type anything."
+        assert str_grandchild.default_value == ""
+        assert str_grandchild.max_length is None
+
+        multi_opt = nested_group.parameters[1]
+        assert isinstance(multi_opt, MultiParameter)
+        assert multi_opt.name == "Multiple optionals"
+        assert (
+            multi_opt.description
+            == "A multi parameter where some are optional."
+        )
+        assert multi_opt.flag == ""
+        assert len(multi_opt.parameters) == 3
+        first_child = multi_opt.parameters[0]
+        assert isinstance(first_child, OptionalParameter)
+        assert first_child.name == ""
+        assert first_child.description == ""
+        assert not first_child.default_value
+        int_grandchild = first_child.parameter
+        assert isinstance(int_grandchild, IntParameter)
+        assert int_grandchild.name == ""
+        assert int_grandchild.description == ""
+        assert int_grandchild.flag == ""
+        assert int_grandchild.default_value == 6
+        assert int_grandchild.lower_bound is None
+        assert int_grandchild.upper_bound is None
+        second_child = multi_opt.parameters[1]
+        assert isinstance(second_child, FloatParameter)
+        assert second_child.name == ""
+        assert second_child.description == "This float is required."
+        assert second_child.flag == ""
+        assert second_child.default_value == approx(2.5)
+        assert second_child.lower_bound is None
+        assert second_child.upper_bound == approx(2.5)
+        third_child = multi_opt.parameters[2]
+        assert isinstance(third_child, OptionalParameter)
+        assert third_child.name == "Another float?"
+        assert third_child.description == ""
+        assert third_child.default_value
+        float_grandchild = third_child.parameter # Reused variable
+        assert isinstance(float_grandchild, FloatParameter)
+        assert float_grandchild.name == "The second float"
+        assert float_grandchild.description == ""
+        assert float_grandchild.default_value == approx(100.8)
+        assert float_grandchild.lower_bound is None
+        assert float_grandchild.upper_bound is None
