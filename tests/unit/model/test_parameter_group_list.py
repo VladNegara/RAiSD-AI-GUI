@@ -126,6 +126,7 @@ class TestParameterGroupListFromYaml:
             "builtins.open",
             mocker.mock_open(
                 read_data= """
+                executable: ./RAiSD-AI
                 modes:
                   - name: standard
                     operations:
@@ -564,9 +565,11 @@ class TestParameterGroupListFromYaml:
 
         # assert
         assert parameter_list.operations == {
-            "first-op": True,
-            "second-op": True,
+            "first-op": False,
+            "second-op": False,
         }
+        parameter_list.set_operation("first-op", True)
+        parameter_list.set_operation("second-op", True)
         assert len(parameter_list.parameter_groups) == 9
 
         # Bool
