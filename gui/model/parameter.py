@@ -27,7 +27,7 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
 
     class EnabledCondition(Dependency.Condition):
         """
-        A condition that track whether a parameter is enabled.
+        A condition that tracks whether a parameter is enabled.
         """
 
         def __init__(
