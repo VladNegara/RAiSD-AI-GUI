@@ -97,7 +97,7 @@ class RunWidget(QWidget):
         Set up the stacked step widget.
         """
         # Operation selection widget
-        self.operation_selection_widget = OperationSelectionWidget(parameter_group_list=self._parameter_group_list)
+        self.operation_selection_widget = OperationSelectionWidget(run_result=self._run_result)
         self.operation_selection_widget.next_button.clicked.connect(self._switch_to_parameter_input_widget)
         layout.addWidget(self.operation_selection_widget)
 
@@ -108,7 +108,7 @@ class RunWidget(QWidget):
         layout.addWidget(self.parameter_input_widget)
 
         # Parameter confirmation widget
-        self.parameter_confirmation_widget = ParameterConfirmationWidget(parameter_group_list=self._parameter_group_list)
+        self.parameter_confirmation_widget = ParameterConfirmationWidget(run_result=self._run_result)
         self.parameter_confirmation_widget.edit_button.clicked.connect(self._switch_to_parameter_input_widget)
         # run_button clicked is handled via the start_run signal
         self.parameter_confirmation_widget.start_run.connect(self.start_run)
@@ -208,8 +208,8 @@ class OperationSelectionWidget(RunSubWidget):
     """
     
     """    
-    def __init__(self, parameter_group_list: ParameterGroupList):
-        self._parameter_group_list = parameter_group_list
+    def __init__(self, run_result: RunResult):
+        self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -339,8 +339,8 @@ class ParameterInputWidget(RunSubWidget):
 class ParameterConfirmationWidget(RunSubWidget):
     start_run = Signal()
 
-    def __init__(self, parameter_group_list: ParameterGroupList):
-        self._parameter_group_list = parameter_group_list
+    def __init__(self, run_result: RunResult):
+        self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
