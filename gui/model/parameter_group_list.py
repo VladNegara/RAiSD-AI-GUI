@@ -1,5 +1,5 @@
 from re import compile
-from typing import Any
+from typing import Any, Iterator
 from yaml import load, Loader
 
 from PySide6.QtCore import (
@@ -710,7 +710,7 @@ class ParameterGroupList(QObject):
 
         The list is valid if and only if every group is valid.
         """
-        return all([group.valid for group in self.parameter_groups])
+        return all([group.valid for group in self])
 
     def to_cli(self) -> list[str]:
         """
@@ -736,3 +736,9 @@ class ParameterGroupList(QObject):
             instructions.append(instruction)
 
         return instructions
+
+    def __iter__(self) -> Iterator[ParameterGroup]:
+        return iter(self.parameter_groups)
+
+    def __getitem__(self, i) -> ParameterGroup:
+        return self.parameter_groups[i]

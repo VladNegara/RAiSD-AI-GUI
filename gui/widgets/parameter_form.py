@@ -31,7 +31,7 @@ class ParameterForm(QWidget):
         heading = QLabel("RAiSD-AI parameters")
         layout.addWidget(heading)
 
-        for parameter_group in self._parameter_group_list.parameter_groups:
+        for parameter_group in self._parameter_group_list:
             parameter_form_section = ParameterFormSection(parameter_group)
             layout.addWidget(parameter_form_section)
             self._parameter_form_sections.append(parameter_form_section)
