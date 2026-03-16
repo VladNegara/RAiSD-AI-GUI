@@ -114,3 +114,20 @@ QWidget#step_button_bar QPushButton[step_role="past_step"]{
     background-color: #9090c1;
     color: white;
 }
+
+QWidget#navigation_buttons_widget {
+    background-color: #d7dbe9;
+}
+
+QWidget#navigation_buttons_widget QPushButton {
+    padding: 10px 40px;
+    background-color: #9090c1;
+    color: #0a0d4f;
+    border: 1px solid #9a9a9a;
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+QWidget#navigation_buttons_widget QPushButton#next_button[enabled="true"]{
+    background-color: #f3af56;
+}

@@ -15,12 +15,16 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QCheckBox,
     QMessageBox,
+    QStyle,
+    QStyleOption,
 )
 
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
+
+from PySide6.QtGui import QPainter
 
 
 class RunWidget(QWidget):
@@ -197,6 +201,8 @@ class NavigationButtonsWidget(QWidget):
         self.middle_button = middle_button
         self.right_button = right_button
 
+        self.setObjectName("navigation_buttons_widget")
+
         layout = QHBoxLayout(self)
         for button, alignment in ((self.left_button, Qt.AlignmentFlag.AlignLeft), (self.middle_button, Qt.AlignmentFlag.AlignHCenter), (self.right_button, Qt.AlignmentFlag.AlignRight)):
             if button:
@@ -204,6 +210,16 @@ class NavigationButtonsWidget(QWidget):
                 layout.addWidget(button, alignment=alignment)
             else:
                 layout.addWidget(QWidget(), 1)
+
+    def paintEvent(self, event) -> None:
+        """
+        Override paintEvent so that QSS styling (background, border,
+        etc.) is applied to this plain QWidget subclass.
+        """
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
 
 class RunSubWidget(QWidget):
@@ -216,9 +232,10 @@ class RunSubWidget(QWidget):
 
     def _setup_layout(self, widget: QWidget, navigation: QWidget) -> None:
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         layout.addWidget(widget, 1)
         layout.addWidget(navigation)
-        pass
 
     def _setup_widget(self) -> QWidget:
         raise NotImplementedError
@@ -330,6 +347,7 @@ class ParameterInputWidget(RunSubWidget):
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.back_button = QPushButton("Back")
         self.next_button = QPushButton("Next")
+        self.next_button.setObjectName("next_button")
 
         self._update_next_button_state()
         for group in self._parameter_group_list.parameter_groups:
@@ -345,9 +363,13 @@ class ParameterInputWidget(RunSubWidget):
         valid = self._parameter_group_list.valid
         self.next_button.setEnabled(valid)
         if valid:
+            self.next_button.setProperty("enabled", "true")
             self._validity_label.setText("")
         else:
+            self.next_button.setProperty("enabled", "false")
             self._validity_label.setText("Cannot continue: one or more parameters are invalid.")
+        self.next_button.style().unpolish(self.next_button)
+        self.next_button.style().polish(self.next_button)
 
     @Slot()
     def _check_param_button_clicked(self) -> None:
