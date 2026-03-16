@@ -476,8 +476,23 @@ class ParameterGroupList(QObject):
                         + f"{operation}. Expected string."
                     )
 
+            if "parameters" not in obj:
+                raise ValueError(
+                    f"Parameter group {name} does has no parameters object."
+                )
+            parameters_obj = obj["parameters"]
+            if not isinstance(parameters_obj, dict):
+                raise ValueError(
+                    f"Invalid parameters field of parameter group {name}: "
+                    + f" {parameters_obj}. Expected an object."
+                )
             parameters: list[Parameter[Any]] = []
             for parameter_id, parameter_obj in obj["parameters"].items():
+                if not isinstance(parameter_id, str):
+                    raise ValueError(
+                        f"Invalid parameter id: {parameter_id}. Expected "
+                        + "string."
+                    )
                 parameter = parse_parameter(parameter_obj, set(operations))
                 parameters.append(parameter)
                 id_to_parameter[parameter_id] = parameter
