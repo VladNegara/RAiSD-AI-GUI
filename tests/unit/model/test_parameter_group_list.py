@@ -1044,6 +1044,7 @@ class TestParameterGroupListFromYaml:
         assert isinstance(opt_str, OptionalParameter)
         assert opt_str.name == "Optional string"
         assert opt_str.description == "An optional string parameter."
+        assert not opt_str.default_value
         inner_str = opt_str.parameter
         assert isinstance(inner_str, StringParameter)
         assert inner_str.name == ""
@@ -1056,6 +1057,7 @@ class TestParameterGroupListFromYaml:
         assert isinstance(opt_file, OptionalParameter)
         assert opt_file.name == "Optional files"
         assert opt_file.description == "An optional multi-file parameter."
+        assert not opt_str.default_value
         inner_file = opt_file.parameter
         assert isinstance(inner_file, FileParameter)
         assert inner_file.name == ""
