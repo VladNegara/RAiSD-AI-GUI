@@ -189,7 +189,9 @@ class NavigationButtonsWidget(QWidget):
 
 
 class OperationSelectionWidget(RunSubWidget):
+    """
     
+    """    
     def __init__(self, parameter_group_list: ParameterGroupList):
         self._parameter_group_list = parameter_group_list
         super().__init__()
@@ -202,7 +204,6 @@ class OperationSelectionWidget(RunSubWidget):
         operation_selection_label = QLabel("Operation Selection")
         layout.addWidget(operation_selection_label)
 
-        # TODO: dynamicly add operation selection buttons
         operation_selection_widget = self._setup_operation_selection_widget()
         layout.addWidget(operation_selection_widget, 1)
 
@@ -214,6 +215,9 @@ class OperationSelectionWidget(RunSubWidget):
         # raise NotImplementedError
 
     def _setup_operation_selection_widget(self) -> QWidget:
+        """
+        Creates the widget with operation selectors and their descriptions.
+        """
         widget = QWidget()
         layout = QVBoxLayout(widget)
 
@@ -224,6 +228,9 @@ class OperationSelectionWidget(RunSubWidget):
         return widget 
 
     def _operation_selector(self, operation: str, description: str) -> QWidget:
+        """
+        An operation selector widget containing a checkbox linked to the parameter_group_list and a description.
+        """
         widget = QWidget()
         layout = QHBoxLayout(widget)
 
@@ -239,6 +246,9 @@ class OperationSelectionWidget(RunSubWidget):
         return widget
     
     def _operation_selector_clicked(self, operation: str, state: Qt.CheckState) -> None:
+        """
+        Set the operation using the given checkbox state.
+        """
         if state == Qt.CheckState.Checked:
             self._parameter_group_list.set_operation(operation, True)
         elif state == Qt.CheckState.Unchecked:
