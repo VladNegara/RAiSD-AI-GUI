@@ -214,49 +214,6 @@ class RunSubWidget(QWidget):
         navigation = self._setup_navigation_buttons()
         self._setup_layout(widget, navigation)
 
-    @Slot()
-    def _switch_to_run_results_widget(self) -> None:
-        self.stacked_step_widget_layout.setCurrentWidget(self.run_results_widget)
-
-    # ---------- Handle signals ----------
-    @Slot()
-    def _handle_run_start(self) -> None:
-        self._switch_to_run_view_widget()
-        self.run_view_widget.results_button.setEnabled(False)
-
-    @Slot()
-    def _handle_run_end(self, run_successful: bool) -> None:
-        if run_successful:
-            self._switch_to_run_results_widget()
-            self.run_view_widget.results_button.setEnabled(True)
-        else:
-            self._switch_to_run_view_widget()
-
-
-class NavigationButtonsWidget(QWidget):
-    def __init__(self, left_button: QPushButton | None = None, middle_button: QPushButton | None = None, right_button: QPushButton | None = None):
-        super().__init__()
-        self.left_button = left_button
-        self.middle_button = middle_button
-        self.right_button = right_button
-
-        layout = QHBoxLayout(self)
-        for button, alignment in ((self.left_button, Qt.AlignmentFlag.AlignLeft), (self.middle_button, Qt.AlignmentFlag.AlignHCenter), (self.right_button, Qt.AlignmentFlag.AlignRight)):
-            if button:
-                print(alignment)
-                layout.addWidget(button, alignment=alignment)
-            else:
-                layout.addWidget(QWidget(), 1)
-
-
-class RunSubWidget(QWidget):
-
-    def __init__(self):
-        super().__init__()
-        widget = self._setup_widget()
-        navigation = self._setup_navigation_buttons()
-        self._setup_layout(widget, navigation)
-
     def _setup_layout(self, widget: QWidget, navigation: QWidget) -> None:
         layout = QVBoxLayout(self)
         layout.addWidget(widget, 1)
