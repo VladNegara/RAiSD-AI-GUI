@@ -265,7 +265,9 @@ parameter_groups:
         operations:
           remove:
             - IMG-GEN
-        name: Window size
+            - MDL-GEN
+            - MDL-TST
+        name: Sweep scan window size
         description: The window size. The default value is empirically determined.
         cli: -w
         type: int # Must be even!
@@ -751,3 +753,62 @@ parameter_groups:
           - type: bool
             parameter: "-bin"
             value: true
+      "-w-img-gen":
+        name: Window size
+        description: The window width provided is used to generate SNP windows as CNN input data.
+        cli: "-w"
+        type: int 
+        min: 6 # must be even
+        default: 400
+  - name: RAISD-AI training mode
+    operations:
+      - MDL-GEN
+    parameters: 
+      "-arc": 
+        name: Network arhitecture
+        description: Specifies the neural network arhitecture.
+        cli: "-arc"
+        type: enum
+        default: 2
+        options:
+          - name: SweepNet
+            cli: "SweepNet"
+          - name: FAST-NN
+            cli: "FAST-NN"
+          - name: FASTER-NN
+            cli: "FASTER-NN"
+          - name: FASTER-NN-G
+            cli: "FASTER-NN-G"
+      "-e":
+        name: Epochs
+        description: Provides the number of epochs
+        cli: "-e"
+        type: int
+        min: 1
+        default: 10
+      "-cl4": 
+        name: Parings between class labels
+        description: Provides 4 parings between class labels and corresponding folder names.
+        cli: "-cl4"
+        conditions:
+          - type: enum
+            parameter: -arc
+            values:
+              - 3
+        type: multi
+        parameters:
+          - name: First folder name
+            type: str
+            cli: "label00="
+          - name: Second folder name
+            type: str
+            cli: "label01="
+          - name: Third folder name
+            type: str
+            cli: "label10="
+          - name: Fourth folder name
+            type: str
+            cli: "label11="
+      "-cl4_1x_label":
+        name: Identifier for Group 1x
+        type: str
