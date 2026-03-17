@@ -615,8 +615,8 @@ parameter_groups:
       "-CO-already-run": # This is wrong
         operations:
           remove:
-          - RSD-DEF
-          - SWP-SCN   
+            - RSD-DEF
+            - SWP-SCN
         name: Common outlier analysis options 
         description: options for CO # TO DO
         type: multi
