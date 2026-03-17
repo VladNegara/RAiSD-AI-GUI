@@ -23,7 +23,7 @@ class OperationRecord:
         self.date = date
 
 
-class HistoryListWidget(QWidget):
+class OperationRecordWidget(QWidget):
     """
     A widget for single operation record to be put in the history_list
     """
@@ -34,34 +34,38 @@ class HistoryListWidget(QWidget):
         layout.setColumnStretch(0, 1)
         layout.setColumnStretch(1, 0)
 
+        # top left: the name of the operation record
         name_label = QLabel(op_rec.name)
         layout.addWidget(name_label, 0, 0, Qt.AlignmentFlag.AlignLeft)
 
+        # top right: indication of the completion time/date
         time_label = QLabel(self._format_time_ago(op_rec.date))
         layout.addWidget(time_label, 0, 1, Qt.AlignmentFlag.AlignRight)
 
+        # middle (from left to right): input files with commas in between with elided text functionality
         files_label = QLabel(", ".join(op_rec.input_files))
-        files_label.setMaximumWidth(300)
+        files_label.setMaximumWidth(400)
         files_label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
         files_label.setToolTip("\n".join(op_rec.input_files))
         files_label.setText(files_label.fontMetrics().elidedText(
-            ", ".join(op_rec.input_files), Qt.TextElideMode.ElideRight, 300
+            ", ".join(op_rec.input_files), Qt.TextElideMode.ElideRight, 400
         ))
         layout.addWidget(files_label, 1, 0, 1, 2, Qt.AlignmentFlag.AlignLeft)
 
+        # bottom left: output folder with elided text functionality
         output_label = QLabel()
-        output_label.setMaximumWidth(300)
+        output_label.setMaximumWidth(250)
         output_label.setToolTip(str(op_rec.output_folder))
         output_label.setText(output_label.fontMetrics().elidedText(
-            str(op_rec.output_folder), Qt.TextElideMode.ElideRight, 300
+            str(op_rec.output_folder), Qt.TextElideMode.ElideRight, 250
         ))
         layout.addWidget(output_label, 2, 0, Qt.AlignmentFlag.AlignLeft)
 
+        # bottom right: logic to add operation icons, not yet visible
         operations_widget = QWidget()
         operations_layout = QHBoxLayout(operations_widget)
         operations_layout.setContentsMargins(0, 0, 0, 0)
         operations_layout.setSpacing(0)
-
         for operation in op_rec.operations:
             icon_widget = QWidget()
             icon_widget.setFixedSize(28, 28)
@@ -69,7 +73,6 @@ class HistoryListWidget(QWidget):
             icon_widget.setObjectName("operation_icon")
             icon_widget.setProperty("operation", operation)
             operations_layout.addWidget(icon_widget)
-
         operations_layout.addStretch()
         layout.addWidget(operations_widget, 2, 1, Qt.AlignmentFlag.AlignRight)
 

@@ -6,10 +6,10 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from gui.widgets.operation_record_widget import OperationRecord, HistoryListWidget
+from gui.widgets.operation_record_widget import OperationRecord, OperationRecordWidget
 
 
-class HistoryList(QWidget):
+class OperationRecordList(QWidget):
     """
     The widget that holds the all operation records to display in history_widget
     """
@@ -48,7 +48,7 @@ class HistoryList(QWidget):
         self._add_record_widget(op_rec, at_top = True)
 
     def _add_record_widget(self, op_rec: OperationRecord, at_top: bool = False) -> None:
-        widget = HistoryListWidget(op_rec)
+        widget = OperationRecordWidget(op_rec)
         widget.setMinimumHeight(100)
         widget.mousePressEvent = lambda _: self.run_selected.emit(op_rec)
         if at_top:

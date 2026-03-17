@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Slot, Qt
 
 from gui.widgets.operation_record_widget import OperationRecord
-from gui.widgets.operation_record_list_widget import HistoryList
+from gui.widgets.operation_record_list_widget import OperationRecordList
 
 
 class HistoryWidget(QWidget):
@@ -20,7 +20,7 @@ class HistoryWidget(QWidget):
 
     def __init__(self):
         super().__init__()
-        self._history_list: HistoryList = HistoryList()
+        self._history_list: OperationRecordList = OperationRecordList()
         self._setup_ui()
 
     def _setup_ui(self):
