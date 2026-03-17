@@ -3,6 +3,7 @@ from PySide6.QtCore import (
     QProcess,
     Signal,
     Slot,
+    QDir
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -18,10 +19,11 @@ from PySide6.QtWidgets import (
 )
 
 from gui.model.parameter_group_list import ParameterGroupList
+from gui.model.run_result import RunResult
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
-
+from gui.widgets.results_widget import ResultsWidget
 
 class RunWidget(QWidget):
     """
@@ -32,12 +34,12 @@ class RunWidget(QWidget):
     run_started = Signal(int)  # number of processes
     run_ended = Signal(bool)  # if run was successful
 
-    def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
+    def __init__(self, run_result: RunResult, command_executor: CommandExecutor):
         """
         Initialize a `RunWidget` object.
         """
         super().__init__()
-        self._parameter_group_list = parameter_group_list
+        self._run_result = run_result
         self._command_executor = command_executor
         self._setup_ui()
         self.run_started.connect(self._handle_run_start)
@@ -95,18 +97,18 @@ class RunWidget(QWidget):
         Set up the stacked step widget.
         """
         # Operation selection widget
-        self.operation_selection_widget = OperationSelectionWidget(parameter_group_list=self._parameter_group_list)
+        self.operation_selection_widget = OperationSelectionWidget(run_result=self._run_result)
         self.operation_selection_widget.next_button.clicked.connect(self._switch_to_parameter_input_widget)
         layout.addWidget(self.operation_selection_widget)
 
         # Parameter input widget
-        self.parameter_input_widget = ParameterInputWidget(parameter_group_list=self._parameter_group_list)
+        self.parameter_input_widget = ParameterInputWidget(run_result=self._run_result)
         self.parameter_input_widget.back_button.clicked.connect(self._switch_to_operation_selection_widget)
         self.parameter_input_widget.next_button.clicked.connect(self._switch_to_parameter_confirmation_widget)
         layout.addWidget(self.parameter_input_widget)
 
         # Parameter confirmation widget
-        self.parameter_confirmation_widget = ParameterConfirmationWidget(parameter_group_list=self._parameter_group_list)
+        self.parameter_confirmation_widget = ParameterConfirmationWidget(run_result=self._run_result)
         self.parameter_confirmation_widget.edit_button.clicked.connect(self._switch_to_parameter_input_widget)
         # run_button clicked is handled via the start_run signal
         self.parameter_confirmation_widget.start_run.connect(self.start_run)
@@ -115,7 +117,7 @@ class RunWidget(QWidget):
         layout.addWidget(self.parameter_confirmation_widget)
 
         # Run view widget
-        self.run_view_widget = RunViewWidget(self._parameter_group_list, self._command_executor)
+        self.run_view_widget = RunViewWidget(self._run_result, self._command_executor)
         self.run_view_widget.results_button.clicked.connect(self._switch_to_run_results_widget)
         self.run_view_widget.run_ended.connect(self.run_ended)
         self.run_view_widget.run_started.connect(self.run_started)
@@ -125,7 +127,8 @@ class RunWidget(QWidget):
         layout.addWidget(self.run_view_widget)
 
         # Results widget
-        self.run_results_widget = RunResultsWidget()
+        self.run_results_widget = RunResultsWidget(self._run_result)
+        self.run_ended.connect(self.run_results_widget.run_end)
         layout.addWidget(self.run_results_widget)
 
     # ---------- step button bar switch methods ----------
@@ -182,7 +185,6 @@ class NavigationButtonsWidget(QWidget):
 
 
 class RunSubWidget(QWidget):
-
     def __init__(self):
         super().__init__()
         widget = self._setup_widget()
@@ -206,8 +208,8 @@ class OperationSelectionWidget(RunSubWidget):
     """
     
     """    
-    def __init__(self, parameter_group_list: ParameterGroupList):
-        self._parameter_group_list = parameter_group_list
+    def __init__(self, run_result: RunResult):
+        self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -273,8 +275,9 @@ class OperationSelectionWidget(RunSubWidget):
 
 
 class ParameterInputWidget(RunSubWidget):    
-    def __init__(self, parameter_group_list: ParameterGroupList):
-        self._parameter_group_list = parameter_group_list
+    def __init__(self, run_result: RunResult):
+        self._run_result = run_result
+        self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -336,8 +339,8 @@ class ParameterInputWidget(RunSubWidget):
 class ParameterConfirmationWidget(RunSubWidget):
     start_run = Signal()
 
-    def __init__(self, parameter_group_list: ParameterGroupList):
-        self._parameter_group_list = parameter_group_list
+    def __init__(self, run_result: RunResult):
+        self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -389,8 +392,9 @@ class RunViewWidget(RunSubWidget):
     run_started = Signal(int)  # Number of processes
     run_ended = Signal(bool)  # Run successful
 
-    def __init__(self, parameter_group_list: ParameterGroupList, command_executor: CommandExecutor):
-        self._parameter_group_list = parameter_group_list
+    def __init__(self, run_result: RunResult, command_executor: CommandExecutor):
+        self._run_result = run_result
+        self._parameter_group_list = self._run_result.parameter_group_list
         self._command_executor = command_executor
         super().__init__()
 
@@ -465,15 +469,23 @@ class RunViewWidget(RunSubWidget):
                 self.confirm_stop_execution_dialog.close()
 
     def _start_execution(self):
-        # self._command_executor.start_execution(self._parameter_group_list.to_cli())
-        self._command_executor.start_execution([
+        # commands = self._parameter_group_list.to_cli()
+        commands = [
             "./RAiSD-AI -n TrainingData2DSNP -I ./datasets/train/msneutral1_100sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTR -f -frm -O",
             "./RAiSD-AI -n TrainingData2DSNP -I datasets/train/msselection1_100sims.out -L 100000 -its 50000 -op IMG-GEN -icl sweepTR -f -O",
-            "./RAiSD-AI -n TestData2DSNP -I datasets/test/msneutral1_10sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTE -f -frm -O",
-            "./RAiSD-AI -n TestData2DSNP -I datasets/test/msselection1_10sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTE -f -frm -O",
-            "./RAiSD-AI -n FAST-NN-PT-2DSNP -I RAiSD_Images.TrainingData2DSNP -f -op MDL-GEN -O -frm -e 3",
-            "./RAiSD-AI -n FAST-NN-PT-2DSNP-SCAN -mdl RAiSD_Model.FAST-NN-PT-2DSNP -f -op SWP-SCN -I datasets/train/msselection1_100sims.out -L 100000 -frm -T 50000 -d 1000 -G 20 -pci 1 1 -O",
-        ])
+            "./RAiSD-AI -n TestData2DSNP -I datasets/test/msneutral1_10sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTE -f -frm -O"
+            # "./RAiSD-AI -n TestData2DSNP -I datasets/test/msselection1_10sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTE -f -frm -O",
+            # "./RAiSD-AI -n FAST-NN-PT-2DSNP -I RAiSD_Images.TrainingData2DSNP -f -op MDL-GEN -O -frm -e 3",
+            # "./RAiSD-AI -n FAST-NN-PT-2DSNP-SCAN -mdl RAiSD_Model.FAST-NN-PT-2DSNP -f -op SWP-SCN -I datasets/train/msselection1_100sims.out -L 100000 -frm -T 50000 -d 1000 -G 20 -pci 1 1 -O",
+        ]
+        # self._command_executor.start_execution(self._parameter_group_list.to_cli())
+        # TODO: implement info filename logic and command generation logic
+        self._run_result.commands = commands
+        info_files = ['RAiSD_Info.TrainingData2DSNP.neutralTR',
+                      'RAiSD_Info.TrainingData2DSNP.sweepTR',
+                      'RAiSD_Info.TestData2DSNP.neutralTE']
+        self._run_result.info_files = info_files
+        self._command_executor.start_execution(commands)
 
     @Slot()
     def _stop_execution(self):
@@ -622,7 +634,8 @@ class RunViewWidget(RunSubWidget):
         self.set_execution_view_indicator(process_index, "purple")
     
 class RunResultsWidget(RunSubWidget):
-    def __init__(self):
+    def __init__(self, run_result: RunResult):
+        self._run_result = run_result
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -633,7 +646,21 @@ class RunResultsWidget(RunSubWidget):
         run_results_label = QLabel("Run Results")
         layout.addWidget(run_results_label)
 
+        self.results_widget = ResultsWidget(self._run_result)
+
+        results_scroll = QScrollArea()
+        results_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        results_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        results_scroll.setWidgetResizable(True)
+        results_scroll.setWidget(self.results_widget )
+        layout.addWidget(results_scroll, 1)
         return widget
+
+    @Slot(bool)
+    def run_end(self, run_successful: bool) -> None:
+        self._run_result.run_completed = run_successful
+        if (run_successful):
+            self.results_widget.show_results()
 
     def _setup_navigation_buttons(self) -> QWidget:
         return QWidget()
