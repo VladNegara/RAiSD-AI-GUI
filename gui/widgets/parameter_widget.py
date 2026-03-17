@@ -2,10 +2,13 @@ from typing import Any
 from abc import ABC
 from pathlib import Path
 
+from PySide6.QtGui import QDesktopServices
+
 from PySide6.QtCore import (
     Qt,
     Slot,
     QRegularExpression,
+    QUrl,
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -17,6 +20,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QComboBox,
     QFileDialog,
+    QListWidget
 )
 from PySide6.QtGui import (
     QRegularExpressionValidator,
@@ -502,6 +506,20 @@ class FileParameterWidget(ParameterWidget):
         self.parameter: FileParameter
 
         layout = QVBoxLayout(self)
+        parameter.value_changed.connect(self._parameter_value_changed)
+
+        if self._locked:
+            self.list_widget = QListWidget()
+            self.list_widget.setSortingEnabled(True)
+            if self.parameter.value:
+                self.list_widget.addItems(self.parameter.value)
+            else:
+                self.list_widget.addItem("No files selected")
+            self.list_widget.setMinimumWidth(self.list_widget.sizeHintForColumn(0)*1.05)
+            self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
+            self.list_widget.doubleClicked.connect(self._on_double_click)
+            layout.addWidget(self.list_widget)
+            return
 
         self._path_label = QLabel("No file selected")
         layout.addWidget(self._path_label)
@@ -528,12 +546,16 @@ class FileParameterWidget(ParameterWidget):
             hint = QLabel(f"Select {mode} — Allowed types: any type.")
             layout.addWidget(hint)
 
-        parameter.value_changed.connect(self._parameter_value_changed)
-
         file_browse = QPushButton('Browse')
         file_browse.clicked.connect(self._open_file_dialog)
 
-        layout.addWidget(file_browse)
+        layout.addWidget(file_browse)    
+
+    @Slot(int)
+    def _on_double_click(self, index) -> None:
+        if self.parameter.value:
+            path = self.list_widget.itemFromIndex(index).text()
+            QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
     @Slot(list, bool)
     def _parameter_value_changed(
@@ -541,6 +563,16 @@ class FileParameterWidget(ParameterWidget):
         file_paths: list[str],
         valid: bool
     ) -> None:
+        if self._locked:
+            self.list_widget.clear()
+            if file_paths:
+                self.list_widget.addItems(file_paths)
+            else:
+                self.list_widget.addItem("No files selected")
+            self.list_widget.setMinimumWidth(self.list_widget.sizeHintForColumn(0)*1.05)
+            self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
+            return
+        
         if file_paths:
             self._path_label.setText("\n".join(file_paths))
         else:
