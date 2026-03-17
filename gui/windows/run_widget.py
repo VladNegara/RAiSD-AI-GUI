@@ -368,10 +368,10 @@ class ParameterInputWidget(RunSubWidget):
         valid = self._parameter_group_list.valid
         self.next_button.setEnabled(valid)
         if valid:
-            self.next_button.setProperty("enabled", "true")
+            self.next_button.setProperty("highlight", "true")
             self._validity_label.setText("")
         else:
-            self.next_button.setProperty("enabled", "false")
+            self.next_button.setProperty("highlight", "false")
             self._validity_label.setText("Cannot continue: one or more parameters are invalid.")
         self.next_button.style().unpolish(self.next_button)
         self.next_button.style().polish(self.next_button)
