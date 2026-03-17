@@ -657,7 +657,7 @@ parameter_groups:
         conditions:
           - type: or
             conditions:
-              - type: enabled
+              - type: optional
                 parameter: -CO
                 value: true
               - type: enabled
@@ -673,7 +673,7 @@ parameter_groups:
         conditions:
           - type: or
             conditions:
-              - type: enabled
+              - type: optional
                 parameter: -CO
                 value: true
               - type: enabled
