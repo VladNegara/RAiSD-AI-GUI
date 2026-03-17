@@ -15,7 +15,8 @@ class ParameterFormSection(QWidget):
 
     def __init__(
             self,
-            parameter_group: ParameterGroup
+            parameter_group: ParameterGroup,
+            locked: bool
     ) -> None:
         """
         Initialize a `ParameterFormSection` object.
@@ -32,6 +33,7 @@ class ParameterFormSection(QWidget):
 
         self._parameter_group = parameter_group
         self._parameter_group.enabled_changed.connect(self._parameter_group_enabled_changed)
+        self._locked = locked
 
         # Make widgets
         heading = QLabel(self._parameter_group.name)
