@@ -845,3 +845,128 @@ parameter_groups:
             parameter: -arc
             values:
               - 3
+  - name: RAiSD-AI inference mode
+    operations:
+      - MDL-TST
+    parameters:
+      # -mdl, -I
+      "-clp": # This type of parameter not yet supported!
+        name: Class test
+        description: For now, just one label-folder pair is supported!
+        cli: "-clp 1"
+        type: multi
+        parameters:
+          - name: Label
+            type: str
+          - name: Folder name
+            type: str
+  - name: RAiSD-AI sweep scan
+    operations:
+      - SWP-SCN
+    parameters:
+      "-pci-class-count":
+        name: Number of positive classes
+        description: The number of positive classes. Choose 2 only if the model was generated with FASTER-NN-G and four class labels.
+        type: enum
+        options:
+          - name: "1"
+          - name: "2"
+      "-pci-1":
+        name: Positive class index
+        description: The class index can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MD-GEN run that generated the CNN model.
+        type: int
+        cli: -pci 1
+        min: 0
+        default: 0
+        conditions:
+          - type: enum
+            parameter: -pci-class-count
+            values:
+              - 0
+      "-pci-2":
+        name: Positive class indices
+        description: The class indices can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MD-GEN run that generated the CNN model.
+        type: multi
+        cli: -pci 2
+        parameters:
+          - name: First positive class index
+            type: int
+            min: 0
+            default: 0
+          - name: Second positive class index
+            type: int
+            min: 0
+            default: 0
+        conditions:
+          - type: enum
+            parameter: -pci-class-count
+            values:
+              - 1
+  - name: RAiSD-AI additional parameters
+    operations: []
+    parameters:
+      "-frm-img-gen":
+        name: Remove exising IMG-GEN directory
+        description: Remove the directory RAiSD_Images.runID if it already exists.
+        operations:
+          add:
+            - IMG-GEN
+        type: bool
+        cli: -frm
+        default: false
+      "-frm-swp-scn":
+        name: Remove existing SWP-SCN directory
+        description: Remove the directory RAiSD_Images.runID if it already exists.
+        operations:
+          add:
+            - SWP-SCN
+        type: bool
+        cli: -frm
+        default: false
+      "-gpu":
+        name: Use GPU
+        description: Change the target hardware platform to be used for training, inference for model testing, and sweep scans from CPU to GPU. CUDA must be enabled to use this option.
+        operations:
+          add:
+            - MDL-GEN
+            - MDL-TST
+            - SWP-SCN
+        type: bool
+        cli: -gpu
+        default: false
+      "-useTF":
+        name: Use TensorFlow
+        description: Change the machine learning library from TensorFlow to PyTorch. Only supported for SweepNet.
+        operations:
+          add:
+            - MDL-GEN
+            - MDL-TST
+            - SWP-SCN
+        type: bool
+        cli: -useTF
+        default: false
+        conditions:
+          - type: enum
+            parameter: -arc
+            values:
+              - 0
+  - name: Miscellaneous parameters
+    operations:
+      - RSD-DEF
+      - IMG-GEN
+      - MDL-GEN
+      - MDL-TST
+      - SWP-SCN
+      - CO
+      - FASTA-VCF
+      - VCF-MS
+    parameters:
+      "-a":
+        name: Provide RNG seed
+        description: Provide a seed to initialize the random number generator. If not provided, the current time of day is used for initialization.
+        type: optional
+        cli: -a
+        parameter:
+          name: Seed
+          type: int
+          default: 0
