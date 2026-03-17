@@ -810,5 +810,38 @@ parameter_groups:
             type: str
             cli: "label11="
       "-cl4_1x_label":
-        name: Identifier for Group 1x
-        type: str
+        name: Provide identifier for Group 1x
+        description: If checked, provide an identifier string to be used in the output for Group 1x. Otherwise, the label names provided in IMG-GEN will be used instead.
+        type: optional
+        parameter:
+          name: Identifier
+          type: str
+          pattern: "\\w+"
+        conditions:
+          - type: enabled
+            parameter: -cl4
+      "-cl4_x1_label":
+        name: Provide identifier for Group x1
+        description: If checked, provide an identifier string to be used in the output for Group x1. Otherwise, the label names provided in IMG-GEN will be used instead.
+        type: optional
+        parameter:
+          name: Identifier
+          type: str
+          pattern: "\\w+"
+        conditions:
+          - type: enabled
+            parameter: -cl4
+      "-g":
+        name: Provide number of sequence groups to be created
+        description: Provide number of sequence groups to be created by FASTER-NN-G for SFS grouped poling. If not provided, the sample size is used.
+        type: optional
+        parameter:
+          name: Sequence groups
+          type: int
+          default: 1
+          min: 1
+        conditions:
+          - type: enum
+            parameter: -arc
+            values:
+              - 3
