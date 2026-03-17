@@ -760,7 +760,7 @@ parameter_groups:
         type: int 
         min: 6 # must be even
         default: 400
-  - name: RAISD-AI training mode
+  - name: RAiSD-AI training mode
     operations:
       - MDL-GEN
     parameters: 
