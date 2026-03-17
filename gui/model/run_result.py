@@ -1,11 +1,13 @@
 from gui.model.parameter_group_list import ParameterGroupList
 
+from PySide6.QtCore import QDir
+
 
 class RunResult():
     def __init__(
             self, 
             parameter_group_list: ParameterGroupList,
-            path: str,
+            path: QDir,
             run_completed: bool = False
         ):
         self._run_completed = run_completed
@@ -15,7 +17,7 @@ class RunResult():
         self._parameter_group_list = parameter_group_list
 
     @classmethod
-    def from_history_file(cls, path:str) -> list["RunResult"]:
+    def from_history_file(cls, path: str) -> list["RunResult"]:
         #TODO: implement parsing
         pass
 
@@ -45,11 +47,11 @@ class RunResult():
         self._run_completed = run_completed
 
     @property
-    def path(self) -> str:
+    def path(self) -> QDir:
         return self._results_path
     
     @path.setter 
-    def path(self, path: str) -> None:
+    def path(self, path: QDir) -> None:
         self._results_path = path
     
     @property

@@ -70,14 +70,14 @@ class ResultsWidget(QWidget):
         self.status_label.setText("This run was completed successfully. For more information, see the info files below.")
         for file in self._run_result.info_files:
             button = QPushButton(file)
-            path = f"{self._run_result.path}/{file}"
+            path = self._run_result.path.filePath(file)
             button.clicked.connect(lambda _, p=path: self.open_file(p))
             self.info_files_layout.addWidget(button)
 
         # Set folder widget to right folder
-        self.folder_structure.setRootPath(self._run_result.path)
+        self.folder_structure.setRootPath(self._run_result.path.absolutePath())
         self.folder_widget.setModel(self.folder_structure)
-        self.folder_widget.setRootIndex(self.folder_structure.index(self._run_result.path))
+        self.folder_widget.setRootIndex(self.folder_structure.index(self._run_result.path.absolutePath()))
         self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def open_file(self, path) -> None:

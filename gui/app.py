@@ -15,7 +15,7 @@ def main():
 
     parameter_group_list = ParameterGroupList.from_yaml("gui/config.yaml")
 
-    run_result = RunResult(parameter_group_list, QDir.currentPath())
+    run_result = RunResult(parameter_group_list, QDir.current())
 
     window = MainWindow(run_result)  
     window.show()
