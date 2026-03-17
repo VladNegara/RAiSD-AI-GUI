@@ -55,7 +55,7 @@ class RunResult():
         self._results_path = path
     
     @property
-    def info_files(self) -> list[str]:
+    def info_files(self) -> list[str] | None:
         return self._info_files
     
     @info_files.setter
@@ -63,7 +63,7 @@ class RunResult():
         self._info_files = files
 
     @property
-    def commands(self) -> list[str]:
+    def commands(self) -> list[str] | None:
         return self._commands
     
     @commands.setter

@@ -30,9 +30,8 @@ class ResultsWidget(QWidget):
         """
         Initialize a `ResultsWidget` object.
 
-        :param parameter_group_list: the parameters filled out by 
-        the user
-        :type parameter_group_list: ParameterGroupList
+        :param run_result: the result to display
+        :type run_result: RunResult
         """
         super().__init__()
         self._run_result = run_result
