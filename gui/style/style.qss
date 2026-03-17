@@ -1,68 +1,152 @@
-*{
+/* =========================================
+   RAiSD-AI-GUI Stylesheet
+   =========================================
+
+   Color reference:
+   - Primary dark:              #0a0d4f
+   - Primary purple:            #9090c1
+   - Accent orange:             #f3af56
+   - Purplish background:       #d7dbe9
+   - Border gray:               #9a9a9a
+*/
+
+
+/* ---- Global ---- */
+* {
     font-size: 16px;
 }
-/* LEFT SIDE BAR */
-QWidget#left_sidebar, QWidget#central_widget{
+
+/* ---- Left Sidebar ---- */
+
+QWidget#left_sidebar,
+QWidget#central_widget {
     background-color: #fff;
 }
-QWidget#logo_widget{
+
+QWidget#logo_widget {
     border-image: url("gui/style/resources/RAiSD-AI_logo.png") 0 0 0 0 stretch stretch;
 }
-QPushButton#run_button{
+
+QPushButton#run_button {
     border-image: url("gui/style/resources/run_icon.svg") 0 0 0 0 stretch stretch;
 }
-QPushButton#history_button{
-    border-image: url("gui/style/resources/history_icon.svg") 0 0 0 0 stretch stretch;
-}
-QPushButton#settings_button{ /* Not possible to change color apparently */
-    border-image: url("gui/style/resources/settings_icon.svg") 0 0 0 0 stretch stretch;
-}
-
-QPushButton#run_button[state="active"]{
+QPushButton#run_button[state="active"] {
     border-image: url("gui/style/resources/run_icon_active.svg") 0 0 0 0 stretch stretch;
 }
-QPushButton#history_button[state="active"]{
+
+QPushButton#history_button {
+    border-image: url("gui/style/resources/history_icon.svg") 0 0 0 0 stretch stretch;
+}
+QPushButton#history_button[state="active"] {
     border-image: url("gui/style/resources/history_icon_active.svg") 0 0 0 0 stretch stretch;
 }
-QPushButton#settings_button[state="active"]{
+
+QPushButton#settings_button {
+    border-image: url("gui/style/resources/settings_icon.svg") 0 0 0 0 stretch stretch;
+}
+QPushButton#settings_button[state="active"] {
     border-image: url("gui/style/resources/settings_icon_active.svg") 0 0 0 0 stretch stretch;
 }
 
-/* PARAMETER INPUT VIEW */
-QWidget#parameter_input_widget{
+
+/* ---- Step Button Bar ---- */
+
+QWidget#step_button_bar QPushButton {
+    padding: 10px 20px;
+    background-color: #ffffff;
+    color: #9a9a9a;
+    border: 2px solid #9a9a9a;
+    border-radius: 10px;
+}
+
+QWidget#step_button_bar QPushButton[step_role="active"] {
+    background-color: #f3af56;
+    color: #ffffff;
+}
+
+QWidget#step_button_bar QPushButton[step_role="past_step"] {
+    background-color: #9090c1;
+    color: #ffffff;
+}
+
+
+/* ---- Navigation Buttons ---- */
+
+QWidget#navigation_buttons_widget {
     background-color: #d7dbe9;
 }
-QWidget#parameter_input_widget QLabel{
+
+QWidget#navigation_buttons_widget QPushButton {
+    padding: 10px 40px;
+    background-color: #9090c1;
+    color: #0a0d4f;
+    border: 1px solid #9a9a9a;
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+QWidget#navigation_buttons_widget QPushButton[highlight="true"] {
+    background-color: #f3af56;
+}
+
+
+/* ---- Parameter Input View ---- */
+
+QWidget#parameter_input_widget {
+    background-color: #d7dbe9;
+}
+
+QWidget#parameter_input_widget QLabel {
     color: #0a0d4f;
 }
-QLabel#parameter_input_label{
+
+QLabel#parameter_input_label {
     font-size: 24px;
     font-weight: 800;
     margin-left: 20px;
     margin-top: 20px;
 }
-QScrollArea#parameter_form_scroll{
+
+QScrollArea#parameter_form_scroll {
     background: transparent;
 }
-QScrollBar{
+
+QScrollBar {
     width: 0px;
     height: 0px;
 }
 
-QWidget#parameter_form{
+QWidget#parameter_form {
     background: transparent;
     padding: 16px;
 }
 
-QWidget#parameter_form_section{
+QWidget#parameter_form_section {
     background-color: #ffffff;
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 10px;
 }
 
+QWidget#parameter_form_section QLineEdit {
+    border: 1px solid #9a9a9a;
+    border-radius: 2px;
+}
+
+QWidget#parameter_form_section QLineEdit[valid="true"] {
+    border-color: green;
+}
+
+QWidget#parameter_form_section QLineEdit[valid="false"] {
+    border-color: red;
+}
+
+QWidget#parameter_form_section QLabel[valid="false"] {
+    color: red;
+}
+
 QWidget#parameter_form_section QComboBox {
-    background-color: white;
+    background-color: #ffffff;
     border: 1px solid #9a9a9a;
     border-radius: 2px;
     padding: 4px 8px;
@@ -78,56 +162,4 @@ QWidget#parameter_form_section QComboBox::down-arrow {
     image: url("gui/style/resources/drop_down_arrow_down.svg");
     width: 20px;
     height: 20px;
-}
-QWidget#parameter_form_section QLineEdit{
-    border: 1px solid #9a9a9a;
-    border-radius: 2px;
-}
-
-QWidget#parameter_form_section QLineEdit[valid="true"]{
-    border-color: green;
-}
-
-QWidget#parameter_form_section QLineEdit[valid="false"]{
-    border-color: red;
-}
-
-QWidget#parameter_form_section QLabel[valid="false"]{
-    color: red;
-}
-
-/* STEP BUTTON BAR */
-QWidget#step_button_bar QPushButton{
-    padding: 10px 20px;
-    background-color: white;
-    color: #9a9a9a;
-    border: 2px solid #9a9a9a;
-    border-radius: 10px;
-}
-
-QWidget#step_button_bar QPushButton[step_role="active"]{
-    background-color: #f3af56;
-    color: white;
-}
-
-QWidget#step_button_bar QPushButton[step_role="past_step"]{
-    background-color: #9090c1;
-    color: white;
-}
-
-QWidget#navigation_buttons_widget {
-    background-color: #d7dbe9;
-}
-
-QWidget#navigation_buttons_widget QPushButton {
-    padding: 10px 40px;
-    background-color: #9090c1;
-    color: #0a0d4f;
-    border: 1px solid #9a9a9a;
-    border-radius: 5px;
-    font-weight: 500;
-}
-
-QWidget#navigation_buttons_widget QPushButton#next_button[enabled="true"]{
-    background-color: #f3af56;
 }
