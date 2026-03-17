@@ -8,8 +8,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Slot, Qt
 
-from gui.widgets.completed_run_widget import OperationRecord
-from gui.model.history_list import HistoryList
+from gui.widgets.operation_record_widget import OperationRecord
+from gui.widgets.operation_record_list_widget import HistoryList
 
 
 class HistoryWidget(QWidget):
