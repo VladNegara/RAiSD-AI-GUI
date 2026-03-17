@@ -1,8 +1,6 @@
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout
-
-from PySide6.QtCore import Signal, Slot
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QStyle, QStyleOption
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QStyle, QStyleOption
+from PySide6.QtCore import Signal, Slot
 
 from gui.model.parameter_group import ParameterGroup
 from gui.widgets.parameter_widget import ParameterWidget
@@ -42,12 +40,15 @@ class ParameterFormSection(QWidget):
         form_body = QWidget()
         form_layout = QVBoxLayout(form_body)
         form_layout.setContentsMargins(0, 0, 0, 0)
-        for parameter in parameter_group.parameters:
-            form_row = ParameterWidget.from_parameter(parameter)
+        for parameter in parameter_group:
+            form_row = ParameterWidget.from_parameter(parameter).build_form_row()
             form_layout.addWidget(form_row)
+
         layout = QVBoxLayout(self)
         layout.addWidget(heading)
         layout.addWidget(form_body)
+
+        self.setVisible(self._parameter_group.enabled)
 
     @property
     def parameter_group(self) -> ParameterGroup:
@@ -61,7 +62,7 @@ class ParameterFormSection(QWidget):
         """
         Handle an enabled_changed from the ParameterGroup by setting 
         visibility accordingly.
-
+        
         :new_value param: the new value of enabled of the ParameterGroup
         :new_value type: bool
         """
@@ -69,7 +70,7 @@ class ParameterFormSection(QWidget):
 
     def paintEvent(self, event) -> None:
         """
-        Override paintEvent so that QSS styling (background, border, 
+        Override paintEvent so that QSS styling (background, border,
         etc.) is applied to this plain QWidget subclass.
         """
         opt = QStyleOption()

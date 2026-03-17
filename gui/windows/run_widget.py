@@ -164,6 +164,7 @@ class RunWidget(QWidget):
     def _switch_to_parameter_input_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.parameter_input_widget)
         self._set_active_step(1)
+        self.parameter_input_widget._update_next_button_state()
 
     @Slot()
     def _switch_to_parameter_confirmation_widget(self) -> None:
@@ -236,6 +237,7 @@ class RunSubWidget(QWidget):
         layout.setSpacing(0)
         layout.addWidget(widget, 1)
         layout.addWidget(navigation)
+        pass
 
     def _setup_widget(self) -> QWidget:
         raise NotImplementedError
@@ -246,8 +248,8 @@ class RunSubWidget(QWidget):
 
 class OperationSelectionWidget(RunSubWidget):
     """
-
-    """
+    
+    """    
     def __init__(self, parameter_group_list: ParameterGroupList):
         self._parameter_group_list = parameter_group_list
         super().__init__()
@@ -276,13 +278,13 @@ class OperationSelectionWidget(RunSubWidget):
         widget = QWidget()
         layout = QVBoxLayout(widget)
 
-        for operation in self._parameter_group_list.operations:
-            operation_selector = self._operation_selector(operation, f"perform: {operation}") # TODO: Set description.
+        for operation, enabled in self._parameter_group_list.operations.items():
+            operation_selector = self._operation_selector(operation, enabled, f"perform: {operation}") # TODO: Set description.
             layout.addWidget(operation_selector)
+            
+        return widget 
 
-        return widget
-
-    def _operation_selector(self, operation: str, description: str) -> QWidget:
+    def _operation_selector(self, operation: str, enabled: bool, description: str) -> QWidget:
         """
         An operation selector widget containing a checkbox linked to the parameter_group_list and a description.
         """
@@ -290,16 +292,19 @@ class OperationSelectionWidget(RunSubWidget):
         layout = QHBoxLayout(widget)
 
         operation_button = QCheckBox(operation)
+        operation_button.setCheckState(
+            Qt.CheckState.Checked if enabled else Qt.CheckState.Unchecked
+        )
         operation_button.checkStateChanged.connect(
             lambda s: self._operation_selector_clicked(operation, s)
             )
         layout.addWidget(operation_button)
-
+        
         description_label = QLabel(description)
         layout.addWidget(description_label, 1)
 
         return widget
-
+    
     def _operation_selector_clicked(self, operation: str, state: Qt.CheckState) -> None:
         """
         Set the operation using the given checkbox state.
@@ -311,7 +316,7 @@ class OperationSelectionWidget(RunSubWidget):
 
 
 
-class ParameterInputWidget(RunSubWidget):
+class ParameterInputWidget(RunSubWidget):    
     def __init__(self, parameter_group_list: ParameterGroupList):
         self._parameter_group_list = parameter_group_list
         super().__init__()
@@ -343,7 +348,7 @@ class ParameterInputWidget(RunSubWidget):
         check_param_button.clicked.connect(self._check_param_button_clicked)
         layout.addWidget(check_param_button)
         return widget
-
+    
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.back_button = QPushButton("Back")
         self.next_button = QPushButton("Next")
@@ -353,7 +358,7 @@ class ParameterInputWidget(RunSubWidget):
         for group in self._parameter_group_list.parameter_groups:
             for parameter in group.parameters:
                 parameter.value_changed.connect(self._update_next_button_state)
-
+                
         return NavigationButtonsWidget(left_button=self.back_button, right_button=self.next_button)
 
     def _update_next_button_state(self) -> None:
@@ -405,8 +410,11 @@ class ParameterConfirmationWidget(RunSubWidget):
 
     @Slot()
     def _run_button_clicked(self) -> None:
-        # TODO: Check input valid
-        self.start_run.emit()
+        if self._parameter_group_list.valid:
+            self.start_run.emit()
+        else:
+            dialog = ErrorDialog(self, "Invalid input", "Input parameters are invalid")
+            dialog.exec()
         pass
 
     @Slot()
@@ -469,7 +477,7 @@ class RunViewWidget(RunSubWidget):
         self.stop_run_button.setEnabled(False)
         self.stop_run_button.setStyleSheet(f"background-color: purple;")
         self.stop_run_button.clicked.connect(self._stop_run_button_clicked)
-
+        
         self.results_button = QPushButton("Results")
         self.results_button.setEnabled(False)
 
@@ -607,13 +615,13 @@ class RunViewWidget(RunSubWidget):
         """
         print(f"Execution failed with exit code '{exit_code}'")
 
-        self.run_ended.emit(False)
+        self.run_ended.emit(False)        
 
         if process_error is None: # otherwise _process_failed will show an error dialog:
             self.execution_output.append(f"Execution failed with exit code '{exit_code}'")
             self.execution_error_dialog = ErrorDialog(self, f"Execution Failed ({exit_code})", f"Execution failed with exit code '{exit_code}'")
             self.execution_error_dialog.exec()
-
+    
     @Slot()
     def _execution_stopped(self) -> None:
         """
@@ -655,7 +663,7 @@ class RunViewWidget(RunSubWidget):
         Handle CommandExecutor.process_stopped.
         """
         self.set_execution_view_indicator(process_index, "purple")
-
+    
 class RunResultsWidget(RunSubWidget):
     def __init__(self):
         super().__init__()

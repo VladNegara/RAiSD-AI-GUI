@@ -12,10 +12,9 @@ def main():
         style = f.read()
     app.setStyleSheet(style)
 
-    parameter_group_list = ParameterGroupList.from_configuration_file(
-        "gui/..."
-    ) # TODO: implement config file and write path
-    window = MainWindow(parameter_group_list=parameter_group_list)
+    parameter_group_list = ParameterGroupList.from_yaml("gui/config.yaml")
+
+    window = MainWindow(parameter_group_list=parameter_group_list)  
     window.show()
     app.exec()
     print("App closed")

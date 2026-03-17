@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Iterator
 
 from PySide6.QtCore import QObject, Signal, Slot
 
@@ -57,7 +57,14 @@ class ParameterGroup(QObject):
         The group is valid if and only if every parameter in the group
         is valid.
         """
-        return all([param.valid for param in self.parameters])
+        return all([param.valid for param in self])
+
+    @property
+    def enabled(self) -> bool:
+        """
+        Whether the parameter group is enabled.
+        """
+        return self._enabled
 
     @Slot(bool)
     def _parameter_enabled_changed(self, new_value: bool) -> None:
@@ -91,9 +98,15 @@ class ParameterGroup(QObject):
         :return: the command-line representation
         :rtype: str
         """
-        cli_params = [p.to_cli(operation) for p in self.parameters]
+        cli_params = [p.to_cli(operation) for p in self]
         nonempty_params = [p for p in cli_params if p]
         return " ".join(nonempty_params)
 
     def __str__(self) -> str:
         return f"{self.name}: {self.to_cli()}"
+
+    def __iter__(self) -> Iterator[Parameter[Any]]:
+        return iter(self.parameters)
+
+    def __getitem__(self, i) -> Parameter[Any]:
+        return self.parameters[i]
