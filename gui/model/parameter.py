@@ -194,7 +194,7 @@ class OptionalParameter(Parameter[bool]):
             name=name,
             description=description,
             flag="",
-            operations=parameter.operations,
+            operations=operations,
             default_value=default_value,
         )
         self._parameter = parameter
@@ -233,13 +233,14 @@ class MultiParameter(Parameter[tuple[()]]):
     def __init__(
             self,
             name: str, description: str, flag: str,
+            operations: set[str],
             parameters: list[Parameter[Any]],
     ) -> None:
         super().__init__(
             name,
             description,
             flag,
-            set().union(*[param.operations for param in parameters]),
+            operations,
             ()
         )
 

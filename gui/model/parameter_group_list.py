@@ -380,7 +380,7 @@ class ParameterGroupList(QObject):
                         name,
                         description,
                         flag,
-                        operations,
+                        parameter_operations,
                         accepted_formats,
                         strict,
                         multiple,
@@ -437,6 +437,7 @@ class ParameterGroupList(QObject):
                         name,
                         description,
                         flag,
+                        parameter_operations,
                         inner_parameters,
                     )
                 case _:
