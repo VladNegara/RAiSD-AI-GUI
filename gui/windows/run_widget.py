@@ -348,6 +348,15 @@ class ParameterConfirmationWidget(RunSubWidget):
         parameter_confirmation_label = QLabel("Parameter Confirmation")
         layout.addWidget(parameter_confirmation_label)
 
+        parameter_form = ParameterForm(self._parameter_group_list, locked=True)
+
+        parameter_form_scroll = QScrollArea()
+        parameter_form_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        parameter_form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        parameter_form_scroll.setWidgetResizable(True)
+        parameter_form_scroll.setWidget(parameter_form)
+        layout.addWidget(parameter_form_scroll)
+
         return widget
 
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
