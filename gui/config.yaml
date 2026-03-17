@@ -138,7 +138,7 @@ parameter_groups:
           - name: ms
             cli: null
           - name: mbs
-            cli: null
+            cli: -b
           - name: FASTA
             cli: null
           - name: Single-chromosome VCF
