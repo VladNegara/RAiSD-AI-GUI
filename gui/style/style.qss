@@ -90,10 +90,12 @@ QWidget#navigation_buttons_widget QPushButton[highlight="true"] {
 }
 
 
-/* ---- Parameter Input View ---- */
+/* ---- Shared Styles ---- */
 
-QWidget#parameter_input_widget, QWidget#run_results_widget,
-QWidget#run_view_widget, QWidget#operation_selection_widget {
+QWidget#parameter_input_widget,
+QWidget#run_results_widget,
+QWidget#run_view_widget,
+QWidget#operation_selection_widget {
     background-color: #d7dbe9;
 }
 
@@ -104,14 +106,19 @@ QWidget#operation_selection_widget QLabel{
     color: #0a0d4f;
 }
 
-QLabel#parameter_input_label, QLabel#run_results_label, QLabel#run_view_label, QLabel#operation_selection_label{
+QLabel#parameter_input_label,
+QLabel#run_results_label,
+QLabel#run_view_label,
+QLabel#operation_selection_label{
     font-size: 24px;
     font-weight: 800;
     margin-left: 20px;
     margin-top: 20px;
 }
 
-QScrollArea#parameter_form_scroll, QScrollArea#results_scroll, QWidget#results_widget{
+QScrollArea#parameter_form_scroll,
+QScrollArea#results_scroll,
+QWidget#results_widget{
     background: transparent;
 }
 
@@ -119,6 +126,8 @@ QScrollBar {
     width: 0px;
     height: 0px;
 }
+
+/* ---- Parameter Input View ---- */
 
 QWidget#parameter_form {
     background: transparent;
@@ -172,7 +181,7 @@ QLabel#validity_label{
     color: red;
 }
 
-/* RESULTS VIEW */
+/* ---- Results View ---- */
 
 QPushButton#file_button{
     padding: 5px;
@@ -199,4 +208,4 @@ QTreeView#folder_widget{
     selection-background-color: #9090c1;
 }
 
-/* RUN VİEW */
+/* ---- Run View ---- */
