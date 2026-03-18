@@ -144,6 +144,92 @@ class OperationTree(QObject):
     root: OperationNode
 
 
+# Dummy data
+img_gen = Operation(
+    cli="-op IMG-GEN",
+    requires=[SingleFile([".ms"])],
+    produces=Directory(
+        [
+            Directory(
+                [
+                    SingleFile([".png"]),
+                ],
+            ),
+        ],
+    ),
+)
+
+mdl_gen = Operation(
+    cli="MDL-GEN",
+    requires=[Directory(
+        [
+            Directory(
+                [
+                    SingleFile([".png"]),
+                ]
+            ),
+            Directory(
+                [
+                    SingleFile([".png"]),
+                ]
+            ),
+        ]
+    )],
+    produces=Directory
+(
+        [
+            SingleFile([".pt"]),
+        ],
+    ),
+)
+
+my_tree = OperationTree(
+    root=OperationNode(
+        operation=mdl_gen,
+        files_needed=[
+            FileConsumerNode(
+                requires=Directory(
+                    [
+                        Directory(
+                            [
+                                SingleFile([".png"]),
+                            ]
+                        ),
+                        Directory(
+                            [
+                                SingleFile([".png"]),
+                            ]
+                        ),
+                    ]
+                ),
+                producers=[
+                    FilePickerNode(
+                        produces=Directory(
+                            [
+                                Directory(
+                                    [
+                                        SingleFile([".png"]),
+                                    ]
+                                ),
+                                Directory(
+                                    [
+                                        SingleFile([".png"]),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ),
+                    OperationNode(
+                        operation=img_gen,
+                        files_needed=[],
+                    ),
+                ]
+            )
+        ]
+    )
+)
+
+
 class ParameterGroupList(QObject):
     """
     A list of parameters for a terminal command.
