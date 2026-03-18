@@ -67,6 +67,10 @@ class RunResult():
         return self._commands
     
     def set_commands(self) -> None:
+        """
+        Sets the commands of a run based on the cli representation
+        of the ParameterGroupList
+        """
         self._commands = self._parameter_group_list.to_cli()
 
     @property

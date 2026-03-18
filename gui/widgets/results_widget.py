@@ -65,6 +65,9 @@ class ResultsWidget(QWidget):
         layout.addWidget(parameters_collapsible)
 
     def show_results(self) -> None:
+        """
+        Updates the ResultWidget with results in the RunResult.
+        """
         # Update summary widgets
         self.status_label.setText("This run was completed successfully. For more information, see the info files below.")
         for file in self._run_result.info_files:

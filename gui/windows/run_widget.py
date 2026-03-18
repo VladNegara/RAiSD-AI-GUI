@@ -352,6 +352,11 @@ class ParameterConfirmationWidget(RunSubWidget):
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
+        """
+        Setup a ParameterConfirmationWidget, including a header,
+        a section for the commands to be run, and the ParameterForm,
+        in locked form. 
+        """
         widget = QWidget()
         widget.setStyleSheet("background-color: lightblue;")
         layout = QVBoxLayout(widget)
@@ -400,6 +405,10 @@ class ParameterConfirmationWidget(RunSubWidget):
         return NavigationButtonsWidget(left_button=self.edit_button, right_button=self.run_button)
 
     def update_commands(self) -> None:
+        """
+        Updates the ParameterConfirmationWidget with the commands from 
+        the RunResult.
+        """
         self._run_result.set_commands()
         self.commands_view.clear()
         if self._run_result.commands:
@@ -408,12 +417,18 @@ class ParameterConfirmationWidget(RunSubWidget):
     
     @Slot(int)
     def _copy_command(self, index) -> None:
+        """
+        Copies a singular command from the QTreeWidget to the clipboard.
+        """
         command = self.commands_view.itemFromIndex(index).text()
         cb = QGuiApplication.clipboard()
         cb.setText(command)
     
     @Slot()
     def _copy_all(self) -> None:
+        """
+        Copies all commands from the run result to the clipboard.
+        """
         string = '; '.join(self._run_result.commands)
         cb = QGuiApplication.clipboard()
         cb.setText(string)

@@ -121,6 +121,9 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         :param parameter: the parameter to create a widget for
         :type parameter: Parameter[Any]
 
+        :param editable: whether the widget is editable or not
+        :type editable: bool
+
         :return: the corresponding widget
         :rtype: ParameterWidget
         """
@@ -191,6 +194,9 @@ class OptionalParameterWidget(ParameterWidget):
 
         :param parameter: the optional parameter to reference
         :type parameter: OptionalParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
         super().__init__(parameter, editable)
 
@@ -245,6 +251,15 @@ class MultiParameterWidget(ParameterWidget):
     """
 
     def __init__(self, parameter: MultiParameter, editable: bool):
+        """
+        Initialize a `MultiParameterWidget` object.
+
+        :param parameter: the optional parameter to reference
+        :type parameter: MultiParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
+        """
         super().__init__(parameter, editable)
 
     def build_form_row(self) -> QWidget:
@@ -275,6 +290,9 @@ class BoolParameterWidget(ParameterWidget):
 
         :param parameter: the boolean parameter to reference
         :type parameter: Parameter[bool]
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
         super().__init__(parameter, editable)
 
@@ -315,6 +333,9 @@ class IntParameterWidget(ParameterWidget):
 
         :param parameter: the integer parameter to reference
         :type parameter: IntParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
         super().__init__(parameter, editable)
 
@@ -368,6 +389,9 @@ class FloatParameterWidget(ParameterWidget):
 
         :param parameter: the float parameter to reference
         :type parameter: FloatParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
         super().__init__(parameter, editable)
 
@@ -463,6 +487,9 @@ class StringParameterWidget(ParameterWidget):
 
         :param parameter: the string parameter to reference
         :type parameter: StringParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
         super().__init__(parameter, editable)
 
@@ -502,12 +529,25 @@ class FileParameterWidget(ParameterWidget):
     """
 
     def __init__(self, parameter: FileParameter, editable: bool) -> None:
+        """
+        Initialize a `FileParameter` object.
+
+        If the parameter has a maximum length, the length is enforced on
+        the input field and displayed to the user in a label.
+
+        :param parameter: the string parameter to reference
+        :type parameter: StringParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
+        """
         super().__init__(parameter, editable)
         self.parameter: FileParameter
 
         layout = QVBoxLayout(self)
         parameter.value_changed.connect(self._parameter_value_changed)
 
+        # If the widget is locked: create a list with the selected files
         if not self._editable:
             self.list_widget = QListWidget()
             self.list_widget.setSortingEnabled(True)
@@ -521,6 +561,7 @@ class FileParameterWidget(ParameterWidget):
             layout.addWidget(self.list_widget)
             return
 
+        # If the widget is not locked:
         self._path_label = QLabel("No file selected")
         layout.addWidget(self._path_label)
 
@@ -553,6 +594,10 @@ class FileParameterWidget(ParameterWidget):
 
     @Slot(int)
     def _on_double_click(self, index) -> None:
+        """
+        Handles a double click on a list item; a file. The file
+        is opened in the system's default file editor.
+        """
         if self.parameter.value:
             path = self.list_widget.itemFromIndex(index).text()
             QDesktopServices.openUrl(QUrl.fromLocalFile(path))
@@ -563,6 +608,7 @@ class FileParameterWidget(ParameterWidget):
         file_paths: list[str],
         valid: bool
     ) -> None:
+        # If the widget is locked add the files to the list
         if not self._editable:
             self.list_widget.clear()
             if file_paths:
@@ -573,6 +619,7 @@ class FileParameterWidget(ParameterWidget):
             self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
             return
         
+        # If the widget is not locked
         if file_paths:
             self._path_label.setText("\n".join(file_paths))
         else:
