@@ -116,7 +116,7 @@ class FilePickerNode(FileProducerNode):
         self._file = new_file
 
 
-class OperationNode():
+class OperationNode(FileProducerNode):
     def __init__(self,
         operation: Operation,
         files_needed: list[FileConsumerNode],
@@ -131,6 +131,12 @@ class OperationNode():
     @property
     def produces(self) -> FileStructure:
         return self.operation.produces
+
+    @property
+    def file(self) -> QFileInfo | None:
+        # TODO: make this return the file corresponding to the output
+        # of the operation.
+        return None
 
 
 @dataclass
