@@ -138,7 +138,7 @@ parameter_groups:
           - name: ms
             cli: null
           - name: mbs
-            cli: null
+            cli: -b
           - name: FASTA
             cli: null
           - name: Single-chromosome VCF
@@ -265,7 +265,9 @@ parameter_groups:
         operations:
           remove:
             - IMG-GEN
-        name: Window size
+            - MDL-GEN
+            - MDL-TST
+        name: Sweep scan window size
         description: The window size. The default value is empirically determined.
         cli: -w
         type: int # Must be even!
@@ -613,8 +615,8 @@ parameter_groups:
       "-CO-already-run": # This is wrong
         operations:
           remove:
-          - RSD-DEF
-          - SWP-SCN   
+            - RSD-DEF
+            - SWP-SCN
         name: Common outlier analysis options 
         description: options for CO # TO DO
         type: multi
@@ -655,7 +657,7 @@ parameter_groups:
         conditions:
           - type: or
             conditions:
-              - type: enabled
+              - type: optional
                 parameter: -CO
                 value: true
               - type: enabled
@@ -671,7 +673,7 @@ parameter_groups:
         conditions:
           - type: or
             conditions:
-              - type: enabled
+              - type: optional
                 parameter: -CO
                 value: true
               - type: enabled
@@ -698,5 +700,273 @@ parameter_groups:
       "-poc": 
         name: Construct position-centered windows
         description: Changes the data-generation mode from using SNP-driven windows to constructing position-centered windows. When SNP-driven windows are used, the SNP located to the image target site position becomes the central SNP in the window and an equal number of SNPs are placed on both sides. When position-centered windows are used, the image target site position is (as close as possible to) the midpoint between the leftmost and rightmost SNPs per window.
+        cli: "-poc"
         type: bool
         default: false
+      "-ips":
+        name: Images per simulation
+        description: Provides the number of images to be created per simulation.
+        cli: "-ips"
+        type: int
+        min: 1
+        default: 1
+      "-iws":
+        name: Image window step
+        description: Provides the windo step for creating images.
+        cli: "-iws"
+        type: int
+        min: 1
+        default: 1
+      "-bin":
+        name: Convert image data to .snp
+        description: Converts image data to custom binary format (.snp). ONly supported by the PyTorch implementation.
+        cli: "-bin"
+        type: bool
+        default: false
+      "-typ":
+        name: Data type
+        description: 
+        cli: "-typ"
+        type: enum
+        options:
+          - name: Raw data in all channels
+            cli: "0"
+          - name: Raw data in one channel and pairwise snp distances in the other channels
+            cli: "1"
+          - name: Raw data in one channel and mu-var-scaled values in the other channels
+            cli: "2"
+        conditions:
+          - type: bool
+            parameter: "-bin"
+            value: false
+      "-typ-bin":
+        name: Data type
+        description: 
+        cli: "-typ"
+        type: enum
+        options:
+          - name: Raw snp data and positions
+            cli: "0"
+          - name: Derived allele frequencies and positions
+            cli: "1"
+        conditions:
+          - type: bool
+            parameter: "-bin"
+            value: true
+      "-w-img-gen":
+        name: Window size
+        description: The window width provided is used to generate SNP windows as CNN input data.
+        cli: "-w"
+        type: int 
+        min: 6 # must be even
+        default: 400
+  - name: RAiSD-AI training mode
+    operations:
+      - MDL-GEN
+    parameters: 
+      "-arc": 
+        name: Network arhitecture
+        description: Specifies the neural network arhitecture.
+        cli: "-arc"
+        type: enum
+        default: 2
+        options:
+          - name: SweepNet
+            cli: "SweepNet"
+          - name: FAST-NN
+            cli: "FAST-NN"
+          - name: FASTER-NN
+            cli: "FASTER-NN"
+          - name: FASTER-NN-G
+            cli: "FASTER-NN-G"
+      "-e":
+        name: Epochs
+        description: Provides the number of epochs
+        cli: "-e"
+        type: int
+        min: 1
+        default: 10
+      "-cl4": 
+        name: Parings between class labels
+        description: Provides 4 parings between class labels and corresponding folder names.
+        cli: "-cl4"
+        conditions:
+          - type: enum
+            parameter: -arc
+            values:
+              - 3
+        type: multi
+        parameters:
+          - name: First folder name
+            type: str
+            cli: "label00="
+          - name: Second folder name
+            type: str
+            cli: "label01="
+          - name: Third folder name
+            type: str
+            cli: "label10="
+          - name: Fourth folder name
+            type: str
+            cli: "label11="
+      "-cl4_1x_label":
+        name: Provide identifier for Group 1x
+        description: If checked, provide an identifier string to be used in the output for Group 1x. Otherwise, the label names provided in IMG-GEN will be used instead.
+        type: optional
+        parameter:
+          name: Identifier
+          type: str
+          pattern: "\\w+"
+        conditions:
+          - type: enabled
+            parameter: -cl4
+      "-cl4_x1_label":
+        name: Provide identifier for Group x1
+        description: If checked, provide an identifier string to be used in the output for Group x1. Otherwise, the label names provided in IMG-GEN will be used instead.
+        type: optional
+        parameter:
+          name: Identifier
+          type: str
+          pattern: "\\w+"
+        conditions:
+          - type: enabled
+            parameter: -cl4
+      "-g":
+        name: Provide number of sequence groups to be created
+        description: Provide number of sequence groups to be created by FASTER-NN-G for SFS grouped poling. If not provided, the sample size is used.
+        type: optional
+        parameter:
+          name: Sequence groups
+          type: int
+          default: 1
+          min: 1
+        conditions:
+          - type: enum
+            parameter: -arc
+            values:
+              - 3
+  - name: RAiSD-AI inference mode
+    operations:
+      - MDL-TST
+    parameters:
+      # -mdl, -I
+      "-clp": # This type of parameter not yet supported!
+        name: Class test
+        description: For now, just one label-folder pair is supported!
+        cli: "-clp 1"
+        type: multi
+        parameters:
+          - name: Label
+            type: str
+          - name: Folder name
+            type: str
+  - name: RAiSD-AI sweep scan
+    operations:
+      - SWP-SCN
+    parameters:
+      "-pci-class-count":
+        name: Number of positive classes
+        description: The number of positive classes. Choose 2 only if the model was generated with FASTER-NN-G and four class labels.
+        type: enum
+        options:
+          - name: "1"
+          - name: "2"
+      "-pci-1":
+        name: Positive class index
+        description: The class index can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MD-GEN run that generated the CNN model.
+        type: int
+        cli: -pci 1
+        min: 0
+        default: 0
+        conditions:
+          - type: enum
+            parameter: -pci-class-count
+            values:
+              - 0
+      "-pci-2":
+        name: Positive class indices
+        description: The class indices can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MD-GEN run that generated the CNN model.
+        type: multi
+        cli: -pci 2
+        parameters:
+          - name: First positive class index
+            type: int
+            min: 0
+            default: 0
+          - name: Second positive class index
+            type: int
+            min: 0
+            default: 0
+        conditions:
+          - type: enum
+            parameter: -pci-class-count
+            values:
+              - 1
+  - name: RAiSD-AI additional parameters
+    operations: []
+    parameters:
+      "-frm-img-gen":
+        name: Remove exising IMG-GEN directory
+        description: Remove the directory RAiSD_Images.runID if it already exists.
+        operations:
+          add:
+            - IMG-GEN
+        type: bool
+        cli: -frm
+        default: false
+      "-frm-swp-scn":
+        name: Remove existing SWP-SCN directory
+        description: Remove the directory RAiSD_Images.runID if it already exists.
+        operations:
+          add:
+            - SWP-SCN
+        type: bool
+        cli: -frm
+        default: false
+      "-gpu":
+        name: Use GPU
+        description: Change the target hardware platform to be used for training, inference for model testing, and sweep scans from CPU to GPU. CUDA must be enabled to use this option.
+        operations:
+          add:
+            - MDL-GEN
+            - MDL-TST
+            - SWP-SCN
+        type: bool
+        cli: -gpu
+        default: false
+      "-useTF":
+        name: Use TensorFlow
+        description: Change the machine learning library from TensorFlow to PyTorch. Only supported for SweepNet.
+        operations:
+          add:
+            - MDL-GEN
+            - MDL-TST
+            - SWP-SCN
+        type: bool
+        cli: -useTF
+        default: false
+        conditions:
+          - type: enum
+            parameter: -arc
+            values:
+              - 0
+  - name: Miscellaneous parameters
+    operations:
+      - RSD-DEF
+      - IMG-GEN
+      - MDL-GEN
+      - MDL-TST
+      - SWP-SCN
+      - CO
+      - FASTA-VCF
+      - VCF-MS
+    parameters:
+      "-a":
+        name: Provide RNG seed
+        description: Provide a seed to initialize the random number generator. If not provided, the current time of day is used for initialization.
+        type: optional
+        cli: -a
+        parameter:
+          name: Seed
+          type: int
+          default: 0

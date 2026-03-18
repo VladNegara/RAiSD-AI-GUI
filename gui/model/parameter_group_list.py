@@ -380,7 +380,7 @@ class ParameterGroupList(QObject):
                         name,
                         description,
                         flag,
-                        operations,
+                        parameter_operations,
                         accepted_formats,
                         strict,
                         multiple,
@@ -437,6 +437,7 @@ class ParameterGroupList(QObject):
                         name,
                         description,
                         flag,
+                        parameter_operations,
                         inner_parameters,
                     )
                 case _:
@@ -551,6 +552,38 @@ class ParameterGroupList(QObject):
                         )
                     
                     return Parameter.EnabledCondition(
+                        parameter,
+                        target_value,
+                    )
+                case "opt" | "optional":
+                    if "parameter" not in obj:
+                        raise ValueError(
+                            "Optional condition has no target parameter."
+                        )
+                    parameter_id = obj["parameter"]
+                    if not isinstance(parameter_id, str):
+                        raise ValueError(
+                            "Invalid target parameter ID for optional "
+                            + f"condition: {parameter_id}. Expected string."
+                        )
+
+                    parameter = id_to_parameter[parameter_id]
+                    if not isinstance(parameter, OptionalParameter):
+                        raise ValueError(
+                            "Bool condition references non-optional parameter "
+                            + f"{parameter_id}."
+                        )
+
+                    target_value = obj.get("value", True)
+                    if target_value is None:
+                        target_value = True
+                    if not isinstance(target_value, bool):
+                        raise ValueError(
+                            "Invalid target value for optional condition: "
+                            + f"{target_value}. Expected bool or null."
+                        )
+
+                    return OptionalParameter.Condition(
                         parameter,
                         target_value,
                     )
