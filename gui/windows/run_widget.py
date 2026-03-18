@@ -684,15 +684,17 @@ class RunResultsWidget(RunSubWidget):
 
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
-        widget.setStyleSheet("background-color: lightblue;")
+        widget.setObjectName("run_results_widget")
         layout = QVBoxLayout(widget)
 
         run_results_label = QLabel("Run Results")
+        run_results_label.setObjectName("run_results_label")
         layout.addWidget(run_results_label)
 
         self.results_widget = ResultsWidget(self._run_result)
 
         results_scroll = QScrollArea()
+        results_scroll.setObjectName("results_scroll")
         results_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         results_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         results_scroll.setWidgetResizable(True)

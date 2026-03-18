@@ -6,7 +6,9 @@ from PySide6.QtWidgets import (
     QFileSystemModel,
     QTreeView,
     QHeaderView,
-    QPushButton
+    QPushButton,
+    QStyleOption,
+    QStyle
 )
 
 from PySide6.QtCore import (
@@ -15,7 +17,7 @@ from PySide6.QtCore import (
     QUrl
 )
 
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QPainter
 
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.widgets.parameter_form import ParameterForm
@@ -35,6 +37,7 @@ class ResultsWidget(QWidget):
         """
         super().__init__()
         self._run_result = run_result
+        self.setObjectName('results_widget')
         layout = QVBoxLayout(self)
 
         # Summary widget
@@ -54,9 +57,14 @@ class ResultsWidget(QWidget):
         files_layout.addWidget(files_label)
         self.folder_structure = QFileSystemModel()
         self.folder_widget = QTreeView()
+        self.folder_widget.setObjectName("folder_widget")
         self.folder_widget.doubleClicked.connect(self._on_double_click)
         files_layout.addWidget(self.folder_widget)
         layout.addWidget(files_widget, 1)
+
+        button = QPushButton("Bu bir örnektir")
+        button.setObjectName("file_button")
+        self.info_files_layout.addWidget(button)
 
         # Parameter widget
         parameters_header = QLabel("Parameters used")
@@ -69,6 +77,7 @@ class ResultsWidget(QWidget):
         self.status_label.setText("This run was completed successfully. For more information, see the info files below.")
         for file in self._run_result.info_files:
             button = QPushButton(file)
+            button.setObjectName("file_button")
             path = self._run_result.path.filePath(file)
             button.clicked.connect(lambda _, p=path: self.open_file(p))
             self.info_files_layout.addWidget(button)
@@ -87,3 +96,9 @@ class ResultsWidget(QWidget):
         if not self.folder_structure.isDir(index):
             path = self.folder_structure.filePath(index)
             self.open_file(path)
+
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)

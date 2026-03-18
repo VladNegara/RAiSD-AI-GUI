@@ -92,22 +92,22 @@ QWidget#navigation_buttons_widget QPushButton[highlight="true"] {
 
 /* ---- Parameter Input View ---- */
 
-QWidget#parameter_input_widget {
+QWidget#parameter_input_widget, QWidget#run_results_widget {
     background-color: #d7dbe9;
 }
 
-QWidget#parameter_input_widget QLabel {
+QWidget#parameter_input_widget QLabel, QWidget#run_results_widget QLabel{
     color: #0a0d4f;
 }
 
-QLabel#parameter_input_label {
+QLabel#parameter_input_label, QLabel#run_results_label{
     font-size: 24px;
     font-weight: 800;
     margin-left: 20px;
     margin-top: 20px;
 }
 
-QScrollArea#parameter_form_scroll {
+QScrollArea#parameter_form_scroll, QScrollArea#results_scroll, QWidget#results_widget{
     background: transparent;
 }
 
@@ -166,4 +166,31 @@ QWidget#parameter_form_section QComboBox::down-arrow {
 
 QLabel#validity_label{
     color: red;
+}
+
+/* RESULTS VIEW */
+
+QPushButton#file_button{
+    padding: 5px;
+    background-color: #9090c1;
+    color: #0a0d4f;
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+QPushButton#file_button:hover{
+    background-color: #b1b1d3;
+}
+
+QPushButton#file_button:pressed{
+    background: #6f6faf;
+}
+
+QHeaderView{
+    background-color: #9090c1;
+    color: #0a0d4f;
+}
+
+QTreeView#folder_widget{
+    selection-background-color: #9090c1;
 }
