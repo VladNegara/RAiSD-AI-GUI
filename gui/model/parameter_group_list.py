@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from re import compile
 from typing import Any, Iterator
 from yaml import load, Loader
@@ -25,6 +27,99 @@ from gui.model.dependency import (
     AndCondition,
     OrCondition,
 )
+
+
+# File structure data classes
+@dataclass
+class FileStructure(ABC):
+    pass
+
+
+@dataclass
+class SingleFile(FileStructure):
+    formats: list[str]
+
+
+@dataclass
+class Directory(FileStructure):
+    contents: list[FileStructure]
+
+
+# Operation model class
+@dataclass
+class Operation(QObject):
+    requires: list[FileStructure]
+    produces: FileStructure
+
+
+# Operation tree classes
+class FileProducerNode(ABC):
+    @property
+    @abstractmethod
+    def produces(self) -> FileStructure:
+        pass
+
+
+class FileConsumerNode:
+    def __init__(
+            self,
+            requires: FileStructure,
+            producers: list[FileProducerNode],
+    ) -> None:
+        self._requires = requires
+        self._producers = producers
+
+    @property
+    def requires(self) -> FileStructure:
+        return self._requires
+
+    @property
+    def producers(self) -> list[FileProducerNode]:
+        return self._producers
+
+
+class CommonParentDirectoryNode(FileProducerNode):
+    def __init__(
+            self,
+            produces: Directory,
+    ) -> None:
+        self._produces = produces
+
+    @property
+    def produces(self) -> FileStructure:
+        return self._produces
+
+
+
+class FilePickerNode(FileProducerNode):
+    def __init__(self, produces: FileStructure):
+        self._produces = produces
+
+    @property
+    def produces(self) -> FileStructure:
+        return self._produces
+
+
+class OperationNode():
+    def __init__(self,
+        operation: Operation,
+        files_needed: list[FileConsumerNode],
+    ) -> None:
+        self._operation = operation
+        self._files_needed = files_needed
+
+    @property
+    def operation(self) -> Operation:
+        return self._operation
+
+    @property
+    def produces(self) -> FileStructure:
+        return self.operation.produces
+
+
+@dataclass
+class OperationTree(QObject):
+    root: OperationNode
 
 
 class ParameterGroupList(QObject):
