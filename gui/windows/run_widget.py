@@ -444,25 +444,30 @@ class RunViewWidget(RunSubWidget):
 
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
-        widget.setStyleSheet("background-color: lightblue;")
+        widget.setObjectName("run_view_widget")
         layout = QVBoxLayout(widget)
 
         run_view_label = QLabel("Run View")
-        layout.addWidget(run_view_label)
+        run_view_label.setObjectName("run_view_label")
+        layout.addWidget(run_view_label, alignment=Qt.AlignmentFlag.AlignTop)
 
         step_widget = QWidget()
+        step_widget.setObjectName("step_widget")
         self.step_layout = QHBoxLayout(step_widget)
         self.run_indicators = []
         layout.addWidget(step_widget)
 
         output_widget = QWidget()
+        output_widget.setObjectName("output_widget")
         output_widget_layout = QHBoxLayout(output_widget)
         layout.addWidget(output_widget)
 
         self.execution_output = QTextEdit(readOnly=True)
+        self.execution_output.setObjectName("execution_output") #Todo hide/reveal these with a button
         output_widget_layout.addWidget(self.execution_output)
 
         self.error_output = QTextEdit(readOnly=True)
+        self.error_output.setObjectName("error_output") #Todo hide/reveal these with a button
         output_widget_layout.addWidget(self.error_output)
 
         self._command_executor.output.connect(self._command_executor_output)
@@ -478,7 +483,7 @@ class RunViewWidget(RunSubWidget):
         return widget
 
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
-        self.stop_run_button = QPushButton("Stop Run")
+        self.stop_run_button = QPushButton("Stop Run") #TODO style this
         self.stop_run_button.setEnabled(False)
         self.stop_run_button.setStyleSheet(f"background-color: purple;")
         self.stop_run_button.clicked.connect(self._stop_run_button_clicked)
