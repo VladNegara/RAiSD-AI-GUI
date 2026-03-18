@@ -16,7 +16,7 @@ class ParameterFormSection(QWidget):
     def __init__(
             self,
             parameter_group: ParameterGroup,
-            locked: bool
+            editable: bool
     ) -> None:
         """
         Initialize a `ParameterFormSection` object.
@@ -33,7 +33,7 @@ class ParameterFormSection(QWidget):
 
         self._parameter_group = parameter_group
         self._parameter_group.enabled_changed.connect(self._parameter_group_enabled_changed)
-        self._locked = locked
+        self._editable = editable
 
         # Make widgets
         heading = QLabel(self._parameter_group.name)
@@ -42,7 +42,7 @@ class ParameterFormSection(QWidget):
         form_layout = QVBoxLayout(form_body)
         form_layout.setContentsMargins(0, 0, 0, 0)
         for parameter in parameter_group:
-            form_row = ParameterWidget.from_parameter(parameter, self._locked).build_form_row()
+            form_row = ParameterWidget.from_parameter(parameter, self._editable).build_form_row()
             form_layout.addWidget(form_row)
 
         layout = QVBoxLayout(self)
