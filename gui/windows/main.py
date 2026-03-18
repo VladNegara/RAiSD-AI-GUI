@@ -1,5 +1,6 @@
 from PySide6.QtCore import (
     Slot,
+    QDir
 )
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -17,7 +18,6 @@ from gui.execution.command_executor import CommandExecutor
 from gui.windows.run_widget import RunWidget
 from gui.windows.history_widget import HistoryWidget
 from gui.windows.settings_widget import SettingsWidget
-from gui.widgets.status_bar import StatusBar
 from gui.model.run_result import RunResult
  
 class MainWindow(QMainWindow):
@@ -38,13 +38,12 @@ class MainWindow(QMainWindow):
         self._setup_ui()
 
     def _setup_ui(self):
-        self.setWindowTitle("RAiSD-AI-GUI")
-        window_widget = QWidget(self)
-        window_layout = QVBoxLayout(window_widget)
-        self.setCentralWidget(window_widget)
+        app_settings.workspace_path_changed.connect(self._set_workspace_path_title)
+        self._set_workspace_path_title(app_settings.workspace_path)
 
         central_widget = QWidget()
         central_layout = QHBoxLayout(central_widget)
+        self.setCentralWidget(central_widget)
 
         # Left sidebar
         left_sidebar = QWidget()
@@ -58,11 +57,6 @@ class MainWindow(QMainWindow):
         central_layout.addWidget(main_widget)
         self._setup_main_widget(self.main_widget_layout)
 
-        window_layout.addWidget(central_widget, 1)
-
-        self._status_bar = StatusBar()
-        app_settings.workspace_path_changed.connect(self._status_bar.workspace_path_changed)
-        window_layout.addWidget(self._status_bar)
 
     def _setup_left_sidebar(self, layout: QVBoxLayout):
         logo_widget = QWidget()
@@ -114,6 +108,12 @@ class MainWindow(QMainWindow):
     def _settings_button_clicked(self) -> None:
         self.main_widget_layout.setCurrentWidget(self.settings_widget)
 
-    
+    def _set_workspace_path_title(self, new_workspace: QDir) -> None:
+        new_workspace_path = new_workspace.absolutePath()
+        max_len = 30
+        if len(new_workspace_path) > 30:
+            self.setWindowTitle(f"RAiSD-AI-GUI - '..{new_workspace_path[-max_len + 2:]}'")
+        else:
+            self.setWindowTitle(f"RAiSD-AI-GUI - '{new_workspace_path}'")
 
     
