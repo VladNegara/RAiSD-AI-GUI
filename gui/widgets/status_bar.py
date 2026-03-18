@@ -23,12 +23,11 @@ class StatusBar(QStatusBar):
         super().__init__()
         self.setStyleSheet("background-color: lightgray;")
 
-        self.workspace_button = QPushButton()
-        self.workspace_button.clicked.connect(app_settings.set_workspace_folder)
-        self.workspace_path_changed.connect(self.update_workspace_button)
-        self.update_workspace_button(app_settings.workspace_path)
+        self.workspace_label = QLabel()
+        self.workspace_path_changed.connect(self.update_workspace_label)
+        self.update_workspace_label(app_settings.workspace_path)
 
-        self.addWidget(self.workspace_button)
+        self.addWidget(self.workspace_label)
 
-    def update_workspace_button(self, new_workspace: QDir) -> None:
-        self.workspace_button.setText(f"Current Workspace: '{new_workspace.absolutePath()}'")
+    def update_workspace_label(self, new_workspace: QDir) -> None:
+        self.workspace_label.setText(f"Current Workspace: '{new_workspace.absolutePath()}'")
