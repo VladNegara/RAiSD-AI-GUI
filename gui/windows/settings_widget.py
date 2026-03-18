@@ -13,18 +13,6 @@ from PySide6.QtWidgets import (
 from gui.model.settings import EnvironmentManager, app_settings
 
 
-class MainWindow(QMainWindow):
-    """
-    The main window of the RAiSD-AI GUI application.
-    """
-    def __init__(self, run_result: RunResult):
-        """
-        Initialize the main window.
-
-        :param parameter_group_list: the parameters to be filled in by
-        the user
-        :type parameter_group_list: ParameterGroupList
-        """
 class SettingsWidget(QWidget):
     """
     The settings widget of the RAiSD-AI GUI application.
@@ -68,7 +56,7 @@ class SettingsWidget(QWidget):
         # Label to show the environment manager
         self.environment_manager_label = QLabel()
         self._update_environment_manager_label(app_settings.environment_manager)
-        app_settings.enviroment_manager_changed.connect(self._update_environment_manager_label)
+        app_settings.environment_manager_changed.connect(self._update_environment_manager_label)
         layout.addWidget(self.environment_manager_label)
 
         # Label to show the environment name
