@@ -98,8 +98,11 @@ class CommonParentDirectoryNode(FileProducerNode):
 
 
 
-class FilePickerNode(FileProducerNode):
+class FilePickerNode(QObject): # TO DO: Make this a FileProducerNode again
+    file_changed = Signal(QFileInfo)
+
     def __init__(self, produces: FileStructure):
+        super().__init__()
         self._produces = produces
         self._file: QFileInfo | None = None
 
@@ -114,6 +117,7 @@ class FilePickerNode(FileProducerNode):
     @file.setter
     def file(self, new_file: QFileInfo | None) -> None:
         self._file = new_file
+        self.file_changed.emit(self._file)
 
 
 class OperationNode(FileProducerNode):
