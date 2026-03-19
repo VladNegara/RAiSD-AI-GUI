@@ -23,7 +23,8 @@ from PySide6.QtGui import QWindow
 
 from gui.model.parameter_group_list import (
     Directory,
-    ParameterGroupList, 
+    ParameterGroupList,
+    Operation,
     OperationTree,
     OperationNode,
     FileConsumerNode,
@@ -321,15 +322,12 @@ class OperationSelectionWidget(RunSubWidget):
         layout = QVBoxLayout(widget)
 
         file_picker_node = FilePickerNode(Directory([]))
-        op_node = OperationNode(None, None)
         file_consumer = FileConsumerNode(
             Directory([]),
-            [
-                file_picker_node,
-                op_node,
-            ],
             label="Input file",
+            cli="-I",
         )
+        file_consumer.add_producer(file_picker_node)
         layout.addWidget(FileConsumerWidget(file_consumer))
 
         for operation, enabled in self._parameter_group_list.operations.items():

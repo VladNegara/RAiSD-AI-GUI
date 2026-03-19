@@ -58,8 +58,10 @@ class Directory(FileStructure):
 # Operation model class
 @dataclass
 class Operation(QObject):
+    name: str
+    description: str
     cli: str
-    requires: list[FileStructure]
+    requires: list[tuple[str, str, FileStructure]]
     produces: FileStructure
 
 
@@ -82,17 +84,21 @@ class FileConsumerNode():
     def __init__(
             self,
             requires: FileStructure,
-            producers: list[FileProducerNode],
             label: str,
+            cli: str,
     ) -> None:
         self._requires = requires
-        self._producers = producers
+        self._producers = []
         self._selected_index = 0
         self._label = label
+        self._cli = cli
 
     @property
     def requires(self) -> FileStructure:
         return self._requires
+
+    def add_producer(self, producer: FileProducerNode) -> None:
+        self._producers.append(producer)
 
     @property
     def producers(self) -> list[FileProducerNode]:
@@ -188,18 +194,33 @@ class FilePickerNode(QObject):
 class OperationNode():
     def __init__(self,
         operation: Operation,
-        files_needed: list[FileConsumerNode],
     ) -> None:
-        self._operation = operation
-        self._files_needed = files_needed
+        self._name = operation.name
+        self._description = operation.description
+        self._cli = operation.cli
+        self._produces = operation.produces
+        self._file_consumers = []
+        for file_name, cli, file_structure in operation.requires:
+            file_consumer = FileConsumerNode(
+                file_structure,
+                file_name,
+                cli,
+            )
+            file_picker = FilePickerNode(file_structure)
+            file_consumer.add_producer(file_picker)
+            self._file_consumers.append(file_consumer)
 
     @property
-    def operation(self) -> Operation:
-        return self._operation
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def description(self) -> str:
+        return self._description
 
     @property
     def produces(self) -> FileStructure:
-        return self.operation.produces
+        return self._produces
 
     @property
     def file(self) -> QFileInfo | None:
@@ -209,7 +230,7 @@ class OperationNode():
 
     @property
     def valid(self) -> bool:
-        return all([consumer.valid for consumer in self._files_needed])
+        return all([consumer.valid for consumer in self._file_consumers])
 
 
 @dataclass
@@ -219,8 +240,10 @@ class OperationTree(QObject):
 
 # Dummy data
 img_gen = Operation(
+    name="Image generation",
+    description="Generate images.",
     cli="-op IMG-GEN",
-    requires=[SingleFile([".ms"])],
+    requires=[("Input data", "-I", SingleFile([".ms"]))],
     produces=Directory(
         [
             Directory(
@@ -233,23 +256,30 @@ img_gen = Operation(
 )
 
 mdl_gen = Operation(
+    name="Model training",
+    description="Train a CNN model.",
     cli="MDL-GEN",
-    requires=[Directory(
-        [
+    requires=[
+        (
+            "Training data",
+            "-I",
             Directory(
                 [
-                    SingleFile([".png"]),
+                    Directory(
+                        [
+                            SingleFile([".png"]),
+                        ]
+                    ),
+                    Directory(
+                        [
+                            SingleFile([".png"]),
+                        ]
+                    ),
                 ]
-            ),
-            Directory(
-                [
-                    SingleFile([".png"]),
-                ]
-            ),
-        ]
-    )],
-    produces=Directory
-(
+            )
+        )
+    ],
+    produces=Directory(
         [
             SingleFile([".pt"]),
         ],
@@ -259,47 +289,6 @@ mdl_gen = Operation(
 my_tree = OperationTree(
     root=OperationNode(
         operation=mdl_gen,
-        files_needed=[
-            FileConsumerNode(
-                requires=Directory(
-                    [
-                        Directory(
-                            [
-                                SingleFile([".png"]),
-                            ]
-                        ),
-                        Directory(
-                            [
-                                SingleFile([".png"]),
-                            ]
-                        ),
-                    ]
-                ),
-                producers=[
-                    FilePickerNode(
-                        produces=Directory(
-                            [
-                                Directory(
-                                    [
-                                        SingleFile([".png"]),
-                                    ]
-                                ),
-                                Directory(
-                                    [
-                                        SingleFile([".png"]),
-                                    ]
-                                ),
-                            ]
-                        ),
-                    ),
-                    OperationNode(
-                        operation=img_gen,
-                        files_needed=[],
-                    ),
-                ],
-                label="Input file",
-            )
-        ]
     )
 )
 
