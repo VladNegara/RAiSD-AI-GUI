@@ -321,9 +321,15 @@ class OperationSelectionWidget(RunSubWidget):
         layout = QVBoxLayout(widget)
 
         file_picker_node = FilePickerNode(Directory([]))
-        file_picker_node2 = FilePickerNode(Directory([SingleFile([".ms"])]))
         op_node = OperationNode(None, None)
-        file_consumer = FileConsumerNode(Directory([]), [file_picker_node, file_picker_node2, op_node])
+        file_consumer = FileConsumerNode(
+            Directory([]),
+            [
+                file_picker_node,
+                op_node,
+            ],
+            label="Input file",
+        )
         layout.addWidget(FileConsumerWidget(file_consumer))
 
         for operation, enabled in self._parameter_group_list.operations.items():

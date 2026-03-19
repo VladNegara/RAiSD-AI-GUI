@@ -296,7 +296,8 @@ my_tree = OperationTree(
                         operation=img_gen,
                         files_needed=[],
                     ),
-                ]
+                ],
+                label="Input file",
             )
         ]
     )
