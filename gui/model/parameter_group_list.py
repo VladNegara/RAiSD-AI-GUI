@@ -304,6 +304,7 @@ class ParameterGroupList(QObject):
             operation=mdl_gen,
         )
     )
+    my_tree.root.file_consumers[0].add_producer(OperationNode(img_gen))
 
     operations_changed = Signal()
 
