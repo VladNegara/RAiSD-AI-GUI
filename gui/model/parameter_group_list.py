@@ -83,10 +83,12 @@ class FileConsumerNode():
             self,
             requires: FileStructure,
             producers: list[FileProducerNode],
+            label: str,
     ) -> None:
         self._requires = requires
         self._producers = producers
         self._selected_index = 0
+        self._label = label
 
     @property
     def requires(self) -> FileStructure:
@@ -95,6 +97,10 @@ class FileConsumerNode():
     @property
     def producers(self) -> list[FileProducerNode]:
         return self._producers
+
+    @property
+    def label(self) -> str:
+        return self._label
 
     @property
     def selected_index(self) -> int:
