@@ -236,6 +236,8 @@ class FileConsumerWidget(QWidget):
 
 
         layout = QVBoxLayout(self)
+        heading = QLabel(self._file_consumer_node.label)
+        layout.addWidget(heading)
         self.button_widget = QWidget()
         self.button_layout = QHBoxLayout(self.button_widget)
         self.file_producer_widget = QWidget()
