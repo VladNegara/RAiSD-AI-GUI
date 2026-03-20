@@ -2,6 +2,8 @@ from gui.model.parameter_group_list import ParameterGroupList
 
 from PySide6.QtCore import QDir
 
+import json
+
 
 class RunResult():
     def __init__(
@@ -34,9 +36,13 @@ class RunResult():
         #TODO: implement
         pass
 
-    def to_str(self) -> str:
-        #TODO: implement file representation
-        pass
+    def to_dir(self) -> str:
+        dir = {
+            "path": self._results_path.path(),
+            "info-files": self._info_files,
+            "commands": self._commands
+        }
+        return dir
 
     @property
     def run_completed(self) -> bool:

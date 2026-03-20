@@ -24,6 +24,8 @@ from PySide6.QtGui import (
     QGuiApplication
 )
 
+import json
+
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.model.run_result import RunResult
 from gui.execution.command_executor import CommandExecutor
@@ -169,6 +171,8 @@ class RunWidget(QWidget):
     @Slot()
     def _handle_run_end(self, run_successful: bool) -> None:
         if run_successful:
+            with open("history.json", "w") as f:
+                json.dump(self._run_result.to_dir(), f)
             self._switch_to_run_results_widget()
             self.run_view_widget.results_button.setEnabled(True)
         else:
