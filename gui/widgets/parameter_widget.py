@@ -77,6 +77,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             :type parameter: Parameter[Any]
             """
             super().__init__("Reset")
+            self.setObjectName("reset_button")
             self._parameter = parameter
 
             self.clicked.connect(self._clicked)
