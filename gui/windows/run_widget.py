@@ -321,7 +321,7 @@ class FilePickerWidget(QWidget):
         self.button.setText(new_file.fileName())
 
 
-class CommonParentDirectoryNode(QWidget):
+class CommonParentDirectoryNodeWidget(QWidget):
     def __init__(self, common_parent_directory: CommonParentDirectoryNode):
         super().__init__()
         self._common_parent_directory = common_parent_directory
