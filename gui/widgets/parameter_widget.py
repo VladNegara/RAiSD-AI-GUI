@@ -635,11 +635,12 @@ class FileParameterWidget(ParameterWidget):
             )
             self._error_label.setText(f"Invalid file type. Allowed: {allowed}")
         elif not self.parameter.matches_expected and file_paths:
-            expected = ', '.join(self.parameter.expected_formats)
-            self._error_label.setText(
-                f"Warning: unexpected file type. "
-                + f"Expected: {expected}. You can still proceed."
-            )
+            if self.parameter.expected_formats:
+                expected = ', '.join(self.parameter.expected_formats)
+                self._error_label.setText(
+                    f"Warning: unexpected file type. "
+                    + f"Expected: {expected}. You can still proceed."
+                )
         else:
             pass
 

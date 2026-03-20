@@ -429,9 +429,10 @@ class ParameterConfirmationWidget(RunSubWidget):
         """
         Copies all commands from the run result to the clipboard.
         """
-        string = '; '.join(self._run_result.commands)
-        cb = QGuiApplication.clipboard()
-        cb.setText(string)
+        if self._run_result.commands:
+            string = '; '.join(self._run_result.commands)
+            cb = QGuiApplication.clipboard()
+            cb.setText(string)
 
     @Slot()
     def _run_button_clicked(self) -> None:
