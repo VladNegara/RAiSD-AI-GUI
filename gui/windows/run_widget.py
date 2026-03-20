@@ -464,7 +464,7 @@ class RunViewWidget(RunSubWidget):
             self.execution_still_running_dialog.close()
 
     def _start_execution(self):
-        source_folder = app_settings.executable_folder_path.absolutePath()
+        source_folder = app_settings.executable_file_path.absoluteDir().absolutePath()
         commands = [
             f"-n TrainingData2DSNP -I {source_folder}/datasets/train/msneutral1_100sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTR -f -frm -O",
             # f"-n TrainingData2DSNP -I {source_folder}/datasets/train/msselection1_100sims.out -L 100000 -its 50000 -op IMG-GEN -icl sweepTR -f -O",
