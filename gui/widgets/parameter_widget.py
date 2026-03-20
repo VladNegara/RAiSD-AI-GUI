@@ -2,10 +2,13 @@ from typing import Any
 from abc import ABC
 from pathlib import Path
 
+from PySide6.QtGui import QDesktopServices
+
 from PySide6.QtCore import (
     Qt,
     Slot,
     QRegularExpression,
+    QUrl
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -17,6 +20,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QComboBox,
     QFileDialog,
+    QListWidget,
+    QAbstractItemView
 )
 from PySide6.QtGui import (
     QRegularExpressionValidator,
@@ -80,7 +85,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         def _clicked(self) -> None:
             self._parameter.reset_value()
 
-    def __init__(self, parameter: Parameter[Any]):
+    def __init__(self, parameter: Parameter[Any], editable: bool):
         """
         Initialize a `ParameterWidget` object.
 
@@ -89,11 +94,12 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         """
         super().__init__()
         self._parameter = parameter
+        self._editable = editable
 
     def _show_validity(self, widget: QWidget, valid: bool) -> None:
-        if valid:
+        if valid and self._editable:
             widget.setStyleSheet("QLineEdit { border: 1px solid green; }")
-        else:
+        elif self._editable:
             widget.setStyleSheet("QLineEdit { border: 1px solid red; }")
 
     @property
@@ -104,7 +110,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         return self._parameter
 
     @classmethod
-    def from_parameter(cls, parameter: Parameter[Any]) -> "ParameterWidget":
+    def from_parameter(cls, parameter: Parameter[Any], editable: bool) -> "ParameterWidget":
         """
         Create a suitable `ParameterWidget` for a given `Parameter`.
 
@@ -116,25 +122,28 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         :param parameter: the parameter to create a widget for
         :type parameter: Parameter[Any]
 
+        :param editable: whether the widget is editable or not
+        :type editable: bool
+
         :return: the corresponding widget
         :rtype: ParameterWidget
         """
         if isinstance(parameter, OptionalParameter):
-            return OptionalParameterWidget(parameter)
+            return OptionalParameterWidget(parameter, editable)
         if isinstance(parameter, MultiParameter):
-            return MultiParameterWidget(parameter)
+            return MultiParameterWidget(parameter, editable)
         if isinstance(parameter, BoolParameter):
-            return BoolParameterWidget(parameter)
+            return BoolParameterWidget(parameter, editable)
         if isinstance(parameter, IntParameter):
-            return IntParameterWidget(parameter)
+            return IntParameterWidget(parameter, editable)
         if isinstance(parameter, FloatParameter):
-            return FloatParameterWidget(parameter)
+            return FloatParameterWidget(parameter, editable)
         if isinstance(parameter, EnumParameter):
-            return EnumParameterWidget(parameter)
+            return EnumParameterWidget(parameter, editable)
         if isinstance(parameter, StringParameter):
-            return StringParameterWidget(parameter)
+            return StringParameterWidget(parameter, editable)
         if isinstance(parameter, FileParameter):
-            return FileParameterWidget(parameter)
+            return FileParameterWidget(parameter, editable)
         raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
 
     def build_form_row(self) -> QWidget:
@@ -168,8 +177,9 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
 
         layout.addWidget(self)
 
-        reset_button = ParameterWidget.ResetButton(self.parameter)
-        layout.addWidget(reset_button)
+        if self._editable:
+            reset_button = ParameterWidget.ResetButton(self.parameter)
+            layout.addWidget(reset_button)
 
         return row
 
@@ -179,14 +189,17 @@ class OptionalParameterWidget(ParameterWidget):
     A widget to edit an optional parameter.
     """
 
-    def __init__(self, parameter: OptionalParameter) -> None:
+    def __init__(self, parameter: OptionalParameter, editable: bool) -> None:
         """
         Initialize an `OptionalParameterWidget` object.
 
         :param parameter: the optional parameter to reference
         :type parameter: OptionalParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
-        super().__init__(parameter)
+        super().__init__(parameter, editable)
 
         layout = QVBoxLayout(self)
         self._checkbox = QCheckBox()
@@ -195,6 +208,7 @@ class OptionalParameterWidget(ParameterWidget):
             if parameter.value
             else Qt.CheckState.Unchecked
         )
+        self._checkbox.setEnabled(self._editable)
         layout.addWidget(self._checkbox)
 
         self._checkbox.checkStateChanged.connect(self._check_state_changed)
@@ -210,7 +224,8 @@ class OptionalParameterWidget(ParameterWidget):
         # `self.parameter`` should always be of type OptionalParameter,
         # even though the type checker doesn't agree.
         child_widget = ParameterWidget.from_parameter(
-            self.parameter.parameter # type: ignore
+            self.parameter.parameter, # type: ignore
+            self._editable
         )
         child_row = child_widget.build_form_row()
         layout.addWidget(child_row)
@@ -236,8 +251,17 @@ class MultiParameterWidget(ParameterWidget):
     A widget to edit a multi-value parameter.
     """
 
-    def __init__(self, parameter: MultiParameter):
-        super().__init__(parameter)
+    def __init__(self, parameter: MultiParameter, editable: bool):
+        """
+        Initialize a `MultiParameterWidget` object.
+
+        :param parameter: the optional parameter to reference
+        :type parameter: MultiParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
+        """
+        super().__init__(parameter, editable)
 
     def build_form_row(self) -> QWidget:
         row = QWidget()
@@ -249,7 +273,7 @@ class MultiParameterWidget(ParameterWidget):
         # This should always work, since the constructor is given a
         # MultiParameter object.
         for child_parameter in self.parameter.parameters: # type: ignore
-            child_widget = ParameterWidget.from_parameter(child_parameter)
+            child_widget = ParameterWidget.from_parameter(child_parameter, self._editable)
             child_row = child_widget.build_form_row()
             layout.addWidget(child_row)
 
@@ -261,14 +285,17 @@ class BoolParameterWidget(ParameterWidget):
     A widget to edit a boolean parameter.
     """
 
-    def __init__(self, parameter: Parameter[bool]) -> None:
+    def __init__(self, parameter: Parameter[bool], editable: bool) -> None:
         """
         Initialize a `BoolParameterWidget` object.
 
         :param parameter: the boolean parameter to reference
         :type parameter: Parameter[bool]
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
-        super().__init__(parameter)
+        super().__init__(parameter, editable)
 
         layout = QVBoxLayout(self)
         self._checkbox = QCheckBox()
@@ -277,6 +304,7 @@ class BoolParameterWidget(ParameterWidget):
             if parameter.value
             else Qt.CheckState.Unchecked
         )
+        self._checkbox.setEnabled(self._editable)
         layout.addWidget(self._checkbox)
 
         self._checkbox.checkStateChanged.connect(self._check_state_changed)
@@ -300,14 +328,17 @@ class IntParameterWidget(ParameterWidget):
     A widget to edit an integer parameter.
     """
 
-    def __init__(self, parameter: IntParameter) -> None:
+    def __init__(self, parameter: IntParameter, editable: bool) -> None:
         """
         Initialize an `IntParameterWidget` object.
 
         :param parameter: the integer parameter to reference
         :type parameter: IntParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
-        super().__init__(parameter)
+        super().__init__(parameter, editable)
 
         layout = QVBoxLayout(self)
 
@@ -317,6 +348,7 @@ class IntParameterWidget(ParameterWidget):
         regex = QRegularExpression(R"^(-)?[0-9]*$")
         validator = QRegularExpressionValidator(regex)
         self._line_edit.setValidator(validator)
+        self._line_edit.setReadOnly(not self._editable)
         layout.addWidget(self._line_edit)
 
         match (parameter.lower_bound is None, parameter.upper_bound is None):
@@ -346,19 +378,23 @@ class IntParameterWidget(ParameterWidget):
         self._line_edit.setText(str(new_value))
         self._show_validity(self._line_edit, valid)
 
+
 class FloatParameterWidget(ParameterWidget):
     """
     A widget to edit a float parameter.
     """
 
-    def __init__(self, parameter: FloatParameter) -> None:
+    def __init__(self, parameter: FloatParameter, editable: bool) -> None:
         """
         Initialize a `FloatParameterWidget` object.
 
         :param parameter: the float parameter to reference
         :type parameter: FloatParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
-        super().__init__(parameter)
+        super().__init__(parameter, editable)
 
         layout = QVBoxLayout(self)
 
@@ -371,6 +407,7 @@ class FloatParameterWidget(ParameterWidget):
         )
         validator = QRegularExpressionValidator(regex)
         self._line_edit.setValidator(validator)
+        self._line_edit.setReadOnly(not self._editable)
         layout.addWidget(self._line_edit)
 
         match (parameter.lower_bound is None, parameter.upper_bound is None):
@@ -401,26 +438,26 @@ class FloatParameterWidget(ParameterWidget):
         self._show_validity(self._line_edit, valid)
 
 
-
 class EnumParameterWidget(ParameterWidget):
     """
     A dropdown widget to edit an enumerated parameter.
     """
 
-    def __init__(self, parameter: EnumParameter):
+    def __init__(self, parameter: EnumParameter, editable: bool):
         """
         Initialize an `EnumParameterWidget` object.
 
         :param parameter: the enum parameter to reference
         :type parameter: EnumParameter
         """
-        super().__init__(parameter)
+        super().__init__(parameter, editable)
 
         layout = QVBoxLayout(self)
 
         self._combo_box = QComboBox()
         self._combo_box.addItems(parameter.options)
         self._combo_box.setCurrentIndex(parameter.value)
+        self._combo_box.setEnabled(self._editable)
         layout.addWidget(self._combo_box)
 
         self._combo_box.currentIndexChanged.connect(
@@ -442,7 +479,7 @@ class StringParameterWidget(ParameterWidget):
     A widget to edit a string parameter.
     """
 
-    def __init__(self, parameter: StringParameter) -> None:
+    def __init__(self, parameter: StringParameter, editable: bool) -> None:
         """
         Initialize a `StringParameterWidget` object.
 
@@ -451,13 +488,17 @@ class StringParameterWidget(ParameterWidget):
 
         :param parameter: the string parameter to reference
         :type parameter: StringParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
         """
-        super().__init__(parameter)
+        super().__init__(parameter, editable)
 
         layout = QVBoxLayout(self)
 
         self._line_edit = QLineEdit()
         self._line_edit.setText(parameter.value)
+        self._line_edit.setReadOnly(not self._editable)
         layout.addWidget(self._line_edit)
 
         if parameter.max_length is not None:
@@ -478,7 +519,6 @@ class StringParameterWidget(ParameterWidget):
         self._show_validity(self._line_edit, valid)
 
 
-
 class FileParameterWidget(ParameterWidget):
     """
     A widget to edit a file parameter.
@@ -489,12 +529,41 @@ class FileParameterWidget(ParameterWidget):
     Displays the currently selected file path(s).
     """
 
-    def __init__(self, parameter: FileParameter) -> None:
-        super().__init__(parameter)
+    def __init__(self, parameter: FileParameter, editable: bool) -> None:
+        """
+        Initialize a `FileParameter` object.
+
+        If the parameter has a maximum length, the length is enforced on
+        the input field and displayed to the user in a label.
+
+        :param parameter: the string parameter to reference
+        :type parameter: StringParameter
+
+        :param editable: whether the widget is editable
+        :type editable: bool
+        """
+        super().__init__(parameter, editable)
         self.parameter: FileParameter
 
         layout = QVBoxLayout(self)
+        parameter.value_changed.connect(self._parameter_value_changed)
 
+        # If the widget is locked: create a list with the selected files
+        if not self._editable:
+            self.list_widget = QListWidget()
+            self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+            self.list_widget.setSortingEnabled(True)
+            if self.parameter.value:
+                self.list_widget.addItems(self.parameter.value)
+            else:
+                self.list_widget.addItem("No files selected")
+            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.05))
+            self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
+            self.list_widget.doubleClicked.connect(self._on_double_click)
+            layout.addWidget(self.list_widget)
+            return
+
+        # If the widget is not locked:
         self._path_label = QLabel("No file selected")
         layout.addWidget(self._path_label)
 
@@ -520,12 +589,20 @@ class FileParameterWidget(ParameterWidget):
             hint = QLabel(f"Select {mode} — Allowed types: any type.")
             layout.addWidget(hint)
 
-        parameter.value_changed.connect(self._parameter_value_changed)
-
         file_browse = QPushButton('Browse')
         file_browse.clicked.connect(self._open_file_dialog)
 
-        layout.addWidget(file_browse)
+        layout.addWidget(file_browse)    
+
+    @Slot(int)
+    def _on_double_click(self, index) -> None:
+        """
+        Handles a double click on a list item; a file. The file
+        is opened in the system's default file editor.
+        """
+        if self.parameter.value:
+            path = self.list_widget.itemFromIndex(index).text()
+            QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
     @Slot(list, bool)
     def _parameter_value_changed(
@@ -533,6 +610,18 @@ class FileParameterWidget(ParameterWidget):
         file_paths: list[str],
         valid: bool
     ) -> None:
+        # If the widget is locked add the files to the list
+        if not self._editable:
+            self.list_widget.clear()
+            if file_paths:
+                self.list_widget.addItems(file_paths)
+            else:
+                self.list_widget.addItem("No files selected")
+            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.05))
+            self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
+            return
+        
+        # If the widget is not locked
         if file_paths:
             self._path_label.setText("\n".join(file_paths))
         else:
@@ -546,11 +635,12 @@ class FileParameterWidget(ParameterWidget):
             )
             self._error_label.setText(f"Invalid file type. Allowed: {allowed}")
         elif not self.parameter.matches_expected and file_paths:
-            expected = ', '.join(self.parameter.expected_formats)
-            self._error_label.setText(
-                f"Warning: unexpected file type. "
-                + f"Expected: {expected}. You can still proceed."
-            )
+            if self.parameter.expected_formats:
+                expected = ', '.join(self.parameter.expected_formats)
+                self._error_label.setText(
+                    f"Warning: unexpected file type. "
+                    + f"Expected: {expected}. You can still proceed."
+                )
         else:
             pass
 

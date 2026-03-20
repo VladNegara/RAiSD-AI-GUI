@@ -7,6 +7,8 @@ from PySide6.QtCore import (
         Slot,
 )
 
+from gui.model.settings import app_settings
+
 class CommandExecutor(QObject):
     """
     A class that manages the execution of shell commands in QProcesses.
@@ -51,7 +53,7 @@ class CommandExecutor(QObject):
         :param commands: the list of commands to be executed
         :type command: list[str]
         """
-        if self._process.state() is (QProcess.ProcessState.Starting or QProcess.ProcessState.Running):
+        if self._process.state() == QProcess.ProcessState.Starting or self._process.state() == QProcess.ProcessState.Running:
             raise Exception("Execution is still running")
         
         self.execution_started.emit(len(commands))
@@ -89,7 +91,11 @@ class CommandExecutor(QObject):
         :param command: the command to be executed in the process
         :type command: str
         """
-        self._process.start("bash", ["-c", f"micromamba run -n raisd-ai {command}"])
+        print(f"Starting process in environment:{app_settings.workspace_path.absolutePath()}")
+        self._process.setWorkingDirectory(app_settings.workspace_path.absolutePath())
+        self._process.setProgram("bash")
+        self._process.setArguments(["-c", f"{app_settings.environment_manager.value} run -n {app_settings.environment_name} {app_settings.executable_file_path.absoluteFilePath()} {command}"])
+        self._process.start()
 
     @Slot()
     def _stop_process(self) -> None:

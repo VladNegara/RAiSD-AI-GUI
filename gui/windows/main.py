@@ -1,6 +1,6 @@
 from PySide6.QtCore import (
-    Qt,
     Slot,
+    QDir
 )
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -10,35 +10,36 @@ from PySide6.QtWidgets import (
     QStackedLayout,
     QScrollArea,
     QPushButton,
-    QLabel,
 )
 
+from gui.model.settings import app_settings
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.execution.command_executor import CommandExecutor
 from gui.windows.run_widget import RunWidget
 from gui.windows.history_widget import HistoryWidget
 from gui.windows.settings_widget import SettingsWidget
-
+from gui.model.run_result import RunResult
  
 class MainWindow(QMainWindow):
     """
     The main window of the RAiSD-AI GUI application.
     """
-    def __init__(self, parameter_group_list: ParameterGroupList):
+    def __init__(self, run_result: RunResult):
         """
         Initialize the main window.
 
-        :param parameter_group_list: the parameters to be filled in by
-        the user
-        :type parameter_group_list: ParameterGroupList
+        :param run_result: the run_result object used by the RunWidget
+        :type run_result: RunResult
         """
         super().__init__()
-        self._parameter_group_list = parameter_group_list
+        self._run_result = run_result
         self.command_executor = CommandExecutor()
         self._setup_ui()
 
     def _setup_ui(self):
-        self.setWindowTitle("RAiSD-AI-GUI")
+        app_settings.workspace_path_changed.connect(self._set_workspace_path_title)
+        self._set_workspace_path_title(app_settings.workspace_path)
+
         central_widget = QWidget()
         central_layout = QHBoxLayout(central_widget)
         self.setCentralWidget(central_widget)
@@ -54,6 +55,7 @@ class MainWindow(QMainWindow):
         self.main_widget_layout = QStackedLayout(main_widget)
         central_layout.addWidget(main_widget)
         self._setup_main_widget(self.main_widget_layout)
+
 
     def _setup_left_sidebar(self, layout: QVBoxLayout):
         logo_widget = QWidget()
@@ -85,7 +87,7 @@ class MainWindow(QMainWindow):
         layout.addStretch()
 
     def _setup_main_widget(self, layout: QStackedLayout):
-        self.run_widget = RunWidget(self._parameter_group_list, self.command_executor)
+        self.run_widget = RunWidget(self._run_result, self.command_executor)
         self.history_widget = HistoryWidget()
         self.settings_widget = SettingsWidget()
 
@@ -105,6 +107,22 @@ class MainWindow(QMainWindow):
     def _settings_button_clicked(self) -> None:
         self.main_widget_layout.setCurrentWidget(self.settings_widget)
 
-    
+    def _set_workspace_path_title(self, new_workspace: QDir, max_len: int = 30) -> None:
+        """
+        Update the window title to reflect the new workspace path.
+
+        Shortens the path if it exceeds a certain length.
+        
+        :param new_workspace: the new workspace path
+        :type new_workspace: QDir
+
+        :param max_len: the maximum length of the path to display
+        :type max_len: int
+        """
+        new_workspace_path = new_workspace.absolutePath()
+        if len(new_workspace_path) > max_len:
+            self.setWindowTitle(f"RAiSD-AI-GUI - '..{new_workspace_path[-max_len + 2:]}'")
+        else:
+            self.setWindowTitle(f"RAiSD-AI-GUI - '{new_workspace_path}'")
 
     
