@@ -224,7 +224,7 @@ class OperationTreeWidget(QWidget):
 
         layout = QVBoxLayout(self)
 
-        heading = QLabel("Choose the operations to be performed.")
+        heading = QLabel("Choose the input for RAiSD-AI.")
         layout.addWidget(heading)
 
         body = OperationNodeWidget(self._operation_tree.root)
