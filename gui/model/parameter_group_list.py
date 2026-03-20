@@ -15,6 +15,7 @@ from gui.model.file_structure import (
     SingleFile,
     Directory,
 )
+from gui.model.operation import Operation
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
@@ -32,16 +33,6 @@ from gui.model.dependency import (
     AndCondition,
     OrCondition,
 )
-
-
-# Operation model class
-@dataclass
-class Operation(QObject):
-    name: str
-    description: str
-    cli: str
-    requires: list[tuple[str, str, FileStructure]]
-    produces: FileStructure
 
 
 # Operation tree classes
