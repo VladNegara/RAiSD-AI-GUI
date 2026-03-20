@@ -16,6 +16,12 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QCheckBox,
     QMessageBox,
+    QListWidget,
+    QAbstractItemView
+)
+
+from PySide6.QtGui import (
+    QGuiApplication
 )
 
 from gui.model.parameter_group_list import ParameterGroupList
@@ -143,6 +149,7 @@ class RunWidget(QWidget):
 
     @Slot()
     def _switch_to_parameter_confirmation_widget(self) -> None:
+        self.parameter_confirmation_widget.update_commands()
         self.stacked_step_widget_layout.setCurrentWidget(self.parameter_confirmation_widget)
 
     @Slot()
@@ -287,7 +294,7 @@ class ParameterInputWidget(RunSubWidget):
         parameter_input_label = QLabel("Parameter Input")
         layout.addWidget(parameter_input_label)
 
-        parameter_form = ParameterForm(self._parameter_group_list)
+        parameter_form = ParameterForm(self._parameter_group_list, editable=True)
 
         parameter_form_scroll = QScrollArea()
         parameter_form_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
@@ -340,16 +347,54 @@ class ParameterConfirmationWidget(RunSubWidget):
     start_run = Signal()
 
     def __init__(self, run_result: RunResult):
+        self._run_result = run_result
         self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
+        """
+        Setup a ParameterConfirmationWidget, including a header,
+        a section for the commands to be run, and the ParameterForm,
+        in locked form. 
+        """
         widget = QWidget()
         widget.setStyleSheet("background-color: lightblue;")
         layout = QVBoxLayout(widget)
 
+        # Header
         parameter_confirmation_label = QLabel("Parameter Confirmation")
         layout.addWidget(parameter_confirmation_label)
+
+        # Commands
+        commands_widget = QWidget()
+        commands_layout = QVBoxLayout(commands_widget)
+
+        commands_header = QWidget()
+        commands_header_layout = QHBoxLayout(commands_header)
+
+        commands_label = QLabel("Commands generated from the input:")
+        commands_header_layout.addWidget(commands_label, 1)
+
+        copy_button = QPushButton("Copy")
+        copy_button.clicked.connect(self._copy_all)
+        commands_header_layout.addWidget(copy_button)
+        commands_layout.addWidget(commands_header)
+
+        self.commands_view = QListWidget()
+        self.commands_view.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)  
+        self.commands_view.clicked.connect(self._copy_command)
+        commands_layout.addWidget(self.commands_view)
+        layout.addWidget(commands_widget)
+
+        # Parameters
+        parameter_form = ParameterForm(self._parameter_group_list, editable=False)
+
+        parameter_form_scroll = QScrollArea()
+        parameter_form_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        parameter_form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        parameter_form_scroll.setWidgetResizable(True)
+        parameter_form_scroll.setWidget(parameter_form)
+        layout.addWidget(parameter_form_scroll, 1)
 
         return widget
 
@@ -358,6 +403,36 @@ class ParameterConfirmationWidget(RunSubWidget):
         self.run_button = QPushButton("Run")
         self.run_button.clicked.connect(self._run_button_clicked)
         return NavigationButtonsWidget(left_button=self.edit_button, right_button=self.run_button)
+
+    def update_commands(self) -> None:
+        """
+        Updates the ParameterConfirmationWidget with the commands from 
+        the RunResult.
+        """
+        self._run_result.set_commands()
+        self.commands_view.clear()
+        if self._run_result.commands:
+            self.commands_view.addItems(self._run_result.commands)
+            self.commands_view.setMaximumHeight(self.commands_view.sizeHintForRow(0)*(self.commands_view.count()+1))
+    
+    @Slot(int)
+    def _copy_command(self, index) -> None:
+        """
+        Copies a singular command from the QTreeWidget to the clipboard.
+        """
+        command = self.commands_view.itemFromIndex(index).text()
+        cb = QGuiApplication.clipboard()
+        cb.setText(command)
+    
+    @Slot()
+    def _copy_all(self) -> None:
+        """
+        Copies all commands from the run result to the clipboard.
+        """
+        if self._run_result.commands:
+            string = '; '.join(self._run_result.commands)
+            cb = QGuiApplication.clipboard()
+            cb.setText(string)
 
     @Slot()
     def _run_button_clicked(self) -> None:
@@ -471,7 +546,6 @@ class RunViewWidget(RunSubWidget):
         ]
         # self._command_executor.start_execution(self._parameter_group_list.to_cli())
         # TODO: implement info filename logic and command generation logic
-        self._run_result.commands = commands
         info_files = ['RAiSD_Info.TrainingData2DSNP.neutralTR',
                       'RAiSD_Info.TrainingData2DSNP.sweepTR',
                       'RAiSD_Info.TestData2DSNP.neutralTE']

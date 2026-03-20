@@ -60,11 +60,14 @@ class ResultsWidget(QWidget):
 
         # Parameter widget
         parameters_header = QLabel("Parameters used")
-        parameter_form = ParameterForm(self._run_result.parameter_group_list)
+        parameter_form = ParameterForm(self._run_result.parameter_group_list, editable=False)
         parameters_collapsible = Collapsible(parameters_header, parameter_form)
         layout.addWidget(parameters_collapsible)
 
     def show_results(self) -> None:
+        """
+        Updates the ResultWidget with results in the RunResult.
+        """
         # Update summary widgets
         self.status_label.setText("This run was completed successfully. For more information, see the info files below.")
         for file in self._run_result.info_files:

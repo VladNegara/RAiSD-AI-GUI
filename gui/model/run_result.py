@@ -66,9 +66,12 @@ class RunResult():
     def commands(self) -> list[str] | None:
         return self._commands
     
-    @commands.setter
-    def commands(self, commands: list[str]) -> None:
-        self._commands = commands
+    def set_commands(self) -> None:
+        """
+        Sets the commands of a run based on the cli representation
+        of the ParameterGroupList
+        """
+        self._commands = self._parameter_group_list.to_cli()
 
     @property
     def parameter_group_list(self) -> ParameterGroupList:
