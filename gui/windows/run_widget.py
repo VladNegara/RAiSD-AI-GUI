@@ -358,7 +358,9 @@ class OperationSelectionWidget(RunSubWidget):
         operation_selection_label = QLabel("Operation Selection")
         layout.addWidget(operation_selection_label)
 
-        operation_selection_widget = self._setup_operation_selection_widget()
+        operation_selection_widget = self.__class__.OperationSelector(
+            self._parameter_group_list.operation_trees,
+        )
         layout.addWidget(operation_selection_widget, 1)
 
         return widget
@@ -367,20 +369,32 @@ class OperationSelectionWidget(RunSubWidget):
         self.next_button = QPushButton("Next")
         return NavigationButtonsWidget(right_button=self.next_button)
 
-    def _setup_operation_selection_widget(self) -> QWidget:
-        """
-        Creates the widget with operation selectors and their descriptions.
-        """
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-        for tree in self._parameter_group_list.operation_trees:
-            layout.addWidget(OperationTreeWidget(tree))
+    class OperationSelector(QWidget):
+        def __init__(self, trees):
+            super().__init__()
 
-        for operation, enabled in self._parameter_group_list.operations.items():
-            operation_selector = self._operation_selector(operation, enabled, f"perform: {operation}") # TODO: Set description.
-            layout.addWidget(operation_selector)
-            
-        return widget 
+            layout = QVBoxLayout(self)
+
+            button_widget = QWidget()
+            button_layout = QHBoxLayout(button_widget)
+
+            operation_selected_widget = QWidget()
+            self.operation_selected_layout = QStackedLayout(operation_selected_widget)
+
+            for tree in trees:
+                button = QPushButton(tree.root.name)
+                button_layout.addWidget(button)
+
+                widget = OperationTreeWidget(tree)
+                self.operation_selected_layout.addWidget(widget)
+
+                button.clicked.connect(lambda _, w=widget: self._button_clicked(w))
+
+            layout.addWidget(button_widget)
+            layout.addWidget(operation_selected_widget)
+
+        def _button_clicked(self, widget: QWidget) -> None:
+            self.operation_selected_layout.setCurrentWidget(widget)
 
     def _operation_selector(self, operation: str, enabled: bool, description: str) -> QWidget:
         """
