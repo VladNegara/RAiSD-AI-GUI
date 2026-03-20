@@ -381,7 +381,7 @@ class ParameterConfirmationWidget(RunSubWidget):
         commands_layout.addWidget(commands_header)
 
         self.commands_view = QListWidget()
-        self.commands_view.setSelectionMode(QAbstractItemView.NoSelection)  
+        self.commands_view.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)  
         self.commands_view.clicked.connect(self._copy_command)
         commands_layout.addWidget(self.commands_view)
         layout.addWidget(commands_widget)

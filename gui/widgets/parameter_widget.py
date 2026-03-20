@@ -8,7 +8,7 @@ from PySide6.QtCore import (
     Qt,
     Slot,
     QRegularExpression,
-    QUrl,
+    QUrl
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -20,7 +20,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QComboBox,
     QFileDialog,
-    QListWidget
+    QListWidget,
+    QAbstractItemView
 )
 from PySide6.QtGui import (
     QRegularExpressionValidator,
@@ -550,6 +551,7 @@ class FileParameterWidget(ParameterWidget):
         # If the widget is locked: create a list with the selected files
         if not self._editable:
             self.list_widget = QListWidget()
+            self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
             self.list_widget.setSortingEnabled(True)
             if self.parameter.value:
                 self.list_widget.addItems(self.parameter.value)
