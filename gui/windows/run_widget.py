@@ -410,11 +410,12 @@ class ParameterConfirmationWidget(RunSubWidget):
         in locked form.
         """
         widget = QWidget()
-        widget.setStyleSheet("background-color: lightblue;")
+        widget.setObjectName("parameter_confirmation_widget")
         layout = QVBoxLayout(widget)
 
         # Header
         parameter_confirmation_label = QLabel("Parameter Confirmation")
+        parameter_confirmation_label.setObjectName("parameter_confirmation_label")
         layout.addWidget(parameter_confirmation_label)
 
         # Commands
@@ -433,6 +434,7 @@ class ParameterConfirmationWidget(RunSubWidget):
         commands_layout.addWidget(commands_header)
 
         self.commands_view = QListWidget()
+        self.commands_view.setObjectName("commands_view")
         self.commands_view.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.commands_view.clicked.connect(self._copy_command)
         commands_layout.addWidget(self.commands_view)
@@ -440,8 +442,10 @@ class ParameterConfirmationWidget(RunSubWidget):
 
         # Parameters
         parameter_form = ParameterForm(self._parameter_group_list, editable=False)
+        parameter_form.setObjectName("parameter_form")
 
         parameter_form_scroll = QScrollArea()
+        parameter_form_scroll.setObjectName("parameter_form_scroll")
         parameter_form_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         parameter_form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         parameter_form_scroll.setWidgetResizable(True)

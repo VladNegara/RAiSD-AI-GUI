@@ -95,6 +95,7 @@ QWidget#navigation_buttons_widget QPushButton[highlight="true"] {
 QWidget#parameter_input_widget,
 QWidget#run_results_widget,
 QWidget#run_view_widget,
+QWidget#parameter_confirmation_widget,
 QWidget#operation_selection_widget {
     background-color: #d7dbe9;
 }
@@ -102,6 +103,7 @@ QWidget#operation_selection_widget {
 QWidget#parameter_input_widget QLabel,
 QWidget#run_results_widget QLabel,
 QWidget#run_view_widget QLabel,
+QWidget#parameter_confirmation_widget QLabel,
 QWidget#operation_selection_widget QLabel{
     color: #0a0d4f;
 }
@@ -109,6 +111,7 @@ QWidget#operation_selection_widget QLabel{
 QLabel#parameter_input_label,
 QLabel#run_results_label,
 QLabel#run_view_label,
+QLabel#parameter_confirmation_label,
 QLabel#operation_selection_label{
     font-size: 24px;
     font-weight: 800;
@@ -118,6 +121,7 @@ QLabel#operation_selection_label{
 
 QScrollArea#parameter_form_scroll,
 QScrollArea#results_scroll,
+QScrollArea#parameter_form_scroll,
 QWidget#results_widget{
     background: transparent;
 }
@@ -207,5 +211,31 @@ QHeaderView{
 QTreeView#folder_widget{
     selection-background-color: #9090c1;
 }
+/* ---- Parameter Confirmation View ---- */
+QWidget#parameter_confirmation_widget QPushButton{
+    padding: 5px 15px;
+    background-color: #9090c1;
+    color: #0a0d4f;
+    border-radius: 5px;
+    font-weight: 500;
+}
+QWidget#parameter_confirmation_widget QPushButton:hover{
+    background-color: #b1b1d3;
+}
 
+QWidget#parameter_confirmation_widget QPushButton:pressed{
+    background: #6f6faf;
+}
+
+QListWidget#commands_view{
+    selection-background-color: #9090c1;
+    padding: 5px;
+    background-color: white;
+    border-radius: 10px;
+}
+
+QWidget#parameter_confirmation_widget QComboBox:disabled,
+QWidget#run_results_widget QComboBox:disabled{
+    color: #0a0d4f;
+}
 /* ---- Run View ---- */
