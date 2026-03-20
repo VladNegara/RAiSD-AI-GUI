@@ -1,27 +1,7 @@
 import datetime as dt
+from gui.model.operation_record import OperationRecord
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QHBoxLayout
-
-
-class OperationRecord:
-    """
-    A record of one single operation with all the necessary attributes
-    """
-    def __init__(
-            self,
-            name: str,
-            operations: set[str],
-            input_files: list[str],
-            output_folder: str,
-            date: dt.datetime,
-            # TODO: parameters
-    ) -> None:
-        self.name = name
-        self.operations = operations
-        self.input_files = input_files
-        self.output_folder = output_folder
-        self.date = date
-
 
 class OperationRecordWidget(QWidget):
     """
