@@ -132,34 +132,42 @@ class FileConsumerNode():
 class CommonParentDirectoryNode():
     def __init__(
             self,
-            producers: list[FileProducerNode],
+            produces: Directory,
     ) -> None:
-        self._producers = producers
-
-    @property
-    def producers(self) -> list[FileProducerNode]:
-        return self._producers
+        self._produces = produces
+        self._file_consumers = []
+        for file_structure in self._produces.contents:
+            file_consumer = FileConsumerNode(
+                file_structure,
+                "Output inside common parent directory",
+                "",
+            )
+            self._file_consumers.append(file_consumer)
 
     @property
     def produces(self) -> FileStructure:
-        return Directory([p.produces for p in self.producers])
+        return self._produces
+
+    @property
+    def file_consumers(self) -> list[FileConsumerNode]:
+        return self._file_consumers
 
     @property
     def file(self) -> QFileInfo | None:
-        if self.producers[0].file:
-            dir = self.producers[0].file.dir()
+        if self.file_consumers[0].file:
+            dir = self.file_consumers[0].file.dir()
             path = dir.absolutePath()
             return QFileInfo(path)
         return None
 
     @property
     def valid(self) -> bool:
-        if not all(producer.valid for producer in self.producers):
+        if not all(consumer.valid for consumer in self.file_consumers):
             return False
 
         parent_directories = [
             producer.file.dir()
-            for producer in self.producers
+            for producer in self.file_consumers
             if producer.file
         ]
 
