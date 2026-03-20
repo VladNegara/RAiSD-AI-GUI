@@ -358,8 +358,8 @@ class OperationSelectionWidget(RunSubWidget):
         """
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        file_picker_node = FilePickerNode(Directory([]))
-        layout.addWidget(OperationTreeWidget(self._parameter_group_list.my_tree))
+        for tree in self._parameter_group_list.operation_trees:
+            layout.addWidget(OperationTreeWidget(tree))
 
         for operation, enabled in self._parameter_group_list.operations.items():
             operation_selector = self._operation_selector(operation, enabled, f"perform: {operation}") # TODO: Set description.

@@ -326,13 +326,6 @@ class ParameterGroupList(QObject):
     the operation mode they correspond to and how they relate.
     """
 
-    my_tree = OperationTree(
-        root=OperationNode(
-            operation=mdl_gen,
-        )
-    )
-    my_tree.root.file_consumers[0].add_producer(OperationNode(img_gen))
-
     operations_changed = Signal()
 
     def __init__(
@@ -990,6 +983,10 @@ class ParameterGroupList(QObject):
             )
 
         return result
+
+    @property
+    def operation_trees(self) -> list[OperationTree]:
+        return self._operation_trees
 
     @property
     def operations(self) -> dict[str, bool]:
