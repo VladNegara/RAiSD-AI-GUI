@@ -23,6 +23,29 @@ from gui.model.operation_tree import (
 from gui.widgets.resizable_stacked_widget import ResizableStackedWidget
 
 
+class FileProducerNodeWidget(QWidget):
+    @classmethod
+    def from_file_producer(
+            cls,
+            file_producer: FileProducerNode
+    ) -> "FileProducerNodeWidget":
+        match file_producer:
+            case FilePickerNode():
+                return FilePickerNodeWidget(file_producer)
+            case OperationNode():
+                return OperationNodeWidget(file_producer)
+            case CommonParentDirectoryNode():
+                return CommonParentDirectoryNodeWidget(file_producer)
+            case _:
+                raise NotImplementedError(
+                    "Cannot create widget for unknown file producer node."
+                )
+
+    @property
+    def button_text(self) -> str:
+        raise NotImplementedError()
+
+
 class FileConsumerWidget(QWidget):
     def __init__(self, file_consumer_node: FileConsumerNode):
         super().__init__()
@@ -35,14 +58,7 @@ class FileConsumerWidget(QWidget):
         self.file_producer_widget = ResizableStackedWidget()
         if len(self._file_consumer_node.producers) == 1:
             producer = self._file_consumer_node.producers[0]
-            if isinstance(producer, FilePickerNode):
-                producer_widget = FilePickerWidget(producer)
-            elif isinstance(producer, OperationNode):
-                producer_widget = OperationNodeWidget(producer)
-            elif isinstance(producer, CommonParentDirectoryNode):
-                producer_widget = CommonParentDirectoryNodeWidget(producer)
-            else:
-                raise NotImplemented
+            producer_widget = FileProducerNodeWidget.from_file_producer(producer)
             self.file_producer_widget.addWidget(producer_widget)
         else:
             button_widget = QWidget()
@@ -54,19 +70,8 @@ class FileConsumerWidget(QWidget):
             button_layout.addWidget(button_heading)
 
             for i, producer in enumerate(self._file_consumer_node.producers):
-                if isinstance(producer, FilePickerNode):
-                    button_text = "Upload a file from your computer."
-                    producer_widget = FilePickerWidget(producer)
-                elif isinstance(producer, OperationNode):
-                    button_text = "Run an operation to generate the input file or directory."
-                    producer_widget = OperationNodeWidget(producer)
-                elif isinstance(producer, CommonParentDirectoryNode):
-                    button_text = "Run multiple operations to generate the input files."
-                    producer_widget = CommonParentDirectoryNodeWidget(producer)
-                else:
-                    raise NotImplemented
-
-                button = QRadioButton(button_text)
+                producer_widget = FileProducerNodeWidget.from_file_producer(producer)
+                button = QRadioButton(producer_widget.button_text)
                 button.setChecked(i == self._file_consumer_node.selected_index)
                 button_layout.addWidget(button)
 
@@ -81,7 +86,7 @@ class FileConsumerWidget(QWidget):
         self.file_producer_widget.setCurrentIndex(i)
 
 
-class CommonParentDirectoryNodeWidget(QWidget):
+class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
     def __init__(self, common_parent_directory: CommonParentDirectoryNode):
         super().__init__()
         self._common_parent_directory = common_parent_directory
@@ -99,8 +104,12 @@ class CommonParentDirectoryNodeWidget(QWidget):
             file_consumer_widget = FileConsumerWidget(file_consumer)
             layout.addWidget(file_consumer_widget)
 
+    @property
+    def button_text(self) -> str:
+        return "Run multiple operations to generate the input files."
 
-class FilePickerWidget(QWidget):
+
+class FilePickerNodeWidget(FileProducerNodeWidget):
     def __init__(self, file_picker: FilePickerNode):
         super().__init__()
         self._file_picker = file_picker
@@ -110,6 +119,10 @@ class FilePickerWidget(QWidget):
         self.button.clicked.connect(self._onpopup) 
         layout.addWidget(self.button)
         self._file_picker.file_changed.connect(self._file_picker_file_changed)
+
+    @property
+    def button_text(self) -> str:
+        return "Upload a file from your computer."
 
     def _onpopup(self):
         self.dialog = QFileDialog()
@@ -125,7 +138,7 @@ class FilePickerWidget(QWidget):
         self.button.setText(new_file)
 
 
-class OperationNodeWidget(QWidget):
+class OperationNodeWidget(FileProducerNodeWidget):
     def __init__(self, operation_node: OperationNode):
         super().__init__()
         self._operation_node = operation_node
@@ -145,6 +158,10 @@ class OperationNodeWidget(QWidget):
             file_consumer_widget = FileConsumerWidget(file_consumer)
             input_files_layout.addWidget(file_consumer_widget)
         layout.addWidget(input_files_widget)
+
+    @property
+    def button_text(self) -> str:
+        return "Run an operation to generate the input file or directory."
 
 
 class OperationTreeWidget(QWidget):
