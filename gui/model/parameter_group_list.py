@@ -79,6 +79,9 @@ class FileProducerNode(Protocol):
     def valid(self) -> bool:
         ...
 
+    def to_cli(self) -> list[str]:
+        ...
+
 
 class FileConsumerNode():
     def __init__(
