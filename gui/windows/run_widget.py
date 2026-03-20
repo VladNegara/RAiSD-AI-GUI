@@ -379,23 +379,22 @@ class OperationSelectionWidget(RunSubWidget):
             button_widget = QWidget()
             button_layout = QHBoxLayout(button_widget)
 
-            operation_selected_widget = QWidget()
-            self.operation_selected_layout = QStackedLayout(operation_selected_widget)
+            self.operation_selected_widget = ResizableStackedWidget()
 
             for tree in trees:
                 button = QPushButton(tree.root.name)
                 button_layout.addWidget(button)
 
                 widget = OperationTreeWidget(tree)
-                self.operation_selected_layout.addWidget(widget)
+                self.operation_selected_widget.addWidget(widget)
 
                 button.clicked.connect(lambda _, w=widget: self._button_clicked(w))
 
             layout.addWidget(button_widget)
-            layout.addWidget(operation_selected_widget)
+            layout.addWidget(self.operation_selected_widget)
 
         def _button_clicked(self, widget: QWidget) -> None:
-            self.operation_selected_layout.setCurrentWidget(widget)
+            self.operation_selected_widget.setCurrentWidget(widget)
 
     def _operation_selector(self, operation: str, enabled: bool, description: str) -> QWidget:
         """
