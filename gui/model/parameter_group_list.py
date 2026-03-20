@@ -403,6 +403,27 @@ class ParameterGroupList(QObject):
                             operation_node = OperationNode(candidate_operation)
                             file_consumer.add_producer(operation_node)
                             unexplored_nodes.append(operation_node)
+                    # If the consumer is expecting a directory, try
+                    # producing that directory from multiple operations.
+                    if isinstance(file_consumer.requires, Directory):
+                        common_parent_dir = CommonParentDirectoryNode(file_consumer.requires)
+                        possible_unexplored = []
+                        operations_exist: bool = True
+                        for sub_consumer in common_parent_dir.file_consumers:
+                            operation_exists: bool = False
+                            for candidate_operation in operations:
+                                if candidate_operation.produces == sub_consumer.requires:
+                                    operation_exists = True
+                                    operation_node = OperationNode(candidate_operation)
+                                    sub_consumer.add_producer(operation_node)
+                                    possible_unexplored.append(operation_node)
+                            if not operation_exists:
+                                operations_exist = False
+                                break
+                        if operations_exist:
+                            file_consumer.add_producer(common_parent_dir)
+                            unexplored_nodes.extend(possible_unexplored)
+
             tree = OperationTree(root_node)
             trees.append(tree)
         return trees

@@ -272,6 +272,8 @@ class FileConsumerWidget(QWidget):
                 widget = FilePickerWidget(producer)
             elif isinstance(producer, OperationNode):
                 widget = OperationNodeWidget(producer)
+            elif isinstance(producer, CommonParentDirectoryNode):
+                widget = CommonParentDirectoryNodeWidget(producer)
             else:
                 raise NotImplemented
             self.file_producer_layout.addWidget(widget)
@@ -283,6 +285,9 @@ class FileConsumerWidget(QWidget):
                 elif isinstance(producer, OperationNode):
                     button = QPushButton("Generate a file")
                     widget = OperationNodeWidget(producer)
+                elif isinstance(producer, CommonParentDirectoryNode):
+                    button = QPushButton("Run multiple operations")
+                    widget = CommonParentDirectoryNodeWidget(producer)
                 else:
                     raise NotImplemented
                 self.button_layout.addWidget(button)
@@ -325,6 +330,16 @@ class CommonParentDirectoryNodeWidget(QWidget):
     def __init__(self, common_parent_directory: CommonParentDirectoryNode):
         super().__init__()
         self._common_parent_directory = common_parent_directory
+
+        layout = QVBoxLayout(self)
+
+        heading = QLabel("You can run the following operations to generate the files you need:")
+        heading.setWordWrap(True)
+        layout.addWidget(heading)
+
+        for file_consumer in self._common_parent_directory.file_consumers:
+            file_consumer_widget = FileConsumerWidget(file_consumer)
+            layout.addWidget(file_consumer_widget)
 
 
 class OperationSelectionWidget(RunSubWidget):
