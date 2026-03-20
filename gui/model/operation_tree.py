@@ -126,7 +126,7 @@ class CommonParentDirectoryNode():
         for file_structure in self._produces.contents:
             file_consumer = FileConsumerNode(
                 Directory([file_structure]),
-                "Output inside common parent directory",
+                "",
                 "",
             )
             self._file_consumers.append(file_consumer)

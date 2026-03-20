@@ -236,9 +236,6 @@ class OperationTreeWidget(QWidget):
 
         layout = QVBoxLayout(self)
 
-        heading = QLabel("Choose the input for RAiSD-AI.")
-        layout.addWidget(heading)
-
         body = OperationNodeWidget(self._operation_tree.root)
         layout.addWidget(body)
 
@@ -289,15 +286,21 @@ class FileConsumerWidget(QWidget):
         else:
             button_widget = QWidget()
             button_layout = QVBoxLayout(button_widget)
+
+            button_heading = QLabel(
+                "Select how you want to provide this input file or directory:"
+            )
+            button_layout.addWidget(button_heading)
+
             for i, producer in enumerate(self._file_consumer_node.producers):
                 if isinstance(producer, FilePickerNode):
-                    button_text = "Upload a file"
+                    button_text = "Upload a file from your computer."
                     producer_widget = FilePickerWidget(producer)
                 elif isinstance(producer, OperationNode):
-                    button_text = "Generate a file"
+                    button_text = "Run an operation to generate the input file or directory."
                     producer_widget = OperationNodeWidget(producer)
                 elif isinstance(producer, CommonParentDirectoryNode):
-                    button_text = "Run multiple operations"
+                    button_text = "Run multiple operations to generate the input files."
                     producer_widget = CommonParentDirectoryNodeWidget(producer)
                 else:
                     raise NotImplemented
@@ -323,7 +326,7 @@ class FilePickerWidget(QWidget):
         self._file_picker = file_picker
 
         layout = QVBoxLayout(self)
-        self.button = QPushButton("Select a file")
+        self.button = QPushButton("Browse")
         self.button.clicked.connect(self._onpopup) 
         layout.addWidget(self.button)
         self._file_picker.file_changed.connect(self._file_picker_file_changed)
@@ -349,7 +352,10 @@ class CommonParentDirectoryNodeWidget(QWidget):
 
         layout = QVBoxLayout(self)
 
-        heading = QLabel("You can run the following operations to generate the files you need:")
+        heading = QLabel(
+            "You can run the operations below "
+            + "to generate the necessary input files:"
+        )
         heading.setWordWrap(True)
         layout.addWidget(heading)
 
