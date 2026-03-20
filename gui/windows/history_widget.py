@@ -5,11 +5,13 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QLabel,
     QSplitter,
+    QStackedWidget,
 )
 from PySide6.QtCore import Slot, Qt
 
 from gui.widgets.operation_record_widget import OperationRecord
 from gui.widgets.operation_record_list_widget import OperationRecordList
+from gui.widgets.results_widget import ResultsWidget
 
 
 class HistoryWidget(QWidget):
@@ -36,7 +38,7 @@ class HistoryWidget(QWidget):
                 name="Run 1",
                 operations={"IMG-GEN"},
                 input_files=["datasets/train/msneutral1.vcf", "datasets/train/msneutral2.vcf","datasets/train/msneutral3.vcf", "datasets/train/msneutral4.vcf"],
-                output_folder="PycharmProjects/outputs/cokcokcokcokcoooooooooooooooooooooooookuzunfiledirectory",
+                output_folder="PycharmProjects/outputs/veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylongfiledirectory",
                 date=dt.datetime.now() - dt.timedelta(minutes=5),
             ),
             OperationRecord(
@@ -143,6 +145,9 @@ class HistoryWidget(QWidget):
 
         splitter.addWidget(self._history_list)
 
+        self._right_panel = QStackedWidget()
+        splitter.addWidget(self._right_panel)
+
         # Right panel: detail view. This will be changed with results view after it is implemented.
         self._detail_panel = QWidget()
         detail_layout = QVBoxLayout(self._detail_panel)
@@ -151,10 +156,11 @@ class HistoryWidget(QWidget):
         self._detail_label.setWordWrap(True)
         detail_layout.addWidget(self._detail_label)
         detail_layout.addStretch()
-        splitter.addWidget(self._detail_panel)
+        self._right_panel.addWidget(self._detail_panel)
 
         # Give the list 1/3 and the detail panel 2/3 of the width
         splitter.setSizes([200, 400])
+
 
     def add_completed_run(self, op_rec: OperationRecord) -> None:
         """
@@ -169,11 +175,24 @@ class HistoryWidget(QWidget):
     def _on_run_selected(self, op_rec: OperationRecord) -> None:
         """
         Update the detail panel when a record is selected from the list.
+        #TODO: this will be changed, once we get the results from actual operation records
         """
-        self._detail_label.setText(
-            f"Name: {op_rec.name}\n"
-            f"Date: {op_rec.date.strftime('%Y-%m-%d %H:%M:%S')}\n"
-            f"Operations: {', '.join(op_rec.operations)}\n"
-            f"Input files:\n" + "\n".join(f"  - {f}" for f in op_rec.input_files) + "\n"
-            f"Output folder: {op_rec.output_folder}"
-        )
+        current = self._right_panel.currentWidget()
+        if current is not self._detail_panel:
+            self._right_panel.removeWidget(current)
+            current.deleteLater()
+
+        if op_rec.run_result is not None:
+            results_widget = ResultsWidget(op_rec.run_result)
+            results_widget.show_results()
+            self._right_panel.addWidget(results_widget)
+            self._right_panel.setCurrentWidget(results_widget)
+        else:
+            self._detail_label.setText(
+                f"Name: {op_rec.name}\n"
+                f"Date: {op_rec.date.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                f"Operations: {', '.join(op_rec.operations)}\n"
+                f"Input files:\n" + "\n".join(f"  - {f}" for f in op_rec.input_files) + "\n"
+                                                                                        f"Output folder: {op_rec.output_folder}"
+            )
+            self._right_panel.setCurrentWidget(self._detail_panel)
