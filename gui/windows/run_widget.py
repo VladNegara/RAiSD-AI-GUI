@@ -3,7 +3,8 @@ from PySide6.QtCore import (
     QProcess,
     Signal,
     Slot,
-    QDir
+    QDir,
+    QFileInfo,
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QCheckBox,
     QMessageBox,
+    QFileDialog,
     QStyle,
     QStyleOption,
     QListWidget,
@@ -28,10 +30,25 @@ from PySide6.QtGui import (
 )
 
 from gui.model.settings import app_settings
-from gui.model.parameter_group_list import ParameterGroupList
+from PySide6.QtGui import QWindow
+
+from gui.model.file_structure import (
+    Directory,
+)
+from gui.model.operation_tree import(
+    OperationTree,
+    OperationNode,
+    FileConsumerNode,
+    FilePickerNode,
+    CommonParentDirectoryNode,
+)
+from gui.model.parameter_group_list import (
+    ParameterGroupList,
+)
 from gui.model.run_result import RunResult
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_form import ParameterForm
+from gui.widgets.resizable_stacked_widget import ResizableStackedWidget
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
 from gui.widgets.results_widget import ResultsWidget
 
@@ -254,10 +271,140 @@ class RunSubWidget(QWidget):
         raise NotImplementedError
 
 
+class OperationTreeWidget(QWidget):
+    def __init__(self, operation_tree: OperationTree):
+        super().__init__()
+        self._operation_tree = operation_tree
+
+        layout = QVBoxLayout(self)
+
+        heading = QLabel("Choose the input for RAiSD-AI.")
+        layout.addWidget(heading)
+
+        test_button = QPushButton("Print commands")
+        test_button.clicked.connect(lambda: print(operation_tree.to_cli()))
+        layout.addWidget(test_button)
+
+        body = OperationNodeWidget(self._operation_tree.root)
+        layout.addWidget(body)
+
+
+class OperationNodeWidget(QWidget):
+    def __init__(self, operation_node: OperationNode):
+        super().__init__()
+        self._operation_node = operation_node
+
+        layout = QVBoxLayout(self)
+
+        name = QLabel(operation_node.name)
+        layout.addWidget(name)
+
+        description = QLabel(operation_node.description)
+        description.setWordWrap(True)
+        layout.addWidget(description)
+
+        input_files_widget = QWidget()
+        input_files_layout = QHBoxLayout(input_files_widget)
+        for file_consumer in operation_node.file_consumers:
+            file_consumer_widget = FileConsumerWidget(file_consumer)
+            input_files_layout.addWidget(file_consumer_widget)
+        layout.addWidget(input_files_widget)
+
+
+class FileConsumerWidget(QWidget):
+    def __init__(self, file_consumer_node: FileConsumerNode):
+        super().__init__()
+        self._file_consumer_node = file_consumer_node
+
+        layout = QVBoxLayout(self)
+
+        heading = QLabel(self._file_consumer_node.label)
+        layout.addWidget(heading)
+        self.button_widget = QWidget()
+        self.button_layout = QHBoxLayout(self.button_widget)
+        self.file_producer_widget = ResizableStackedWidget()
+        if len(self._file_consumer_node.producers) == 1:
+            producer = self._file_consumer_node.producers[0]
+            if isinstance(producer, FilePickerNode):
+                widget = FilePickerWidget(producer)
+            elif isinstance(producer, OperationNode):
+                widget = OperationNodeWidget(producer)
+            elif isinstance(producer, CommonParentDirectoryNode):
+                widget = CommonParentDirectoryNodeWidget(producer)
+            else:
+                raise NotImplemented
+            self.file_producer_widget.addWidget(widget)
+        else:
+            for i, producer in enumerate(self._file_consumer_node.producers):
+                if isinstance(producer, FilePickerNode):
+                    button = QPushButton("Upload a file")
+                    widget = FilePickerWidget(producer)
+                elif isinstance(producer, OperationNode):
+                    button = QPushButton("Generate a file")
+                    widget = OperationNodeWidget(producer)
+                elif isinstance(producer, CommonParentDirectoryNode):
+                    button = QPushButton("Run multiple operations")
+                    widget = CommonParentDirectoryNodeWidget(producer)
+                else:
+                    raise NotImplemented
+                self.button_layout.addWidget(button)
+                self.file_producer_widget.addWidget(widget)
+                button.clicked.connect(lambda _, i=i: self._button_clicked(i))
+        layout.addWidget(self.button_widget)
+        layout.addWidget(self.file_producer_widget)
+
+    def _button_clicked(self, i: int) -> None:
+        self._file_consumer_node.selected_index = i
+        self.file_producer_widget.setCurrentIndex(i)
+
+
+class FilePickerWidget(QWidget):
+    def __init__(self, file_picker: FilePickerNode):
+        super().__init__()
+        self._file_picker = file_picker
+
+        layout = QVBoxLayout(self)
+        self.button = QPushButton("Select a file")
+        self.button.clicked.connect(self._onpopup)
+        layout.addWidget(self.button)
+        self._file_picker.file_changed.connect(self._file_picker_file_changed)
+
+
+    def _onpopup(self):
+        self.dialog = QFileDialog()
+        if isinstance(self._file_picker.produces, Directory):
+            self.dialog.setFileMode(QFileDialog.FileMode.Directory)
+        self.dialog.show()
+        self.dialog.fileSelected.connect(self._file_selected)
+
+    def _file_selected(self, path):
+        self._file_picker.file = path
+
+    def _file_picker_file_changed(self, new_file: str):
+        self.button.setText(new_file)
+
+
+class CommonParentDirectoryNodeWidget(QWidget):
+    def __init__(self, common_parent_directory: CommonParentDirectoryNode):
+        super().__init__()
+        self._common_parent_directory = common_parent_directory
+
+        layout = QVBoxLayout(self)
+
+        heading = QLabel("You can run the following operations to generate the files you need:")
+        heading.setWordWrap(True)
+        layout.addWidget(heading)
+
+        for file_consumer in self._common_parent_directory.file_consumers:
+            file_consumer_widget = FileConsumerWidget(file_consumer)
+            layout.addWidget(file_consumer_widget)
+
+
 class OperationSelectionWidget(RunSubWidget):
     """
-    
-    """    
+    A widget that allows the user to select operations to be run.
+    """
+
     def __init__(self, run_result: RunResult):
         self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
@@ -271,8 +418,19 @@ class OperationSelectionWidget(RunSubWidget):
         operation_selection_label.setObjectName("operation_selection_label")
         layout.addWidget(operation_selection_label)
 
-        operation_selection_widget = self._setup_operation_selection_widget()
-        layout.addWidget(operation_selection_widget, 1)
+        scroll = QScrollArea()
+        scroll.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+        scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        scroll.setWidgetResizable(True)
+        operation_selector = self.__class__.OperationSelector(
+            self._parameter_group_list
+        )
+        scroll.setWidget(operation_selector)
+        layout.addWidget(scroll)
 
         return widget
 
@@ -280,52 +438,37 @@ class OperationSelectionWidget(RunSubWidget):
         self.next_button = QPushButton("Next")
         return NavigationButtonsWidget(right_button=self.next_button)
 
-    def _setup_operation_selection_widget(self) -> QWidget:
-        """
-        Creates the widget with operation selectors and their descriptions.
-        """
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
+    class OperationSelector(QWidget):
+        def __init__(self, parameter_group_list: ParameterGroupList):
+            super().__init__()
 
-        for operation, enabled in self._parameter_group_list.operations.items():
-            operation_selector = self._operation_selector(operation, enabled, f"perform: {operation}") # TODO: Set description.
-            layout.addWidget(operation_selector)
-            
-        return widget 
+            self._parameter_group_list = parameter_group_list
 
-    def _operation_selector(self, operation: str, enabled: bool, description: str) -> QWidget:
-        """
-        An operation selector widget containing a checkbox linked to the parameter_group_list and a description.
-        """
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
+            layout = QVBoxLayout(self)
 
-        operation_button = QCheckBox(operation)
-        operation_button.setCheckState(
-            Qt.CheckState.Checked if enabled else Qt.CheckState.Unchecked
-        )
-        operation_button.checkStateChanged.connect(
-            lambda s: self._operation_selector_clicked(operation, s)
-            )
-        layout.addWidget(operation_button)
-        
-        description_label = QLabel(description)
-        layout.addWidget(description_label, 1)
+            button_widget = QWidget()
+            button_layout = QHBoxLayout(button_widget)
 
-        return widget
-    
-    def _operation_selector_clicked(self, operation: str, state: Qt.CheckState) -> None:
-        """
-        Set the operation using the given checkbox state.
-        """
-        if state == Qt.CheckState.Checked:
-            self._parameter_group_list.set_operation(operation, True)
-        elif state == Qt.CheckState.Unchecked:
-            self._parameter_group_list.set_operation(operation, False)
+            self.operation_selected_widget = ResizableStackedWidget()
+
+            for i, tree in enumerate(self._parameter_group_list.operation_trees):
+                button = QPushButton(tree.root.name)
+                button_layout.addWidget(button)
+
+                widget = OperationTreeWidget(tree)
+                self.operation_selected_widget.addWidget(widget)
+
+                button.clicked.connect(lambda _, i=i: self._button_clicked(i))
+
+            layout.addWidget(button_widget)
+            layout.addWidget(self.operation_selected_widget)
+
+        def _button_clicked(self, i: int) -> None:
+            self._parameter_group_list.selected_operation_tree_index = i
+            self.operation_selected_widget.setCurrentIndex(i)
 
 
-
-class ParameterInputWidget(RunSubWidget):    
+class ParameterInputWidget(RunSubWidget):
     def __init__(self, run_result: RunResult):
         self._run_result = run_result
         self._parameter_group_list = run_result.parameter_group_list
