@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QStackedLayout,
     QScrollArea,
     QPushButton,
+    QRadioButton,
     QLabel,
     QTextEdit,
     QCheckBox,
@@ -273,37 +274,42 @@ class FileConsumerWidget(QWidget):
 
         heading = QLabel(self._file_consumer_node.label)
         layout.addWidget(heading)
-        self.button_widget = QWidget()
-        self.button_layout = QHBoxLayout(self.button_widget)
         self.file_producer_widget = ResizableStackedWidget()
         if len(self._file_consumer_node.producers) == 1:
             producer = self._file_consumer_node.producers[0]
             if isinstance(producer, FilePickerNode):
-                widget = FilePickerWidget(producer)
+                producer_widget = FilePickerWidget(producer)
             elif isinstance(producer, OperationNode):
-                widget = OperationNodeWidget(producer)
+                producer_widget = OperationNodeWidget(producer)
             elif isinstance(producer, CommonParentDirectoryNode):
-                widget = CommonParentDirectoryNodeWidget(producer)
+                producer_widget = CommonParentDirectoryNodeWidget(producer)
             else:
                 raise NotImplemented
-            self.file_producer_widget.addWidget(widget)
+            self.file_producer_widget.addWidget(producer_widget)
         else:
+            button_widget = QWidget()
+            button_layout = QVBoxLayout(button_widget)
             for i, producer in enumerate(self._file_consumer_node.producers):
                 if isinstance(producer, FilePickerNode):
-                    button = QPushButton("Upload a file")
-                    widget = FilePickerWidget(producer)
+                    button_text = "Upload a file"
+                    producer_widget = FilePickerWidget(producer)
                 elif isinstance(producer, OperationNode):
-                    button = QPushButton("Generate a file")
-                    widget = OperationNodeWidget(producer)
+                    button_text = "Generate a file"
+                    producer_widget = OperationNodeWidget(producer)
                 elif isinstance(producer, CommonParentDirectoryNode):
-                    button = QPushButton("Run multiple operations")
-                    widget = CommonParentDirectoryNodeWidget(producer)
+                    button_text = "Run multiple operations"
+                    producer_widget = CommonParentDirectoryNodeWidget(producer)
                 else:
                     raise NotImplemented
-                self.button_layout.addWidget(button)
-                self.file_producer_widget.addWidget(widget)
+
+                button = QRadioButton(button_text)
+                button.setChecked(i == self._file_consumer_node.selected_index)
+                button_layout.addWidget(button)
+
+                self.file_producer_widget.addWidget(producer_widget)
+
                 button.clicked.connect(lambda _, i=i: self._button_clicked(i))
-        layout.addWidget(self.button_widget)
+            layout.addWidget(button_widget)
         layout.addWidget(self.file_producer_widget)
 
     def _button_clicked(self, i: int) -> None:
@@ -321,7 +327,6 @@ class FilePickerWidget(QWidget):
         self.button.clicked.connect(self._onpopup) 
         layout.addWidget(self.button)
         self._file_picker.file_changed.connect(self._file_picker_file_changed)
-        
 
     def _onpopup(self):
         self.dialog = QFileDialog()
@@ -396,28 +401,34 @@ class OperationSelectionWidget(RunSubWidget):
 
             self._parameter_group_list = parameter_group_list
 
-            layout = QVBoxLayout(self)
+            layout = QHBoxLayout(self)
 
             button_widget = QWidget()
-            button_layout = QHBoxLayout(button_widget)
+            button_layout = QVBoxLayout(button_widget)
 
-            self.operation_selected_widget = ResizableStackedWidget()
+            self.tree_stacked_widget = ResizableStackedWidget()
 
-            for i, tree in enumerate(self._parameter_group_list.operation_trees):
-                button = QPushButton(tree.root.name)
+            for i, tree in enumerate(
+                    self._parameter_group_list.operation_trees
+            ):
+                button = QRadioButton(tree.root.name)
+                button.setChecked(
+                    i
+                    == self._parameter_group_list.selected_operation_tree_index
+                )
                 button_layout.addWidget(button)
 
                 widget = OperationTreeWidget(tree)
-                self.operation_selected_widget.addWidget(widget)
+                self.tree_stacked_widget.addWidget(widget)
 
                 button.clicked.connect(lambda _, i=i: self._button_clicked(i))
 
             layout.addWidget(button_widget)
-            layout.addWidget(self.operation_selected_widget)
+            layout.addWidget(self.tree_stacked_widget)
 
         def _button_clicked(self, i: int) -> None:
             self._parameter_group_list.selected_operation_tree_index = i
-            self.operation_selected_widget.setCurrentIndex(i)
+            self.tree_stacked_widget.setCurrentIndex(i)
 
 
 class ParameterInputWidget(RunSubWidget):    
