@@ -12,6 +12,9 @@ from gui.model.file_structure import (
     Directory,
 )
 from gui.model.operation import Operation
+from gui.model.parameter import (
+    Parameter,
+)
 from gui.model.dependency import (
     Dependency,
     OrCondition,
@@ -39,7 +42,7 @@ class FileProducerNode(Protocol):
     def enabled(self, new_enabled: bool) -> None:
         ...
 
-    def to_cli(self) -> list[str]:
+    def to_cli(self, parameters: list[Parameter]) -> list[str]:
         ...
 
 
@@ -108,8 +111,8 @@ class FileConsumerNode():
     def valid(self) -> bool:
         return self.selected_producer.valid
     
-    def to_cli(self) -> list[str]:
-        return self.selected_producer.to_cli()
+    def to_cli(self, parameters: list[Parameter]) -> list[str]:
+        return self.selected_producer.to_cli(parameters)
 
 
 class CommonParentDirectoryNode():
@@ -159,10 +162,10 @@ class CommonParentDirectoryNode():
         # All child nodes must produce files with the same parent directory
         return len(set(consumer.file for consumer in self.file_consumers)) == 1
 
-    def to_cli(self) -> list[str]:
+    def to_cli(self, parameters: list[Parameter]) -> list[str]:
         commands = []
         for consumer in self.file_consumers:
-            commands.extend(consumer.to_cli())
+            commands.extend(consumer.to_cli(parameters))
         return commands
 
 
@@ -206,7 +209,7 @@ class FilePickerNode(QObject):
             return False
         return self.produces.matches(self.file)
 
-    def to_cli(self) -> list[str]:
+    def to_cli(self, parameters: list[Parameter]) -> list[str]:
         return []
 
 
@@ -238,6 +241,7 @@ class OperationNode(QObject):
         enabled: bool = False,
     ) -> None:
         super().__init__()
+        self._id = operation.id
         self._name = operation.name
         self._description = operation.description
         self._cli = operation.cli
@@ -253,6 +257,10 @@ class OperationNode(QObject):
             file_consumer.add_producer(file_picker)
             self._file_consumers.append(file_consumer)
         self._enabled = enabled
+
+    @property
+    def id(self) -> str:
+        return self._id
 
     @property
     def name(self) -> str:
@@ -289,13 +297,19 @@ class OperationNode(QObject):
     def valid(self) -> bool:
         return all([consumer.valid for consumer in self._file_consumers])
 
-    def to_cli(self) -> list[str]:
+    def to_cli(self, parameters: list[Parameter]) -> list[str]:
         commands = []
-        own_command = f"./RAiSD-AI {self._cli}"
+        own_command_pieces = ["./RAiSD-AI", self._cli]
 
         for file_consumer in self.file_consumers:
-            commands.extend(file_consumer.to_cli())
-            own_command += f" {file_consumer.cli_parameter}"
+            commands.extend(file_consumer.to_cli(parameters))
+            own_command_pieces.append(file_consumer.cli_parameter)
+
+        for parameter in parameters:
+            own_command_pieces.append(parameter.to_cli(self.id))
+
+        own_command_pieces = [piece for piece in own_command_pieces if piece]
+        own_command = " ".join(own_command_pieces)
         commands.append(own_command)
 
         return commands
@@ -394,5 +408,5 @@ class OperationTree(QObject):
         return trees, operation_id_to_condition
 
 
-    def to_cli(self) -> list[str]:
-        return self.root.to_cli()
+    def to_cli(self, parameters: list[Parameter]) -> list[str]:
+        return self.root.to_cli(parameters)

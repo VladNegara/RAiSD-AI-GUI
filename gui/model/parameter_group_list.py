@@ -36,6 +36,7 @@ from gui.model.dependency import (
 
 # Dummy data
 rsd_def = Operation(
+    id="RSD-DEF",
     name="Standard RAiSD",
     description="Perform a standard RAiSD sweep scan.",
     cli="",
@@ -50,6 +51,7 @@ rsd_def = Operation(
 )
 
 img_gen = Operation(
+    id="IMG-GEN",
     name="Image generation",
     description="Generate images.",
     cli="-op IMG-GEN",
@@ -66,6 +68,7 @@ img_gen = Operation(
 )
 
 mdl_gen = Operation(
+    id="MDL-GEN",
     name="Model training",
     description="Train a CNN model.",
     cli="-op MDL-GEN",
@@ -97,6 +100,7 @@ mdl_gen = Operation(
 )
 
 mdl_tst = Operation(
+    id="MDL-TST",
     name="Inference",
     description="Test your CNN model.",
     cli="-op MDL-TST",
@@ -116,6 +120,7 @@ mdl_tst = Operation(
 )
 
 swp_scn = Operation(
+    id="SWP-SCN",
     name="Sweep scan",
     description="Run a sweep scan with you CNN mode.",
     cli="-op SWP-SCN",
@@ -135,6 +140,7 @@ swp_scn = Operation(
 )
 
 co = Operation(
+    id="CO",
     name="Common outlier analysis",
     description="Perform common outlier analysis for a previously completed sweep scan.",
     cli="",
@@ -143,6 +149,7 @@ co = Operation(
 )
 
 fasta_vcf = Operation(
+    id="FASTA-VCF",
     name="FASTA to vcf conversion",
     description="Convert a FASTA file to vcf",
     cli="-E",
@@ -157,6 +164,7 @@ fasta_vcf = Operation(
 )
 
 vcf_ms = Operation(
+    id="VCF-MS",
     name="vcf to ms conversion",
     description="Convert a vcf file to ms",
     cli="",
@@ -858,6 +866,13 @@ class ParameterGroupList(QObject):
         return self._parameter_groups
 
     @property
+    def parameters(self) -> list[Parameter]:
+        result = []
+        for parameter_group in self:
+            result.extend(parameter_group)
+        return result
+
+    @property
     def valid(self) -> bool:
         """
         Whether the current parameter values are valid.
@@ -879,9 +894,7 @@ class ParameterGroupList(QObject):
         :rtype: list[str]
         """
 
-        instructions = []
-
-        return instructions
+        return self.selected_operation_tree.to_cli(self.parameters)
 
     def __iter__(self) -> Iterator[ParameterGroup]:
         return iter(self.parameter_groups)

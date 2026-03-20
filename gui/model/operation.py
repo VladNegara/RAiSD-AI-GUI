@@ -5,6 +5,7 @@ from gui.model.file_structure import FileStructure
 
 @dataclass
 class Operation():
+    id: str
     name: str
     description: str
     cli: str
