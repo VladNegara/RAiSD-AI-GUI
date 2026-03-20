@@ -290,6 +290,33 @@ mdl_gen = Operation(
     ),
 )
 
+fake_mdl_gen = Operation(
+    name="Fake model training",
+    description="Imagine model training if it only wanted one class.",
+    cli="MDL-GEN-FAKE",
+    requires=[
+        (
+            "Training data",
+            "-I",
+            Directory(
+                [
+                    Directory(
+                        [
+                            SingleFile([".png"]),
+                        ]
+                    ),
+                ]
+            )
+        )
+    ],
+    produces=Directory(
+        [
+            SingleFile([".pt"]),
+        ],
+    ),
+)
+
+
 
 class ParameterGroupList(QObject):
     """
