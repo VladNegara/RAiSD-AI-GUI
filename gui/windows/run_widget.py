@@ -280,7 +280,7 @@ class FileConsumerWidget(QWidget):
         else:
             for producer in self._file_consumer_node.producers:
                 if isinstance(producer, FilePickerNode):
-                    button = QPushButton("Select a file")
+                    button = QPushButton("Upload a file")
                     widget = FilePickerWidget(producer)
                 elif isinstance(producer, OperationNode):
                     button = QPushButton("Generate a file")
