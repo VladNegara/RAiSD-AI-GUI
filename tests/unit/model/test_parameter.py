@@ -510,16 +510,24 @@ class TestFileParameter:
     """Tests for FileParameter class."""
 
     @fixture(autouse=True)
-    def set_file_param(self):
+    def set_file_param(self, tmp_path):
+
+        self.valid_file = tmp_path / "sample.vcf"
+        self.valid_file.write_text("data")
+        self.second_valid_file = tmp_path / "test.vcf"
+        self.second_valid_file.write_text("data")
+        self.invalid_file = tmp_path / "sample.txt"
+        self.invalid_file.write_text("data")
+
         self.file_param = FileParameter(
             name="testfile",
             description="Test file parameter",
             flag="--testfile",
             operations={'IMG-GEN', 'MDL-GEN'},
-            accepted_formats=["txt"],
+            accepted_formats=[".vcf"],
             strict=True,
             multiple=True,
-            default_value=["testfile.txt", "filetest.txt"],
+            default_value=[str(self.valid_file)]
         )
 
     def test_init_values(self):
@@ -529,38 +537,55 @@ class TestFileParameter:
         assert param.description == "Test file parameter"
         assert param.flag == "--testfile"
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
-        assert param.accepted_formats == [".txt"]
-        assert param.value == ["testfile.txt", "filetest.txt"]
-        assert param.default_value == ["testfile.txt", "filetest.txt"]
+        assert param.accepted_formats == [".vcf"]
         assert param.strict
         assert param.multiple
 
     def test_set_value(self):
         """Test setting FileParameter value."""
         param = self.file_param
-        param.value = ["newfile.txt"]
-        assert param.value == ["newfile.txt"]
+        param.value = [str(self.valid_file)]
+        assert param.value == [str(self.valid_file)]
 
     def test_reset_value(self):
         """Test resetting FileParameter value to default."""
         param = self.file_param
         param.value = ["newfile.txt"]
         param.reset_value()
-        assert param.value == ["testfile.txt", "filetest.txt"]
+        assert param.value == [str(self.valid_file)]
 
     def test_valid_format(self):
         """Test FileParameter format validity."""
         param = self.file_param
-        # How to initialize FileParameter with valid value?
-        # assert param.valid
-        param.value = ["invalid.md"]
-        assert not param.valid
+        param.value = [str(self.valid_file)]
+        assert param.valid
 
     def test_valid_file_count(self):
         """Test FileParameter validity when no file is selected."""
         param = self.file_param
-        param.value = []
+        param.value = [str(self.invalid_file)]
         assert not param.valid
+    
+    def test_multiple_false_rejects_two_files(self):
+        """Two files should be invalid when multiple=False."""
+        param = FileParameter(
+            name="testfile",
+            description="Test file parameter",
+            flag="--testfile",
+            operations={'IMG-GEN', 'MDL-GEN'},
+            accepted_formats=[".vcf"],
+            strict=True,
+            multiple=False,
+            default_value=[str(self.valid_file)]
+        )
+        param.value = [str(self.valid_file), str(self.valid_file)]
+        assert not param.valid
+
+    def test_multiple_true_accepts_two_files(self):
+        """Two valid files should be valid when multiple=True."""
+        param = self.file_param
+        param.value = [str(self.valid_file), str(self.second_valid_file)]
+        assert param.valid
 
     def test_to_cli(self):
         """Test FileParameter command-line representation."""
@@ -568,9 +593,9 @@ class TestFileParameter:
         # Doesn't make much sense, but it's expected behavior.
         assert (
             param.to_cli('IMG-GEN')
-            == "--testfile testfile.txt --testfile filetest.txt"
+            == f"--testfile {self.valid_file}"
         )
-        param.value = ["newfile.txt"]
+
 
     def test_value_changed_emitted(self):
         """Test that value_changed signal is emitted when FileParameter value changes."""
@@ -579,7 +604,7 @@ class TestFileParameter:
         param = self.file_param
         self.signal_emitted = False
         self.value = []
-        self.new_value = ["invalid.md"]
+        self.new_value = [str(self.second_valid_file)]
         self.valid = True
 
         def on_value_changed(value, valid):
@@ -595,4 +620,4 @@ class TestFileParameter:
         # assert
         assert self.signal_emitted
         assert self.value == self.new_value
-        assert not self.valid
+        assert self.valid

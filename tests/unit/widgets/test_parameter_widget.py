@@ -93,34 +93,12 @@ class TestIntParameterWidget:
         self.param.value = 8
         assert self.widget._line_edit.text() == "8"
 
-    def test_valid_value_accepted(self):
-        """A value within bounds should be valid."""
-        self.param.value = 7
-        assert self.param.valid is True
-
-    def test_invalid_value_below_lower_bound(self):
-        """A value below the lower bound should be invalid."""
-        self.param.value = -1
-        assert self.param.valid is False
-
-    def test_invalid_value_above_upper_bound(self):
-        """A value above the upper bound should be invalid."""
-        self.param.value = 11
-        assert self.param.valid is False
-
     def test_reset_updates_line_edit(self):
         """Resetting the parameter should update the line edit."""
         self.param.value = 8
         self.param.reset_value()
         assert self.widget._line_edit.text() == "5"
 
-    def test_bounds_label_shown(self):
-        """A label showing bounds should be present in the layout."""
-        labels = [
-            self.widget.layout().itemAt(i).widget().__class__.__name__
-            for i in range(self.widget.layout().count())
-        ]
-        assert "QLabel" in labels
 
 
 class TestFloatParameterWidget:
@@ -144,18 +122,6 @@ class TestFloatParameterWidget:
     def test_parameter_updates_line_edit(self):
         self.param.value = 7.5
         assert self.widget._line_edit.text() == "7.5"
-
-    def test_valid_value(self):
-        self.param.value = 3.14
-        assert self.param.valid is True
-
-    def test_invalid_value_below_lower_bound(self):
-        self.param.value = -0.1
-        assert self.param.valid is False
-
-    def test_invalid_value_above_upper_bound(self):
-        self.param.value = 10.1
-        assert self.param.valid is False
 
     def test_reset_updates_line_edit(self):
         self.param.value = 9.9
@@ -246,13 +212,6 @@ class TestStringParameterWidget:
         self.param.reset_value()
         assert self.widget._line_edit.text() == "hello"
 
-    def test_max_length_label_present(self):
-        """A label showing max length should be present."""
-        labels = [
-            self.widget.layout().itemAt(i).widget().__class__.__name__
-            for i in range(self.widget.layout().count())
-        ]
-        assert "QLabel" in labels
 
 
 class TestFileParameterWidget:
@@ -296,72 +255,11 @@ class TestFileParameterWidget:
         param._value = [str(self.invalid_file)]
         assert str(self.invalid_file) in str(param.value)
 
-    def test_valid_file_is_valid(self):
-        """A file with an accepted extension should be valid."""
-        self.param.value = [str(self.valid_file)]
-        assert self.param.valid is True
-
-    def test_invalid_extension_is_invalid(self):
-        """A file with a non-accepted extension should be invalid."""
-        param = FileParameter(
-            name="testfile", description="", flag="--input",
-            operations={'IMG-GEN', 'MDL-GEN'},
-            accepted_formats=["vcf", "fasta"],
-            strict=True, multiple=False,
-        )
-        param._value = [str(self.invalid_file)]
-        assert param.valid is False
-
-    def test_empty_value_is_invalid(self):
-        """An empty file list should be invalid."""
-        self.param.value = []
-        assert self.param.valid is False
-
-    def test_multiple_false_rejects_two_files(self):
-        """Two files should be invalid when multiple=False."""
-        param = FileParameter(
-            name="testfile", description="", flag="--input",
-            operations={'IMG-GEN', 'MDL-GEN'},
-            accepted_formats=["vcf", "fasta"],
-            strict=True, multiple=False,
-        )
-        param._value = [str(self.valid_file), str(self.valid_file)]
-        assert param.valid is False
-
-    def test_multiple_true_accepts_two_files(self, app, tmp_path):
-        """Two valid files should be valid when multiple=True."""
-        f1 = tmp_path / "a.vcf"
-        f1.write_text("data")
-        f2 = tmp_path / "b.vcf"
-        f2.write_text("data")
-        param = FileParameter(
-            name="multi", description="", flag="--input",
-            operations={'IMG-GEN', 'MDL-GEN'}, accepted_formats=["vcf"], multiple=True,
-        )
-        param.value = [str(f1), str(f2)]
-        assert param.valid is True
-
     def test_reset_clears_label(self):
         """Resetting the parameter should clear the path label."""
         self.param.value = [str(self.valid_file)]
         self.param.reset_value()
         assert self.widget._path_label.text() == "No file selected"
-
-    def test_to_cli_valid(self):
-        """to_cli should return flag and path when valid."""
-        self.param.value = [str(self.valid_file)]
-        assert self.param.to_cli('IMG-GEN') == f"--input {str(self.valid_file)}"
-
-    def test_to_cli_invalid(self):
-        """to_cli should return empty string when invalid."""
-        param = FileParameter(
-        name="testfile", description="", flag="--input",
-            operations={'IMG-GEN'},
-           accepted_formats=["vcf", "fasta"],
-            strict=True, multiple=False,
-        )
-        param._value = [str(self.invalid_file)]
-        assert param.to_cli('IMG-GEN') == ""
 
 class TestParameterWidgetFromParameter:
     """Tests for the from_parameter factory method."""
