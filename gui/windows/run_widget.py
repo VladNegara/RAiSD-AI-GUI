@@ -145,8 +145,8 @@ class RunWidget(QWidget):
 
     @Slot()
     def _switch_to_parameter_input_widget(self) -> None:
-        self.stacked_step_widget_layout.setCurrentWidget(self.parameter_input_widget)
         self.parameter_input_widget._update_next_button_state()
+        self.stacked_step_widget_layout.setCurrentWidget(self.parameter_input_widget)
 
     @Slot()
     def _switch_to_parameter_confirmation_widget(self) -> None:
