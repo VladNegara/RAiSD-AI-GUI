@@ -721,3 +721,64 @@ class TestOptionalParameter:
         assert self.signal_emitted
         assert self.value == self.new_value
         assert self.valid
+
+class TestMultiParameter:
+    """Tests for MultiParameter class."""
+
+    @fixture(autouse=True)
+    def set_multi_param(self):
+        self.int_param = IntParameter(
+            name="testint", 
+            description="Test int parameter", 
+            flag="", 
+            operations={'IMG-GEN', 'MDL-GEN'},
+            default_value=0, 
+            lower_bound=-10, 
+            upper_bound=10
+            )
+        self.bool_param = BoolParameter(
+            name="testbool", 
+            description="Test bool parameter", 
+            flag="--testbool", 
+            operations={'IMG-GEN'},
+            default_value=False
+            )
+        self.multi_param = MultiParameter(
+            name="testmulti",
+            description="Test multi parameter",
+            flag="--testmulti",
+            parameters = [self.int_param, self.bool_param]
+        )
+
+    def test_init_values(self):
+        """Test MultiParameter initial values"""
+        param = self.multi_param
+        assert param.name == "testmulti"
+        assert param.description == "Test multi parameter"
+        assert param.flag == "--testmulti"
+        assert param.operations == {'IMG-GEN', 'MDL-GEN'}
+        assert param.value == ()
+
+    def test_reset_value(self):
+        """Test resetting MultiParameter's inner parameters to default."""
+        param=self.multi_param
+        self.int_param.value = 5
+        self.bool_param.value = True
+        param.reset_value()
+        assert self.int_param.value == 0
+        assert self.bool_param.value == False
+
+    def test_valid(self):
+        """Test MultiParameter validity."""
+        param = self.multi_param
+        assert param.valid
+        self.int_param.value = -11
+        assert not param.valid
+
+    def test_to_cli(self):
+        """Test MultiParameter command-line representation."""
+        param = self.multi_param
+        assert param.to_cli('IMG-GEN') == f"{param.flag} {self.int_param.value}"
+        self.bool_param.value = True
+        assert param.to_cli('IMG-GEN') == f"{param.flag} {self.int_param.value} {self.bool_param.flag}"
+        assert param.to_cli('SWP_SCN') == ""
