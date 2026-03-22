@@ -756,7 +756,7 @@ parameter_groups:
         pattern: ".+"
       "-its":
         name: Image target site
-        description: The target site position for generating images, corresponding to the center of the first generated image. Should be smaller than region length
+        description: The target site position for generating images, corresponding to the center of the first generated image. Should be smaller than region length.
         cli: "-its"
         type: int
         min: 1
@@ -784,7 +784,7 @@ parameter_groups:
         default: 1
       "-bin":
         name: Convert image data to .snp
-        description: Converts image data to custom binary format (.snp). ONly supported by the PyTorch implementation.
+        description: Converts image data to custom binary format (.snp). Only supported by the PyTorch implementation.
         cli: "-bin"
         type: bool
         default: false
@@ -830,20 +830,20 @@ parameter_groups:
       - MDL-GEN
     parameters: 
       "-arc": 
-        name: Network arhitecture
-        description: Specifies the neural network arhitecture.
+        name: Network architecture
+        description: Specifies the neural network architecture.
         cli: "-arc"
         type: enum
         default: 2
         options:
           - name: SweepNet
-            cli: "SweepNet"
+            cli: SweepNet
           - name: FAST-NN
-            cli: "FAST-NN"
+            cli: FAST-NN
           - name: FASTER-NN
-            cli: "FASTER-NN"
+            cli: FASTER-NN
           - name: FASTER-NN-G
-            cli: "FASTER-NN-G"
+            cli: FASTER-NN-G
       "-e":
         name: Epochs
         description: Provides the number of epochs
@@ -852,8 +852,8 @@ parameter_groups:
         min: 1
         default: 10
       "-cl4": 
-        name: Parings between class labels
-        description: Provides 4 parings between class labels and corresponding folder names.
+        name: Pairings between class labels
+        description: Provides 4 pairings between class labels and corresponding folder names.
         cli: "-cl4"
         conditions:
           - type: enum
@@ -898,7 +898,7 @@ parameter_groups:
             parameter: -cl4
       "-g":
         name: Provide number of sequence groups to be created
-        description: Provide number of sequence groups to be created by FASTER-NN-G for SFS grouped poling. If not provided, the sample size is used.
+        description: Provide number of sequence groups to be created by FASTER-NN-G for SFS grouped pooling. If not provided, the sample size is used.
         type: optional
         parameter:
           name: Sequence groups
@@ -950,7 +950,7 @@ parameter_groups:
               - 0
       "-pci-2":
         name: Positive class indices
-        description: The class indices can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MD-GEN run that generated the CNN model.
+        description: The class indices can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MDL-GEN run that generated the CNN model.
         type: multi
         cli: -pci 2
         parameters:
@@ -981,7 +981,7 @@ parameter_groups:
         default: false
       "-frm-swp-scn":
         name: Remove existing SWP-SCN directory
-        description: Remove the directory RAiSD_Images.runID if it already exists.
+        description: Remove the directory RAiSD_Report.runID if it already exists.
         operations:
           add:
             - SWP-SCN
