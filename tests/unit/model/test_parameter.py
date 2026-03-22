@@ -1,7 +1,17 @@
 from pytest import fixture
 import re
 
-from gui.model.parameter import Parameter, BoolParameter, IntParameter, FloatParameter, StringParameter, EnumParameter, FileParameter
+from gui.model.parameter import (
+    Parameter,
+    BoolParameter,
+    IntParameter,
+    FloatParameter,
+    StringParameter,
+    EnumParameter,
+    FileParameter,
+    OptionalParameter,
+    MultiParameter,
+)
 
 class TestBoolParameter:
     """Tests for BoolParameter class."""
@@ -606,6 +616,96 @@ class TestFileParameter:
         self.value = []
         self.new_value = [str(self.second_valid_file)]
         self.valid = True
+
+        def on_value_changed(value, valid):
+            self.signal_emitted = True
+            self.value = value
+            self.valid = valid
+
+        param.value_changed.connect(on_value_changed)
+
+        # act
+        param.value = self.new_value
+
+        # assert
+        assert self.signal_emitted
+        assert self.value == self.new_value
+        assert self.valid
+
+class TestOptionalParameter:
+    """Tests for OptionalParameter class."""
+
+    @fixture(autouse=True)
+    def set_optional_parameter(self):
+        self.int_param = IntParameter(
+            name="testint", 
+            description="Test int parameter", 
+            flag="--testint", 
+            operations={'IMG-GEN', 'MDL-GEN'},
+            default_value=0, 
+            lower_bound=-10, 
+            upper_bound=10
+            )
+        self.optional_param = OptionalParameter(
+            name="testoptional",
+            description="Test optional parameter",
+            operations=set(),
+            default_value = True,
+            parameter=self.int_param
+        )
+
+    def test_init_values(self):
+        """Test OptionalParameter initialization with default value."""
+        param = self.optional_param
+        assert param.name == "testoptional"
+        assert param.description == "Test optional parameter"
+        assert param.operations == {'IMG-GEN', 'MDL-GEN'}
+        assert param.default_value
+        assert param.parameter == self.int_param
+        assert self.int_param.enabled
+
+    def test_set_value(self):
+        """Test setting OptionalParameter value."""
+        param = self.optional_param
+        param.value = False
+        assert not self.int_param.enabled
+
+    def test_reset_value(self):
+        """Test resetting OptionalParameter value."""
+        param = self.optional_param
+        param.value = False
+        param.reset_value()
+        assert self.int_param.enabled
+
+    def test_valid(self):
+        """Test OptionalParameter validity."""
+        param = self.optional_param
+        assert param.valid
+        param.value = False
+        assert param.valid
+        self.int_param.value = -11
+        assert param.valid
+        param.value = True
+        assert not param.valid
+
+    def test_to_cli(self):
+        """Test OptionalParameter comand-line representation."""
+        param = self.optional_param
+        # If OptionalParameter value is true, to_cli gives the cli
+        # represenation of the inner parameter.
+        assert param.to_cli('IMG-GEN') == "--testint 0"
+        assert param.to_cli('SWP-SCN') == ""
+        param.value = False
+        assert param.to_cli('IMG-GEN') == ""
+
+    def test_value_changed_signal_emitted(self):
+        """Test that value_changed signal is emitted when OptionalParameter values changes."""
+        # arrange
+        param = self.optional_param
+        self.signal_emitted = False
+        self.value = True
+        self.new_value = False
+        self.valid = False
 
         def on_value_changed(value, valid):
             self.signal_emitted = True
