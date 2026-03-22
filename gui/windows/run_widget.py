@@ -557,7 +557,6 @@ class RunViewWidget(RunSubWidget):
         info_files = ['RAiSD_Info.TrainingData2DSNP.neutralTR',
                       'RAiSD_Info.TrainingData2DSNP.sweepTR',
                       'RAiSD_Info.TestData2DSNP.neutralTE']
-        self._run_result.info_files = info_files
         try:
             self._command_executor.start_execution(commands)
         except Exception:
@@ -736,7 +735,6 @@ class RunResultsWidget(RunSubWidget):
 
     @Slot(bool)
     def run_end(self, run_successful: bool) -> None:
-        self._run_result.run_completed = run_successful
         if (run_successful):
             self.results_widget.show_results()
 

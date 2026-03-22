@@ -17,6 +17,8 @@ from PySide6.QtCore import (
 
 from PySide6.QtGui import QDesktopServices
 
+
+from gui.model.settings import app_settings
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.widgets.parameter_form import ParameterForm
 from gui.widgets.collapsible import Collapsible
@@ -70,16 +72,19 @@ class ResultsWidget(QWidget):
         """
         # Update summary widgets
         self.status_label.setText("This run was completed successfully. For more information, see the info files below.")
-        for file in self._run_result.info_files:
+
+        info_files = [] # TODO implement infofile gen logic
+        for file in info_files:
             button = QPushButton(file)
-            path = self._run_result.path.filePath(file)
+            path = self._run_result.path.absoluteFilePath(file)
             button.clicked.connect(lambda _, p=path: self.open_file(p))
             self.info_files_layout.addWidget(button)
 
         # Set folder widget to right folder
-        self.folder_structure.setRootPath(self._run_result.path.absolutePath())
+        path = app_settings.workspace_path.filePath(self._run_result.folder_name)
+        self.folder_structure.setRootPath(path)
         self.folder_widget.setModel(self.folder_structure)
-        self.folder_widget.setRootIndex(self.folder_structure.index(self._run_result.path.absolutePath()))
+        self.folder_widget.setRootIndex(self.folder_structure.index(path))
         self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def open_file(self, path) -> None:

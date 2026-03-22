@@ -8,15 +8,12 @@ import json
 class RunResult():
     def __init__(
             self, 
-            parameter_group_list: ParameterGroupList,
-            path: QDir,
-            run_completed: bool = False
+            yaml_path: str,
+            name: str,
         ):
-        self._run_completed = run_completed
-        self._results_path = path
-        self._info_files = None
+        self._folder_name = name
         self._commands = None
-        self._parameter_group_list = parameter_group_list
+        self._parameter_group_list = ParameterGroupList.from_yaml(yaml_path)
 
     @classmethod
     def from_history_file(cls, path: str) -> list["RunResult"]:
@@ -38,40 +35,27 @@ class RunResult():
 
     def to_dir(self) -> str:
         dir = {
-            "path": self._results_path.path(),
-            "info-files": self._info_files,
-            "commands": self._commands
+            # "path": self._results_path.path(),
+            # "info-files": self._info_files,
+            # "commands": self._commands
         }
         return dir
 
     @property
-    def run_completed(self) -> bool:
-        return self._run_completed
-
-    @run_completed.setter
-    def run_completed(self, run_completed: bool) -> None:
-        self._run_completed = run_completed
-
-    @property
-    def path(self) -> QDir:
-        return self._results_path
+    def folder_name(self) -> str:
+        return self._folder_name
     
-    @path.setter 
-    def path(self, path: QDir) -> None:
-        self._results_path = path
-    
-    @property
-    def info_files(self) -> list[str] | None:
-        return self._info_files
-    
-    @info_files.setter
-    def info_files(self, files: list[str]) -> None:
-        self._info_files = files
-
     @property
     def commands(self) -> list[str] | None:
         return self._commands
     
+    @property
+    def parameter_group_list(self) -> ParameterGroupList:
+        return self._parameter_group_list
+    
+    def set_name(self) -> None:
+        self._folder_name = "Hi" # TODO: fix once merged with Steefs PR
+
     def set_commands(self) -> None:
         """
         Sets the commands of a run based on the cli representation
@@ -79,6 +63,3 @@ class RunResult():
         """
         self._commands = self._parameter_group_list.to_cli()
 
-    @property
-    def parameter_group_list(self) -> ParameterGroupList:
-        return self._parameter_group_list
