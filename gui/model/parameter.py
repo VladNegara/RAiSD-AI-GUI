@@ -399,8 +399,11 @@ class NumberParameter(Parameter[X]):
         # A numeric parameter is represented in the command line by
         # its flag and its value.
         if self.in_cli(operation):
-            return f"{self.flag} {self.value}"
-        else: return ""   
+            if self.flag:
+                return f"{self.flag} {self.value}"
+            return f"{self.value}"
+        else:
+            return ""
 
 
 class IntParameter(NumberParameter[int]):
