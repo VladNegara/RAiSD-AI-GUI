@@ -3,13 +3,13 @@ from gui.model.parameter_group_list import ParameterGroupList
 from PySide6.QtCore import QDir
 
 import json
-
+from gui.model.settings import app_settings
 
 class RunResult():
     def __init__(
             self, 
             yaml_path: str,
-            name: str,
+            name: str = "",
         ):
         self._folder_name = name
         self._commands = None
@@ -33,13 +33,35 @@ class RunResult():
         #TODO: implement
         pass
 
-    def to_dir(self) -> str:
-        dir = {
-            # "path": self._results_path.path(),
-            # "info-files": self._info_files,
-            # "commands": self._commands
+    def to_dict(self) -> str:
+        parameters_dict = {}
+        for parameter_group in self.parameter_group_list:
+            for parameter in parameter_group:
+                parameters_dict[parameter.name] = parameter.value
+
+        dict = {
+            "folder_name": self.folder_name,
+            "commands": self._commands,
+            "parameters": parameters_dict
         }
-        return dir
+        return dict
+
+    def save_to_history(self) -> None:
+        try: 
+            if not app_settings.workspace_path.exists("history.json"):
+                with open(app_settings.workspace_path.absoluteFilePath("history.json"), "w") as f:
+                    history = {}
+                    history[self._folder_name] = self.to_dict()
+                    json.dump(history, f)
+            else:    
+                with open(app_settings.workspace_path.absoluteFilePath("history.json"), "r+") as f:
+                    history = json.load(f)
+                    history[self._folder_name] = self.to_dict()
+                    f.seek(0)
+                    json.dump(history, f)
+        except:
+            raise Exception("Failed to write to history file")
+
 
     @property
     def folder_name(self) -> str:

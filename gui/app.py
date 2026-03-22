@@ -26,7 +26,7 @@ def main():
 
     # parameter_group_list = ParameterGroupList.from_yaml("gui/config.yaml")
 
-    run_result = RunResult("gui/config.yaml", "")
+    run_result = RunResult("gui/config.yaml")
     app_settings.workspace_path_changed.connect(lambda path: setattr(run_result, 'path', path))
 
     window = MainWindow(run_result)  
