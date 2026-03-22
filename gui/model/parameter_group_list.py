@@ -13,6 +13,7 @@ from gui.model.parameter import (
     Parameter,
     OptionalParameter,
     MultiParameter,
+    CountedMultiParameter,
     BoolParameter,
     IntParameter,
     FloatParameter,
@@ -434,6 +435,40 @@ class ParameterGroupList(QObject):
                         )
 
                     parameter = MultiParameter(
+                        name,
+                        description,
+                        flag,
+                        parameter_operations,
+                        inner_parameters,
+                    )
+                case (
+                    "multi counted"
+                    | "counted multi"
+                    | "multi count"
+                    | "count multi"
+                ):
+                    if "parameters" not in obj:
+                        raise ValueError(
+                            f"Inner parameters not provided "
+                            + f"for counted multi-value parameter {name}."
+                        )
+                    parameters_list = obj["parameters"]
+                    if not isinstance(parameters_list, list):
+                        raise ValueError(
+                            "Invalid inner parameter list for counted multi-"
+                            + f"value parameter {name}: {parameters_list}. "
+                            + "Expected a list."
+                        )
+                    inner_parameters: list[Parameter[Any]] = []
+                    for inner_parameter_obj in parameters_list:
+                        inner_parameters.append(
+                            parse_parameter(
+                                inner_parameter_obj,
+                                operations,
+                            ),
+                        )
+
+                    parameter = CountedMultiParameter(
                         name,
                         description,
                         flag,

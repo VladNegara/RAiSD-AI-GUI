@@ -455,7 +455,7 @@ parameter_groups:
         description: Fill in these thresholds using the values reported by a previous RAiSD-AI run with "Report score" activated.
         cli: -l # There also has to be an integer that says how many of the thresholds are provided!
         # The CLI representation here needs more thought
-        type: multi
+        type: count multi
         parameters:
           # Are the thresholds 0-1?
           - name: Provide var threshold
