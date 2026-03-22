@@ -72,6 +72,12 @@ QWidget#navigation_buttons_widget QPushButton {
     font-weight: 500;
 }
 
+QWidget#navigation_buttons_widget QPushButton[highlight="false"]{
+    background-color: $button-disabled-background;
+    color: $button-disabled-text-color;
+    border: $button-disabled-border;
+}
+
 QWidget#navigation_buttons_widget QPushButton[highlight="true"] {
     background-color: $accent-orange;
 }
