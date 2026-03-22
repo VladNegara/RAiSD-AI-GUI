@@ -10,12 +10,13 @@ The recommended way to construct operation trees is using the
 `OperationTree#build_trees` factory method.
 """
 
-from typing import Mapping, Protocol
+from typing import Mapping
 
 from PySide6.QtCore import (
     QObject,
     Signal,
     Slot,
+    QDir,
 )
 
 from gui.model.file_structure import (
@@ -33,31 +34,38 @@ from gui.model.dependency import (
 )
 
 
-class FileProducerNode(Protocol):
+class FileProducerNode(QObject):
     """
-    A protocol for nodes that can produce a file.
+    An abstract class for nodes that can produce a file.
     """
+
+    file_changed = Signal(str)
 
     @property
     def produces(self) -> FileStructure:
         """
         The type of file this node produces.
         """
-        ...
+        raise NotImplementedError()
 
     @property
     def file(self) -> str | None:
         """
         The path to the file produced by this node, if available.
         """
-        ...
+        raise NotImplementedError()
 
     @property
     def valid(self) -> bool:
         """
         Whether the node is in a valid state.
         """
-        ...
+        raise NotImplementedError()
+
+    def _set_run_id(self, new_run_id: str) -> None:
+        raise NotImplementedError()
+
+    run_id = property(fset=_set_run_id)
 
     @property
     def enabled(self) -> bool:
@@ -66,11 +74,11 @@ class FileProducerNode(Protocol):
 
         This property is used in generating commands.
         """
-        ...
+        raise NotImplementedError()
 
     @enabled.setter
     def enabled(self, new_enabled: bool) -> None:
-        ...
+        raise NotImplementedError()
 
     def to_cli(self, parameters: list[Parameter]) -> list[str]:
         """
@@ -82,7 +90,7 @@ class FileProducerNode(Protocol):
         :return: the (possibly empty) list of commands
         :rtype: list[str]
         """
-        ...
+        raise NotImplementedError()
 
 
 class FileConsumerNode():
@@ -183,6 +191,12 @@ class FileConsumerNode():
         """
         return self.producers[self.selected_index]
 
+    def _set_run_id(self, new_run_id: str):
+        for producer in self.producers:
+            producer.run_id = new_run_id
+
+    run_id = property(fset=_set_run_id)
+
     @property
     def enabled(self) -> bool:
         """
@@ -224,7 +238,7 @@ class FileConsumerNode():
         return self.selected_producer.to_cli(parameters)
 
 
-class CommonParentDirectoryNode():
+class CommonParentDirectoryNode(FileProducerNode):
     """
     A node which produces a directory of files by producing each file
     individually.
@@ -251,6 +265,7 @@ class CommonParentDirectoryNode():
         :param enabled: whether the node is initially enabled
         :type enabled: bool
         """
+        super().__init__()
         self._produces = produces
         self._file_consumers = []
         for file_structure in self._produces.contents:
@@ -284,6 +299,13 @@ class CommonParentDirectoryNode():
         """
         return self.file_consumers[0].file
 
+    def _set_run_id(self, new_run_id: str) -> None:
+        for file_consumer in self.file_consumers:
+            file_consumer.run_id = new_run_id
+        self.file_changed.emit(self.file)
+
+    run_id = property(fset=_set_run_id)
+
     @property
     def enabled(self) -> bool:
         """
@@ -306,6 +328,8 @@ class CommonParentDirectoryNode():
         A `CommonParentDirectoryNode` is valid if each of its children
         is valid, and they all produce output in the same directory.
         """
+        # TODO: hide the node if its children don't have the same output
+        # location
         if not all(consumer.valid for consumer in self.file_consumers):
             return False
 
@@ -327,14 +351,12 @@ class CommonParentDirectoryNode():
         return commands
 
 
-class FilePickerNode(QObject):
+class FilePickerNode(FileProducerNode):
     """
     A node which allows the user to select an existing file.
 
     Implements `FileProviderNode`.
     """
-
-    file_changed = Signal(str)
 
     def __init__(
             self,
@@ -374,6 +396,11 @@ class FilePickerNode(QObject):
         self._file = new_file
         self.file_changed.emit(self._file)
 
+    def _set_run_id(self, new_run_id: str) -> None:
+        pass
+
+    run_id = property(fset=_set_run_id)
+
     @property
     def enabled(self) -> bool:
         """
@@ -409,7 +436,7 @@ class FilePickerNode(QObject):
         return []
 
 
-class OperationNode(QObject):
+class OperationNode(FileProducerNode):
     """
     A node which allows the user to run an operation.
 
@@ -457,6 +484,7 @@ class OperationNode(QObject):
 
     def __init__(self,
         operation: Operation,
+        run_id: str = "",
         enabled: bool = False,
     ) -> None:
         """
@@ -478,6 +506,7 @@ class OperationNode(QObject):
         self._description = operation.description
         self._cli = operation.cli
         self._produces = operation.produces
+        self._output_path_prefix = operation.output_path_prefix
         self._file_consumers = []
         for file_name, cli, file_structure in operation.requires:
             file_consumer = FileConsumerNode(
@@ -488,6 +517,7 @@ class OperationNode(QObject):
             file_picker = FilePickerNode(file_structure)
             file_consumer.add_producer(file_picker)
             self._file_consumers.append(file_consumer)
+        self._run_id = run_id
         self._enabled = enabled
 
     @property
@@ -526,6 +556,20 @@ class OperationNode(QObject):
         return self._file_consumers
 
     @property
+    def run_id(self) -> str:
+        """
+        The run ID stored in this node.
+        """
+        return self._run_id
+
+    @run_id.setter
+    def run_id(self, new_run_id: str) -> None:
+        self._run_id = new_run_id
+        for file_consumer in self.file_consumers:
+            file_consumer.run_id = self.run_id
+        self.file_changed.emit(self.file)
+
+    @property
     def enabled(self) -> bool:
         """
         Whether the node is enabled. Setting this property sets the
@@ -541,12 +585,13 @@ class OperationNode(QObject):
         self.enabled_changed.emit(self.enabled)
 
     @property
-    def file(self) -> str | None:
+    def file(self) -> str:
         """
         The path to the output file of the operation.
         """
-        # TODO: implement this
-        return "RAiSD_Images.runID"
+        return QDir.current().absoluteFilePath(
+            f"{self._output_path_prefix}{self.run_id}",
+        )
 
     @property
     def valid(self) -> bool:
@@ -621,6 +666,11 @@ class OperationTree(QObject):
         """
         return self._root
 
+    def _set_run_id(self, new_run_id: str) -> None:
+        self.root.run_id = new_run_id
+
+    run_id = property(fset=_set_run_id)
+
     @property
     def enabled(self) -> bool:
         """
@@ -637,6 +687,7 @@ class OperationTree(QObject):
     def build_trees(
             cls,
             operations: dict[str, Operation],
+            run_id: str = "",
     ) -> tuple[list["OperationTree"], Mapping[str, Dependency.Condition]]:
         """
         For each operation in a given list, create an operation tree
@@ -659,6 +710,9 @@ class OperationTree(QObject):
         :param operations: a dictionary from ID to operation
         :type operations: dict[str, Operation]
 
+        :param run_id: the initial run ID
+        :type run_id: str
+
         :return: the list of operation trees and the mapping from
         operation ID to condition
         :rtype: tuple[list[OperationTree], Mapping[str, Condition]]
@@ -671,7 +725,10 @@ class OperationTree(QObject):
         }
         for root_operation_id in operations:
             root_operation = operations[root_operation_id]
-            root_node = OperationNode(root_operation)
+            root_node = OperationNode(
+                root_operation,
+                run_id=run_id,
+            )
             # Create an EnabledCondition for the root node.
             operation_id_to_conditions[root_operation_id].append(
                 OperationNode.EnabledCondition(
@@ -692,6 +749,7 @@ class OperationTree(QObject):
                             == file_consumer.requires):
                             operation_node = OperationNode(
                                 candidate_operation,
+                                run_id=run_id,
                             )
                             file_consumer.add_producer(operation_node)
                             unexplored_nodes.append(operation_node)
@@ -724,7 +782,8 @@ class OperationTree(QObject):
                                     == sub_consumer.requires):
                                     operation_exists = True
                                     operation_node = OperationNode(
-                                        candidate_operation
+                                        candidate_operation,
+                                        run_id=run_id,
                                     )
                                     possible_conditions[candidate_id].append(
                                         OperationNode.EnabledCondition(
