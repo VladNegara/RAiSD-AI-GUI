@@ -72,7 +72,7 @@ class FileProducerNodeWidget(QWidget):
         raise NotImplementedError()
 
 
-class FileConsumerWidget(QWidget):
+class FileConsumerNodeWidget(QWidget):
     """
     A widget to display a `FileConsumerNode`.
 
@@ -85,7 +85,7 @@ class FileConsumerWidget(QWidget):
 
     def __init__(self, file_consumer_node: FileConsumerNode):
         """
-        Initialize a `FileConsumerWidget` object.
+        Initialize a `FileConsumerNodeWidget` object.
 
         :param file_consumer_node: the file consumer node to display
         :type file_consumer_node: FileConsumerNode
@@ -166,7 +166,7 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         layout.addWidget(heading)
 
         for file_consumer in self._common_parent_directory.file_consumers:
-            file_consumer_widget = FileConsumerWidget(file_consumer)
+            file_consumer_widget = FileConsumerNodeWidget(file_consumer)
             layout.addWidget(file_consumer_widget)
 
     @property
@@ -300,7 +300,7 @@ class OperationNodeWidget(FileProducerNodeWidget):
         input_files_widget = QWidget()
         input_files_layout = QHBoxLayout(input_files_widget)
         for file_consumer in operation_node.file_consumers:
-            file_consumer_widget = FileConsumerWidget(file_consumer)
+            file_consumer_widget = FileConsumerNodeWidget(file_consumer)
             input_files_layout.addWidget(
                 file_consumer_widget,
                 alignment=Qt.AlignmentFlag.AlignTop,
