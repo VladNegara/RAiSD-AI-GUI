@@ -262,6 +262,8 @@ class MultiParameter(Parameter[tuple[()]]):
         return all([parameter.valid for parameter in self.parameters])
 
     def to_cli(self, operation: str) -> str:
+        if not self.in_cli(operation):
+            return ""
         cli_params = [self.flag] + [p.to_cli(operation) for p in self.parameters]
         nonempty_params = [p for p in cli_params if p]
         return " ".join(nonempty_params)
