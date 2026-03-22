@@ -315,6 +315,25 @@ class MultiParameter(Parameter[tuple[()]]):
             parameter.enabled = new_enabled
 
 
+class CountedMultiParameter(MultiParameter):
+    """
+    A multi-value parameter which includes the number of values in its
+    command-line representation.
+    """
+
+    def to_cli(self, operation: str) -> str:
+        inner_parameters = [p.to_cli(operation) for p in self.parameters]
+        nonempty_inner_parameters = [p for p in inner_parameters if p]
+        if not nonempty_inner_parameters:
+            return ""
+        cli_pieces: list[str] = [
+            self.flag,
+            str(len(nonempty_inner_parameters)),
+            *nonempty_inner_parameters
+        ]
+        return " ".join(cli_pieces)
+
+
 class BoolParameter(Parameter[bool]):
     """
     A boolean parameter in the GUI.
