@@ -849,6 +849,17 @@ class ParameterGroupList(QObject):
         return result
 
     @property
+    def run_id(self) -> str:
+        # TODO: implement
+        return "someRunID"
+
+    @run_id.setter
+    def run_id(self, new_run_id: str) -> None:
+        # TODO: save this value
+        for operation_tree in self.operation_trees:
+            operation_tree.run_id = new_run_id
+
+    @property
     def operation_trees(self) -> list[OperationTree]:
         return self._operation_trees
 
