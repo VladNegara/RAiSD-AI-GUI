@@ -730,7 +730,7 @@ parameter_groups:
                 value: true
       "-COD": # typically 100-400
         name: Maximum distance
-        description: Provides the maximum distance (in number of sites) between outlier points in th eprovided reports to identify matching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD and RAiSD, typically between 100 and 400.
+        description: Provides the maximum distance (in number of sites) between outlier points in the provided reports to identify matching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD and RAiSD, typically between 100 and 400.
         cli: "-COD"
         type: int
         min: 0
