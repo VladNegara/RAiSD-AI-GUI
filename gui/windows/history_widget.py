@@ -4,6 +4,9 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
+from gui.model.settings import app_settings
+from gui.model.run_result import RunResult
+
 class HistoryWidget(QWidget):
     def __init__(self):
         super().__init__()
@@ -14,3 +17,6 @@ class HistoryWidget(QWidget):
         layout = QHBoxLayout(self)
         history_label = QLabel("History")
         layout.addWidget(history_label)
+
+    def update_history(self) -> None:
+        run_results = RunResult.from_history_file()

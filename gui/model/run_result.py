@@ -17,9 +17,12 @@ class RunResult():
         self._parameter_group_list = ParameterGroupList.from_yaml(yaml_path)
 
     @classmethod
-    def from_history_file(cls, path: str) -> list["RunResult"]:
-        #TODO: implement parsing
-        pass
+    def from_history_file(cls) -> list["RunResult"]:
+        with open(app_settings.workspace_path.absoluteFilePath("history.json"), "r") as f:
+            try:
+                data = json.loads(f)
+            except:
+                pass
 
     @classmethod
     def from_str(cls, string: str) -> "RunResult":
