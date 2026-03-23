@@ -6,21 +6,22 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from gui.widgets.operation_record_widget import OperationRecord, OperationRecordWidget
+from gui.widgets.history_record_widget import HistoryRecordWidget
+from gui.model.run_result import RunResult
 
 
 class OperationRecordList(QWidget):
     """
     The widget that holds the all operation records to display in history_widget
     """
-    run_selected = Signal(OperationRecord)
+    run_selected = Signal(RunResult)
 
     def __init__(
             self,
-            op_records: list[OperationRecord] | None = None,
+            history_records: list[RunResult] | None = None,
     ) -> None:
         super().__init__()
-        self._op_records = op_records or []
+        self._history_records = history_records or []
 
         layout = QVBoxLayout(self)
 
@@ -40,17 +41,17 @@ class OperationRecordList(QWidget):
         self._list_layout.addStretch()
         scroll_area.setWidget(self._list_container)
 
-        for record in self._op_records:
+        for record in self._history_records:
             self._add_record_widget(record)
 
-    def add_record(self, op_rec: OperationRecord) -> None:
-        self._op_records.insert(0, op_rec)
-        self._add_record_widget(op_rec, at_top = True)
+    def add_record(self, run_result: RunResult) -> None:
+        self._history_records.insert(0, run_result)
+        self._add_record_widget(run_result, at_top = True)
 
-    def _add_record_widget(self, op_rec: OperationRecord, at_top: bool = False) -> None:
-        widget = OperationRecordWidget(op_rec)
+    def _add_record_widget(self, run_result: RunResult, at_top: bool = False) -> None:
+        widget = HistoryRecordWidget(run_result)
         widget.setMinimumHeight(100)
-        widget.mousePressEvent = lambda _: self.run_selected.emit(op_rec)
+        widget.mousePressEvent = lambda _: self.run_selected.emit(run_result)
         if at_top:
             self._list_layout.insertWidget(0, widget)
         else:

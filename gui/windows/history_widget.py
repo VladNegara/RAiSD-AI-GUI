@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Slot, Qt
 
-from gui.widgets.operation_record_widget import OperationRecord
+from gui.widgets.history_record_widget import HistoryRecordWidget
 from gui.widgets.operation_record_list_widget import OperationRecordList
 from gui.widgets.results_widget import ResultsWidget
 
@@ -60,17 +60,17 @@ class HistoryWidget(QWidget):
         splitter.setSizes([200, 400])
 
 
-    def add_completed_run(self, op_rec: OperationRecord) -> None:
+    def add_completed_run(self, run_result: RunResult) -> None:
         """
         Add a completed run to the history list.
 
         :param op_rec: the completed operation record to add
         :type op_rec: OperationRecord
         """
-        self._history_list.add_record(op_rec)
+        self._history_list.add_record(run_result)
 
-    @Slot(OperationRecord)
-    def _on_run_selected(self, op_rec: OperationRecord) -> None:
+    @Slot(RunResult)
+    def _on_run_selected(self, run_result: RunResult) -> None:
         """
         Update the detail panel when a record is selected from the list.
         #TODO: this will be changed, once we get the results from actual operation records
@@ -80,19 +80,20 @@ class HistoryWidget(QWidget):
             self._right_panel.removeWidget(current)
             current.deleteLater()
 
-        if op_rec.run_result is not None:
-            results_widget = ResultsWidget(op_rec.run_result)
-            results_widget.show_results()
-            self._right_panel.addWidget(results_widget)
-            self._right_panel.setCurrentWidget(results_widget)
-        else:
-            self._detail_label.setText(
-                f"Name: {op_rec.name}\n"
-                f"Date: {op_rec.date.strftime('%Y-%m-%d %H:%M:%S')}\n"
-                f"Operations: {', '.join(op_rec.operations)}\n"
-                f"Input files:\n" + "\n".join(f"  - {f}" for f in op_rec.input_files) + "\n"
-                                                                                        f"Output folder: {op_rec.output_folder}"
-            )
-            self._right_panel.setCurrentWidget(self._detail_panel)
+        # if run_result is not None:
+        #     results_widget = ResultsWidget(run_result)
+        #     results_widget.show_results()
+        #     self._right_panel.addWidget(results_widget)
+        #     self._right_panel.setCurrentWidget(results_widget)
+        # else:
+        #     self._detail_label.setText(
+        #         f"Name: {run_result.folder_name}\n"
+        #         f"Date: {run_result.date.strftime('%Y-%m-%d %H:%M:%S')}\n"
+        #         f"Operations: {', '.join(run_result.operations)}\n"
+        #         f"Input files:\n" + "\n".join(f"  - {f}" for f in run_result.input_files) + "\n"
+        #                                                                                 f"Output folder: {run_result.output_folder}"
+        #     )
+        #     self._right_panel.setCurrentWidget(self._detail_panel)
+
     def update_history(self) -> None:
         run_results = RunResult.from_history_file()
