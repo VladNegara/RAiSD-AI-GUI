@@ -6,6 +6,7 @@ from PySide6.QtGui import QDesktopServices
 
 from PySide6.QtCore import (
     Qt,
+    Signal,
     Slot,
     QRegularExpression,
     QUrl
@@ -36,6 +37,7 @@ from gui.model.parameter import (
     FloatParameter,
     EnumParameter,
     StringParameter,
+    StringPairListParameter,
     FileParameter,
 )
 from gui.widgets.collapsible import Collapsible
@@ -522,6 +524,62 @@ class StringParameterWidget(ParameterWidget):
     def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
         self._line_edit.setText(new_value)
         self._show_validity(self._line_edit, valid)
+
+
+class StringPairListParameterWidget(ParameterWidget):
+    class Row(QWidget):
+        values_changed = Signal(tuple[str, str])
+
+        def __init__(
+                self,
+                values: tuple[str, str] = ("", ""),
+        ) -> None:
+            super().__init__()
+
+            layout = QHBoxLayout(self)
+
+            self._left_line_edit = QLineEdit()
+            self._left_line_edit.setText(values[0])
+            self._left_line_edit.editingFinished.connect(
+                self._editing_finished,
+            )
+            layout.addWidget(self._left_line_edit)
+
+            self._right_line_edit = QLineEdit()
+            self._right_line_edit.setText(values[1])
+            self._right_line_edit.editingFinished.connect(
+                self._editing_finished,
+            )
+
+        @Slot()
+        def _editing_finished(self) -> None:
+            self.values_changed.emit(
+                (
+                    self._left_line_edit.text(),
+                    self._right_line_edit.text(),
+                )
+            )
+
+    def __init__(
+            self,
+            parameter: StringPairListParameter,
+            editable: bool = True,
+    ) -> None:
+        super().__init__(
+            parameter=parameter,
+            editable=editable,
+        )
+
+        layout = QVBoxLayout(self)
+
+        row_widget = QWidget()
+        self.row_layout = QVBoxLayout(row_widget)
+        self._parameter: StringPairListParameter
+        for pair in self._parameter.value:
+            self.row_layout.addWidget(
+                self.__class__.Row(pair),
+            )
+        layout.addWidget(row_widget)
 
 
 class FileParameterWidget(ParameterWidget):
