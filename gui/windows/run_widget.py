@@ -16,12 +16,15 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QCheckBox,
     QMessageBox,
+    QStyle,
+    QStyleOption,
     QListWidget,
     QAbstractItemView
 )
 
 from PySide6.QtGui import (
-    QGuiApplication
+    QGuiApplication,
+    QPainter
 )
 
 from gui.model.settings import app_settings
@@ -58,19 +61,17 @@ class RunWidget(QWidget):
 
         Includes the step button bar and the stacked step widget.
         """
-        self.setStyleSheet("background-color: lightblue;")
         layout = QVBoxLayout(self)
 
         # Step button bar
         step_button_bar = QWidget()
-        step_button_bar.setStyleSheet("background-color: lightgray;")
+        step_button_bar.setObjectName("step_button_bar")
         step_button_bar_layout = QHBoxLayout(step_button_bar)
         layout.addWidget(step_button_bar)
         self._setup_step_button_bar(step_button_bar_layout)
 
         # Step stacked widget
         stacked_step_widget = QWidget()
-        stacked_step_widget.setStyleSheet("background-color: lightgray;")
         self.stacked_step_widget_layout = QStackedLayout(stacked_step_widget)
         layout.addWidget(stacked_step_widget, 1)
         self._setup_stacked_step_widget(self.stacked_step_widget_layout)
@@ -79,25 +80,56 @@ class RunWidget(QWidget):
         """
         Setup the step button bar.
         """
-        operation_selection_button = QPushButton("Operation Selection")
-        operation_selection_button.clicked.connect(self._switch_to_operation_selection_widget)
-        layout.addWidget(operation_selection_button)
+        self.operation_selection_button = QPushButton("Operation Selection")
+        self.operation_selection_button.clicked.connect(self._switch_to_operation_selection_widget)
+        self.operation_selection_button.setProperty("step_role", "active")
+        layout.addWidget(self.operation_selection_button)
 
-        parameter_input_button = QPushButton("Parameter Input")
-        parameter_input_button.clicked.connect(self._switch_to_parameter_input_widget)
-        layout.addWidget(parameter_input_button)
+        self.parameter_input_button = QPushButton("Parameter Input")
+        self.parameter_input_button.clicked.connect(self._switch_to_parameter_input_widget)
+        self.parameter_input_button.setEnabled(False)
+        layout.addWidget(self.parameter_input_button)
 
-        parameter_confirmation_button = QPushButton("Parameter Confirmation")
-        parameter_confirmation_button.clicked.connect(self._switch_to_parameter_confirmation_widget)
-        layout.addWidget(parameter_confirmation_button)
+        self.parameter_confirmation_button = QPushButton("Parameter Confirmation")
+        self.parameter_confirmation_button.clicked.connect(self._switch_to_parameter_confirmation_widget)
+        self.parameter_confirmation_button.setEnabled(False)
+        layout.addWidget(self.parameter_confirmation_button)
 
         self.execution_view_button = QPushButton("Run")
         self.execution_view_button.clicked.connect(self._switch_to_run_view_widget)
+        self.execution_view_button.setEnabled(False)
         layout.addWidget(self.execution_view_button)
 
         self.results_button = QPushButton("Results")
         self.results_button.clicked.connect(self._switch_to_run_results_widget)
+        self.results_button.setEnabled(False)
         layout.addWidget(self.results_button)
+
+        self._step_buttons = [
+            self.operation_selection_button,
+            self.parameter_input_button,
+            self.parameter_confirmation_button,
+            self.execution_view_button,
+            self.results_button,
+        ]
+
+    def _set_active_step(self, active_index: int) -> None:
+        """
+        Update the step_role dynamic property on each step button
+        and force Qt to re-evaluate stylesheets.
+        """
+        for i, button in enumerate(self._step_buttons):
+            if i < active_index:
+                role = "past_step"
+                button.setEnabled(True)
+            elif i == active_index:
+                role = "active"
+            else:
+                role = "default"
+                button.setEnabled(False)
+            button.setProperty("step_role", role)
+            button.style().unpolish(button) #Required to apply styling dynamically
+            button.style().polish(button)
 
     def _setup_stacked_step_widget(self, layout: QStackedLayout):
         """
@@ -142,24 +174,29 @@ class RunWidget(QWidget):
     @Slot()
     def _switch_to_operation_selection_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.operation_selection_widget)
+        self._set_active_step(0)
 
     @Slot()
     def _switch_to_parameter_input_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.parameter_input_widget)
+        self._set_active_step(1)
         self.parameter_input_widget._update_next_button_state()
 
     @Slot()
     def _switch_to_parameter_confirmation_widget(self) -> None:
         self.parameter_confirmation_widget.update_commands()
         self.stacked_step_widget_layout.setCurrentWidget(self.parameter_confirmation_widget)
+        self._set_active_step(2)
 
     @Slot()
     def _switch_to_run_view_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.run_view_widget)
+        self._set_active_step(3)
 
     @Slot()
     def _switch_to_run_results_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.run_results_widget)
+        self._set_active_step(4)
 
     # ---------- Handle signals ----------
     @Slot()
@@ -175,7 +212,6 @@ class RunWidget(QWidget):
         else:
             self._switch_to_run_view_widget()
 
-
 class NavigationButtonsWidget(QWidget):
     def __init__(self, left_button: QPushButton | None = None, middle_button: QPushButton | None = None, right_button: QPushButton | None = None):
         super().__init__()
@@ -183,12 +219,24 @@ class NavigationButtonsWidget(QWidget):
         self.middle_button = middle_button
         self.right_button = right_button
 
+        self.setObjectName("navigation_buttons_widget")
+
         layout = QHBoxLayout(self)
         for button, alignment in ((self.left_button, Qt.AlignmentFlag.AlignLeft), (self.middle_button, Qt.AlignmentFlag.AlignHCenter), (self.right_button, Qt.AlignmentFlag.AlignRight)):
             if button:
                 layout.addWidget(button, alignment=alignment)
             else:
                 layout.addWidget(QWidget(), 1)
+
+    def paintEvent(self, event) -> None:
+        """
+        Override paintEvent so that QSS styling (background, border,
+        etc.) is applied to this plain QWidget subclass.
+        """
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
 
 class RunSubWidget(QWidget):
@@ -200,6 +248,8 @@ class RunSubWidget(QWidget):
 
     def _setup_layout(self, widget: QWidget, navigation: QWidget) -> None:
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         layout.addWidget(widget, 1)
         layout.addWidget(navigation)
         pass
@@ -221,10 +271,11 @@ class OperationSelectionWidget(RunSubWidget):
 
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
-        widget.setStyleSheet("background-color: lightblue;")
+        widget.setObjectName("operation_selection_widget")
         layout = QVBoxLayout(widget)
 
         operation_selection_label = QLabel("Operation Selection")
+        operation_selection_label.setObjectName("operation_selection_label")
         layout.addWidget(operation_selection_label)
 
         operation_selection_widget = self._setup_operation_selection_widget()
@@ -289,14 +340,17 @@ class ParameterInputWidget(RunSubWidget):
 
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
-        widget.setStyleSheet("background-color: lightblue;")
+        widget.setObjectName("parameter_input_widget")
         layout = QVBoxLayout(widget)
         parameter_input_label = QLabel("Parameter Input")
+        parameter_input_label.setObjectName("parameter_input_label")
         layout.addWidget(parameter_input_label)
 
         parameter_form = ParameterForm(self._parameter_group_list, editable=True)
+        parameter_form.setObjectName("parameter_form")
 
         parameter_form_scroll = QScrollArea()
+        parameter_form_scroll.setObjectName("parameter_form_scroll")
         parameter_form_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         parameter_form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         parameter_form_scroll.setWidgetResizable(True)
@@ -304,7 +358,7 @@ class ParameterInputWidget(RunSubWidget):
         layout.addWidget(parameter_form_scroll)
 
         self._validity_label = QLabel("")
-        self._validity_label.setStyleSheet("QLabel { color: red; }")
+        self._validity_label.setObjectName("validity_label")
         layout.addWidget(self._validity_label)
 
         check_param_button = QPushButton("Check parameters")
@@ -315,7 +369,8 @@ class ParameterInputWidget(RunSubWidget):
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.back_button = QPushButton("Back")
         self.next_button = QPushButton("Next")
-        
+        self.next_button.setObjectName("next_button")
+
         self._update_next_button_state()
         for group in self._parameter_group_list.parameter_groups:
             for parameter in group.parameters:
@@ -330,10 +385,14 @@ class ParameterInputWidget(RunSubWidget):
         valid = self._parameter_group_list.valid
         self.next_button.setEnabled(valid)
         if valid:
+            self.next_button.setProperty("highlight", "true")
             self._validity_label.setText("")
         else:
+            self.next_button.setProperty("highlight", "false")
             self._validity_label.setText("Cannot continue: one or more parameters are invalid.")
-        
+        self.next_button.style().unpolish(self.next_button)
+        self.next_button.style().polish(self.next_button)
+
     @Slot()
     def _check_param_button_clicked(self) -> None:
         """
@@ -355,14 +414,15 @@ class ParameterConfirmationWidget(RunSubWidget):
         """
         Setup a ParameterConfirmationWidget, including a header,
         a section for the commands to be run, and the ParameterForm,
-        in locked form. 
+        in locked form.
         """
         widget = QWidget()
-        widget.setStyleSheet("background-color: lightblue;")
+        widget.setObjectName("parameter_confirmation_widget")
         layout = QVBoxLayout(widget)
 
         # Header
         parameter_confirmation_label = QLabel("Parameter Confirmation")
+        parameter_confirmation_label.setObjectName("parameter_confirmation_label")
         layout.addWidget(parameter_confirmation_label)
 
         # Commands
@@ -381,15 +441,18 @@ class ParameterConfirmationWidget(RunSubWidget):
         commands_layout.addWidget(commands_header)
 
         self.commands_view = QListWidget()
-        self.commands_view.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)  
+        self.commands_view.setObjectName("commands_view")
+        self.commands_view.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.commands_view.clicked.connect(self._copy_command)
         commands_layout.addWidget(self.commands_view)
         layout.addWidget(commands_widget)
 
         # Parameters
         parameter_form = ParameterForm(self._parameter_group_list, editable=False)
+        parameter_form.setObjectName("parameter_form")
 
         parameter_form_scroll = QScrollArea()
+        parameter_form_scroll.setObjectName("parameter_form_scroll")
         parameter_form_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         parameter_form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         parameter_form_scroll.setWidgetResizable(True)
@@ -406,7 +469,7 @@ class ParameterConfirmationWidget(RunSubWidget):
 
     def update_commands(self) -> None:
         """
-        Updates the ParameterConfirmationWidget with the commands from 
+        Updates the ParameterConfirmationWidget with the commands from
         the RunResult.
         """
         self._run_result.set_commands()
@@ -414,7 +477,7 @@ class ParameterConfirmationWidget(RunSubWidget):
         if self._run_result.commands:
             self.commands_view.addItems(self._run_result.commands)
             self.commands_view.setMaximumHeight(self.commands_view.sizeHintForRow(0)*(self.commands_view.count()+1))
-    
+
     @Slot(int)
     def _copy_command(self, index) -> None:
         """
@@ -423,7 +486,7 @@ class ParameterConfirmationWidget(RunSubWidget):
         command = self.commands_view.itemFromIndex(index).text()
         cb = QGuiApplication.clipboard()
         cb.setText(command)
-    
+
     @Slot()
     def _copy_all(self) -> None:
         """
@@ -469,25 +532,30 @@ class RunViewWidget(RunSubWidget):
 
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
-        widget.setStyleSheet("background-color: lightblue;")
+        widget.setObjectName("run_view_widget")
         layout = QVBoxLayout(widget)
 
         run_view_label = QLabel("Run View")
-        layout.addWidget(run_view_label)
+        run_view_label.setObjectName("run_view_label")
+        layout.addWidget(run_view_label, alignment=Qt.AlignmentFlag.AlignTop)
 
         step_widget = QWidget()
+        step_widget.setObjectName("step_widget")
         self.step_layout = QHBoxLayout(step_widget)
         self.run_indicators = []
         layout.addWidget(step_widget)
 
         output_widget = QWidget()
+        output_widget.setObjectName("output_widget")
         output_widget_layout = QHBoxLayout(output_widget)
         layout.addWidget(output_widget)
 
         self.execution_output = QTextEdit(readOnly=True)
+        self.execution_output.setObjectName("execution_output") #Todo hide/reveal these with a button
         output_widget_layout.addWidget(self.execution_output)
 
         self.error_output = QTextEdit(readOnly=True)
+        self.error_output.setObjectName("error_output") #Todo hide/reveal these with a button
         output_widget_layout.addWidget(self.error_output)
 
         self._command_executor.output.connect(self._command_executor_output)
@@ -503,9 +571,8 @@ class RunViewWidget(RunSubWidget):
         return widget
 
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
-        self.stop_run_button = QPushButton("Stop Run")
+        self.stop_run_button = QPushButton("Stop Run") #TODO style this
         self.stop_run_button.setEnabled(False)
-        self.stop_run_button.setStyleSheet(f"background-color: purple;")
         self.stop_run_button.clicked.connect(self._stop_run_button_clicked)
         
         self.results_button = QPushButton("Results")
@@ -714,15 +781,17 @@ class RunResultsWidget(RunSubWidget):
 
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
-        widget.setStyleSheet("background-color: lightblue;")
+        widget.setObjectName("run_results_widget")
         layout = QVBoxLayout(widget)
 
         run_results_label = QLabel("Run Results")
+        run_results_label.setObjectName("run_results_label")
         layout.addWidget(run_results_label)
 
         self.results_widget = ResultsWidget(self._run_result)
 
         results_scroll = QScrollArea()
+        results_scroll.setObjectName("results_scroll")
         results_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         results_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         results_scroll.setWidgetResizable(True)

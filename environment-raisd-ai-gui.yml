@@ -56,6 +56,7 @@ dependencies:
   - libpng=1.6.54=hee55ce4_0
   - libpq=17.6=h5ca1609_1
   - libre2-11=2025.11.05=h3356fce_1
+  - libsass=0.23.0=py313h5d5ffb9_3
   - libsodium=1.0.20=heac8642_0
   - libstdcxx=15.2.0=h39759b7_7
   - libstdcxx-ng=15.2.0=hc03a8fd_7
