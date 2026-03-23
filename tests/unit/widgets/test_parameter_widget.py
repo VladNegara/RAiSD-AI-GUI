@@ -41,7 +41,7 @@ class TestBoolParameterWidget:
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value=False,
         )
-        self.widget = BoolParameterWidget(self.param)
+        self.widget = BoolParameterWidget(self.param, editable=True)
 
     def test_initial_state_unchecked(self):
         """Checkbox should reflect the default value of False."""
@@ -49,7 +49,7 @@ class TestBoolParameterWidget:
 
     def test_initial_state_checked(self, app):
         param = BoolParameter("b", "b", "--b", {'IMG-GEN', 'MDL-GEN'} , default_value=True)
-        widget = BoolParameterWidget(param)
+        widget = BoolParameterWidget(param, editable=True)
         assert widget._checkbox.checkState() == Qt.CheckState.Checked
 
     def test_checkbox_updates_parameter(self):
@@ -82,7 +82,7 @@ class TestIntParameterWidget:
             lower_bound=0,
             upper_bound=10,
         )
-        self.widget = IntParameterWidget(self.param)
+        self.widget = IntParameterWidget(self.param, editable=True)
 
     def test_initial_value_displayed(self):
         """Line edit should show the default value."""
@@ -114,7 +114,7 @@ class TestFloatParameterWidget:
             lower_bound=0.0,
             upper_bound=10.0,
         )
-        self.widget = FloatParameterWidget(self.param)
+        self.widget = FloatParameterWidget(self.param, editable=True)
 
     def test_initial_value_displayed(self):
         assert self.widget._line_edit.text() == "5.0"
@@ -141,7 +141,7 @@ class TestEnumParameterWidget:
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value=0,
         )
-        self.widget = EnumParameterWidget(self.param)
+        self.widget = EnumParameterWidget(self.param, editable=True)
 
     def test_initial_index(self):
         """Combo box should reflect the default index."""
@@ -181,7 +181,7 @@ class TestStringParameterWidget:
             max_length=10,
             pattern=re.compile(r"^[a-z]+$"),
         )
-        self.widget = StringParameterWidget(self.param)
+        self.widget = StringParameterWidget(self.param, editable=True)
 
     def test_initial_value_displayed(self):
         """Line edit should show the default value."""
@@ -233,7 +233,7 @@ class TestFileParameterWidget:
             multiple=False,
             default_value=None,
         )
-        self.widget = FileParameterWidget(self.param)
+        self.widget = FileParameterWidget(self.param, editable=True)
 
     def test_initial_label_no_file(self):
         """Path label should show 'No file selected' initially."""
@@ -270,32 +270,32 @@ class TestParameterWidgetFromParameter:
 
     def test_from_parameter_bool(self):
         param = BoolParameter("b", "b", "--b", {"TEST"}, False)
-        row = ParameterWidget.from_parameter(param)
+        row = ParameterWidget.from_parameter(param, editable=True)
         assert row is not None
 
     def test_from_parameter_int(self):
         param = IntParameter("i", "i", "--i", {"TEST"}, 0)
-        row = ParameterWidget.from_parameter(param)
+        row = ParameterWidget.from_parameter(param, editable=True)
         assert row is not None
 
     def test_from_parameter_float(self):
         param = FloatParameter("f", "f", "--f", {"TEST"}, 0.0)
-        row = ParameterWidget.from_parameter(param)
+        row = ParameterWidget.from_parameter(param, editable=True)
         assert row is not None
 
     def test_from_parameter_enum(self):
         param = EnumParameter("e", "e", "--e", {"TEST"}, [("A", "a")], 0)
-        row = ParameterWidget.from_parameter(param)
+        row = ParameterWidget.from_parameter(param, editable=True)
         assert row is not None
 
     def test_from_parameter_string(self):
         param = StringParameter("s", "s", "--s", {"TEST"}, "")
-        row = ParameterWidget.from_parameter(param)
+        row = ParameterWidget.from_parameter(param, editable=True)
         assert row is not None
 
     def test_from_parameter_file(self):
         param = FileParameter("f", "f", "--f", {"TEST"})
-        row = ParameterWidget.from_parameter(param)
+        row = ParameterWidget.from_parameter(param, editable=True)
         assert row is not None
 
     def test_reset_button_resets_value(self, app):
@@ -310,7 +310,7 @@ class TestParameterWidgetFromParameter:
     def test_enabled_changed_hides_row(self, app):
         """Setting enabled=False should hide the row widget."""
         param = BoolParameter("b", "b", "--b", {"TEST"}, False)
-        row = ParameterWidget.from_parameter(param).build_form_row()
+        row = ParameterWidget.from_parameter(param, editable=True).build_form_row()
         row.show()
         param.enabled = False
         assert not row.isVisible()
@@ -325,7 +325,7 @@ class TestIntParameterWidgetTextChanged:
             name="testint", description="", flag="--i",
             operations={"TEST"}, default_value=5,
         )
-        self.widget = IntParameterWidget(self.param)
+        self.widget = IntParameterWidget(self.param, editable=True)
 
     def test_text_changed_valid_input(self):
         """Typing a valid integer should update the parameter."""
@@ -348,7 +348,7 @@ class TestFloatParameterWidgetTextChanged:
             name="testfloat", description="", flag="--f",
             operations={"TEST"}, default_value=3.0,
         )
-        self.widget = FloatParameterWidget(self.param)
+        self.widget = FloatParameterWidget(self.param, editable=True)
 
     def test_text_changed_valid_input(self):
         """Typing a valid float should update the parameter."""
@@ -374,7 +374,7 @@ class TestFileParameterWidgetDialog:
             operations={"TEST"}, accepted_formats=["vcf"],
             strict=True, multiple=False,
         )
-        self.widget = FileParameterWidget(self.param)
+        self.widget = FileParameterWidget(self.param, editable=True)
 
     def test_open_file_dialog_single(self):
         """_open_file_dialog should set parameter value for single file."""
@@ -400,7 +400,7 @@ class TestFileParameterWidgetDialog:
             name="multi", description="", flag="--input",
             operations={"TEST"}, accepted_formats=["vcf"], multiple=True,
         )
-        widget = FileParameterWidget(param)
+        widget = FileParameterWidget(param, editable=True)
         with patch("gui.widgets.parameter_widget.QFileDialog.getOpenFileNames",
                    return_value=([str(f1), str(f2)], "")):
             widget._open_file_dialog()
@@ -416,7 +416,7 @@ class TestFileParameterWidgetDialog:
             name="any", description="", flag="--input",
             operations={"TEST"}, accepted_formats=None,
         )
-        widget = FileParameterWidget(param)
+        widget = FileParameterWidget(param, editable=True)
         assert widget._build_filter() == "All files (*)"
 
 
@@ -431,7 +431,7 @@ class TestFileParameterWidgetExpectedFormats:
             operations={"TEST"}, accepted_formats=["vcf"],
             strict=False, multiple=False,
         )
-        self.widget = FileParameterWidget(self.param)
+        self.widget = FileParameterWidget(self.param, editable=True)
 
     def test_warning_shown_for_unexpected_format(self):
         """An unexpected file type should show a warning in the error label."""
