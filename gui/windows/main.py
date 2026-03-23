@@ -12,6 +12,10 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
+from PySide6.QtGui import (
+    QCursor, Qt,
+)
+
 from gui.model.settings import app_settings
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.execution.command_executor import CommandExecutor
@@ -57,6 +61,9 @@ class MainWindow(QMainWindow):
         self.main_widget_layout = QStackedLayout(main_widget)
         central_layout.addWidget(main_widget)
         self._setup_main_widget(self.main_widget_layout)
+
+        for button in self.findChildren(QPushButton):
+            button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
 
     def _setup_left_sidebar(self, layout: QVBoxLayout):
