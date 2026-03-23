@@ -9,12 +9,12 @@ from gui.model.settings import app_settings
 class RunResult():
     def __init__(
             self, 
-            yaml_path: str,
             name: str = "",
         ):
         self._folder_name = name
         self._commands = None
-        self._parameter_group_list = ParameterGroupList.from_yaml(yaml_path)
+        self._parameter_group_list = ParameterGroupList.from_yaml(app_settings.yaml_path)
+        self._time_completed = None
 
     @classmethod
     def from_history_file(cls) -> list["RunResult"]:
