@@ -1,9 +1,10 @@
-/* ---- Global ---- */
+/* GLOBAL */
+
 * {
     font-size: $font-size;
 }
 
-/* ---- Left Sidebar ---- */
+/* LEFT SIDEBAR */
 
 QWidget#left_sidebar,
 QWidget#central_widget {
@@ -35,15 +36,102 @@ QPushButton#settings_button[state="active"] {
     border-image: url("gui/style/resources/settings_icon_active.svg") 0 0 0 0 stretch stretch;
 }
 
-QPushButton#run_button:hover, QPushButton#history_button:hover, QPushButton#settings_button:hover{
+QPushButton#run_button:hover,
+QPushButton#history_button:hover,
+QPushButton#settings_button:hover {
     background-color: $sidebar-button-hover;
 }
-QPushButton#run_button:pressed, QPushButton#history_button:pressed, QPushButton#settings_button:pressed{
+
+QPushButton#run_button:pressed,
+QPushButton#history_button:pressed,
+QPushButton#settings_button:pressed {
     background-color: $sidebar-button-pressed;
 }
 
+/* SHARED — VIEW BACKGROUNDS */
 
-/* ---- Step Button Bar ---- */
+QWidget#operation_selection_widget,
+QWidget#parameter_input_widget,
+QWidget#parameter_confirmation_widget,
+QWidget#run_view_widget,
+QWidget#run_results_widget,
+QWidget#settings_widget {
+    background-color: $purplish-background;
+}
+
+/* SHARED — VIEW LABELS */
+
+QWidget#operation_selection_widget QLabel,
+QWidget#parameter_input_widget QLabel,
+QWidget#parameter_confirmation_widget QLabel,
+QWidget#run_view_widget QLabel,
+QWidget#run_results_widget QLabel,
+QWidget#settings_widget QLabel {
+    color: $primary-dark;
+}
+
+QLabel#operation_selection_label,
+QLabel#parameter_input_label,
+QLabel#parameter_confirmation_label,
+QLabel#run_view_label,
+QLabel#run_results_label,
+QLabel#settings_label {
+    font-size: 24px;
+    font-weight: 800;
+    margin-left: 20px;
+    margin-top: 20px;
+}
+
+/* SHARED — SCROLL AREAS */
+
+QScrollBar {
+    width: 0px;
+    height: 0px;
+}
+
+QScrollArea#parameter_form_scroll,
+QScrollArea#results_scroll,
+QWidget#results_widget {
+    background: transparent;
+}
+
+/* SHARED — PURPLE BUTTONS */
+
+QWidget#parameter_confirmation_widget QPushButton,
+QWidget#settings_widget QPushButton,
+QPushButton#reset_button,
+QPushButton#file_button {
+    padding: 5px 15px;
+    background-color: $primary-purple;
+    color: $primary-dark;
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+QWidget#parameter_confirmation_widget QPushButton:hover,
+QWidget#settings_widget QPushButton:hover,
+QPushButton#reset_button:hover,
+QPushButton#file_button:hover {
+    background-color: $button-hover;
+}
+
+QWidget#parameter_confirmation_widget QPushButton:pressed,
+QWidget#settings_widget QPushButton:pressed,
+QPushButton#reset_button:pressed,
+QPushButton#file_button:pressed {
+    background-color: $button-pressed;
+}
+
+/* SETTINGS — WHITE CARD CONTAINER */
+
+QWidget#container_widget {
+    background-color: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+}
+
+/* STEP BUTTON BAR */
 
 QWidget#step_button_bar QPushButton {
     padding: 10px 20px;
@@ -71,8 +159,7 @@ QWidget#step_button_bar QPushButton[step_role="past_step"]:pressed {
     background-color: $button-pressed;
 }
 
-
-/* ---- Navigation Buttons ---- */
+/* NAVIGATION BUTTONS */
 
 QWidget#navigation_buttons_widget {
     background-color: $purplish-background;
@@ -87,15 +174,15 @@ QWidget#navigation_buttons_widget QPushButton {
     font-weight: 500;
 }
 
-QWidget#navigation_buttons_widget QPushButton:hover{
+QWidget#navigation_buttons_widget QPushButton:hover {
     background-color: $button-hover;
 }
 
-QWidget#navigation_buttons_widget QPushButton:pressed{
+QWidget#navigation_buttons_widget QPushButton:pressed {
     background-color: $button-pressed;
 }
 
-QWidget#navigation_buttons_widget QPushButton#next_button[highlight="false"]{
+QWidget#navigation_buttons_widget QPushButton#next_button[highlight="false"] {
     background-color: $button-disabled-background;
     color: $button-disabled-text-color;
     border: $button-disabled-border;
@@ -105,59 +192,15 @@ QWidget#navigation_buttons_widget QPushButton#next_button[highlight="true"] {
     background-color: $accent-orange;
 }
 
-QWidget#navigation_buttons_widget QPushButton#next_button[highlight="true"]:hover{
+QWidget#navigation_buttons_widget QPushButton#next_button[highlight="true"]:hover {
     background-color: $button-orange-hover;
 }
-QWidget#navigation_buttons_widget QPushButton#next_button[highlight="true"]:pressed{
+
+QWidget#navigation_buttons_widget QPushButton#next_button[highlight="true"]:pressed {
     background-color: $button-orange-pressed;
 }
 
-
-/* ---- Shared Styles ---- */
-
-QWidget#parameter_input_widget,
-QWidget#run_results_widget,
-QWidget#run_view_widget,
-QWidget#parameter_confirmation_widget,
-QWidget#operation_selection_widget,
-QWidget#settings_widget{
-    background-color: $purplish-background;
-}
-
-QWidget#parameter_input_widget QLabel,
-QWidget#run_results_widget QLabel,
-QWidget#run_view_widget QLabel,
-QWidget#parameter_confirmation_widget QLabel,
-QWidget#operation_selection_widget QLabel,
-QWidget#settings_widget QLabel{
-    color: $primary-dark;
-}
-
-QLabel#parameter_input_label,
-QLabel#run_results_label,
-QLabel#run_view_label,
-QLabel#parameter_confirmation_label,
-QLabel#operation_selection_label,
-QLabel#settings_label{
-    font-size: 24px;
-    font-weight: 800;
-    margin-left: 20px;
-    margin-top: 20px;
-}
-
-QScrollArea#parameter_form_scroll,
-QScrollArea#results_scroll,
-QScrollArea#parameter_form_scroll,
-QWidget#results_widget{
-    background: transparent;
-}
-
-QScrollBar {
-    width: 0px;
-    height: 0px;
-}
-
-/* ---- Parameter Input View ---- */
+/* PARAMETER INPUT VIEW */
 
 QWidget#parameter_form {
     background: transparent;
@@ -207,59 +250,13 @@ QWidget#parameter_form_section QComboBox::down-arrow {
     height: 20px;
 }
 
-QLabel#validity_label{
+QLabel#validity_label {
     color: red;
 }
 
-/* ---- Results View ---- */
+/* PARAMETER CONFIRMATION VIEW */
 
-QPushButton#file_button{
-    padding: 5px;
-    background-color: $primary-purple;
-    color: $primary-dark;
-    border-radius: 5px;
-    font-weight: 500;
-}
-
-QPushButton#file_button:hover{
-    background-color: $button-hover;
-}
-
-QPushButton#file_button:pressed{
-    background: $button-pressed;
-}
-
-QHeaderView{
-    background-color: $primary-purple;
-    color: $primary-dark;
-}
-
-QTreeView#folder_widget{
-    selection-background-color: $primary-purple;
-}
-/* ---- Parameter Confirmation View ---- */
-QWidget#parameter_confirmation_widget QPushButton,
-QWidget#settings_widget QPushButton,
-QPushButton#reset_button{
-    padding: 5px 15px;
-    background-color: $primary-purple;
-    color: $primary-dark;
-    border-radius: 5px;
-    font-weight: 500;
-}
-QWidget#parameter_confirmation_widget QPushButton:hover,
-QWidget#settings_widget QPushButton:hover,
-QPushButton#reset_button:hover{
-    background-color: $button-hover;
-}
-
-QWidget#parameter_confirmation_widget QPushButton:pressed,
-QWidget#settings_widget QPushButton:pressed,
-QPushButton#reset_button:pressed{
-    background: $button-pressed;
-}
-
-QListWidget#commands_view{
+QListWidget#commands_view {
     selection-background-color: $primary-purple;
     padding: 5px;
     background-color: white;
@@ -267,15 +264,20 @@ QListWidget#commands_view{
 }
 
 QWidget#parameter_confirmation_widget QComboBox:disabled,
-QWidget#run_results_widget QComboBox:disabled{
+QWidget#run_results_widget QComboBox:disabled {
     color: $primary-dark;
 }
 
-QWidget#container_widget{
-    background-color: white;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 10px;
+/* RESULTS VIEW */
+
+QHeaderView {
+    background-color: $primary-purple;
+    color: $primary-dark;
 }
 
-/* ---- Run View ---- */
+QTreeView#folder_widget {
+    selection-background-color: $primary-purple;
+}
+
+/* RUN VIEW */
+
