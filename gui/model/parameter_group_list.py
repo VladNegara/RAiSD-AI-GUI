@@ -40,6 +40,7 @@ class ParameterGroupList(QObject):
     def __init__(
             self,
             command: str,
+            run_id_parameter: StringParameter,
             operations: dict[str, bool],
             parameter_groups: list[ParameterGroup] | None = None,
             dependencies: list[Dependency] | None = None,
@@ -55,6 +56,11 @@ class ParameterGroupList(QObject):
         """
         super().__init__()
         self.command = command
+        self._run_id_parameter = run_id_parameter
+        self._run_id = run_id_parameter.value
+        self._run_id_parameter.value_changed.connect(
+            self._run_id_parameter_value_changed
+        )
         self._operations = operations
         self._parameter_groups = parameter_groups or []
         self._dependencies = dependencies or []
@@ -662,17 +668,41 @@ class ParameterGroupList(QObject):
                 f"Invalid executable name: {executable}. Expected string."
             )
 
-        operations = {}
+        operations: dict[str, bool] = {}
         mode_list = config_obj.get("modes", []) or []
         for mode_obj in mode_list:
             for operation in mode_obj["operations"]:
+                if not isinstance(operation, str):
+                    raise ValueError()
                 operations[operation] = False
+
+        if "run_id_parameter" not in config_obj:
+            raise ValueError(
+                "Run ID parameter missing from configuration file!"
+            )
+        run_id_parameter_obj = config_obj["run_id_parameter"]
+        if not isinstance(run_id_parameter_obj, dict):
+            raise ValueError(
+                "Invalid value for run ID parameter: "
+                + f"{run_id_parameter_obj}. Expected object."
+            )
+        run_id_parameter = parse_parameter(
+            run_id_parameter_obj,
+            # Assign the run ID parameter to all operations so it is
+            # always present.
+            set(operations.keys()),
+        )
+        if not isinstance(run_id_parameter, StringParameter):
+            raise ValueError(
+                f"Invalid run ID parameter: {run_id_parameter}. "
+                + "Expected string parameter."
+            )
 
         parameter_groups = []
         for parameter_group_obj in config_obj["parameter_groups"]:
             parameter_groups.append(parse_parameter_group(parameter_group_obj))
 
-        result = cls(executable, operations, parameter_groups)
+        result = cls(executable, run_id_parameter, operations, parameter_groups)
 
         parameter_conditions: dict[Parameter[Any], list[Dependency.Condition]] = {}
 
@@ -703,6 +733,18 @@ class ParameterGroupList(QObject):
             )
 
         return result
+
+    @property
+    def run_id_parameter(self) -> StringParameter:
+        return self._run_id_parameter
+
+    @property
+    def run_id(self) -> str:
+        return self._run_id
+
+    @run_id.setter
+    def run_id(self, new_run_id: str) -> None:
+        self._run_id = new_run_id
 
     @property
     def operations(self) -> dict[str, bool]:
@@ -743,7 +785,10 @@ class ParameterGroupList(QObject):
 
         The list is valid if and only if every group is valid.
         """
-        return all([group.valid for group in self])
+        return all(
+            [self._run_id_parameter.valid]
+            + [group.valid for group in self]
+        )
 
     def to_cli(self) -> list[str]:
         """
@@ -763,7 +808,7 @@ class ParameterGroupList(QObject):
         for operation in operations:
             # For each operation get the cli representation from all param_groups
             # The paramgroups handle the operation by passing it to the parameters
-            instruction = f"{self.command} -op {operation}"
+            instruction = f"{self.command} {self._run_id_parameter.to_cli(operation)} -op {operation}"
             for param_group in self._parameter_groups:
                 if (param_group.to_cli(operation) != ""): instruction = f"{instruction} {param_group.to_cli(operation)}"
             instructions.append(instruction)
@@ -775,3 +820,11 @@ class ParameterGroupList(QObject):
 
     def __getitem__(self, i) -> ParameterGroup:
         return self.parameter_groups[i]
+
+    @Slot(str, bool)
+    def _run_id_parameter_value_changed(
+        self,
+        new_run_id: str,
+        new_valid: bool,
+    ) -> None:
+        self.run_id = new_run_id

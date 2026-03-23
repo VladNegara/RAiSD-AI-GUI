@@ -31,6 +31,7 @@ from gui.model.settings import app_settings
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.model.run_result import RunResult
 from gui.execution.command_executor import CommandExecutor
+from gui.widgets.parameter_widget import ParameterWidget
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
 from gui.widgets.results_widget import ResultsWidget
@@ -278,6 +279,12 @@ class OperationSelectionWidget(RunSubWidget):
         operation_selection_label.setObjectName("operation_selection_label")
         layout.addWidget(operation_selection_label)
 
+        run_id_parameter_widget = ParameterWidget.from_parameter(
+            self._parameter_group_list.run_id_parameter,
+            editable=True,
+        )
+        layout.addWidget(run_id_parameter_widget.build_form_row())
+
         operation_selection_widget = self._setup_operation_selection_widget()
         layout.addWidget(operation_selection_widget, 1)
 
@@ -285,6 +292,11 @@ class OperationSelectionWidget(RunSubWidget):
 
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.next_button = QPushButton("Next")
+        self.next_button.setObjectName("next_button")
+        self._update_next_button_state()
+        self._parameter_group_list.run_id_parameter.value_changed.connect(
+            self._update_next_button_state,
+        )
         return NavigationButtonsWidget(right_button=self.next_button)
 
     def _setup_operation_selection_widget(self) -> QWidget:
@@ -320,7 +332,7 @@ class OperationSelectionWidget(RunSubWidget):
         layout.addWidget(description_label, 1)
 
         return widget
-    
+
     def _operation_selector_clicked(self, operation: str, state: Qt.CheckState) -> None:
         """
         Set the operation using the given checkbox state.
@@ -330,6 +342,16 @@ class OperationSelectionWidget(RunSubWidget):
         elif state == Qt.CheckState.Unchecked:
             self._parameter_group_list.set_operation(operation, False)
 
+    @Slot()
+    def _update_next_button_state(self) -> None:
+        valid = self._parameter_group_list.run_id_parameter.valid
+        self.next_button.setEnabled(valid)
+        if valid:
+            self.next_button.setProperty("highlight", "true")
+        else:
+            self.next_button.setProperty("highlight", "false")
+        self.next_button.style().unpolish(self.next_button)
+        self.next_button.style().polish(self.next_button)
 
 
 class ParameterInputWidget(RunSubWidget):    
@@ -372,6 +394,10 @@ class ParameterInputWidget(RunSubWidget):
         self.next_button.setObjectName("next_button")
 
         self._update_next_button_state()
+        # TODO: make this just connect to a signal on the parameter group list
+        self._parameter_group_list.run_id_parameter.value_changed.connect(
+            self._update_next_button_state
+        )
         for group in self._parameter_group_list.parameter_groups:
             for parameter in group.parameters:
                 parameter.value_changed.connect(self._update_next_button_state)
