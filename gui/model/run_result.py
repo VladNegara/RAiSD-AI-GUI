@@ -14,7 +14,7 @@ class RunResult():
             parameter_group_list: ParameterGroupList = None,
             time_completed: datetime | None = None
         ):
-        self._folder_name = name
+        self._name = name
         self._commands = commands
         self._parameter_group_list = parameter_group_list or ParameterGroupList.from_yaml(app_settings.yaml_path)
         self._time_completed = time_completed
@@ -42,7 +42,7 @@ class RunResult():
 
     @classmethod
     def from_dict(cls, dictionary: dict) -> "RunResult":
-        name = dictionary.get("folder_name")
+        name = dictionary.get("name")
         if not isinstance(name, str):
             raise ValueError(
                 f"Invalid run name: {name}. "
@@ -98,7 +98,7 @@ class RunResult():
                 parameters_dict[parameter.name] = parameter.value
 
         dict = {
-            "folder_name": self.folder_name,
+            "name": self.name,
             "commands": self._commands,
             "parameters": parameters_dict,
             "time_completed": self._time_completed
@@ -111,7 +111,7 @@ class RunResult():
             # If no history file exists
             with open(app_settings.workspace_path.absoluteFilePath("history.json"), "w") as f:
                 history = {}
-                history[self._folder_name] = self.to_dict()
+                history[self._name] = self.to_dict()
                 json.dump(history, f, indent=4, default=str)
         else:    
             # If a file exists
@@ -122,14 +122,14 @@ class RunResult():
                 except:
                     # File could not be parsed
                     print("Problem reading file: might be empty or incorrect format")
-                history[self._folder_name] = self.to_dict()
+                history[self._name] = self.to_dict()
                 f.seek(0)
                 json.dump(history, f, indent=4, default=str)
 
 
     @property
-    def folder_name(self) -> str:
-        return self._folder_name
+    def name(self) -> str:
+        return self._name
     
     @property
     def commands(self) -> list[str] | None:
@@ -144,7 +144,7 @@ class RunResult():
         return self._time_completed
     
     def set_name(self) -> None:
-        self._folder_name = "Hi" # TODO: fix once merged with Steefs PR
+        self._name = "Hi" # TODO: fix once merged with PR of run_id
 
     def set_commands(self) -> None:
         """

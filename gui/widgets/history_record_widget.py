@@ -18,7 +18,7 @@ class HistoryRecordWidget(QWidget):
         layout.setColumnStretch(1, 0)
 
         # top left: the name of the operation record
-        name_label = QLabel(self._run_result.folder_name)
+        name_label = QLabel(self._run_result.name)
         layout.addWidget(name_label, 0, 0, Qt.AlignmentFlag.AlignLeft)
 
         # top right: indication of the completion time/date
