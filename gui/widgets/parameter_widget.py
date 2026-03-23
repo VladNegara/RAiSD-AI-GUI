@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QListWidget,
-    QAbstractItemView
+    QAbstractItemView,
 )
 from PySide6.QtGui import (
     QRegularExpressionValidator,
@@ -98,8 +98,8 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
 
     def _show_validity(self, widget: QWidget, valid: bool) -> None:
         if valid and self._editable:
-            widget.setStyleSheet("QLineEdit { border: 1px solid green; }")
-        elif self._editable:
+            widget.setStyleSheet("")
+        elif not valid and self._editable:
             widget.setStyleSheet("QLineEdit { border: 1px solid red; }")
 
     @property
@@ -363,20 +363,24 @@ class IntParameterWidget(ParameterWidget):
                 label = QLabel(f'(maximum {parameter.upper_bound})')
                 layout.addWidget(label)
     
-        self._line_edit.editingFinished.connect(self._text_changed)
+        self._line_edit.textChanged.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
+        parameter.enabled_changed.connect(
+            lambda enabled: self._show_validity(self._line_edit, self.parameter.valid)
+        )
+
     @Slot(str)
-    def _text_changed(self) -> None:
-        try: 
-            self.parameter.value = int(self._line_edit.text())
+    def _text_changed(self, text: str) -> None:
+        try:
+            self.parameter.value = int(text)
         except:
-            self._line_edit.setText(str(self.parameter.value))
+            pass
 
     @Slot(int, bool)
     def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
         self._line_edit.setText(str(new_value))
-        self._show_validity(self._line_edit, valid)
+        self._show_validity(self._line_edit, self.parameter.valid)
 
 
 class FloatParameterWidget(ParameterWidget):
@@ -422,20 +426,24 @@ class FloatParameterWidget(ParameterWidget):
                 label = QLabel(f'(maximum {parameter.upper_bound})')
                 layout.addWidget(label)
     
-        self._line_edit.editingFinished.connect(self._text_changed)
+        self._line_edit.textChanged.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
+        parameter.enabled_changed.connect(
+            lambda enabled: self._show_validity(self._line_edit, self.parameter.valid)
+        )
+
     @Slot(str)
-    def _text_changed(self) -> None:
+    def _text_changed(self, text: str) -> None:
         try:
-            self.parameter.value = float(self._line_edit.text())
+            self.parameter.value = float(text)
         except:
-            self._line_edit.setText(str(self.parameter.value))
+            pass
 
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
         self._line_edit.setText(str(new_value))
-        self._show_validity(self._line_edit, valid)
+        self._show_validity(self._line_edit, self.parameter.valid)
 
 
 class EnumParameterWidget(ParameterWidget):
@@ -506,17 +514,22 @@ class StringParameterWidget(ParameterWidget):
             hint = QLabel(f"Max length: {parameter.max_length}")
             layout.addWidget(hint)
 
-        self._line_edit.editingFinished.connect(self._editing_finished)
+        self._line_edit.textChanged.connect(self._text_changed)
+
         parameter.value_changed.connect(self._parameter_value_changed)
 
+        parameter.enabled_changed.connect(
+            lambda enabled: self._show_validity(self._line_edit, self.parameter.valid)
+        )
+
     @Slot(str)
-    def _editing_finished(self) -> None:
-        self.parameter.value = self._line_edit.text()
+    def _text_changed(self, text: str) -> None:
+        self.parameter.value = text
 
     @Slot(str, bool)
     def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
         self._line_edit.setText(new_value)
-        self._show_validity(self._line_edit, valid)
+        self._show_validity(self._line_edit, self.parameter.valid)
 
 
 class FileParameterWidget(ParameterWidget):
@@ -543,7 +556,6 @@ class FileParameterWidget(ParameterWidget):
         :type editable: bool
         """
         super().__init__(parameter, editable)
-        self.parameter: FileParameter
 
         layout = QVBoxLayout(self)
         parameter.value_changed.connect(self._parameter_value_changed)
@@ -551,19 +563,21 @@ class FileParameterWidget(ParameterWidget):
         # If the widget is locked: create a list with the selected files
         if not self._editable:
             self.list_widget = QListWidget()
+            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0) * 1.01))
             self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
             self.list_widget.setSortingEnabled(True)
             if self.parameter.value:
                 self.list_widget.addItems(self.parameter.value)
+
             else:
                 self.list_widget.addItem("No files selected")
-            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.05))
             self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
             self.list_widget.doubleClicked.connect(self._on_double_click)
             layout.addWidget(self.list_widget)
             return
 
         # If the widget is not locked:
+        self.setFixedWidth(280)
         self._path_label = QLabel("No file selected")
         layout.addWidget(self._path_label)
 
@@ -572,6 +586,7 @@ class FileParameterWidget(ParameterWidget):
         if parameter.strict and parameter.accepted_formats is not None:
             allowed = ', '.join(parameter.accepted_formats)
             hint = QLabel(f"Select {mode} — Allowed types: {allowed}")
+            hint.setWordWrap(True)
             layout.addWidget(hint)
         elif (not parameter.strict
               and parameter.accepted_formats is None
@@ -582,11 +597,13 @@ class FileParameterWidget(ParameterWidget):
             expected = ', '.join(parameter.expected_formats)
             hint = QLabel(f"Select {mode} — Expected file types: {expected}. "
                           + f"You can still upload a different file.")
+            hint.setWordWrap(True)
             layout.addWidget(hint)
         elif (parameter.strict is False
               and parameter.accepted_formats is None
               and parameter.expected_formats is None):
             hint = QLabel(f"Select {mode} — Allowed types: any type.")
+            hint.setWordWrap(True)
             layout.addWidget(hint)
 
         file_browse = QPushButton('Browse')
@@ -617,13 +634,16 @@ class FileParameterWidget(ParameterWidget):
                 self.list_widget.addItems(file_paths)
             else:
                 self.list_widget.addItem("No files selected")
-            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.05))
             self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
+            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0) * 1.01))
             return
         
         # If the widget is not locked
         if file_paths:
-            self._path_label.setText("\n".join(file_paths))
+            full_text = "\n".join(file_paths)
+            self._path_label.setToolTip(full_text)
+            display = "\n".join(Path(f).name for f in file_paths)
+            self._path_label.setText(display)
         else:
             self._path_label.setText("No file selected")
 
