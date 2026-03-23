@@ -41,7 +41,8 @@ def main():
     run_result = RunResult(parameter_group_list, app_settings.workspace_path)
     app_settings.workspace_path_changed.connect(lambda path: setattr(run_result, 'path', path))
 
-    window = MainWindow(run_result)  
+    window = MainWindow(run_result)
+    window.resize(1000,800)
     window.show()
     app.exec()
     print("App closed")
