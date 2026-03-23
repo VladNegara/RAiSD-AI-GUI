@@ -292,6 +292,11 @@ class OperationSelectionWidget(RunSubWidget):
 
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.next_button = QPushButton("Next")
+        self.next_button.setObjectName("next_button")
+        self._update_next_button_state()
+        self._parameter_group_list.run_id_parameter.value_changed.connect(
+            self._update_next_button_state,
+        )
         return NavigationButtonsWidget(right_button=self.next_button)
 
     def _setup_operation_selection_widget(self) -> QWidget:
@@ -327,7 +332,7 @@ class OperationSelectionWidget(RunSubWidget):
         layout.addWidget(description_label, 1)
 
         return widget
-    
+
     def _operation_selector_clicked(self, operation: str, state: Qt.CheckState) -> None:
         """
         Set the operation using the given checkbox state.
@@ -337,6 +342,16 @@ class OperationSelectionWidget(RunSubWidget):
         elif state == Qt.CheckState.Unchecked:
             self._parameter_group_list.set_operation(operation, False)
 
+    @Slot()
+    def _update_next_button_state(self) -> None:
+        valid = self._parameter_group_list.run_id_parameter.valid
+        self.next_button.setEnabled(valid)
+        if valid:
+            self.next_button.setProperty("highlight", "true")
+        else:
+            self.next_button.setProperty("highlight", "false")
+        self.next_button.style().unpolish(self.next_button)
+        self.next_button.style().polish(self.next_button)
 
 
 class ParameterInputWidget(RunSubWidget):    
