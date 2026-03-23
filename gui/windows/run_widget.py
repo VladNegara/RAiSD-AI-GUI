@@ -34,6 +34,7 @@ from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
 from gui.widgets.results_widget import ResultsWidget
+from gui.widgets.process_indicator_widget import ProcessIndicator
 
 class RunWidget(QWidget):
     """
@@ -661,7 +662,7 @@ class RunViewWidget(RunSubWidget):
         for idx in range(max([number_of_indicators, number_of_processes])):
             if idx < number_of_processes and idx < number_of_indicators:
                 self.run_indicators[idx].setVisible(True)
-                self.run_indicators[idx].setStyleSheet("background-color: lightgray;")
+                self.run_indicators[idx].state = "pending"
             elif idx < number_of_processes and idx >= number_of_indicators:
                 self.add_indicator_widget(idx)
                 continue
@@ -672,16 +673,13 @@ class RunViewWidget(RunSubWidget):
         """
         Add an indicator widget to self.step_layout.
         """
-        widget = QWidget()
-        widget.setFixedSize(50, 50)
-        widget.setStyleSheet("background-color: lightgray;")
-        widget.setObjectName(f"process_{index}")
+        indicator = ProcessIndicator(number=index + 1, size=90)
         self._command_executor.process_started.connect(lambda idx=index: self._process_started(idx))
         self._command_executor.process_finished.connect(lambda idx=index: self._process_finished(idx))
-        self.step_layout.addWidget(widget)
-        self.run_indicators.append(widget)
+        self.step_layout.addWidget(indicator)
+        self.run_indicators.append(indicator)
 
-    def set_execution_view_indicator(self, index: int, color: str) -> None:
+    def set_execution_view_indicator(self, index: int, state: str) -> None:
         """
         Set the indicator to the given color.
 
@@ -691,7 +689,7 @@ class RunViewWidget(RunSubWidget):
         :param color: the new color of the indicator
         :type color: str
         """
-        self.run_indicators[index].setStyleSheet(f"background-color: {color};")
+        self.run_indicators[index].state = state
 
     def clear_outputs(self) -> None:
         """
@@ -744,21 +742,20 @@ class RunViewWidget(RunSubWidget):
         """
         Handle CommandExecutor.process_started.
         """
-        self.set_execution_view_indicator(process_index, "yellow")
-
+        self.set_execution_view_indicator(process_index, "running")
     @Slot(int)
     def _process_finished(self, index: int) -> None:
         """
         Handle CommandExecutor.process_finished.
         """
-        self.set_execution_view_indicator(index, "green")
+        self.set_execution_view_indicator(index, "finished")
 
     @Slot(int, QProcess.ProcessError)
     def _process_failed(self, process_index: int, process_error: QProcess.ProcessError) -> None:
         """
         Handle CommandExecutor.process_failed.
         """
-        self.set_execution_view_indicator(process_index, "red")
+        self.set_execution_view_indicator(process_index, "failed")
 
         if process_error is not None:
             print(f"Process '{process_index}' failed with process error '{process_error}'")
@@ -771,7 +768,7 @@ class RunViewWidget(RunSubWidget):
         """
         Handle CommandExecutor.process_stopped.
         """
-        self.set_execution_view_indicator(process_index, "purple")
+        self.set_execution_view_indicator(process_index, "stopped")
 
 
 class RunResultsWidget(RunSubWidget):
