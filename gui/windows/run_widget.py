@@ -379,6 +379,10 @@ class ParameterInputWidget(RunSubWidget):
         self.next_button.setObjectName("next_button")
 
         self._update_next_button_state()
+        # TODO: make this just connect to a signal on the parameter group list
+        self._parameter_group_list.run_id_parameter.value_changed.connect(
+            self._update_next_button_state
+        )
         for group in self._parameter_group_list.parameter_groups:
             for parameter in group.parameters:
                 parameter.value_changed.connect(self._update_next_button_state)
