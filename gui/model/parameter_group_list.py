@@ -274,6 +274,80 @@ class ParameterGroupList(QObject):
                     raise ValueError(
                         f"Invalid file structure. Unknown file type {file_type}"
                     )
+                
+        def parse_operation(
+                obj: dict,
+                id: str
+        ) -> Operation:
+            name = obj.get("name", "") or ""
+            if not isinstance(name, str):
+                raise ValueError(
+                    f"Invalid operation name: {name}. Expected string or null."
+                )
+
+            description = obj.get("description", "") or ""
+            if not isinstance(description, str):
+                raise ValueError(
+                    f"Invalid description for operation {name}: {description}."
+                    + " Expected string or null."
+                )
+            
+            cli = obj.get("cli", "") or ""
+            if not isinstance(cli, str):
+                raise ValueError(
+                    f"Invalid CLI representation for operation {name}: {cli}."
+                    + " Expected string or null."
+                )
+
+            requires = []
+            requires_list = obj.get("input", "") or ""
+            if not isinstance(requires_list, list):
+                raise ValueError(
+                    f"Invalid input for operation: {requires_list}."
+                    + "Expected list."
+                )
+            for requires_obj in requires_list:
+                if not isinstance (requires_obj, dict):
+                    raise ValueError(
+                        f"Invalid item in input list: {requires_obj}."
+                        + "Expected object."
+                    )
+                file_name = requires_obj.get("name", "")
+                if not isinstance(file_name, str):
+                    raise ValueError(
+                    f"Invalid file name: {file_name}. Expected string or null."
+                    )
+                file_cli = requires_obj.get("cli", "") or ""
+                if not isinstance(file_cli, str):
+                    raise ValueError(
+                        f"Invalid CLI representation for fil {file_name}: {file_cli}."
+                        + " Expected string or null."
+                    )
+
+                if "file" not in obj:
+                    raise ValueError("File missing.")
+                file_obj = obj["file"]
+                file = parse_file_structure(file_obj)
+                requires.append((file_name, file_cli, file))
+            
+            requires = parse_file_structure(requires_obj)
+
+            produces_obj = obj.get("output", "") or ""
+            if not isinstance(produces_obj, obj):
+                raise ValueError(
+                    f"Invalid output for operation: {produces_obj}."
+                    + "Expected object."
+                )
+            produces = parse_file_structure(produces_obj)
+
+            prefix = obj.get("prefix", "") or ""
+            if not isinstance(prefix, str):
+                raise ValueError(
+                    f"Invalid prefix for output path {prefix}."
+                    + " Expected string or null."
+                )
+            
+            return Operation(id, name, description, cli, requires, produces, prefix)
 
         def parse_parameter(
                 obj: dict,
