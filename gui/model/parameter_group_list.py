@@ -147,16 +147,16 @@ class ParameterGroupList(QObject):
                 )
 
             requires = []
-            requires_list = obj.get("input", "") or ""
+            requires_list = obj.get("input", []) or []
             if not isinstance(requires_list, list):
                 raise ValueError(
-                    f"Invalid input for operation: {requires_list}."
+                    f"Invalid input for operation {name}: {requires_list}."
                     + "Expected list."
                 )
             for requires_obj in requires_list:
                 if not isinstance (requires_obj, dict):
                     raise ValueError(
-                        f"Invalid item in input list: {requires_obj}."
+                        f"Invalid item in input list: {requires_obj}. "
                         + "Expected object."
                     )
                 file_name = requires_obj.get("name", "")
@@ -167,20 +167,18 @@ class ParameterGroupList(QObject):
                 file_cli = requires_obj.get("cli", "") or ""
                 if not isinstance(file_cli, str):
                     raise ValueError(
-                        f"Invalid CLI representation for fil {file_name}: {file_cli}."
-                        + " Expected string or null."
+                        f"Invalid CLI representation for file {file_name}: "
+                        + f"{file_cli}. Expected string or null."
                     )
 
-                if "file" not in obj:
+                if "file" not in requires_obj:
                     raise ValueError("File missing.")
-                file_obj = obj["file"]
+                file_obj = requires_obj["file"]
                 file = parse_file_structure(file_obj)
                 requires.append((file_name, file_cli, file))
-            
-            requires = parse_file_structure(requires_obj)
 
             produces_obj = obj.get("output", "") or ""
-            if not isinstance(produces_obj, obj):
+            if not isinstance(produces_obj, dict):
                 raise ValueError(
                     f"Invalid output for operation: {produces_obj}."
                     + "Expected object."
@@ -761,17 +759,33 @@ class ParameterGroupList(QObject):
                 f"Invalid executable name: {executable}. Expected string."
             )
 
-        operations = {
-            "RSD-DEF": rsd_def,
-            "IMG-GEN": img_gen,
-            "MDL-GEN": mdl_gen,
-            "MDL-TST": mdl_tst,
-            "SWP-SCN": swp_scn,
-            "CO": co,
-            "FASTA-VCF": fasta_vcf,
-            "VCF-MS": vcf_ms,
-        }
-        # TODO: parse operations
+        operations = {}
+        if "modes" not in config_obj:
+            raise ValueError("Configuration file contains no list of modes.")
+        mode_list = config_obj["modes"]
+        if not isinstance(mode_list, list):
+            raise ValueError(
+                f"Invalid mode list: {mode_list}. Expected a list."
+            )
+        for mode_obj in mode_list:
+            if not isinstance(mode_obj, dict):
+                raise ValueError(f"Invalid mode: {mode_obj}. Expected object.")
+            if "operations" not in mode_obj:
+                raise ValueError(f"Mode has no operation list.")
+            operations_obj = mode_obj["operations"]
+            if not isinstance(operations_obj, dict):
+                raise ValueError(
+                    f"Invalid operations dictionary: {operations_obj}. "
+                    + "Expected an object."
+                )
+            for operation_id in operations_obj:
+                operation_obj = operations_obj[operation_id]
+                if not isinstance(operation_obj, dict):
+                    raise ValueError(
+                        f"Invalid operation: {operation_obj}"
+                        + "Expected an object."
+                    )
+                operations[operation_id] = parse_operation(operation_obj, operation_id)
 
         parameter_groups = []
         for parameter_group_obj in config_obj["parameter_groups"]:
