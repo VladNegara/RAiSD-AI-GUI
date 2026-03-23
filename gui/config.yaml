@@ -856,15 +856,14 @@ parameter_groups:
     parameters:
       # -mdl, -I
       "-clp": # This type of parameter not yet supported!
-        name: Class test
-        description: For now, just one label-folder pair is supported!
-        cli: "-clp 1"
-        type: multi
-        parameters:
-          - name: Label
-            type: str
-          - name: Folder name
-            type: str
+        name: Class tests
+        description: Enter one or more label-folder pairs.
+        cli: "-clp"
+        type: string pair list
+        min: 1
+        default:
+          - left: label
+            right: folder
   - name: RAiSD-AI sweep scan
     operations:
       - SWP-SCN
