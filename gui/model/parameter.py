@@ -700,6 +700,51 @@ class StringParameter(Parameter[str]):
         )
 
 
+class StringPairListParameter(Parameter[list[tuple[str, str]]]):
+    """
+    A parameter for entering any number of label-value pairs of strings.
+    """
+
+    def __init__(
+            self,
+            name: str, description: str,
+            flag: str,
+            operations: set[str],
+            default_value: list[tuple[str, str]],
+            separator: str,
+            left_pattern: Pattern | None = None,
+            right_pattern: Pattern | None = None,
+            min_count: int | None = None,
+            enabled: bool = True,
+    ) -> None:
+        super().__init__(
+            name=name,
+            description=description,
+            flag=flag,
+            operations=operations,
+            default_value=default_value,
+            enabled=enabled,
+        )
+        self._separator = separator
+        self._left_pattern = left_pattern
+        self._right_pattern = right_pattern
+        self._min_count = min_count
+
+    def add_pair(self, pair=("", "")) -> None:
+        self.value += [pair]
+
+    def delete_pair(self, i: int) -> None:
+        self.value = self.value[:i] + self.value[i+1:]
+
+    def to_cli(self, operation: str) -> str:
+        if not self.in_cli(operation):
+            return ""
+        result = f"{self.flag} {len(self.value)}"
+        for left, right in self.value:
+            result += f" {left}{self._separator}{right}"
+        return result
+
+
 class FileParameter(Parameter[list[str]]):
     """
     A file path parameter in the GUI
