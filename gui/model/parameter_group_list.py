@@ -237,6 +237,44 @@ class ParameterGroupList(QObject):
         id_to_parameter: dict[str, Parameter[Any]] = {}
         parameter_to_condition_objs: dict[Parameter[Any], list[dict]] = {}
 
+        def parse_file_structure(
+                obj: dict,
+        ) -> FileStructure:
+            if "type" not in obj:
+                raise ValueError("File structure type missing.")
+            file_type = obj["type"]
+            match file_type:
+                case "single" | "single file":
+                    formats = obj.get("formats", [])
+                    if not isinstance(formats, list):
+                        raise ValueError("Invalid format list for single file.")
+                    for format in formats:
+                        if not isinstance(format, str):
+                            raise ValueError(
+                                f"Invalid format for single file: {format}. "
+                                + "Expected string."
+                            )
+
+                    return SingleFile(formats)
+                case "folder" | "directory" | "dir":
+                    contents_list = obj.get("contents", [])
+                    if not isinstance(contents_list, list):
+                        raise ValueError("Invalid contents list for directory.")
+                    contents = []
+                    for contents_obj in contents_list:
+                        if not isinstance (contents_obj, dict):
+                            raise ValueError(
+                                f"Invalid item in contents for directory: {contents_obj}."
+                                + "Expected object."
+                            )
+                        contents.append(parse_file_structure(contents_obj))
+
+                    return Directory(contents)
+                case _:
+                    raise ValueError(
+                        f"Invalid file structure. Unknown file type {file_type}"
+                    )
+
         def parse_parameter(
                 obj: dict,
                 operations: set[str]
