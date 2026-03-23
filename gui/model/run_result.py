@@ -3,6 +3,7 @@ from gui.model.parameter_group_list import ParameterGroupList
 from PySide6.QtCore import QDir
 
 import json
+import datetime
 from gui.model.settings import app_settings
 
 class RunResult():
@@ -42,25 +43,31 @@ class RunResult():
         dict = {
             "folder_name": self.folder_name,
             "commands": self._commands,
-            "parameters": parameters_dict
+            "parameters": parameters_dict,
+            "time_completed": datetime.datetime.now()
         }
         return dict
 
     def save_to_history(self) -> None:
-        try: 
-            if not app_settings.workspace_path.exists("history.json"):
-                with open(app_settings.workspace_path.absoluteFilePath("history.json"), "w") as f:
-                    history = {}
-                    history[self._folder_name] = self.to_dict()
-                    json.dump(history, f)
-            else:    
-                with open(app_settings.workspace_path.absoluteFilePath("history.json"), "r+") as f:
+        # try: 
+        if not app_settings.workspace_path.exists("history.json"):
+            # If no history file exists
+            with open(app_settings.workspace_path.absoluteFilePath("history.json"), "w") as f:
+                history = {}
+                history[self._folder_name] = self.to_dict()
+                json.dump(history, f, indent=4, default=str)
+        else:    
+            # If a file exists
+            with open(app_settings.workspace_path.absoluteFilePath("history.json"), "r+") as f:
+                history = {}
+                try:
                     history = json.load(f)
-                    history[self._folder_name] = self.to_dict()
-                    f.seek(0)
-                    json.dump(history, f)
-        except:
-            raise Exception("Failed to write to history file")
+                except:
+                    # File could not be parsed
+                    print("Problem reading file: might be empty or incorrect format")
+                history[self._folder_name] = self.to_dict()
+                f.seek(0)
+                json.dump(history, f, indent=4, default=str)
 
 
     @property

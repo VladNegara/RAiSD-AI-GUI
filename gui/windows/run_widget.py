@@ -553,6 +553,7 @@ class RunViewWidget(RunSubWidget):
         ]
         # self._command_executor.start_execution(self._parameter_group_list.to_cli())
         # TODO: implement info filename logic and command generation logic
+        self._run_result.set_commands()
         info_files = ['RAiSD_Info.TrainingData2DSNP.neutralTR',
                       'RAiSD_Info.TrainingData2DSNP.sweepTR',
                       'RAiSD_Info.TestData2DSNP.neutralTE']
