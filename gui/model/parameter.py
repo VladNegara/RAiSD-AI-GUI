@@ -303,6 +303,8 @@ class MultiParameter(Parameter[tuple[()]]):
         return all([parameter.valid for parameter in self.parameters])
 
     def to_cli(self, operation: str) -> str:
+        if not self.in_cli(operation):
+            return ""
         cli_params = [self.flag] + [p.to_cli(operation) for p in self.parameters]
         nonempty_params = [p for p in cli_params if p]
         return " ".join(nonempty_params)
@@ -441,8 +443,11 @@ class NumberParameter(Parameter[X]):
         # A numeric parameter is represented in the command line by
         # its flag and its value.
         if self.in_cli(operation):
-            return f"{self.flag} {self.value}"
-        else: return ""   
+            if self.flag:
+                return f"{self.flag} {self.value}"
+            return f"{self.value}"
+        else:
+            return ""
 
 
 class IntParameter(NumberParameter[int]):
@@ -751,12 +756,13 @@ class FileParameter(Parameter[list[str]]):
         return all(
             Path(f).is_file()
             and os.access(Path(f), os.R_OK)
-            and (self.accepted_formats is None
-                 or self.accepted_formats
-                 and Path(f).suffix.lower() in self.accepted_formats
-                 or self.expected_formats
-                 and Path(f).suffix.lower() in self.expected_formats)
-            for f in self.value)
+            and (
+                    not self.strict
+                    or self.accepted_formats is None
+                    or Path(f).suffix.lower() in self.accepted_formats
+            )
+            for f in self.value
+        )
 
     @property
     def file_extensions(self) -> list[str]:

@@ -810,7 +810,7 @@ class ParameterGroupList(QObject):
             # The paramgroups handle the operation by passing it to the parameters
             instruction = f"{self.command} {self._run_id_parameter.to_cli(operation)} -op {operation}"
             for param_group in self._parameter_groups:
-                instruction = f"{instruction} {param_group.to_cli(operation)}"
+                if (param_group.to_cli(operation) != ""): instruction = f"{instruction} {param_group.to_cli(operation)}"
             instructions.append(instruction)
 
         return instructions
