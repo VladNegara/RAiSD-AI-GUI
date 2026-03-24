@@ -29,6 +29,7 @@ import json
 from gui.model.settings import app_settings
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.model.run_result import RunResult
+from gui.model.history_record import HistoryRecord
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
@@ -42,6 +43,7 @@ class RunWidget(QWidget):
     start_run = Signal()
     run_started = Signal(int)  # number of processes
     run_ended = Signal(bool)  # if run was successful
+    run_saved = Signal(HistoryRecord)
 
     def __init__(self, run_result: RunResult, command_executor: CommandExecutor):
         """
@@ -173,7 +175,8 @@ class RunWidget(QWidget):
     def _handle_run_end(self, run_successful: bool) -> None:
         if run_successful:
             self._run_result.set_completed()
-            self._run_result.save_to_history()            
+            self._run_result.save_to_history()
+            self.run_saved.emit(self._run_result.to_history_record())            
             self._switch_to_run_results_widget()
             self.run_view_widget.results_button.setEnabled(True)
         else:

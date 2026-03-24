@@ -12,7 +12,7 @@ class HistoryRecord():
             commands: list[str],
             operations: dict[str, bool],
             parameters: dict,
-            time_completed
+            time_completed: datetime
     ):
         self._name = name
         self._commands = commands

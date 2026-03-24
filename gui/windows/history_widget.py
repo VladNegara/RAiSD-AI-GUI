@@ -72,6 +72,7 @@ class HistoryWidget(QWidget):
         # Give the list 1/3 and the detail panel 2/3 of the width
         splitter.setSizes([200, 400])
 
+    @Slot(HistoryRecord)
     def add_completed_run(self, history_record: HistoryRecord) -> None:
         """
         Add a completed run to the history list.
@@ -95,8 +96,3 @@ class HistoryWidget(QWidget):
             self.results_widget.show_results()
             self.results_panel.show()
             self._selected = history_record.name
-        
-
-    def update_history(self) -> None:
-        #TODO: d not remake the entire list each time, but update as runs are completed
-        run_results = HistoryRecord.from_history_file()

@@ -30,6 +30,20 @@ class RunResult():
         #TODO: implement
         pass
 
+    def to_history_record(self) -> HistoryRecord:
+        parameters_dict = {}
+        for parameter_group in self.parameter_group_list:
+            for parameter in parameter_group:
+                parameters_dict[parameter.name] = self.parameter_to_value(parameter)
+        
+        return HistoryRecord(
+            self.name,
+            self.commands,
+            self._parameter_group_list.operations,
+            parameters_dict,
+            self._time_completed
+        )
+
     def to_dict(self) -> str:
         parameters_dict = {}
         for parameter_group in self.parameter_group_list:

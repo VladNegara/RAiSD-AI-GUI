@@ -90,6 +90,7 @@ class MainWindow(QMainWindow):
         self.run_widget = RunWidget(self._run_result, self.command_executor)
         self.history_widget = HistoryWidget()
         self.settings_widget = SettingsWidget()
+        self.run_widget.run_saved.connect(self.history_widget.add_completed_run)
 
         layout.addWidget(self.run_widget)
         layout.addWidget(self.history_widget)
@@ -101,7 +102,6 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _history_button_clicked(self) -> None:
-        self.history_widget.update_history()
         self.main_widget_layout.setCurrentWidget(self.history_widget)
 
     @Slot()
