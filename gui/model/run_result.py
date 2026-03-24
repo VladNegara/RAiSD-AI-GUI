@@ -5,6 +5,8 @@ from PySide6.QtCore import QDir
 import json
 from datetime import datetime 
 from gui.model.settings import app_settings
+from gui.model.history_record import HistoryRecord
+from gui.model.parameter import Parameter, OptionalParameter, MultiParameter
 
 class RunResult():
     def __init__(
@@ -32,15 +34,34 @@ class RunResult():
         parameters_dict = {}
         for parameter_group in self.parameter_group_list:
             for parameter in parameter_group:
-                parameters_dict[parameter.name] = parameter.value
+                parameters_dict[parameter.name] = self.parameter_to_value(parameter)
 
         dict = {
             "name": self.name,
             "commands": self._commands,
+            "operations": self._parameter_group_list.operations,
             "parameters": parameters_dict,
             "time_completed": self._time_completed
         }
         return dict
+
+    def parameter_to_value(self, parameter: Parameter) -> str | dict:
+        print(f"value of {parameter.name}: ")
+        if type(parameter) is MultiParameter: 
+            parameters = {}
+            print(f"multiparameter with {parameter.parameters}")
+            for param in parameter.parameters:
+                parameters[param.name] = self.parameter_to_value(param)
+            return parameters
+        if type(parameter) is OptionalParameter:
+            print(f"optional parameter with {parameter.parameter}")
+            value = {}
+            value["enabled"] = parameter.value
+            value[parameter.parameter.name] = self.parameter_to_value(parameter.parameter)
+            return value
+        else:
+            print(f"value: {parameter.value}")
+            return parameter.value
 
     def save_to_history(self) -> None:
         # try: 
