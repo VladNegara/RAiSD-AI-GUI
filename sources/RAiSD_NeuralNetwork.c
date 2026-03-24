@@ -78,7 +78,7 @@ void read_img_nn_info_file (char * path, int mode, FILE * fpOut, int * width, in
 			fprintf(stderr, "\nERROR: File %s with expected input image dimensions not found!\n\n", path);			
 		}
 		
-		exit(0);
+		exit(1);
 	}
 	else
 	{		
@@ -164,7 +164,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				fprintf(fpOut, "\nERROR: File %s with class labels not found!\n\n",tstring);		
 				fprintf(stderr, "\nERROR: File %s with class labels not found!\n\n",tstring);
 				
-				exit(0);
+				exit(1);
 			}
 			
 			ret = fscanf(fp, "%s %d", tstring, &RSDNeuralNetwork->classSize);
@@ -201,7 +201,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				fprintf(fpOut, "\nERROR: File %s with class labels not found!\n\n",tstring);		
 				fprintf(stderr, "\nERROR: File %s with class labels not found!\n\n",tstring);
 				
-				exit(0);
+				exit(1);
 			}
 			
 			ret = fscanf(fp, "%s %d", tstring, &RSDNeuralNetwork->classSize);
@@ -279,14 +279,14 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 			{
 				fprintf(fpOut, "\nERROR: The TensorFlow implementation does not currently support binary input. You can use the PyTorch implementation instead.\n\n");
 				fprintf(stderr, "\nERROR: The TensorFlow implementation does not currently support binary input. You can use the PyTorch implementation instead.\n\n");
-				exit(0);
+				exit(1);
 			}
 			
 			if(!strcmp(RSDNeuralNetwork->networkArchitecture, ARC_FASTER_NN_G) && (RSDNeuralNetwork->dataFormat==1 && RSDNeuralNetwork->dataType==1))
 			{
 				fprintf(fpOut, "\nERROR: %s can only be used with raw image data.\n\n", RSDNeuralNetwork->networkArchitecture);
 				fprintf(stderr, "\nERROR: %s can only be used with raw image data.\n\n", RSDNeuralNetwork->networkArchitecture);
-				exit(0);			
+				exit(1);			
 			}
 			
 						
@@ -299,7 +299,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 																	    !strcmp(imgFormat2, "bin")?"binary":"PNG");		
 				fprintf(stderr, "\nERROR: Input image format (%s) is incompatible with the trained model (expected %s)!\n\n", !strcmp(imgFormat, "bin")?"binary":"PNG", 
 																	      !strcmp(imgFormat2, "bin")?"binary":"PNG");				
-				exit(0);
+				exit(1);
 			}
 			
 			if(imgWidth!=RSDNeuralNetwork->imageWidth)
@@ -307,7 +307,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				fprintf(fpOut, "\nERROR: Input image width (%d) is incompatible with the trained model (expected %d)!\n\n", imgWidth, RSDNeuralNetwork->imageWidth);		
 				fprintf(stderr, "\nERROR: Input image width (%d) is incompatible with the trained model (expected %d)!\n\n", imgWidth, RSDNeuralNetwork->imageWidth);
 				
-				exit(0);
+				exit(1);
 			}
 			
 			if(imgHeight!=RSDNeuralNetwork->imageHeight)
@@ -322,7 +322,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 					fprintf(fpOut, "\nERROR: Input image height (%d) is incompatible with the trained model (expected %d)!\n\n",imgHeight, RSDNeuralNetwork->imageHeight);		
 					fprintf(stderr, "\nERROR: Input image height (%d) is incompatible with the trained model (expected %d)!\n\n", imgHeight, RSDNeuralNetwork->imageHeight);				
 					
-					exit(0);
+					exit(1);
 				}
 			}
 				
@@ -331,7 +331,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				fprintf(fpOut, "\nERROR: Input image data-type code (%d) is incompatible with the trained model (expected %d)!\n\n",imgDataType, RSDNeuralNetwork->dataType);		
 				fprintf(stderr, "\nERROR: Input image data-type code (%d) is incompatible with the trained model (expected %d)!\n\n", imgDataType, RSDNeuralNetwork->dataType);				
 				
-				exit(0);
+				exit(1);
 			}
 			
 			if(enTF!=RSDCommandLine->enTF && RSDCommandLine->enTF==1)
@@ -339,7 +339,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				fprintf(fpOut, "\nERROR: Model %s is implemented in PyTorch. Remove \"-useTF\".\n\n", RSDNeuralNetwork->modelPath);		
 				fprintf(stderr, "\nERROR: Model %s is implemented in PyTorch. Remove \"-useTF\".\n\n", RSDNeuralNetwork->modelPath);			
 				
-				exit(0);
+				exit(1);
 			}
 			
 			RSDCommandLine->enTF = enTF;
@@ -348,7 +348,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 			{
 				fprintf(fpOut, "\nERROR: The TensorFlow implementation does not currently support binary input. You can use the PyTorch implementation instead.\n\n");
 				fprintf(stderr, "\nERROR: The TensorFlow implementation does not currently support binary input. You can use the PyTorch implementation instead.\n\n");
-				exit(0);
+				exit(1);
 			}
 			
 			strcpy(RSDCommandLine->networkArchitecture, RSDNeuralNetwork->networkArchitecture); 
@@ -368,7 +368,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 					fprintf(fpOut, "\nERROR: Sliding-window size (%d) is incompatible with the trained model (expected %d)!\n\n",(int)RSDCommandLine->windowSize, RSDNeuralNetwork->imageWidth);		
 					fprintf(stderr, "\nERROR: Sliding-window size (%d) is incompatible with the trained model (expected %d)!\n\n",(int)RSDCommandLine->windowSize, RSDNeuralNetwork->imageWidth);
 					fclose(fpOut);					
-					exit(0);
+					exit(1);
 				}
 				else
 					RSDCommandLine->windowSize = RSDNeuralNetwork->imageWidth;
@@ -384,7 +384,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				fprintf(fpOut, "\nERROR: The number of positive-class indices provided through -pci is incompatible with the trained model (expected %d).\n\n", numOfPositiveClasses_NN_architecture (RSDNeuralNetwork->networkArchitecture, RSDCommandLine->classification2x2En));		
 				fprintf(stderr, "\nERROR: The number of positive-class indices provided through -pci is incompatible with the trained model (expected %d).\n\n", numOfPositiveClasses_NN_architecture (RSDNeuralNetwork->networkArchitecture, RSDCommandLine->classification2x2En));				
 				
-				exit(0);			
+				exit(1);			
 			}			
 			
 			for(i=0;i<RSDCommandLine->numOfPositiveClasses;i++)
@@ -394,7 +394,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 					fprintf(fpOut, "\nERROR: Invalid positive-class index given through -pci (%d). Valid values: [0-%d].\n\n", RSDCommandLine->positiveClassIndex[i], numOfClasses_NN_architecture (RSDNeuralNetwork->networkArchitecture, RSDCommandLine->classification2x2En)-1);		
 					fprintf(stderr, "\nERROR: Invalid positive-class index given through -pci (%d). Valid values: [0-%d].\n\n", RSDCommandLine->positiveClassIndex[i], numOfClasses_NN_architecture (RSDNeuralNetwork->networkArchitecture, RSDCommandLine->classification2x2En)-1);		
 				
-					exit(0);				
+					exit(1);				
 				}
 			
 			}	    		
@@ -404,7 +404,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				fprintf(fpOut, "\nERROR: Model %s is implemented in PyTorch. Remove \"-useTF\".\n\n", RSDNeuralNetwork->modelPath);		
 				fprintf(stderr, "\nERROR: Model %s is implemented in PyTorch. Remove \"-useTF\".\n\n", RSDNeuralNetwork->modelPath);			
 				
-				exit(0);
+				exit(1);
 			}
 			
 			RSDCommandLine->enTF = enTF;
@@ -414,7 +414,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				fprintf(fpOut, "\nERROR: The TensorFlow implementation does not currently support binary input. You can use the PyTorch implementation instead.\n\n");
 				fprintf(stderr, "\nERROR: The TensorFlow implementation does not currently support binary input. You can use the PyTorch implementation instead.\n\n");
 				
-				exit(0);
+				exit(1);
 			}			
 		break;
 	
@@ -448,7 +448,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 		fprintf(fpOut, "\nERROR: Network architecture SweepNetRecombination does not support allele frequencies as input!\n\n");		
 		fprintf(stderr, "\nERROR: Network architecture SweepNetRecombination does not support allele frequencies as input!\n\n");
 		
-		exit(0);
+		exit(1);
 	}	 
 	
 	//Python source files path and check
@@ -464,7 +464,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 		fprintf(fpOut, "\n\nERROR: Python source files not found at %s/sources/pytorch-sources\n", _COMPILE_PATH);
 		fprintf(stderr, "\n\nERROR: Python source files not found at %s/sources/pytorch-sources\n", _COMPILE_PATH);
 	
-		exit(0);
+		exit(1);
 	}
 	assert(fp!=NULL);
 	fclose(fp);		
@@ -504,7 +504,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 			exec_command("rm checkClassLbl.txt 1>>/dev/null 2>>/dev/null");			
 
 			fclose(fp);			
-			exit(0);
+			exit(1);
 		}
 		else
 		{
@@ -536,7 +536,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				exec_command("rm checkClassLbl.txt 1>>/dev/null 2>>/dev/null");	
 				
 				fclose(fp);			
-				exit(0);
+				exit(1);
 			}
 			else
 			{
@@ -854,7 +854,7 @@ void RSDNeuralNetwork_modelCheck (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDComm
 		if(fp==NULL)
 		{
 			fprintf(stderr, "\nERROR: File %s (Tensorflow) not found!\n\n", tstring);
-			exit(0);
+			exit(1);
 		}
 		fclose(fp);
 	}
@@ -866,7 +866,7 @@ void RSDNeuralNetwork_modelCheck (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDComm
 		if(fp==NULL)
 		{
 			fprintf(stderr, "\nERROR: File %s (PyTorch) not found!\n\n", tstring);
-			exit(0);
+			exit(1);
 		}
 		fclose(fp);
 	}	
@@ -1092,7 +1092,7 @@ void RSDNeuralNetwork_test (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 																	      RSDNeuralNetwork->classSize);
 
 		fclose(fpOut);
-		exit(0);
+		exit(1);
 	}
 	
 	for(i=0;i<RSDCommandLine->numberOfClasses;i++)
@@ -1122,7 +1122,7 @@ void RSDNeuralNetwork_test (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 												       							    RSDNeuralNetwork->modelPath);
 
 			fclose(fpOut);			
-			exit(0);
+			exit(1);
 		}
 	}
 	

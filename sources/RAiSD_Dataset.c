@@ -414,7 +414,7 @@ void RSDDataset_init (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLi
 		if(strcmp(RSDDataset->inputFileFormat, "vcf.gz"))
 		{
 			fprintf(stderr, "\nERROR: Only VCF files can be parsed in gzip file format.\n\n");
-			exit(0);
+			exit(1);
 		}
 
 		fclose(RSDDataset->inputFilePtr);
@@ -429,7 +429,7 @@ void RSDDataset_init (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLi
 	if(RSDCommandLine->regionLength==0ull && !strcmp(RSDDataset->inputFileFormat, "ms"))
 	{
 		fprintf(stderr, "\nERROR: Missing required input parameter -L\n\n");
-		exit(0);
+		exit(1);
 	}
 
 	if(RSDCommandLine->printSampleList==1)
@@ -471,7 +471,7 @@ void RSDDataset_init (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandLi
 	if(RSDDataset->numberOfSamples<MIN_NUMBER_OF_SAMPLES)
 	{
 		fprintf(stderr, "\nERROR: Number of samples (%d) less than minimum (%d)\n\n", RSDDataset->numberOfSamples, MIN_NUMBER_OF_SAMPLES);
-		exit(0);
+		exit(1);
 	}	
 }
 
@@ -546,12 +546,12 @@ void RSDDataset_print (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandL
 	if(!strcmp(RSDDataset->inputFileFormat, "invalid"))
 	{
 		fprintf(fpOut, "\nERROR: Unrecognized input file format\n\n");
-		exit(0);
+		exit(1);
 	}
 	if(!strcmp(RSDDataset->inputFileFormat, "sf"))
 	{
 		fprintf(fpOut, "\nERROR: The SweepFinder file format is not supported\n\n");
-		exit(0);
+		exit(1);
 	}		
 }
 
@@ -1306,7 +1306,7 @@ void RSDDataset_getSetRegionLength_vcf_gz (RSDDataset_t * RSDDataset, RSDCommand
 				fprintf(stderr, "\n\nERROR: Out-of-order VCF entry found at location %.0f! Unzip and rerun using -o to order the input file!\n\n", setSizeTmp);
 				fflush(stderr);
 
-				exit(0);
+				exit(1);
 			}
 
 			assert(setSizeTmp>=setRegionSize);
@@ -1539,7 +1539,7 @@ int RSDDataset_getNextSNP_vcf_gz (RSDDataset_t * RSDDataset, RSDPatternPool_t * 
 	if(vali>(double)length)
 	{
 		fprintf(stderr, "\nERROR: A VCF entry is found at position %.0f, whereas the region size is set to %.0f via -B.\n       (-B is not required with VCF files)\n\n",vali, (double)length);
-		exit(0);
+		exit(1);
 	}
 
 	RSDDataset->setSize++;
@@ -1650,7 +1650,7 @@ int RSDDataset_getNextSNP_vcf_gz (RSDDataset_t * RSDDataset, RSDPatternPool_t * 
 							// ERROR with snp larger than the first
 							fprintf(fpOut, "\n\nERROR: Wrong SNP size (L) found!\n\n\n");
 							fprintf(stderr, "\n\nERROR: Wrong SNP size (L) found!\n\n\n");
-							exit(0);
+							exit(1);
 						}
 					}
 			
@@ -2154,7 +2154,7 @@ void RSDDataset_getSetRegionLength_vcf (RSDDataset_t * RSDDataset, RSDCommandLin
 				fprintf(stderr, "\n\nERROR: Out-of-order VCF entry found at location %.0f! Rerun using -o to order the input file!\n\n", setSizeTmp);
 				fflush(stderr);
 
-				exit(0);
+				exit(1);
 			}
 
 			assert(setSizeTmp>=setRegionSize);
@@ -2382,7 +2382,7 @@ int RSDDataset_getNextSNP_vcf (RSDDataset_t * RSDDataset, RSDPatternPool_t * RSD
 	if(vali>(double)length)
 	{
 		fprintf(stderr, "\nERROR: A VCF entry is found at position %.0f, whereas the region size is set to %.0f via -B.\n       (-B is not required with VCF files)\n\n",vali, (double)length);
-		exit(0);
+		exit(1);
 	}
 
 	RSDDataset->setSize++;
@@ -2493,7 +2493,7 @@ int RSDDataset_getNextSNP_vcf (RSDDataset_t * RSDDataset, RSDPatternPool_t * RSD
 							// ERROR with snp larger than the first
 							fprintf(fpOut, "\n\nERROR: Wrong SNP size (L) found!\n\n\n");
 							fprintf(stderr, "\n\nERROR: Wrong SNP size (L) found!\n\n\n");
-							exit(0);
+							exit(1);
 						}
 					}
 			
@@ -2587,7 +2587,7 @@ void RSDDataset_initParser (RSDDataset_t * RSDDataset, FILE * fpOut, RSDCommandL
 	{
 		fprintf(fpOut, "\nERROR: unexpected error during parser initialization\n\n");
 		fprintf(stderr, "\nERROR: unexpected error during parser initialization\n\n");
-		exit(0);
+		exit(1);
 	}
 
 	if(!strcmp(RSDDataset->inputFileFormat, "ms"))
@@ -2631,7 +2631,7 @@ void RSDDataset_initParser (RSDDataset_t * RSDDataset, FILE * fpOut, RSDCommandL
 	{
 		fprintf(fpOut, "\nERROR: parser initialization failed (supported file formats are ms and VCF, recompile with MakefileZLIB for vcf.gz files)\n\n");
 		fprintf(stderr, "\nERROR: parser initialization failed (supported file formats are ms and VCF, recompile with MakefileZLIB for vcf.gz files)\n\n");
-		exit(0);
+		exit(1);
 	}
 	assert(0);
 	return;	

@@ -127,7 +127,7 @@ int main (int argc, char ** argv)
 
 			fprintf(RAiSD_Info_FP, "\nERROR: Model generation failed. The CNN did not train correctly.\n\nUse this command to see Python errors: %s\n\n", trainCommand);
 			fprintf(stderr, "\nERROR: Model generation failed. The CNN did not train correctly.\n\nUse this command to see Python errors: %s\n\n", trainCommand);
-			exit(0);
+			exit(1);
 		}		
 	
 		fprintf(stdout, "\n");
@@ -289,7 +289,7 @@ int main (int argc, char ** argv)
 						fprintf(RAiSD_Info_FP, "\nERROR: Set %s sample size (%d) is incompatible with the trained model (expected %d)!\n\n",RSDDataset->setID, RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);		
 						fprintf(stderr, "\nERROR: Set %s sample size (%d) is incompatible with the trained model (expected %d)!\n\n",RSDDataset->setID, RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);
 		
-						exit(0);
+						exit(1);
 					}
 				}
 			}	
@@ -339,7 +339,7 @@ int main (int argc, char ** argv)
 				if(RSDCommandLine->vcf2msExtra == VCF2MS_CONVERT && RSDChunk->chunkID!=0)
 				{
 					fprintf(stderr, "\nERROR: Insufficient memory size provided through -Q for VCF-to-ms conversion!\n\n");
-					exit(0);
+					exit(1);
 				}
 
 				int poolFull = 0;

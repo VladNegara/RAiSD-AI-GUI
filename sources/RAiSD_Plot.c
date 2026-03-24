@@ -138,7 +138,7 @@ void RSDPlot_generateRscript (RSDCommandLine_t * RSDCommandLine, int mode)
 		if(RSDCommandLine->overwriteOutput==0)
 		{
 			fprintf(stderr, "\nERROR: Rscript file %s exists. Use -f to overwrite it.\n\n", scriptName);
-			exit(0);
+			exit(1);
 		}
 		else
 		{
