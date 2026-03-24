@@ -784,7 +784,7 @@ class RunViewWidget(RunSubWidget):
         """
         Handle CommandExecutor.process_finished.
         """
-        self.set_execution_view_indicator(index, "finished")
+        self.set_execution_view_indicator(process_index, "finished")
 
     @Slot(int, QProcess.ProcessError)
     def _process_failed(self, process_index: int, process_error: QProcess.ProcessError) -> None:
