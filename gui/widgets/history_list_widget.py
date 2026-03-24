@@ -53,7 +53,7 @@ class HistoryListWidget(QWidget):
 
     def _add_record_widget(self, history_record: HistoryRecord, at_top: bool = False) -> HistoryRecordWidget:
         widget = HistoryRecordWidget(history_record)
-        widget.setMinimumHeight(100)
+        widget.setMinimumHeight(widget.minimumSizeHint().height())
         widget.mousePressEvent = lambda _: self.run_selected.emit(history_record)
         if at_top:
             self._list_layout.insertWidget(0, widget)
