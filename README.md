@@ -8,7 +8,7 @@ Authors: Nikolaos Alachiotis (n.alachiotis@gmail.com) and Pavlos Pavlidis (pavli
 
 RAiSD first release: 9/6/2017 | RAiSD-AI first release: 8/7/2024 
 
-Current version: 4.2 | Released: 30/1/2026
+Current version: 4.3 | Released: 24/3/2026
 
 RAiSD-AI code contributions by Sjoerd van den Belt and Hanqing Zhao
 
