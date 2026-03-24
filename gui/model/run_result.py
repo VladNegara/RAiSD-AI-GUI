@@ -155,3 +155,26 @@ class RunResult():
 
     def set_completed(self) -> None:
         self._time_completed = datetime.now()
+
+    def populate(self, history_record: HistoryRecord) -> None:
+        self._name = history_record.name
+        self._commands = history_record.commands
+        dictionary = history_record.parameters
+        for parameter_group in self._parameter_group_list:
+            for parameter in parameter_group:
+                if parameter.name in dictionary:
+                    self.populate_parameter(parameter, dictionary[parameter.name])
+                    #TODO: validiity checking?
+        self._time_completed = history_record.time_completed
+        for operation in history_record.operations:
+            self._parameter_group_list.set_operation(operation, history_record.operations[operation])
+
+    def populate_parameter(self, parameter: Parameter, value: dict | str) -> None:
+        if type(parameter) is MultiParameter:
+            for param in parameter.parameters:
+                self.populate_parameter(param, value[param.name])
+        elif type(parameter) is OptionalParameter:
+            parameter.value = value["enabled"]
+            self.populate_parameter(parameter.parameter, value[parameter.parameter.name])
+        else:
+            parameter.value = value

@@ -86,25 +86,10 @@ class HistoryWidget(QWidget):
         Update the detail panel when a record is selected from the list.
         #TODO: this will be changed, once we get the results from actual operation records
         """
-        current = self._right_panel.currentWidget()
-        if current is not self._detail_panel:
-            self._right_panel.removeWidget(current)
-            current.deleteLater()
-
-        # if run_result is not None:
-        #     results_widget = ResultsWidget(run_result)
-        #     results_widget.show_results()
-        #     self._right_panel.addWidget(results_widget)
-        #     self._right_panel.setCurrentWidget(results_widget)
-        # else:
-        #     self._detail_label.setText(
-        #         f"Name: {run_result.folder_name}\n"
-        #         f"Date: {run_result.date.strftime('%Y-%m-%d %H:%M:%S')}\n"
-        #         f"Operations: {', '.join(run_result.operations)}\n"
-        #         f"Input files:\n" + "\n".join(f"  - {f}" for f in run_result.input_files) + "\n"
-        #                                                                                 f"Output folder: {run_result.output_folder}"
-        #     )
-        #     self._right_panel.setCurrentWidget(self._detail_panel)
+        self._run_result.populate(history_record)
+        self.results_widget.show_results()
+        # self.results_panel.show()
+        print("Done ")
 
     def update_history(self) -> None:
         #TODO: d not remake the entire list each time, but update as runs are completed
