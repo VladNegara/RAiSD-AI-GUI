@@ -182,22 +182,10 @@ QWidget#navigation_buttons_widget QPushButton:pressed {
     background-color: $button-pressed;
 }
 
-QWidget#navigation_buttons_widget QPushButton#next_button[highlight="false"] {
+QWidget#navigation_buttons_widget QPushButton[highlight="false"] {
     background-color: $button-disabled-background;
     color: $button-disabled-text-color;
     border: $button-disabled-border;
-}
-
-QWidget#navigation_buttons_widget QPushButton#next_button[highlight="true"] {
-    background-color: $accent-orange;
-}
-
-QWidget#navigation_buttons_widget QPushButton#next_button[highlight="true"]:hover {
-    background-color: $button-orange-hover;
-}
-
-QWidget#navigation_buttons_widget QPushButton#next_button[highlight="true"]:pressed {
-    background-color: $button-orange-pressed;
 }
 
 /* PARAMETER INPUT VIEW */
