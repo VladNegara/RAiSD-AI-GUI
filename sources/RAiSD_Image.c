@@ -197,21 +197,21 @@ void RSDImage_checkDimensions (RSDImage_t * RSDImage, RSDCommandLine_t * RSDComm
 			else
 				fprintf(stderr, "\nERROR: Image dimension mismatch between class folders in directory RAiSD_Images.%s\n       (width x height in file RAiSD_Images.%s/info.txt: %d x %d, current: %d x %d)\n\n",RSDCommandLine->runName, RSDCommandLine->runName, width, height, RSDImage->width, RSDImage->height);
 				
-			exit(0);			
+			exit(1);			
 		}
 		
 		if((RSDCommandLine->enBinFormat==0 && (!strcmp(format, "bin")))||(RSDCommandLine->enBinFormat==1 && (!strcmp(format, "2D"))))
 		{
 			fprintf(stderr, "\nERROR: Data format mismatch between class folders in directory RAiSD_Images.%s\n       (data format in file RAiSD_Images.%s/info.txt: %s, current: %s)\n\n",RSDCommandLine->runName, RSDCommandLine->runName, format, RSDCommandLine->enBinFormat==1?"bin":"2D");
 			
-			exit(0);
+			exit(1);
 		}
 		
 		if(RSDCommandLine->imgDataType!= type)
 		{
 			fprintf(stderr, "\nERROR: Data-type code mismatch between class folders in directory RAiSD_Images.%s\n       (data-type code in file RAiSD_Images.%s/info.txt: %d, current: %d)\n\n", RSDCommandLine->runName, RSDCommandLine->runName, type, RSDCommandLine->imgDataType);
 			
-			exit(0);
+			exit(1);
 		}	
 	}
 	
@@ -667,7 +667,7 @@ int RSDImage_savePNG (RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDDataset_t
 					
 					fprintf(fpOut, "\nERROR: Invalid data-type code (-typ %d) in image format (PNG)\n\n",RSDCommandLine->imgDataType);
 					fprintf(stderr, "\nERROR: Invalid data-type code (-typ %d) in image format (PNG)\n\n",RSDCommandLine->imgDataType);
-					exit(0);
+					exit(1);
 					
 				break;			
 			}			
@@ -681,7 +681,7 @@ int RSDImage_savePNG (RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDDataset_t
 	{
 		fprintf(fpOut, "\nERROR: Creating file %s failed!\n\n", imgPath);
 		fprintf(stderr, "\nERROR: Creating file %s failed!\n\n", imgPath);
-		exit(0);					
+		exit(1);					
 	}
 	
 	return 1;	
@@ -710,7 +710,7 @@ int RSDImage_saveBIN (RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDDataset_t
 	{
 		fprintf(fpOut, "\nERROR: Creating file %s failed!\n\n", snpPath);
 		fprintf(stderr, "\nERROR: Creating file %s failed!\n\n", snpPath);
-		exit(0);
+		exit(1);
 	}
 	
 	assert(fp1!=NULL);			
@@ -745,7 +745,7 @@ int RSDImage_saveBIN (RSDImage_t * RSDImage, RSDChunk_t * RSDChunk, RSDDataset_t
 		default:
 			fprintf(fpOut, "\nERROR: Invalid data-type code (-typ %d) in binary format (-bin)!\n\n",RSDCommandLine->imgDataType);
 			fprintf(stderr, "\nERROR: Invalid data-type code (-typ %d) in binary format (-bin)!\n\n",RSDCommandLine->imgDataType);
-			exit(0);
+			exit(1);
 		break;
 	}
 	
