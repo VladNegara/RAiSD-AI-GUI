@@ -57,10 +57,11 @@ class Collapsible(QWidget):
             self._collapsed = collapsed
 
             layout = QHBoxLayout(self)
+            layout.setContentsMargins(0, 0, 0, 0)
 
             self._arrow = QLabel("")
             self._update_arrow()
-            layout.addWidget(self._arrow)
+            layout.addWidget(self._arrow, alignment=Qt.AlignmentFlag.AlignTop)
 
             # Set stretch to 1 so that the widget takes up all free
             # space. Otherwise, it gets centered.
@@ -118,6 +119,8 @@ class Collapsible(QWidget):
         self._collapsed = collapsed
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
         self._header = Collapsible.Header(
             header,

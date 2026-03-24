@@ -377,7 +377,7 @@ int getGTAlleles_vcf (char * string, char * stateVector, int statesTotal, char *
 			if(string[i]!='0' && string[i]!='1')
 			{
 				fprintf(stderr, "\n ERROR: Invalid character (%c) found!\n\n", string[i]);
-				exit(0);
+				exit(1);
 			}
 
 			index = string[i]-48;
@@ -519,7 +519,7 @@ char alleleMask_binary (char c, int * isDerived, int * isValid, FILE * fpOut)
 		default:
 			fprintf(fpOut, "ERROR: Unrecognized character %c\n\n",c);
 			fprintf(stderr, "ERROR: Unrecognized character %c\n\n",c);
-			exit(0);
+			exit(1);
 
 	}	
 }
@@ -1123,7 +1123,7 @@ int VCFFileCheckAndReorder (void * vRSDDataset, char * fileName, int overwriteOu
 				fflush(fpOut);
 
 				fprintf(stderr, "\nERROR: Reordered file %s exists. Use -f to overwrite it.\n\n", fileNameNew);
-				exit(0);
+				exit(1);
 			}
 			else
 			{
@@ -1370,7 +1370,7 @@ void dir_exists_check (char * path)
 	if(stat(path,&st) != 0)
 	{
 		fprintf(stderr, "\nERROR: Directory %s not found!\n\n", path);
-		exit(0);
+		exit(1);
 	}
 }
 
@@ -1442,7 +1442,7 @@ int numOfClasses_NN_architecture (char * arc, int classification2x2En)
 		return CLA_SWEEPNETRECOMB;
 
 	fprintf(stderr, "\nERROR: Unknown network architecture %s!\n\n", arc); 
-	exit(0);
+	exit(1);
 }
 
 int numOfPositiveClasses_NN_architecture (char * arc, int classification2x2En)
@@ -1470,7 +1470,7 @@ int numOfPositiveClasses_NN_architecture (char * arc, int classification2x2En)
 		return PCLA_SWEEPNETRECOMB;
 
 	fprintf(stderr, "\nERROR: Unknown network architecture %s!\n\n", arc); 
-	exit(0);
+	exit(1);
 }
 
 char * getDataType_string (char * imgFormat, int imgDataType)

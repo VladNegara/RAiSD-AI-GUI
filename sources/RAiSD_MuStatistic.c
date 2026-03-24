@@ -288,7 +288,7 @@ void RSDMuStat_setReportName (RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCom
 	{
 		fprintf(fpOut, "\nERROR: Output report file %s exists. Use -f to overwrite it.\n\n", RSDMuStat->reportName);
 		fprintf(stderr, "\nERROR: Output report file %s exists. Use -f to overwrite it.\n\n", RSDMuStat->reportName);
-		exit(0);	
+		exit(1);	
 	}
 
 	if(RSDMuStat->reportFP!=NULL)
@@ -419,7 +419,7 @@ void RSDMuStat_setReportNamePerSet (RSDMuStat_t * RSDMuStat, RSDCommandLine_t * 
 	{
 		fprintf(fpOut, "\nERROR: Output report file %s exists. Use -f to overwrite it.\n\n", tstring);
 		fprintf(stderr, "\nERROR: Output report file %s exists. Use -f to overwrite it.\n\n", tstring);
-		exit(0);	
+		exit(1);	
 	}
 
 	if(RSDMuStat->reportFP!=NULL)
@@ -3716,7 +3716,7 @@ float RSDMuStat_calcMu (RSDMuStat_t * RSDMuStat, RSDCommandLine_t * RSDCommandLi
 	{
 		fprintf(fpOut, "\n\nERROR: infinite mu-statistic score was found. Restart the run with smaller exponents. \n\n");
 		fprintf(stderr, "\n\nERROR: infinite mu-statistic score was found. Restart the run with smaller exponents.\n\n");
-		exit(0);
+		exit(1);
 	}
 	
 	// MuVar Max
@@ -3924,7 +3924,7 @@ void RSDMuStat_scanChunkWithMask (RSDMuStat_t * RSDMuStat, RSDChunk_t * RSDChunk
 		{
 			fprintf(fpOut, "\n\nERROR: infinite mu-statistic score was found. Restart the run with smaller exponents. \n\n");
 			fprintf(stderr, "\n\nERROR: infinite mu-statistic score was found. Restart the run with smaller exponents.\n\n");
-			exit(0);
+			exit(1);
 		}
 
 		// MuVar Max

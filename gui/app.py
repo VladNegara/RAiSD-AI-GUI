@@ -1,11 +1,12 @@
 import sys
+import sass
 
 from PySide6.QtCore import (
     QDir,
     QFileInfo,
 )
 from PySide6.QtWidgets import (
-    QApplication, 
+    QApplication,
     QStyleFactory,
 )
 
@@ -15,9 +16,20 @@ from gui.windows.main import MainWindow
 from gui.model.run_result import RunResult
 
 
+
 def main():
     app = QApplication(sys.argv)
-    QApplication.setStyle(QStyleFactory.create("windowsvista"))
+
+    with open("gui/style/variables.scss", "r") as f:
+        variables = f.read()
+
+    with open("gui/style/style.qss", "r") as f:
+        stylesheet = f.read()
+
+    final_stylesheet = variables + stylesheet
+    final_stylesheet = sass.compile(string=final_stylesheet)
+
+    app.setStyleSheet(final_stylesheet)
 
     app_settings.workspace_path = QDir()
     app_settings.executable_file_path = QFileInfo(QDir().absoluteFilePath("RAiSD-AI"))
@@ -29,7 +41,8 @@ def main():
     run_result = RunResult()
     app_settings.workspace_path_changed.connect(lambda path: setattr(run_result, 'path', path))
 
-    window = MainWindow(run_result)  
+    window = MainWindow(run_result)
+    window.resize(1000,800)
     window.show()
     app.exec()
     print("App closed")

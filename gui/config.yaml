@@ -1,4 +1,10 @@
 executable: ./RAiSD-AI
+run_id_parameter:
+  name: Run ID
+  description: A name that identifies the run and is used to name the output files. Only letters, digits and underscores allowed
+  cli: -n
+  type: str
+  pattern: "[a-zA-Z0-9_]+"
 modes:
   - name: Standard RAiSD
     operations:
@@ -123,11 +129,6 @@ parameter_groups:
       - FASTA-VCF
       - VCF-MS
     parameters:
-      "-n":
-        name: Run name
-        description: A unique run ID that is used to name the output files.
-        cli: -n
-        type: str
       # Where to handle -I?
       input-file-type:
         name: Input file type

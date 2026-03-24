@@ -84,7 +84,7 @@ void RSDGrid_setChunkGridSize (RSDGrid_t * RSDGrid, RSDDataset_t * RSDDataset, R
 	if(RSDGrid->sizeAcc>RSDCommandLine->gridSize)
 	{
 		fprintf(stderr, "\nERROR: A grid-size error occurred! Increase the grid size. \n\n"); // this is related to the out-of-core algorithm
-		exit(0);	
+		exit(1);	
 	}	
 	
 	assert(RSDGrid->sizeAcc<=RSDCommandLine->gridSize);

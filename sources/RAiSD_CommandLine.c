@@ -457,7 +457,7 @@ void flagCheck (char ** argv, int i, int * flagVector, int flagIndex)
 	if(flagVector[flagIndex]!=0)
 	{
 		fprintf(stderr, "\nERROR: Flag %s is given more than once!\n\n",argv[i]);
-		exit(0);
+		exit(1):
 	}
 
 	flagVector[flagIndex]=1;
@@ -483,7 +483,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1):	
 			}
 			
 #ifdef _RSDAI
@@ -515,7 +515,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1):	
 			}
 
 			continue;
@@ -528,7 +528,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			if(flagVector[B_FLAG_INDEX])
 			{
 				fprintf(stderr, "\nERROR: Argument %s cannot be used if -B is already provided!\n\n",argv[i]);
-				exit(0);
+				exit(1);
 			}
 
 			if (i!=argc-1 && argv[i+1][0]!='-')
@@ -539,7 +539,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -591,7 +591,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 			continue;
 		}
@@ -606,13 +606,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(RSDCommandLine->maf<0.0 || RSDCommandLine->maf>1.0)
 				{
 					fprintf(stderr, "\nERROR: Invalid MAF value (valid: 0.0-1.0)\n\n");
-					exit(0);
+					exit(1);
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -634,14 +634,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(ploidy<=0)
 				{
 					fprintf(stderr, "\nERROR: Invalid argument after %s\n\n",argv[i-1]);
-					exit(0);
+					exit(1);
 				}
 				RSDCommandLine->ploidy = ploidy;
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 			continue;
 		}	
@@ -655,7 +655,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if((strlen(argv[i+1])!=1) || ((strlen(argv[i+1])==1)&&(argv[i+1][0]!='0' && argv[i+1][0]!='1' && argv[i+1][0]!='2' && argv[i+1][0]!='3')))// && argv[i+1][0]!='3')
 				{
 					fprintf(stderr, "\nERROR: Invalid argument after %s\n\n",argv[i]);
-					exit(0);	
+					exit(1);	
 				}
 
 				int mode = atoi(argv[++i]);
@@ -686,7 +686,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -732,7 +732,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -748,7 +748,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			if(RSDPlot_checkRscript()!=0)
 			{
 				fprintf(stderr, "\nERROR: Rscript is not installed, required by %s for plotting with R\n\n",argv[i]);
-				exit(0);
+				exit(1);
 			}			
 			
 			continue;
@@ -765,7 +765,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if((windowSize<MIN_WINDOW_SIZE) || ((windowSizeInt&1)==1))
 				{
 					fprintf(stderr, "\nERROR: Invalid window size (valid: even number >= %d)\n\n", MIN_WINDOW_SIZE);
-					exit(0);
+					exit(1);
 				}
 				RSDCommandLine->windowSize = (int64_t)windowSize;
 #ifdef _RSDAI
@@ -776,7 +776,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -792,14 +792,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(sfsSlack<1)
 				{
 					fprintf(stderr, "\nERROR: Invalid sfs slack value (valid: >= 1)\n\n");
-					exit(0);
+					exit(1);
 				}
 				RSDCommandLine->sfsSlack = (int64_t)sfsSlack;
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -817,13 +817,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(prob<0.0 || prob>1.0)
 				{
 					fprintf(stderr, "\nERROR: Invalid probability value (valid: 0.0-1.0)\n\n");
-					exit(0);
+					exit(1);
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			strcpy(RSDCommandLine->manhattanThreshold, argv[i]);
@@ -836,7 +836,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			if(RSDPlot_checkRscript()!=0)
 			{
 				fprintf(stderr, "\nERROR: Rscript is not installed, required by %s for plotting with R\n\n",argv[i]);
-				exit(0);
+				exit(1);
 			}
 
 			tstring2[0]='\0';
@@ -862,7 +862,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -880,7 +880,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -895,7 +895,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -912,13 +912,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(scoresTotal>6 || scoresTotal<=0)
 				{
 					fprintf(stderr, "\nERROR: Invalid number of TPR threshold values (%s) after %s (valid: 1-6)\n\n", argv[i], argv[i-1]);
-					exit(0);
+					exit(1);
 				}
 				
 				if(i>=argc-scoresTotal)
 				{
 					fprintf(stderr, "\nERROR: Missing TPR threshold values after %s %s \n\n", argv[i-1], argv[i]);
-					exit(0);
+					exit(1);
 				}				
 				
 				for(j=0;j<scoresTotal;j++)
@@ -951,14 +951,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
   					else 
   					{  
 						fprintf(stderr, "\nERROR: Invalid TPR treshold label %s (valid: var, sfs, ld, mu, pcl0, pcl1) \n\n",argv[i]);
-						exit(0);				
+						exit(1);				
 					}
 				}				
 			}	
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -973,7 +973,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -985,7 +985,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			if(flagVector[L_FLAG_INDEX])
 			{
 				fprintf(stderr, "\nERROR: Argument %s cannot be used if -L is already provided!\n\n",argv[i]);
-				exit(0);
+				exit(1);
 			}
 			
 			flagCheck (argv, i, flagVector, 17);
@@ -1001,7 +1001,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1022,7 +1022,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1037,7 +1037,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1052,7 +1052,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1076,13 +1076,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(RSDCommandLine->gridSize<3)
 				{
 					fprintf(stderr, "\nERROR: Invalid grid size (valid: >=3)\n\n");
-					exit(0);
+					exit(1);
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1112,14 +1112,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 						{
 
 							fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-							exit(0);
+							exit(1);
 						}
 					}
 				}
 				else
 				{
 					fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-					exit(0);
+					exit(1);
 				}
 			}
 			else
@@ -1143,20 +1143,20 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 							else
 							{
 								fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-								exit(0);
+								exit(1);
 							}
 						}
 					}
 					else
 					{
 						fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-						exit(0);
+						exit(1);
 					}
 				}
 				else
 				{
 					fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-					exit(0);
+					exit(1);
 				}
 			}
 
@@ -1190,14 +1190,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(threshold<0.0 || threshold>1.0)
 				{
 					fprintf(stderr, "\nERROR: Invalid threshold value for common outliers (valid: 0.0-1.0)\n\n");
-					exit(0);
+					exit(1);
 				}
 				strcpy(RSDCommandLine->commonOutliersThreshold, argv[i]);
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1213,14 +1213,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(maxdistance<0.0)
 				{
 					fprintf(stderr, "\nERROR: Invalid maximum distance between common outliers (valid: 0.0>=0)\n\n");
-					exit(0);
+					exit(1);
 				}
 				RSDCommandLine->commonOutliersMaxDistance = maxdistance;
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1240,13 +1240,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(RSDCommandLine->vcf2msMemsize<1)
 				{
 					fprintf(stderr, "\nERROR: Invalid memory size for VCF to ms conversion (valid: >=1 MB)\n\n");
-					exit(0);
+					exit(1);
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1263,13 +1263,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(RSDCommandLine->muVarExp<0.0 || RSDCommandLine->muVarExp>10.0)
 				{
 					fprintf(stderr, "\nERROR: You have given an exponent that is outside the valid range (0.0 < exp < 10.0, default: 1.0)\n\n");
-					exit(0);
+					exit(1);
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1286,13 +1286,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(RSDCommandLine->muVarExp<0.0 || RSDCommandLine->muVarExp>10.0)
 				{
 					fprintf(stderr, "\nERROR: You have given an exponent that is outside the valid range (0.0 < exp < 10.0, default: 1.0)\n\n");
-					exit(0);
+					exit(1);
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1309,13 +1309,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(RSDCommandLine->muVarExp<0.0 || RSDCommandLine->muVarExp>10.0)
 				{
 					fprintf(stderr, "\nERROR: You have given an exponent that is outside the valid range (0.0 < exp < 10.0, default: 1.0)\n\n");
-					exit(0);
+					exit(1);
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1364,7 +1364,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 								else
 								{
 									fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i-1]);
-									exit(0);
+									exit(1);
 								}
 							}
 						}						
@@ -1374,7 +1374,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1417,7 +1417,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1435,7 +1435,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1453,13 +1453,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(RSDCommandLine->imageWindowStep<1)
 				{
 					fprintf(stderr, "\nERROR: You have given an invalid window step with -iws (>= 1, default: 1)\n\n");
-					exit(0);
+					exit(1);
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1474,7 +1474,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1509,13 +1509,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(RSDNeuralNetwork_modelExists(RSDCommandLine->modelPath)!=1)
 				{
 					fprintf(stderr, "\nERROR: Invalid model %s or directory not found!\n\n", RSDCommandLine->modelPath);
-					exit(0);
+					exit(1);
 				}			
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1532,7 +1532,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(numberOfClasses<=0)
 				{
 					fprintf(stderr, "\nERROR: Invalid number of classes (>=1))\n\n");
-					exit(0);
+					exit(1);
 				}
 				RSDCommandLine->numberOfClasses = numberOfClasses;
 				
@@ -1562,20 +1562,20 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 						if(suc!=1)
 						{
 							fprintf(stderr, "\nERROR: Invalid format string \"%s\" (missing or wrong delimiter, '=')\n\n",argv[i]);
-							exit(0);
+							exit(1);
 						}					
 					}
 					else
 					{
 						fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-						exit(0);
+						exit(1);
 					}			
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1592,7 +1592,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1609,7 +1609,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1625,14 +1625,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(epochs<=0)
 				{
 					fprintf(stderr, "\nERROR: Invalid argument after %s\n\n",argv[i-1]);
-					exit(0);
+					exit(1);
 				}
 				RSDCommandLine->epochs = epochs;
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 			continue;
 		}
@@ -1647,7 +1647,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 			
 			//assert(RSDCommandLine->threads==1);
@@ -1670,7 +1670,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument(s) after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1686,20 +1686,20 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(RSDCommandLine->enTF==1 && strcmp(RSDCommandLine->networkArchitecture, "SweepNet"))
 				{
 					fprintf(stderr, "\nERROR: %s is not implemented in TensorFlow. You can either remove \"-arc %s\" or \"-useTF\".\n\n", argv[i], argv[i]);
-					exit(0);				
+					exit(1);				
 				}
 				
 				
 				if(!is_valid_NN_architecture(RSDCommandLine->networkArchitecture))
 				{
 					fprintf(stderr, "\nERROR: Invalid argument after -arc (unknown neural network architecture %s)\n\n",argv[i]);
-					exit(0);
+					exit(1);
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 	
 			continue;
@@ -1714,7 +1714,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if((strlen(argv[i+1])!=1) || ((strlen(argv[i+1])==1)&&(argv[i+1][0]!='0' && argv[i+1][0]!='1' && argv[i+1][0]!='2' && argv[i+1][0]!='3')))
 				{
 					fprintf(stderr, "\nERROR: Invalid argument after %s\n\n",argv[i]);
-					exit(0);	
+					exit(1);	
 				}
 
 				RSDCommandLine->imgDataType = atoi(argv[++i]);				
@@ -1722,7 +1722,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1739,7 +1739,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(!(RSDCommandLine->numOfPositiveClasses>=1 && RSDCommandLine->numOfPositiveClasses<=2))
 				{
 					fprintf(stderr, "\nERROR: Unsupported number of positive classes (%s)!\n\n",argv[i]);
-					exit(0);
+					exit(1);
 				}
 				else
 				{
@@ -1755,7 +1755,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 						else
 						{
 							fprintf(stderr, "\nERROR: Missing argument after %s (-pci)\n\n",argv[i]);
-							exit(0);						
+							exit(1);						
 						}
 					}				
 				}
@@ -1763,7 +1763,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1804,26 +1804,26 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 						if(suc!=1)
 						{
 							fprintf(stderr, "\nERROR: Invalid format string \"%s\" (missing or wrong delimiter, '=')\n\n",argv[i]);
-							exit(0);
+							exit(1);
 						}
 						
 						if(strcmp(RSDCommandLine->classLabelList[j], validLabelList[j]))
 						{
 							fprintf(stderr, "\nERROR: Invalid label \"%s\" given with -cl4 (expected \"%s\", exepected label order: \"%s\", \"%s\", \"%s\", \"%s\")\n\n", RSDCommandLine->classLabelList[j], validLabelList[j], validLabelList[0], validLabelList[1], validLabelList[2], validLabelList[3]);
-							exit(0);								
+							exit(1);								
 						}					
 					}
 					else
 					{
 						fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-						exit(0);
+						exit(1);
 					}			
 				}
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
@@ -1840,7 +1840,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 			continue;
 		} 
@@ -1856,7 +1856,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 		
 			continue;
@@ -1872,14 +1872,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(groups<=0)
 				{
 					fprintf(stderr, "\nERROR: Invalid argument after %s\n\n",argv[i-1]);
-					exit(0);
+					exit(1);
 				}
 				RSDCommandLine->fasterNNgroups = groups;
 			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing or invalid argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 			continue;
 		}
@@ -1893,14 +1893,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "ERROR: Missing argument after %s\n\n",argv[i]);
-				exit(0);	
+				exit(1);	
 			}
 
 			continue;
 		}*/
 
 		fprintf(stderr, "\nERROR: Unrecognized input parameter %s\n\n",argv[i]);
-		exit(0);
+		exit(1);
 	}
 	
 	// Checks
@@ -1908,7 +1908,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 	if(!strcmp(RSDCommandLine->runName, "\0"))
 	{
 		fprintf(stderr, "\nERROR: Missing required input parameter -n\n\n");
-		exit(0);	
+		exit(1);	
 	}
 	
 #ifdef _RSDAI
@@ -1922,7 +1922,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 		if(RSDCommandLine->overwriteOutput==0)
 		{
 			fprintf(stderr, "\nERROR: Output info file %s exists. Use -f to overwrite it.\n\n", tstring); 
-			exit(0);
+			exit(1);
 		}
 		else
 		{
@@ -1937,7 +1937,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 		if(!strcmp(RSDCommandLine->inputFileName, "\0"))
 		{
 			fprintf(stderr, "\nERROR: Missing required input parameter -I\n\n");
-			exit(0);	
+			exit(1);	
 		}
 		else
 		{
@@ -1949,7 +1949,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				if(inputFileExists==NULL)
 				{
 					fprintf(stderr, "\nERROR: Input file %s not found!\n\n", RSDCommandLine->inputFileName);
-					exit(0);
+					exit(1);
 				}
 				
 				assert(inputFileExists!=NULL); // file exists check
@@ -1961,7 +1961,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			if(inputFileExists==NULL)
 			{
 				fprintf(stderr, "\nERROR: Input file %s not found!\n\n", RSDCommandLine->inputFileName);
-				exit(0);
+				exit(1);
 			}
 				
 			assert(inputFileExists!=NULL); // file exists check
@@ -1980,13 +1980,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 	if(flagVector[M_FLAG_INDEX] && !(flagVector[Y_FLAG_INDEX]))
 	{
 		fprintf(stderr, "\nERROR: Missing input parameter -y that is required when -M is used.\n\n");
-		exit(0);
+		exit(1);
 	}
 
 	if(RSDCommandLine->vcf2msExtra==VCF2MS_CONVERT && !(flagVector[L_FLAG_INDEX]))
 	{
 		fprintf(stderr, "\nERROR: Missing input parameter -L that is required when -Q is used.\n\n");
-		exit(0);
+		exit(1);
 	}
 
 	if(RSDCommandLine->createPatternPoolMask==1)
@@ -2005,19 +2005,19 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 		if(RSDCommandLine->positionIndexSweeD<1)
 		{
 			fprintf(stderr, "\nERROR: Invalid position index after %s (valid: >=1)\n\n", RSDCommandLine->reportFilenameSweeD);
-			exit(0);
+			exit(1);
 		}
 
 		if(RSDCommandLine->scoreIndexSweeD<1)
 		{
 			fprintf(stderr, "\nERROR: Invalid score index after %s (valid: >=1)\n\n", RSDCommandLine->reportFilenameSweeD);
-			exit(0);
+			exit(1);
 		}
 
 		if(RSDCommandLine->positionIndexSweeD==RSDCommandLine->scoreIndexSweeD)
 		{
 			fprintf(stderr, "\nERROR: Same column indices for positions and scores after %s (valid: >=1)\n\n", RSDCommandLine->reportFilenameSweeD);
-			exit(0);
+			exit(1);
 		}
 
 		if(co_mode)
@@ -2029,19 +2029,19 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			if(RSDCommandLine->positionIndexRAiSD<1)
 			{
 				fprintf(stderr, "\nERROR: Invalid position index after %s (valid: >=1)\n\n", RSDCommandLine->reportFilenameRAiSD);
-				exit(0);
+				exit(1);
 			}
 
 			if(RSDCommandLine->scoreIndexRAiSD<1)
 			{
 				fprintf(stderr, "\nERROR: Invalid score index after %s (valid: >=1)\n\n", RSDCommandLine->reportFilenameRAiSD);
-				exit(0);
+				exit(1);
 			}
 
 			if(RSDCommandLine->positionIndexRAiSD==RSDCommandLine->scoreIndexRAiSD)
 			{
 				fprintf(stderr, "\nERROR: Same column indices for positions and scores after %s (valid: >=1)\n\n", RSDCommandLine->reportFilenameRAiSD);
-				exit(0);
+				exit(1);
 			}
 		}
 	}
@@ -2050,79 +2050,79 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 	if (flagVector[NN_ARC_FLAG_INDEX] && RSDCommandLine->opCode!=OP_TRAIN_CNN)
 	{
 		fprintf(stderr, "\nERROR: Remove -arc. It is only used in MDL-GEN mode!\n\n");
-		exit(0);	
+		exit(1);	
 	}
 
 	if(flagVector[CLASS_PAIRINGS_4] && RSDCommandLine->opCode!=OP_TRAIN_CNN)
 	{
 		fprintf(stderr, "\nERROR: Remove -clp. It is only used in MDL-GEN mode!\n\n");
-		exit(0);	
+		exit(1);	
 	}
 	
 	if(flagVector[CLASS_PAIRINGS_4] && strcmp(RSDCommandLine->networkArchitecture, ARC_SWEEPNETRECOMB))
 	{
 		fprintf(stderr, "\nERROR: -cl4 is only used with network architecture %s!\n\n", ARC_SWEEPNETRECOMB);
-		exit(0);	
+		exit(1);	
 	}
 	
 	//if(!flagVector[CLASS_PAIRINGS_4] && !strcmp(RSDCommandLine->networkArchitecture, ARC_SWEEPNETRECOMB))
 	//{
 	//	fprintf(stderr, "\nERROR: -cl4 is required with network architecture %s!\n\n", ARC_SWEEPNETRECOMB);
-	//	exit(0);	
+	//	exit(1);	
 	//}
 
 	if (flagVector[CL_TEST_PATH_FLAG_INDEX] && RSDCommandLine->opCode!=OP_TEST_CNN)
 	{
 		fprintf(stderr, "\nERROR: Remove -clp. It is only used in MDL-TST mode!\n\n");
-		exit(0);	
+		exit(1);	
 	}	
 	
 	if(flagVector[DATA_TYPE_INDEX] && (RSDCommandLine->opCode!=OP_CREATE_IMAGES))
 	{
 		fprintf(stderr, "\nERROR: Remove -typ. It is only used in IMG-GEN mode for data generation!\n\n");
-		exit(0);	
+		exit(1);	
 	}	
 	
 	if(RSDCommandLine->enBinFormat==1 && (RSDCommandLine->opCode!=OP_CREATE_IMAGES))
 	{
 		fprintf(stderr, "\nERROR: Remove -bin. It is only used in IMG-GEN mode for data generation!\n\n");
-		exit(0);	
+		exit(1);	
 	}
 	
 	/*if(RSDCommandLine->trnObjDetection==1 && (RSDCommandLine->opCode!=OP_CREATE_IMAGES))
 	{
 		fprintf(stderr, "\nERROR: Remove -det. It is only used in IMG-GEN mode for data generation!\n\n");
-		//exit(0);	
+		//exit(1);	
 	}*/
 	
 	/*if(RSDCommandLine->trnObjDetection==1 && RSDCommandLine->enBinFormat==0)
 	{
 		fprintf(stderr, "\nERROR: Remove -det or add -bin. -det is only used with -bin to generate binary data to train for detection!\n\n");
-		exit(0);	
+		exit(1);	
 	}*/
 	
 	/*if(RSDCommandLine->trnObjDetection==1 && (!(flagVector[GRID_FLAG_INDEX])))
 	{
 		fprintf(stderr, "\nERROR: Missing input parameter -G that is required when -det is used!\n\n");
-		//exit(0);
+		//exit(1);
 	}*/
 	
 	if (flagVector[IMG_CLASS_LABEL_FLAG_INDEX] && (RSDCommandLine->opCode!=OP_CREATE_IMAGES))
 	{
 		fprintf(stderr, "\nERROR: Remove -icl. The class label (-icl %s) is only used in IMG-GEN mode!\n\n", RSDCommandLine->imageClassLabel);
-		exit(0);	
+		exit(1);	
 	}
 	
 	if (flagVector[IMG_TARGET_SITE_FLAG_INDEX] && (RSDCommandLine->opCode!=OP_CREATE_IMAGES))
 	{
 		fprintf(stderr, "\nERROR: Remove -its. It is only used in IMG-GEN mode!\n\n");
-		exit(0);	
+		exit(1);	
 	}	
 	
 	if ((!(flagVector[IMG_TARGET_SITE_FLAG_INDEX])) && (RSDCommandLine->opCode==OP_CREATE_IMAGES))
 	{
 		fprintf(stderr, "\nERROR: Missing input parameter -its that is required when \"-op IMG-GEN\" is used!\n\n");
-		exit(0);	
+		exit(1);	
 	}
 	
 	if (((flagVector[IMG_TARGET_SITE_FLAG_INDEX])) && (RSDCommandLine->opCode==OP_CREATE_IMAGES))
@@ -2130,37 +2130,37 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 		if(RSDCommandLine->imageTargetSite<=0ull)
 		{
 			fprintf(stderr, "\nERROR: Invalid -its position (valid: >= 1)\n\n");
-			exit(0);
+			exit(1);
 		}
 		if(RSDCommandLine->regionLength!=0ull && RSDCommandLine->imageTargetSite>=RSDCommandLine->regionLength)
 		{
 			fprintf(stderr, "\nERROR: Invalid -its position (valid: < region_length)\n\n");
-			exit(0);
+			exit(1);
 		}		
 	}	
 	
 	if ((!(flagVector[IMG_CLASS_LABEL_FLAG_INDEX])) && (RSDCommandLine->opCode==OP_CREATE_IMAGES))
 	{
 		fprintf(stderr, "\nERROR: Missing input parameter -icl that is required when \"-op IMG-GEN\" is used!\n\n");
-		exit(0);	
+		exit(1);	
 	}
 	
 	if ((!(flagVector[MDL_PATH_FLAG_INDEX])) && (RSDCommandLine->opCode==OP_TEST_CNN || RSDCommandLine->opCode==OP_USE_CNN))
 	{
 		fprintf(stderr, "\nERROR: Missing input parameter -mdl that is required when \"-op MDL-TST\" or \"-op SWP-SCN\" is used!\n\n");
-		exit(0);	
+		exit(1);	
 	}
 	
 	if ((!(flagVector[CL_TEST_PATH_FLAG_INDEX])) && (RSDCommandLine->opCode==OP_TEST_CNN))
 	{
 		fprintf(stderr, "\nERROR: Missing input parameter -clp that is required when \"-op MDL-TST\" is used!\n\n");
-		exit(0);	
+		exit(1);	
 	}
 	
 	if ((!(flagVector[GRID_FLAG_INDEX])) && (RSDCommandLine->opCode==OP_USE_CNN))
 	{
 		fprintf(stderr, "\nERROR: Missing input parameter -G that is required when \"-op SWP-SCN\" is used!\n\n");
-		exit(0);	
+		exit(1);	
 	}	
 	
 	if(RSDCommandLine->opCode==OP_USE_CNN)
@@ -2168,13 +2168,13 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 		if(!(flagVector[POSITIVE_CLASS_FLAG_INDEX]) && !(flagVector[POSITIVE_CLASS_FLAG_INDEX2]))
 		{
 			fprintf(stderr, "\nERROR: Missing input parameter -pci or -pci2 that is required when \"-op SWP-SCN\" is used!\n\n");
-			exit(0);
+			exit(1);
 		}
 		
 		if((flagVector[POSITIVE_CLASS_FLAG_INDEX]) && (flagVector[POSITIVE_CLASS_FLAG_INDEX2]))
 		{
 			fprintf(stderr, "\nERROR: Use either -pci or -pci2 depending on the CNN architecture. Using both is not valid!\n\n");
-			exit(0);
+			exit(1);
 		}	
 	}
 	else
@@ -2182,7 +2182,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 		if(flagVector[POSITIVE_CLASS_FLAG_INDEX] || flagVector[POSITIVE_CLASS_FLAG_INDEX2])
 		{
 			fprintf(stderr, "\nERROR: Remove -pci. The positive class index command-line flag is only used in SWP-SCN mode!\n\n");
-			exit(0);		
+			exit(1);		
 		}
 	}	
 	
@@ -2203,7 +2203,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 	{
 		fclose(RAiSD_Info_FP);
 		fprintf(stderr, "\nERROR: Output info file %s exists. Use -f to overwrite it.\n\n", tstring); 
-		exit(0);
+		exit(1);
 	}
 	else
 	{

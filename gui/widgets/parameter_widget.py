@@ -77,6 +77,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             :type parameter: Parameter[Any]
             """
             super().__init__("Reset")
+            self.setObjectName("reset_button")
             self._parameter = parameter
 
             self.clicked.connect(self._clicked)
@@ -98,9 +99,11 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
 
     def _show_validity(self, widget: QWidget, valid: bool) -> None:
         if valid and self._editable:
-            widget.setStyleSheet("QLineEdit { border: 1px solid green; }")
+            widget.setProperty("valid", "true")
         elif self._editable:
-            widget.setStyleSheet("QLineEdit { border: 1px solid red; }")
+            widget.setProperty("valid", "false")
+        widget.style().unpolish(widget)
+        widget.style().polish(widget)
 
     @property
     def parameter(self) -> Parameter[Any]:
@@ -577,7 +580,9 @@ class FileParameterWidget(ParameterWidget):
               and parameter.accepted_formats is None
               and parameter.expected_formats is not None):
             self._error_label = QLabel("")
-            self._error_label.setStyleSheet("QLabel { color: red; }")
+            self._error_label.setProperty("valid", "false")
+            self._error_label.style().unpolish(self)
+            self._error_label.style().polish(self)
             layout.addWidget(self._error_label)
             expected = ', '.join(parameter.expected_formats)
             hint = QLabel(f"Select {mode} — Expected file types: {expected}. "
@@ -592,7 +597,7 @@ class FileParameterWidget(ParameterWidget):
         file_browse = QPushButton('Browse')
         file_browse.clicked.connect(self._open_file_dialog)
 
-        layout.addWidget(file_browse)    
+        layout.addWidget(file_browse)
 
     @Slot(int)
     def _on_double_click(self, index) -> None:
@@ -620,7 +625,7 @@ class FileParameterWidget(ParameterWidget):
             self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.05))
             self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
             return
-        
+
         # If the widget is not locked
         if file_paths:
             self._path_label.setText("\n".join(file_paths))
