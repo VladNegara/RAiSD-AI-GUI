@@ -173,6 +173,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         label_header.setAlignment(Qt.AlignmentFlag.AlignLeft)
         label_header.setObjectName("label_header")
         label_body = QLabel(self.parameter.description)
+        label_body.setObjectName("label_body")
         label: QWidget = Collapsible(
             label_header,
             label_body,
