@@ -149,6 +149,8 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             return StringParameterWidget(parameter, editable)
         if isinstance(parameter, FileParameter):
             return FileParameterWidget(parameter, editable)
+        if isinstance(parameter, StringPairListParameter):
+            return StringPairListParameterWidget(parameter, editable)
         raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
 
     def build_form_row(self) -> QWidget:
@@ -528,7 +530,7 @@ class StringParameterWidget(ParameterWidget):
 
 class StringPairListParameterWidget(ParameterWidget):
     class Row(QWidget):
-        values_changed = Signal(tuple[str, str])
+        values_edited = Signal(str, str)
 
         def __init__(
                 self,
@@ -550,15 +552,23 @@ class StringPairListParameterWidget(ParameterWidget):
             self._right_line_edit.editingFinished.connect(
                 self._editing_finished,
             )
+            layout.addWidget(self._right_line_edit)
+
+        @property
+        def values(self) -> tuple[str, str]:
+            return (
+                self._left_line_edit.text(),
+                self._right_line_edit.text(),
+            )
+
+        @values.setter
+        def values(self, new_values: tuple[str, str]) -> None:
+            self._left_line_edit.setText(new_values[0])
+            self._right_line_edit.setText(new_values[1])
 
         @Slot()
         def _editing_finished(self) -> None:
-            self.values_changed.emit(
-                (
-                    self._left_line_edit.text(),
-                    self._right_line_edit.text(),
-                )
-            )
+            self.values_edited.emit(*self.values)
 
     def __init__(
             self,
@@ -572,14 +582,64 @@ class StringPairListParameterWidget(ParameterWidget):
 
         layout = QVBoxLayout(self)
 
+        self.rows: list[StringPairListParameterWidget.Row] = []
         row_widget = QWidget()
         self.row_layout = QVBoxLayout(row_widget)
         self._parameter: StringPairListParameter
-        for pair in self._parameter.value:
-            self.row_layout.addWidget(
-                self.__class__.Row(pair),
+        for i, pair in enumerate(self._parameter.value):
+            row = self.__class__.Row(pair)
+            row.values_edited.connect(
+                lambda l, r, i=i: self._row_values_edited(i, l, r)
             )
+            self.rows.append(row)
+            self.row_layout.addWidget(row)
         layout.addWidget(row_widget)
+
+        add_pair_button = QPushButton("Add another row")
+        add_pair_button.clicked.connect(self._add_clicked)
+        layout.addWidget(add_pair_button)
+
+        self._parameter.value_changed.connect(
+            self._parameter_value_changed,
+        )
+
+    @Slot()
+    def _add_clicked(self) -> None:
+        self._parameter.add_pair()
+
+    @Slot()
+    def _parameter_value_changed(
+            self,
+            new_value: list[tuple[str, str]],
+            new_valid: bool,
+    ) -> None:
+        print(new_value)
+        current_count = len(self.rows)
+        new_count = len(new_value)
+
+        for i in range(min(current_count, new_count)):
+            self.rows[i].values = new_value[i]
+
+        if new_count < current_count:
+            for i in range(new_count, current_count):
+                row = self.rows[i]
+                self.row_layout.removeWidget(row)
+                row.destroy()
+            self.rows = self.rows[:new_count]
+        if new_count > current_count:
+            for i in range(current_count, new_count):
+                new_row = self.__class__.Row(
+                    new_value[i],
+                )
+                new_row.values_edited.connect(
+                    lambda l, r, i=i: self._row_values_edited(i, l, r)
+                )
+                self.rows.append(new_row)
+                self.row_layout.addWidget(new_row)
+
+    @Slot(int, str, str)
+    def _row_values_edited(self, index: int, left: str, right: str) -> None:
+        self._parameter.set_pair(index, (left, right))
 
 
 class FileParameterWidget(ParameterWidget):

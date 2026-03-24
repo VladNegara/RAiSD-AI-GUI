@@ -705,6 +705,8 @@ class StringPairListParameter(Parameter[list[tuple[str, str]]]):
     A parameter for entering any number of label-value pairs of strings.
     """
 
+    value_changed = Signal(list, bool)
+
     def __init__(
             self,
             name: str, description: str,
@@ -725,6 +727,7 @@ class StringPairListParameter(Parameter[list[tuple[str, str]]]):
             default_value=default_value,
             enabled=enabled,
         )
+        self.value = default_value.copy()
         self._separator = separator
         self._left_pattern = left_pattern
         self._right_pattern = right_pattern
@@ -733,8 +736,15 @@ class StringPairListParameter(Parameter[list[tuple[str, str]]]):
     def add_pair(self, pair=("", "")) -> None:
         self.value += [pair]
 
+    def set_pair(self, index: int, pair: tuple[str, str]) -> None:
+        self.value[index] = pair
+        self.value_changed.emit(self.value, self.valid)
+
     def delete_pair(self, i: int) -> None:
         self.value = self.value[:i] + self.value[i+1:]
+
+    def reset_value(self) -> None:
+        self.value = self.default_value.copy()
 
     def to_cli(self, operation: str) -> str:
         if not self.in_cli(operation):

@@ -26,6 +26,7 @@ from gui.model.parameter import (
     FloatParameter,
     EnumParameter,
     StringParameter,
+    StringPairListParameter,
     FileParameter,
 )
 from gui.model.dependency import (
@@ -443,6 +444,97 @@ class ParameterGroupList(QObject):
                         default_value,
                         max_length,
                         compiled_pattern,
+                    )
+                case "string pair list" | "string pairs":
+                    default_value_list = obj.get("default", []) or []
+                    if not isinstance(default_value_list, list):
+                        raise ValueError(
+                            "Invalid default value for string pair list "
+                            + f"parameter {name}: {default_value_list}. "
+                            + "Expected a list or null."
+                        )
+                    default_value = []
+                    for pair in default_value_list:
+                        if not isinstance(pair, dict):
+                            raise ValueError(
+                                "Invalid value in default list for string pair"
+                                + f" list parameter {name}: {pair}. Expected "
+                                + "an object."
+                            )
+
+                        left = pair.get("left", "") or ""
+                        if not isinstance(left, str):
+                            raise ValueError(
+                                "Invalid left value in default list for string"
+                                + f" pair list parameter {name}: {left}. "
+                                + "Expected a string or null."
+                            )
+
+                        right = pair.get("right", "") or ""
+                        if not isinstance(right, str):
+                            raise ValueError(
+                                "Invalid right value in default list for "
+                                + f"string pair list parameter {name}: {right}"
+                                + ". Expected a string or null."
+                            )
+
+                        default_value.append((left, right))
+
+                    if "separator" not in obj:
+                        raise ValueError(
+                            "Missing separator for string pair list parameter "
+                            + f"{name}."
+                        )
+                    separator = obj["separator"]
+                    if not isinstance(separator, str):
+                        raise ValueError(
+                            "Invalid separator for string pair list parameter "
+                            + f"{name}: {separator}. Expected a string."
+                        )
+
+                    left_pattern = obj.get("left_pattern", None)
+                    if isinstance(left_pattern, str):
+                        compiled_left_pattern = compile(left_pattern)
+                    elif left_pattern is None:
+                        compiled_left_pattern = None
+                    else:
+                        raise ValueError(
+                            "Invalid left-side pattern for string pair list "
+                            + f"parameter {name}: {left_pattern}. Expected a "
+                            + "string or null."
+                        )
+
+                    right_pattern = obj.get("right_pattern", None)
+                    if isinstance(right_pattern, str):
+                        compiled_right_pattern = compile(right_pattern)
+                    elif right_pattern is None:
+                        compiled_right_pattern = None
+                    else:
+                        raise ValueError(
+                            "Invalid right-side pattern for string pair list "
+                            + f"parameter {name}: {right_pattern}. Expected a "
+                            + "string or null."
+                        )
+
+
+                    min_count = obj.get("min", 0) or 0
+                    if not isinstance(min_count, int):
+                        raise ValueError(
+                            "Invalid minimum count for string pair list "
+                            + f"parameter {name}: {min_count}. Expected an int"
+                            + " or null."
+                        )
+        
+                    parameter = StringPairListParameter(
+                        name,
+                        description,
+                        flag,
+                        operations,
+                        default_value,
+                        separator,
+                        compiled_left_pattern,
+                        compiled_right_pattern,
+                        min_count,
                     )
                 case "file":
                     accepted_formats = obj.get("formats", None)

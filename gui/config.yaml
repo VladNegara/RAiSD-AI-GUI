@@ -920,6 +920,9 @@ parameter_groups:
         description: Enter one or more label-folder pairs.
         cli: "-clp"
         type: string pair list
+        separator: "="
+        left_pattern: "\\w+"
+        right_pattern: "\\w+"
         min: 1
         default:
           - left: label
