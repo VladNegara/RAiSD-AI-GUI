@@ -651,6 +651,8 @@ class StringPairListParameterWidget(ParameterWidget):
         if new_count < current_count:
             for i in range(new_count, current_count):
                 row = self.rows[i]
+                row.values_edited.disconnect()
+                row.delete_button_clicked.disconnect()
                 self.row_layout.removeWidget(row)
                 row.destroy()
             self.rows = self.rows[:new_count]
