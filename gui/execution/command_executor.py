@@ -28,11 +28,12 @@ class CommandExecutor(QObject):
     process_failed = Signal(int, QProcess.ProcessError)     # process_index, process_error
     process_stopped = Signal(int)                   # process_index
 
-    def __init__(self):
+    def __init__(self, command_builder = None):
         """
         Initialize a `CommandExecutor` object.
         """
         super().__init__()
+        self.command_builder = command_builder or self._default_command_builder
         self._process = QProcess()
 
         self._process.started.connect(self._process_started)
@@ -43,6 +44,19 @@ class CommandExecutor(QObject):
         
         self._commands = []
         self._command_queue = queue.Queue()
+
+    def _default_command_builder(self, parameters:str) -> str:
+        """
+        Builds a command using the given parameters.
+
+        :param parameters: the parameters to use
+        :type parameters: str
+        """
+        return (
+            f"{app_settings.environment_manager.value} run "
+            f"-n {app_settings.environment_name} "
+            f"{app_settings.executable_file_path.absoluteFilePath()} {parameters}"
+        )
 
     @Slot(list)
     def start_execution(self, commands:list[str]=[]) -> None:
@@ -94,7 +108,9 @@ class CommandExecutor(QObject):
         print(f"Starting process in environment:{app_settings.workspace_path.absolutePath()}")
         self._process.setWorkingDirectory(app_settings.workspace_path.absolutePath())
         self._process.setProgram("bash")
-        self._process.setArguments(["-c", f"{app_settings.environment_manager.value} run -n {app_settings.environment_name} {app_settings.executable_file_path} {command}"])
+
+        full_command = self.command_builder(command)
+        self._process.setArguments(["-c", full_command])
         self._process.start()
 
     @Slot()
