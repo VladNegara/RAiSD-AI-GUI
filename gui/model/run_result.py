@@ -19,69 +19,6 @@ class RunResult():
         self._parameter_group_list = parameter_group_list or ParameterGroupList.from_yaml(app_settings.yaml_path)
         self._time_completed = time_completed
 
-    @classmethod
-    def from_history_file(cls) -> list["RunResult"] | None:
-        run_results = []
-        try: 
-            with open(app_settings.workspace_path.absoluteFilePath("history.json"), "r") as f:
-                data = json.load(f)
-                if not isinstance(data, dict):
-                    raise json.JSONDecodeError
-                for key in data.keys():
-                    if not isinstance(data[key], dict):
-                        raise json.JSONDecodeError
-                    run_results.append(cls.from_dict(data[key]))
-                return run_results
-        except FileNotFoundError:
-            print("No history file found in this workspace")
-            return None
-        except json.JSONDecodeError:
-            print("History file not parseable. Might be empty or formatted incorrectly")
-            return []
-            
-
-    @classmethod
-    def from_dict(cls, dictionary: dict) -> "RunResult":
-        name = dictionary.get("name")
-        if not isinstance(name, str):
-            raise ValueError(
-                f"Invalid run name: {name}. "
-                + "Expected string name."
-            )
-
-        commands = dictionary.get("commands")
-        if not isinstance(commands, list):
-            raise ValueError(
-                f"Invalid commands object: {commands}. "
-                + "Expected list."
-            )
-        
-        for command in commands:
-            if not isinstance(command, str):
-                raise ValueError(
-                    f"Invalid command type: {command}"
-                    + "Expected string."
-                )
-        
-        parameters = dictionary.get("parameters")
-        if not isinstance(parameters, dict):
-            raise ValueError(
-                f"Invalid parameter object: {parameters}."
-                + "Expected dictionary."
-            )
-        
-        parameter_group_list = ParameterGroupList.from_yaml(app_settings.yaml_path)
-        # TODO populate with parameter values
-
-        time_completed = dictionary.get("time_completed")
-        if not isinstance(time_completed, str):
-            raise ValueError(
-                f"Invalid time_completed type: {time_completed}"
-                + "Expected string."
-            )
-        time_completed = datetime.strptime(time_completed, "%Y-%m-%d %H:%M:%S.%f")
-
-        return cls(name, commands, parameter_group_list, time_completed)
 
     def populate_parameter_group_list(
             self, 
