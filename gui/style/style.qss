@@ -204,7 +204,16 @@ QWidget#parameter_form_section {
 
 QWidget#heading{
     font-size: $font-size + 2px;
-    margin-bottom: 10px;
+}
+
+QWidget#label_body{
+    font-size: $font-size - 2px;
+    font-weight: 300;
+}
+
+QCheckBox::indicator {
+    width: 20px;
+    height: 20px;
 }
 
 QWidget#parameter_form_section QLineEdit {

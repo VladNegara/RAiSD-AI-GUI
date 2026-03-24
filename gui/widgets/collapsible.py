@@ -120,7 +120,7 @@ class Collapsible(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self._header = Collapsible.Header(
             header,
