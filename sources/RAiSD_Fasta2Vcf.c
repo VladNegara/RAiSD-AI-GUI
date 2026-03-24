@@ -886,7 +886,7 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 			fflush(fpOut);
 
 			fprintf(stderr, "\n\nERROR: Converted file %s exists.\n       Use -f to overwrite it or give it as input with -I.\n\n", fileNameNew);
-			exit(0);
+			exit(1);
 		}
 		else
 		{
@@ -1111,7 +1111,7 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 				fflush(fpOut);
 
 				fprintf(stderr, "\n\nERROR: Invalid character (%c) found in sequence %s (outgroup)\n\n", tstring[0], RSDDataset->outgroupName);
-				exit(0);
+				exit(1);
 			}
 		}
 		else
@@ -1152,7 +1152,7 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 					fflush(fpOut);
 
 					fprintf(stderr, "\n\nERROR: Invalid character (%c) found in sequence %s (outgroup)\n\n", tstring[0], RSDDataset->outgroupName2);
-					exit(0);
+					exit(1);
 				}
 			}
 			else
@@ -1254,7 +1254,7 @@ void RSDDataset_convertFasta2VCF (RSDDataset_t * RSDDataset, RSDCommandLine_t * 
 				fflush(fpOut);
 
 				fprintf(stderr, "\n\nERROR: Invalid character (%c) found in sequence %s\n\n", tstring[0], seqName);
-				exit(0);
+				exit(1);
 			}
 
 			tsite[i] = tstring[0]; 
