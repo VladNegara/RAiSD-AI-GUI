@@ -535,15 +535,18 @@ class StringPairListParameterWidget(ParameterWidget):
 
         def __init__(
                 self,
+                editable: bool,
                 values: tuple[str, str] = ("", ""),
                 delete_button_visible: bool = True,
         ) -> None:
             super().__init__()
+            self._editable = editable
 
             layout = QHBoxLayout(self)
 
             self._left_line_edit = QLineEdit()
             self._left_line_edit.setText(values[0])
+            self._left_line_edit.setReadOnly(not self._editable)
             self._left_line_edit.editingFinished.connect(
                 self._editing_finished,
             )
@@ -551,15 +554,17 @@ class StringPairListParameterWidget(ParameterWidget):
 
             self._right_line_edit = QLineEdit()
             self._right_line_edit.setText(values[1])
+            self._right_line_edit.setReadOnly(not self._editable)
             self._right_line_edit.editingFinished.connect(
                 self._editing_finished,
             )
             layout.addWidget(self._right_line_edit)
 
-            self._delete_button_visible = delete_button_visible
             self._delete_button = QPushButton("Delete row")
             self._delete_button.clicked.connect(self.delete_button_clicked)
-            self._delete_button.setVisible(self._delete_button_visible)
+            self._delete_button.setVisible(
+                delete_button_visible and self._editable
+            )
             layout.addWidget(self._delete_button)
 
         @property
@@ -580,7 +585,7 @@ class StringPairListParameterWidget(ParameterWidget):
 
         @delete_button_visible.setter
         def delete_button_visible(self, new_visible: bool) -> None:
-            self._delete_button.setVisible(new_visible)
+            self._delete_button.setVisible(new_visible and self._editable)
 
         @Slot()
         def _editing_finished(self) -> None:
@@ -606,7 +611,7 @@ class StringPairListParameterWidget(ParameterWidget):
             len(self._parameter.value) > self._parameter.min_count
         )
         for i, pair in enumerate(self._parameter.value):
-            row = self.__class__.Row(pair)
+            row = self.__class__.Row(self._editable, pair)
             row.delete_button_visible = delete_button_visible
             row.values_edited.connect(
                 lambda l, r, i=i: self._row_values_edited(i, l, r)
@@ -659,6 +664,7 @@ class StringPairListParameterWidget(ParameterWidget):
         if new_count > current_count:
             for i in range(current_count, new_count):
                 new_row = self.__class__.Row(
+                    self._editable,
                     new_value[i],
                 )
                 new_row.delete_button_visible = delete_button_visible
