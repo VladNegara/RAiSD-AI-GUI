@@ -19,7 +19,8 @@ from PySide6.QtWidgets import (
     QStyle,
     QStyleOption,
     QListWidget,
-    QAbstractItemView
+    QAbstractItemView,
+    QSplitter
 )
 
 from PySide6.QtGui import (
@@ -570,22 +571,19 @@ class RunViewWidget(RunSubWidget):
         step_widget.setObjectName("step_widget")
         self.step_layout = QHBoxLayout(step_widget)
         self.run_indicators = []
-        layout.addWidget(step_widget)
+        layout.addWidget(step_widget,1)
 
-        output_widget = QWidget()
-        output_widget.setObjectName("output_widget")
-        output_widget_layout = QHBoxLayout(output_widget)
-        layout.addWidget(output_widget)
+        self.output_widget = QSplitter()
+        layout.addWidget(self.output_widget,1)
 
         self.execution_output = QTextEdit(readOnly=True)
         self.execution_output.setObjectName("execution_output")
-        self.execution_output.setVisible(False)
-        output_widget_layout.addWidget(self.execution_output)
+        self.output_widget.addWidget(self.execution_output)
 
         self.error_output = QTextEdit(readOnly=True)
         self.error_output.setObjectName("error_output")
-        self.error_output.setVisible(False)
-        output_widget_layout.addWidget(self.error_output)
+        self.output_widget.addWidget(self.error_output)
+        self.output_widget.setVisible(False)
 
         self._command_executor.output.connect(self._command_executor_output)
         self._command_executor.err_output.connect(self._command_executor_err_output)
@@ -617,14 +615,19 @@ class RunViewWidget(RunSubWidget):
         self._stop_execution()
 
     def _toggle_console_button_clicked(self) -> None:
-        previous_visibility = self.execution_output.isVisible()
-        self.execution_output.setVisible(not previous_visibility)
-        self.error_output.setVisible(not previous_visibility)
+        previous_visibility = self.output_widget.isVisible()
+        self.output_widget.setVisible(not previous_visibility)
 
-        for indicator in self.run_indicators:
-            if previous_visibility:
+        layout = self.output_widget.parent().layout()
+        step_widget_index = 1
+
+        if previous_visibility:
+            layout.setStretch(step_widget_index, 1)
+            for indicator in self.run_indicators:
                 indicator.set_indicator_size(120)
-            else:
+        else:
+            layout.setStretch(step_widget_index, 0)
+            for indicator in self.run_indicators:
                 indicator.set_indicator_size(90)
 
     # methods
