@@ -29,6 +29,7 @@ class HistoryWidget(QWidget):
         super().__init__()
         self._history_list: HistoryListWidget = HistoryListWidget()
         self._run_result = RunResult()
+        self._selected = None
         self._setup_ui()
 
     def _setup_ui(self):
@@ -66,7 +67,7 @@ class HistoryWidget(QWidget):
         results_scroll.setWidget(self.results_widget )
         results_layout.addWidget(results_scroll, 1)
         self._right_panel.addWidget(self.results_panel)
-        # self.results_panel.hide()
+        self.results_panel.hide()
 
         # Give the list 1/3 and the detail panel 2/3 of the width
         splitter.setSizes([200, 400])
@@ -86,10 +87,15 @@ class HistoryWidget(QWidget):
         Update the detail panel when a record is selected from the list.
         #TODO: this will be changed, once we get the results from actual operation records
         """
-        self._run_result.populate(history_record)
-        self.results_widget.show_results()
-        # self.results_panel.show()
-        print("Done ")
+        if self._selected == history_record.name:
+            self.results_panel.hide()
+            self._selected = None
+        else:
+            self._run_result.populate(history_record)
+            self.results_widget.show_results()
+            self.results_panel.show()
+            self._selected = history_record.name
+        
 
     def update_history(self) -> None:
         #TODO: d not remake the entire list each time, but update as runs are completed
