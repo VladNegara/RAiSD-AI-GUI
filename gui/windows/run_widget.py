@@ -298,7 +298,10 @@ class OperationSelectionWidget(RunSubWidget):
         self.next_button = QPushButton("Next")
         self.next_button.setObjectName("next_button")
         self._update_next_button_state()
-        self._parameter_group_list.run_id_parameter.value_changed.connect(
+        self._parameter_group_list.run_id_valid_changed.connect(
+            self._update_next_button_state,
+        )
+        self._parameter_group_list.operations_valid_changed.connect(
             self._update_next_button_state,
         )
         return NavigationButtonsWidget(right_button=self.next_button)
@@ -349,7 +352,10 @@ class OperationSelectionWidget(RunSubWidget):
 
     @Slot()
     def _update_next_button_state(self) -> None:
-        valid = self._parameter_group_list.run_id_parameter.valid
+        valid = (
+            self._parameter_group_list.run_id_valid
+            and self._parameter_group_list.operations_valid
+        )
         self.next_button.setEnabled(valid)
         if valid:
             self.next_button.setProperty("highlight", "true")

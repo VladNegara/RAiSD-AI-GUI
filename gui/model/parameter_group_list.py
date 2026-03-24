@@ -42,7 +42,8 @@ class ParameterGroupList(QObject):
     the operation mode they correspond to and how they relate.
     """
 
-    operations_changed = Signal()
+    run_id_valid_changed = Signal(bool)
+    operations_valid_changed = Signal(bool)
 
     def __init__(
             self,
@@ -69,6 +70,8 @@ class ParameterGroupList(QObject):
             self._run_id_parameter_value_changed
         )
         self._operation_trees = operation_trees
+        for tree in self._operation_trees:
+            tree.valid_changed.connect(self._operation_tree_valid_changed)
         self._selected_operation_tree_index = 0
         self._parameter_groups = parameter_groups or []
         self._dependencies = dependencies or []
@@ -855,13 +858,20 @@ class ParameterGroupList(QObject):
 
     @property
     def run_id(self) -> str:
-        return self._run_id
+        return self.run_id_parameter.value
 
     @run_id.setter
     def run_id(self, new_run_id: str) -> None:
-        self._run_id = new_run_id
+        if self.run_id_parameter.value == new_run_id:
+            return # Nothing actually changed
+        self.run_id_parameter.value = new_run_id
         for operation_tree in self.operation_trees:
             operation_tree.run_id = new_run_id
+        self.run_id_valid_changed.emit(self.run_id_valid)
+
+    @property
+    def run_id_valid(self) -> bool:
+        return self.run_id_parameter.valid
 
     @property
     def operation_trees(self) -> list[OperationTree]:
@@ -880,6 +890,11 @@ class ParameterGroupList(QObject):
         self.selected_operation_tree.enabled = False
         self._selected_operation_tree_index = new_index
         self.selected_operation_tree.enabled = True
+        self.operations_valid_changed.emit(self.operations_valid)
+
+    @property
+    def operations_valid(self) -> bool:
+        return self.selected_operation_tree.valid
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:
@@ -935,3 +950,7 @@ class ParameterGroupList(QObject):
         new_valid: bool,
     ) -> None:
         self.run_id = new_run_id
+
+    @Slot(bool)
+    def _operation_tree_valid_changed(self, new_valid: bool) -> None:
+        self.operations_valid_changed.emit(self.operations_valid)
