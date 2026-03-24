@@ -350,7 +350,8 @@ class ParameterGroupList(QObject):
                     )
                 case "file":
                     accepted_formats = obj.get("formats", None)
-                    if accepted_formats is not None and not isinstance(accepted_formats, list):                        raise ValueError(
+                    if accepted_formats is not None and not isinstance(accepted_formats, list):
+                        raise ValueError(
                             "Invalid list of file formats for file parameter "
                             + f"{name}: {accepted_formats}. Expected list or "
                             + "None."
