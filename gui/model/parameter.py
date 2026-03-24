@@ -726,7 +726,11 @@ class StringPairListParameter(Parameter[list[tuple[str, str]]]):
         self._separator = separator
         self._left_pattern = left_pattern
         self._right_pattern = right_pattern
-        self._min_count = min_count
+        self._min_count = min_count or 0
+
+    @property
+    def min_count(self) -> int:
+        return self._min_count
 
     def add_pair(self, pair=("", "")) -> None:
         self.value += [pair]

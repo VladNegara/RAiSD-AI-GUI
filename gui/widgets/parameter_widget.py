@@ -526,10 +526,12 @@ class StringParameterWidget(ParameterWidget):
 class StringPairListParameterWidget(ParameterWidget):
     class Row(QWidget):
         values_edited = Signal(str, str)
+        delete_button_clicked = Signal()
 
         def __init__(
                 self,
                 values: tuple[str, str] = ("", ""),
+                delete_button_visible: bool = True,
         ) -> None:
             super().__init__()
 
@@ -549,6 +551,12 @@ class StringPairListParameterWidget(ParameterWidget):
             )
             layout.addWidget(self._right_line_edit)
 
+            self._delete_button_visible = delete_button_visible
+            self._delete_button = QPushButton("Delete row")
+            self._delete_button.clicked.connect(self.delete_button_clicked)
+            self._delete_button.setVisible(self._delete_button_visible)
+            layout.addWidget(self._delete_button)
+
         @property
         def values(self) -> tuple[str, str]:
             return (
@@ -560,6 +568,14 @@ class StringPairListParameterWidget(ParameterWidget):
         def values(self, new_values: tuple[str, str]) -> None:
             self._left_line_edit.setText(new_values[0])
             self._right_line_edit.setText(new_values[1])
+
+        @property
+        def delete_button_visible(self) -> bool:
+            return self._delete_button.isVisible()
+
+        @delete_button_visible.setter
+        def delete_button_visible(self, new_visible: bool) -> None:
+            self._delete_button.setVisible(new_visible)
 
         @Slot()
         def _editing_finished(self) -> None:
@@ -581,10 +597,17 @@ class StringPairListParameterWidget(ParameterWidget):
         row_widget = QWidget()
         self.row_layout = QVBoxLayout(row_widget)
         self._parameter: StringPairListParameter
+        delete_button_visible = (
+            len(self._parameter.value) > self._parameter.min_count
+        )
         for i, pair in enumerate(self._parameter.value):
             row = self.__class__.Row(pair)
+            row.delete_button_visible = delete_button_visible
             row.values_edited.connect(
                 lambda l, r, i=i: self._row_values_edited(i, l, r)
+            )
+            row.delete_button_clicked.connect(
+                lambda i=i: self._delete_button_clicked(i)
             )
             self.rows.append(row)
             self.row_layout.addWidget(row)
@@ -612,8 +635,13 @@ class StringPairListParameterWidget(ParameterWidget):
         current_count = len(self.rows)
         new_count = len(new_value)
 
+        delete_button_visible = (
+            new_count > self._parameter.min_count
+        )
+
         for i in range(min(current_count, new_count)):
             self.rows[i].values = new_value[i]
+            self.rows[i].delete_button_visible = delete_button_visible
 
         if new_count < current_count:
             for i in range(new_count, current_count):
@@ -626,8 +654,12 @@ class StringPairListParameterWidget(ParameterWidget):
                 new_row = self.__class__.Row(
                     new_value[i],
                 )
+                new_row.delete_button_visible = delete_button_visible
                 new_row.values_edited.connect(
                     lambda l, r, i=i: self._row_values_edited(i, l, r)
+                )
+                new_row.delete_button_clicked.connect(
+                    lambda i=i: self._delete_button_clicked(i)
                 )
                 self.rows.append(new_row)
                 self.row_layout.addWidget(new_row)
@@ -635,6 +667,10 @@ class StringPairListParameterWidget(ParameterWidget):
     @Slot(int, str, str)
     def _row_values_edited(self, index: int, left: str, right: str) -> None:
         self._parameter.set_pair(index, (left, right))
+
+    @Slot(int)
+    def _delete_button_clicked(self, index: int) -> None:
+        self._parameter.delete_pair(index)
 
 
 class FileParameterWidget(ParameterWidget):
