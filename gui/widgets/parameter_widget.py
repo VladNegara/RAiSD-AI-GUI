@@ -631,9 +631,10 @@ class StringPairListParameterWidget(ParameterWidget):
             self.row_layout.addWidget(row)
         layout.addWidget(row_widget)
 
-        add_pair_button = QPushButton("Add another row")
-        add_pair_button.clicked.connect(self._add_clicked)
-        layout.addWidget(add_pair_button)
+        if self._editable:
+            add_pair_button = QPushButton("Add another row")
+            add_pair_button.clicked.connect(self._add_clicked)
+            layout.addWidget(add_pair_button)
 
         self._parameter.value_changed.connect(
             self._parameter_value_changed,
