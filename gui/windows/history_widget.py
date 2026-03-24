@@ -36,7 +36,7 @@ class HistoryWidget(QWidget):
 
         self._history_list.run_selected.connect(self._on_run_selected)
 
-        history_records = RunResult.from_history_file()
+        history_records = HistoryRecord.from_history_file()
         if history_records:
             for op_rec in history_records:
                 self._history_list.add_record(op_rec)
@@ -59,18 +59,17 @@ class HistoryWidget(QWidget):
         # Give the list 1/3 and the detail panel 2/3 of the width
         splitter.setSizes([200, 400])
 
-
-    def add_completed_run(self, run_result: RunResult) -> None:
+    def add_completed_run(self, history_record: HistoryRecord) -> None:
         """
         Add a completed run to the history list.
 
         :param op_rec: the completed operation record to add
         :type op_rec: OperationRecord
         """
-        self._history_list.add_record(run_result)
+        self._history_list.add_record(history_record)
 
     @Slot(RunResult)
-    def _on_run_selected(self, run_result: RunResult) -> None:
+    def _on_run_selected(self, history_record: HistoryRecord) -> None:
         """
         Update the detail panel when a record is selected from the list.
         #TODO: this will be changed, once we get the results from actual operation records
@@ -96,4 +95,5 @@ class HistoryWidget(QWidget):
         #     self._right_panel.setCurrentWidget(self._detail_panel)
 
     def update_history(self) -> None:
-        run_results = RunResult.from_history_file()
+        #TODO: d not remake the entire list each time, but update as runs are completed
+        run_results = HistoryRecord.from_history_file()

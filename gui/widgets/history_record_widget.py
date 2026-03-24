@@ -3,26 +3,26 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QHBoxLayout
 
 from gui.model.settings import app_settings
-from gui.model.run_result import RunResult
+from gui.model.history_record import HistoryRecord
 
 class HistoryRecordWidget(QWidget):
     """
     A widget for single operation record to be put in the history_list
     """
-    def __init__(self, run_result: RunResult):
+    def __init__(self, history_record: HistoryRecord):
         super().__init__()
-        self._run_result = run_result
+        self._history_record = history_record
 
         layout = QGridLayout(self)
         layout.setColumnStretch(0, 1)
         layout.setColumnStretch(1, 0)
 
         # top left: the name of the operation record
-        name_label = QLabel(self._run_result.name)
+        name_label = QLabel(self._history_record.name)
         layout.addWidget(name_label, 0, 0, Qt.AlignmentFlag.AlignLeft)
 
         # top right: indication of the completion time/date
-        time_label = QLabel(self._format_time_ago(self._run_result.time_completed))
+        time_label = QLabel(self._format_time_ago(self._history_record.time_completed))
         layout.addWidget(time_label, 0, 1, Qt.AlignmentFlag.AlignRight)
 
         # # middle (from left to right): input files with commas in between with elided text functionality

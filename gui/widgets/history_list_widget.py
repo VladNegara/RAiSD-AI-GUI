@@ -7,18 +7,18 @@ from PySide6.QtWidgets import (
 )
 
 from gui.widgets.history_record_widget import HistoryRecordWidget
-from gui.model.run_result import RunResult
+from gui.model.history_record import HistoryRecord
 
 
 class HistoryListWidget(QWidget):
     """
     The widget that holds the all operation records to display in history_widget
     """
-    run_selected = Signal(RunResult)
+    run_selected = Signal(HistoryRecord)
 
     def __init__(
             self,
-            history_records: list[RunResult] | None = None,
+            history_records: list[HistoryRecord] | None = None,
     ) -> None:
         super().__init__()
         self._history_records = history_records or []
@@ -44,14 +44,14 @@ class HistoryListWidget(QWidget):
         for record in self._history_records:
             self._add_record_widget(record)
 
-    def add_record(self, run_result: RunResult) -> None:
-        self._history_records.insert(0, run_result)
-        self._add_record_widget(run_result, at_top = True)
+    def add_record(self, history_record: HistoryRecord) -> None:
+        self._history_records.insert(0, history_record)
+        self._add_record_widget(history_record, at_top = True)
 
-    def _add_record_widget(self, run_result: RunResult, at_top: bool = False) -> None:
-        widget = HistoryRecordWidget(run_result)
+    def _add_record_widget(self, history_record: HistoryRecord, at_top: bool = False) -> None:
+        widget = HistoryRecordWidget(history_record)
         widget.setMinimumHeight(100)
-        widget.mousePressEvent = lambda _: self.run_selected.emit(run_result)
+        widget.mousePressEvent = lambda _: self.run_selected.emit(history_record)
         if at_top:
             self._list_layout.insertWidget(0, widget)
         else:
