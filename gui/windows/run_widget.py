@@ -287,12 +287,6 @@ class OperationSelectionWidget(RunSubWidget):
         )
         layout.addWidget(run_id_parameter_widget.build_form_row())
 
-        run_id_parameter_widget = ParameterWidget.from_parameter(
-            self._parameter_group_list.run_id_parameter,
-            editable=True,
-        )
-        layout.addWidget(run_id_parameter_widget.build_form_row())
-
         operation_selector = self.__class__.OperationSelector(
             self._parameter_group_list
         )
