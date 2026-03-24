@@ -29,7 +29,7 @@ class HistoryWidget(QWidget):
         super().__init__()
         self._history_list: HistoryListWidget = HistoryListWidget()
         self._run_result = RunResult()
-        self._selected = None
+        self._selected : HistoryRecord = None
         self._setup_ui()
 
     def _setup_ui(self):
@@ -88,14 +88,14 @@ class HistoryWidget(QWidget):
         Update the detail panel when a record is selected from the list.
         #TODO: this will be changed, once we get the results from actual operation records
         """
-        if self._selected == history_record.name:
+        if self._selected == history_record:
             self.results_panel.hide()
             self._selected = None
         else:
             self._run_result.populate(history_record)
             self.results_widget.show_results()
             self.results_panel.show()
-            self._selected = history_record.name
+            self._selected = history_record
 
     def update_history_time(self) -> None:
         self._history_list.update_time()
