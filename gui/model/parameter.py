@@ -701,7 +701,7 @@ class FileParameter(Parameter[list[str]]):
     1. If `accepted_formats` is given and `strict` is `True`, the user
     is only able to select files that match the types in
     `accepted_formats`.
-    2. If `accepted_formats` is given and `strict` is `True`, the user
+    2. If `accepted_formats` is given and `strict` is `False`, the user
     can select any file, but a warning is displayed if the file type
     does not match the ones in `accepted_formats`.
     3. If `accepted_formats` is `None`, the user can select any file.

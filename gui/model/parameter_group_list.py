@@ -449,19 +449,20 @@ class ParameterGroupList(QObject):
                         compiled_pattern,
                     )
                 case "file":
-                    accepted_formats = obj.get("formats", []) or []
-                    if not isinstance(accepted_formats, list):
+                    accepted_formats = obj.get("formats", None)
+                    if accepted_formats is not None and not isinstance(accepted_formats, list):
                         raise ValueError(
                             "Invalid list of file formats for file parameter "
                             + f"{name}: {accepted_formats}. Expected list or "
-                            + "null."
+                            + "None."
                         )
-                    for format in accepted_formats:
-                        if not isinstance(format, str):
-                            raise ValueError(
-                                "Invalid accepted format for file parameter "
-                                + f"{name}: {format}. Expected string."
-                            )
+                    if accepted_formats is not None:
+                        for format in accepted_formats:
+                            if not isinstance(format, str):
+                                raise ValueError(
+                                    "Invalid accepted format for file parameter "
+                                    + f"{name}: {format}. Expected string."
+                                )
 
                     strict = obj.get("strict", False)
                     if not isinstance(strict, bool):
