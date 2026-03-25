@@ -1,7 +1,5 @@
 from gui.model.parameter_group_list import ParameterGroupList
 
-from PySide6.QtCore import QDir
-
 import json
 from datetime import datetime 
 from gui.model.settings import app_settings
@@ -20,6 +18,9 @@ class RunResult():
         self._time_completed = time_completed
 
     def to_history_record(self) -> HistoryRecord:
+        """
+        Makes a history record with the information of the current RunResult.
+        """
         parameters_dict = {}
         for parameter_group in self.parameter_group_list:
             for parameter in parameter_group:
@@ -34,6 +35,10 @@ class RunResult():
         )
 
     def to_dict(self) -> str:
+        """
+        Makes a dictionary with the information of the current RunResult. This
+        is used to store in the history file.
+        """
         parameters_dict = {}
         for parameter_group in self.parameter_group_list:
             for parameter in parameter_group:
@@ -49,6 +54,10 @@ class RunResult():
         return dict
 
     def parameter_to_value(self, parameter: Parameter) -> str | dict:
+        """
+        Makes the dictionary or string that is stored as the value of each 
+        parameter. Uses recursion for MultiParameter and OptionalParameter
+        """
         if type(parameter) is MultiParameter: 
             parameters = {}
             for param in parameter.parameters:
@@ -63,7 +72,9 @@ class RunResult():
             return parameter.value
 
     def save_to_history(self) -> None:
-        # try: 
+        """
+        Saves current run result to the history file of the workspace.
+        """
         if not app_settings.workspace_path.exists("history.json"):
             # If no history file exists
             with open(app_settings.workspace_path.absoluteFilePath("history.json"), "w") as f:
@@ -108,6 +119,11 @@ class RunResult():
         self._time_completed = datetime.now()
 
     def populate(self, history_record: HistoryRecord) -> None:
+        """
+        Populates the current run result with the contents of a history record.
+        This is used to fill the ResultsWidget in history with the contents
+        of records when a user clicks on them.
+        """
         self.parameter_group_list.run_id_parameter.value = history_record.name
         self._commands = history_record.commands
         dictionary = history_record.parameters
@@ -121,11 +137,29 @@ class RunResult():
             self._parameter_group_list.set_operation(operation, history_record.operations[operation])
 
     def populate_parameter(self, parameter: Parameter, value: dict | str) -> None:
+        """
+        Populates a parameter with the values from a dict or string. Uses
+        recursion for optional parameters and multi parameters.
+        """
         if type(parameter) is MultiParameter:
             for param in parameter.parameters:
-                self.populate_parameter(param, value[param.name])
+                if value[param.name]:
+                    self.populate_parameter(param, value[param.name])
         elif type(parameter) is OptionalParameter:
+            if not value['enabled']:
+                raise ValueError(
+                    "Optional parameter must have 'enabled' value."
+                )
             parameter.value = value["enabled"]
-            self.populate_parameter(parameter.parameter, value[parameter.parameter.name])
+            if value[parameter.parameter]:
+                self.populate_parameter(
+                    parameter.parameter, 
+                    value[parameter.parameter.name]
+                )
         else:
+            if not isinstance(value, str):
+                raise ValueError(
+                    f"Incorrect value for {parameter.name}: {value}"
+                    + "Expected str."
+                )
             parameter.value = value
