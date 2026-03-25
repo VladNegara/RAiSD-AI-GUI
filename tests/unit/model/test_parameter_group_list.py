@@ -1,6 +1,9 @@
 from pytest import approx, fixture, raises
 import re
 
+from gui.model.operation_tree import OperationTree
+from gui.model.operation import Operation
+from gui.model.file_structure import SingleFile
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
@@ -13,6 +16,8 @@ from gui.model.parameter import (
     StringParameter,
     FileParameter,
 )
+
+# TODO: make the tests more comprehensive and use mocking
 
 class TestParameterGroupList:
     """Tests for ParameterGroupList class."""
@@ -37,14 +42,28 @@ class TestParameterGroupList:
                 ]
             )
         ]
+        self.operations = {
+            "MDL-GEN": Operation(
+                id="mdl",
+                name="Model training",
+                description="Perform a model training.",
+                cli="-mdl",
+                requires=[("Input file", "-I", SingleFile([".ms", ".txt"]))],
+                produces=SingleFile([".txt"]),
+                output_path_prefix="./MDL-GEN",
+            )
+        }
+        self.operation_trees, _ = OperationTree.build_trees(self.operations)
         self.parameter_group_list = ParameterGroupList(
             command="./RAiSD-AI",
-            operations={
-                'IMG-GEN': True, 
-                'MDL-GEN': True, 
-                'MDL-TST': False,
-                'SWP-SCN': False
-            },
+            run_id_parameter=StringParameter(
+                name="Run ID",
+                description="Fill in a name to identify your run.",
+                flag="-n",
+                operations={"IMG-GEN", "MDL-GEN"},
+                default_value="my_run",
+            ),
+            operation_trees=self.operation_trees,
             parameter_groups=self.parameter_groups,
             dependencies=None,
         )
@@ -56,45 +75,9 @@ class TestParameterGroupList:
 
         # assert
         assert list.command == "./RAiSD-AI"
-        assert list.operations == {'IMG-GEN': True, 
-                                    'MDL-GEN': True, 
-                                    'MDL-TST': False,
-                                    'SWP-SCN': False}
+        assert list.operation_trees == self.operation_trees
         assert list.parameter_groups == groups
         assert list._dependencies == []
-
-    def test_set_operations(self):
-        # arrange
-        list = self.parameter_group_list
-
-        # act
-        list.set_operation('MDL-TST', True)
-        list.set_operation('IMG-GEN', False)
-
-        # assert
-        assert list.operations['MDL-TST'] == True
-        assert list.operations ['IMG-GEN'] == False
-        with raises(Exception, match="Setting an invalid operation: invalid op"):
-            list.set_operation('invalid op', True)
-
-    def test_operations_changed_signal_emitted(self):
-        # arrange
-        list = self.parameter_group_list
-        self.signals_emitted = 0
-
-        def on_operations_changed():
-            self.signals_emitted += 1
-
-        list.operations_changed.connect(on_operations_changed)
-
-        # act
-        list.set_operation('MDL-TST', True)
-        list.set_operation('IMG-GEN', False)
-        with raises(Exception):
-            list.set_operation('invalid op', True)
-
-        # assert
-        assert self.signals_emitted == 2
 
     def test_valid(self):
         list = self.parameter_group_list
@@ -110,11 +93,9 @@ class TestParameterGroupList:
         instructions = list.to_cli()
 
         # assert
-        assert len(instructions) == 2
-        assert instructions == [
-            './RAiSD-AI -op IMG-GEN',
-            './RAiSD-AI -op MDL-GEN -flag default'
-        ]
+        assert len(instructions) == 1
+        assert instructions == list.selected_operation_tree.to_cli(list.parameters)
+        
 
 
 class TestParameterGroupListFromYaml:
@@ -127,6 +108,10 @@ class TestParameterGroupListFromYaml:
             mocker.mock_open(
                 read_data= """
                 executable: ./RAiSD-AI
+                run_id_parameter:
+                  type: str
+                  name: Run ID
+                  description: The ID of the run.
                 modes:
                   - name: standard
                     operations:
@@ -134,10 +119,38 @@ class TestParameterGroupListFromYaml:
                         name: First operation
                         description: The first operation in the sequence.
                         cli: -op 1
+                        input:
+                          - name: Input video
+                            cli: --mp4
+                            file:
+                              type: single
+                              formats:
+                                - .mp4
+                        output:
+                          type: directory
+                          contents:
+                            - type: single
+                              formats:
+                                - .jpg
+                        prefix: Operation1.
                       second-op:
                         name: Second operation
                         description: The operation that comes after.
                         cli: -op 2
+                        input:
+                          - name: Frames
+                            cli: -f
+                            file:
+                              type: folder
+                              contents:
+                                - type: single
+                                  formats:
+                                    - .jpg
+                        output:
+                          type: single
+                          formats:
+                            - .txt
+                        prefix: Operation2.
                 parameter_groups:
                   - name: Boolean parameters
                     operations:
@@ -564,12 +577,7 @@ class TestParameterGroupListFromYaml:
         parameter_list = ParameterGroupList.from_yaml('path')
 
         # assert
-        assert parameter_list.operations == {
-            "first-op": False,
-            "second-op": False,
-        }
-        parameter_list.set_operation("first-op", True)
-        parameter_list.set_operation("second-op", True)
+        assert len(parameter_list.operation_trees) == 2
         assert len(parameter_list.parameter_groups) == 9
 
         # Bool
@@ -890,7 +898,7 @@ class TestParameterGroupListFromYaml:
         assert any_file.default_value == []
         assert not any_file.strict
         assert any_file.accepted_formats is None
-        assert any_file.expected_formats == [] # Should this be like this?
+        assert any_file.expected_formats is None
         assert not any_file.multiple
 
         any_files = file_group.parameters[1]
@@ -904,7 +912,7 @@ class TestParameterGroupListFromYaml:
         assert any_files.default_value == []
         assert not any_files.strict
         assert any_files.accepted_formats is None
-        assert any_files.expected_formats == [] # Should this be like this?
+        assert any_files.expected_formats is None
         assert any_files.multiple
 
         not_strict_file = file_group.parameters[2]

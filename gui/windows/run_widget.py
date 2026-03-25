@@ -3,7 +3,6 @@ from PySide6.QtCore import (
     QProcess,
     Signal,
     Slot,
-    QDir
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -12,9 +11,9 @@ from PySide6.QtWidgets import (
     QStackedLayout,
     QScrollArea,
     QPushButton,
+    QRadioButton,
     QLabel,
     QTextEdit,
-    QCheckBox,
     QMessageBox,
     QStyle,
     QStyleOption,
@@ -33,6 +32,8 @@ from gui.model.parameter_group_list import ParameterGroupList
 from gui.model.run_result import RunResult
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_widget import ParameterWidget
+from gui.widgets.operation_tree_widget import OperationTreeWidget
+from gui.widgets.resizable_stacked_widget import ResizableStackedWidget
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
 from gui.widgets.results_widget import ResultsWidget
@@ -275,8 +276,9 @@ class RunSubWidget(QWidget):
 
 class OperationSelectionWidget(RunSubWidget):
     """
-    
-    """    
+    A widget that allows the user to select operations to be run.
+    """
+
     def __init__(self, run_result: RunResult):
         self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
@@ -296,8 +298,10 @@ class OperationSelectionWidget(RunSubWidget):
         )
         layout.addWidget(run_id_parameter_widget.build_form_row())
 
-        operation_selection_widget = self._setup_operation_selection_widget()
-        layout.addWidget(operation_selection_widget, 1)
+        operation_selector = self.__class__.OperationSelector(
+            self._parameter_group_list
+        )
+        layout.addWidget(operation_selector)
 
         return widget
 
@@ -305,57 +309,64 @@ class OperationSelectionWidget(RunSubWidget):
         self.next_button = QPushButton("Next")
         self.next_button.setObjectName("next_button")
         self._update_next_button_state()
-        self._parameter_group_list.run_id_parameter.value_changed.connect(
+        self._parameter_group_list.run_id_valid_changed.connect(
+            self._update_next_button_state,
+        )
+        self._parameter_group_list.operations_valid_changed.connect(
             self._update_next_button_state,
         )
         return NavigationButtonsWidget(right_button=self.next_button)
 
-    def _setup_operation_selection_widget(self) -> QWidget:
-        """
-        Creates the widget with operation selectors and their descriptions.
-        """
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
+    class OperationSelector(QWidget):
+        def __init__(self, parameter_group_list: ParameterGroupList):
+            super().__init__()
 
-        for operation, enabled in self._parameter_group_list.operations.items():
-            operation_selector = self._operation_selector(operation, enabled, f"perform: {operation}") # TODO: Set description.
-            layout.addWidget(operation_selector)
-            
-        return widget 
+            self._parameter_group_list = parameter_group_list
 
-    def _operation_selector(self, operation: str, enabled: bool, description: str) -> QWidget:
-        """
-        An operation selector widget containing a checkbox linked to the parameter_group_list and a description.
-        """
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
+            layout = QHBoxLayout(self)
 
-        operation_button = QCheckBox(operation)
-        operation_button.setCheckState(
-            Qt.CheckState.Checked if enabled else Qt.CheckState.Unchecked
-        )
-        operation_button.checkStateChanged.connect(
-            lambda s: self._operation_selector_clicked(operation, s)
+            button_widget = QWidget()
+            button_layout = QVBoxLayout(button_widget)
+
+            tree_scroll = QScrollArea()
+            tree_scroll.setVerticalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
             )
-        layout.addWidget(operation_button)
-        
-        description_label = QLabel(description)
-        layout.addWidget(description_label, 1)
+            tree_scroll.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
+            tree_scroll.setWidgetResizable(True)
 
-        return widget
+            self.tree_stacked_widget = ResizableStackedWidget()
+            for i, tree in enumerate(
+                    self._parameter_group_list.operation_trees
+            ):
+                button = QRadioButton(tree.root.name)
+                button.setChecked(
+                    i
+                    == self._parameter_group_list.selected_operation_tree_index
+                )
+                button_layout.addWidget(button)
 
-    def _operation_selector_clicked(self, operation: str, state: Qt.CheckState) -> None:
-        """
-        Set the operation using the given checkbox state.
-        """
-        if state == Qt.CheckState.Checked:
-            self._parameter_group_list.set_operation(operation, True)
-        elif state == Qt.CheckState.Unchecked:
-            self._parameter_group_list.set_operation(operation, False)
+                widget = OperationTreeWidget(tree)
+                self.tree_stacked_widget.addWidget(widget)
+
+                button.clicked.connect(lambda _, i=i: self._button_clicked(i))
+            tree_scroll.setWidget(self.tree_stacked_widget)
+
+            layout.addWidget(button_widget)
+            layout.addWidget(tree_scroll)
+
+        def _button_clicked(self, i: int) -> None:
+            self._parameter_group_list.selected_operation_tree_index = i
+            self.tree_stacked_widget.current_index = i
 
     @Slot()
     def _update_next_button_state(self) -> None:
-        valid = self._parameter_group_list.run_id_parameter.valid
+        valid = (
+            self._parameter_group_list.run_id_valid
+            and self._parameter_group_list.operations_valid
+        )
         self.next_button.setEnabled(valid)
         if valid:
             self.next_button.setProperty("highlight", "true")
@@ -363,7 +374,6 @@ class OperationSelectionWidget(RunSubWidget):
             self.next_button.setProperty("highlight", "false")
         self.next_button.style().unpolish(self.next_button)
         self.next_button.style().polish(self.next_button)
-
 
 class ParameterInputWidget(RunSubWidget):    
     def __init__(self, run_result: RunResult):
