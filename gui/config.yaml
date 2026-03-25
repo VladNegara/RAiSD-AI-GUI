@@ -12,110 +12,170 @@ modes:
         description: Do a sweep scan with standard RAiSD.
         cli: ""
         input:
-          - multiple: false
-            extension:
-              - ms
-              - mbs
-              - VCF
-              - FASTA
-        output: report # What and how?
+          - name: Input data
+            cli: -I
+            file:
+              type: single
+              formats:
+                - .ms
+                - .mbs
+                - .vcf
+                - .fasta
+        output:
+          type: directory
+          contents: []
+        prefix: RAiSD_Grid.
   - name: RAiSD-AI
     operations:
       IMG-GEN:
         name: Data formatting
         description: Make raw data into PNGs.
-        cli: -op IMG_GEN
+        cli: -op IMG-GEN
         input:
-          - multiple: false
-            extension:
-              - ms
-              - mbs
-              - VCF
-              - FASTA
+          - name: Input data
+            cli: -I
+            file:
+              type: single
+              formats:
+                - .ms
         output:
-          - multiple: true
-            extension:
-              - png
+          type: directory
+          contents:
+            - type: directory
+              contents:
+                - type: single
+                  formats:
+                    - .png
+        prefix: RAiSD_Images.
       MDL-GEN:
         name: Model training
         description: Train a sweep detection CNN model.
-        cli: -op MDL_GEN
+        cli: -op MDL-GEN
         input:
-          - multiple: true
-            extension:
-              - png
+          - name: Training data
+            cli: -I
+            file:
+              type: directory
+              contents:
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
         output:
-          - multiple: false
-            extension:
-              - pt
-              - keras
+          type: directory
+          contents:
+            - type: single
+              formats:
+                - .pt
+        prefix: RAiSD_Model.
       MDL-TST:
         name: Model testing
         description: Evaluate a model.
-        cli: -op MDL_TST
+        cli: -op MDL-TST
         input:
-          - multiple: false
-            extension:
-              - pt
-              - keras
-          - multiple: true
-            extension:
-              - png
-        output: testing report # What and how?
+          - name: Model
+            cli: -mdl
+            file:
+              type: directory
+              contents: 
+                - type: single
+                  formats:
+                    - .pt
+          - name: Testing data
+            cli: -I
+            file:
+              type: directory
+              contents:
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+        output: 
+          type: single
+          formats:
+            - .report
+        prefix: RAiSD_Inference.
       SWP-SCN:
         name: Sweep scan
         description: Use a trained model to scan for selective sweeps.
-        cli: -op SWP_SCN
+        cli: -op SWP-SCN
         input:
-          - multiple: false
-            extension:
-              - pt
-              - keras
-          - multiple: true # Can you do multiple?
-            extension:
-              - ms
-              - mbs
-              - VCF
-              - FASTA
-        output: report # What and how?
+          - name: Model
+            cli: -mdl
+            file:
+              type: directory
+              contents: 
+                - type: single
+                  formats:
+                    - .pt
+          - name: Testing data
+            cli: -I
+            file:
+              type: single
+              formats: 
+                - .ms
+        output:
+          type: single
+          formats:
+            - .report
+        prefix: RAiSD_Report.
   - name: Common outlier analysis
     operations:
       CO:
         name: Common outlier analysis
         description: Perform common outlier analysis for a completed RAiSD run.
         cli: ""
-        input:
-          - multiple: false
-            extension:
-              - sweed # Whatever file this produces
-          - multiple: false
-            extensoion:
-              - raisd # Whatever file RAiSD produces
-        output: common outlier report # What?
+        input: []
+        output:
+          type: single
+          formats: 
+            - .co-report
   - name: File conversion
     operations:
       FASTA-VCF:
         name: FASTA to VCF
+        description: Convert a FASTA file to vcf
         cli: -E
         input:
-          - multiple: false
-            extension:
-              - FASTA
+          - name: Input file
+            cli: -I
+            file:
+              type: single
+              formats:
+                - .fasta
         output:
-          - multiple: false
-            extension:
-              - VCF
+          type: single
+          formats:
+            - .vcf
+        prefix: RAiSD_FastaVcf
       VCF-MS:
         name: VCF to ms
+        description: Convert a vcf file to ms
         cli: ""
         input:
-          - multiple: false
-            expension:
-              - VCF
+          - name: Input file
+            cli: -I
+            file:
+              type: single
+              formats:
+                - .vcf
         output:
-          - multiple: false
-            extension:
-              - ms
+          type: single
+          formats:
+            - .ms
+        prefix: RAiSD_VcfMs
 parameter_groups:
   - name: General
     operations:

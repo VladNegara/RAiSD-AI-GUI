@@ -7,6 +7,7 @@ from PySide6.QtCore import (
         Slot,
 )
 
+from gui.model.run_result import RunResult
 from gui.model.settings import app_settings
 
 class CommandExecutor(QObject):
@@ -34,8 +35,8 @@ class CommandExecutor(QObject):
         """
         super().__init__()
         self.command_builder = command_builder or self._default_command_builder
-        self._process = QProcess()
 
+        self._process = QProcess()
         self._process.started.connect(self._process_started)
         self._process.readyReadStandardOutput.connect(self._read_output)
         self._process.readyReadStandardError.connect(self._read_error)

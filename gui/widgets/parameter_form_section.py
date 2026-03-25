@@ -4,7 +4,7 @@ from PySide6.QtCore import Signal, Slot
 
 from gui.model.parameter_group import ParameterGroup
 from gui.widgets.parameter_widget import ParameterWidget
-
+from gui.widgets.collapsible import Collapsible
 
 class ParameterFormSection(QWidget):
     """
@@ -47,8 +47,9 @@ class ParameterFormSection(QWidget):
             form_layout.addWidget(form_row)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(heading)
-        layout.addWidget(form_body)
+        heading.setObjectName("heading")
+        widget = Collapsible(heading, form_body)
+        layout.addWidget(widget)
 
         self.setVisible(self._parameter_group.enabled)
 

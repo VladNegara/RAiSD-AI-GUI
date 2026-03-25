@@ -3,7 +3,6 @@ from PySide6.QtCore import (
     QProcess,
     Signal,
     Slot,
-    QDir
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -12,14 +11,15 @@ from PySide6.QtWidgets import (
     QStackedLayout,
     QScrollArea,
     QPushButton,
+    QRadioButton,
     QLabel,
     QTextEdit,
-    QCheckBox,
     QMessageBox,
     QStyle,
     QStyleOption,
     QListWidget,
-    QAbstractItemView
+    QAbstractItemView,
+    QSplitter
 )
 
 from PySide6.QtGui import (
@@ -32,9 +32,12 @@ from gui.model.parameter_group_list import ParameterGroupList
 from gui.model.run_result import RunResult
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_widget import ParameterWidget
+from gui.widgets.operation_tree_widget import OperationTreeWidget
+from gui.widgets.resizable_stacked_widget import ResizableStackedWidget
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
 from gui.widgets.results_widget import ResultsWidget
+from gui.widgets.process_indicator_widget import ProcessIndicator, IndicatorState
 
 class RunWidget(QWidget):
     """
@@ -104,6 +107,9 @@ class RunWidget(QWidget):
         self.results_button = QPushButton("Results")
         self.results_button.clicked.connect(self._switch_to_run_results_widget)
         self.results_button.setEnabled(False)
+        self.results_button.setProperty("highlight", "false")
+        self.results_button.style().unpolish(self.results_button)
+        self.results_button.style().polish(self.results_button)
         layout.addWidget(self.results_button)
 
         self._step_buttons = [
@@ -204,12 +210,18 @@ class RunWidget(QWidget):
     def _handle_run_start(self) -> None:
         self._switch_to_run_view_widget()
         self.run_view_widget.results_button.setEnabled(False)
+        self.run_view_widget.results_button.setProperty("highlight", "false")
+        self.run_view_widget.results_button.style().unpolish(self.run_view_widget.results_button)
+        self.run_view_widget.results_button.style().polish(self.run_view_widget.results_button)
 
     @Slot()
     def _handle_run_end(self, run_successful: bool) -> None:
         if run_successful:
             self._switch_to_run_results_widget()
             self.run_view_widget.results_button.setEnabled(True)
+            self.run_view_widget.results_button.setProperty("highlight", "true")
+            self.run_view_widget.results_button.style().unpolish(self.run_view_widget.results_button)
+            self.run_view_widget.results_button.style().polish(self.run_view_widget.results_button)
         else:
             self._switch_to_run_view_widget()
 
@@ -264,8 +276,9 @@ class RunSubWidget(QWidget):
 
 class OperationSelectionWidget(RunSubWidget):
     """
-    
-    """    
+    A widget that allows the user to select operations to be run.
+    """
+
     def __init__(self, run_result: RunResult):
         self._parameter_group_list = run_result.parameter_group_list
         super().__init__()
@@ -285,8 +298,10 @@ class OperationSelectionWidget(RunSubWidget):
         )
         layout.addWidget(run_id_parameter_widget.build_form_row())
 
-        operation_selection_widget = self._setup_operation_selection_widget()
-        layout.addWidget(operation_selection_widget, 1)
+        operation_selector = self.__class__.OperationSelector(
+            self._parameter_group_list
+        )
+        layout.addWidget(operation_selector)
 
         return widget
 
@@ -294,57 +309,64 @@ class OperationSelectionWidget(RunSubWidget):
         self.next_button = QPushButton("Next")
         self.next_button.setObjectName("next_button")
         self._update_next_button_state()
-        self._parameter_group_list.run_id_parameter.value_changed.connect(
+        self._parameter_group_list.run_id_valid_changed.connect(
+            self._update_next_button_state,
+        )
+        self._parameter_group_list.operations_valid_changed.connect(
             self._update_next_button_state,
         )
         return NavigationButtonsWidget(right_button=self.next_button)
 
-    def _setup_operation_selection_widget(self) -> QWidget:
-        """
-        Creates the widget with operation selectors and their descriptions.
-        """
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
+    class OperationSelector(QWidget):
+        def __init__(self, parameter_group_list: ParameterGroupList):
+            super().__init__()
 
-        for operation, enabled in self._parameter_group_list.operations.items():
-            operation_selector = self._operation_selector(operation, enabled, f"perform: {operation}") # TODO: Set description.
-            layout.addWidget(operation_selector)
-            
-        return widget 
+            self._parameter_group_list = parameter_group_list
 
-    def _operation_selector(self, operation: str, enabled: bool, description: str) -> QWidget:
-        """
-        An operation selector widget containing a checkbox linked to the parameter_group_list and a description.
-        """
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
+            layout = QHBoxLayout(self)
 
-        operation_button = QCheckBox(operation)
-        operation_button.setCheckState(
-            Qt.CheckState.Checked if enabled else Qt.CheckState.Unchecked
-        )
-        operation_button.checkStateChanged.connect(
-            lambda s: self._operation_selector_clicked(operation, s)
+            button_widget = QWidget()
+            button_layout = QVBoxLayout(button_widget)
+
+            tree_scroll = QScrollArea()
+            tree_scroll.setVerticalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
             )
-        layout.addWidget(operation_button)
-        
-        description_label = QLabel(description)
-        layout.addWidget(description_label, 1)
+            tree_scroll.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
+            tree_scroll.setWidgetResizable(True)
 
-        return widget
+            self.tree_stacked_widget = ResizableStackedWidget()
+            for i, tree in enumerate(
+                    self._parameter_group_list.operation_trees
+            ):
+                button = QRadioButton(tree.root.name)
+                button.setChecked(
+                    i
+                    == self._parameter_group_list.selected_operation_tree_index
+                )
+                button_layout.addWidget(button)
 
-    def _operation_selector_clicked(self, operation: str, state: Qt.CheckState) -> None:
-        """
-        Set the operation using the given checkbox state.
-        """
-        if state == Qt.CheckState.Checked:
-            self._parameter_group_list.set_operation(operation, True)
-        elif state == Qt.CheckState.Unchecked:
-            self._parameter_group_list.set_operation(operation, False)
+                widget = OperationTreeWidget(tree)
+                self.tree_stacked_widget.addWidget(widget)
+
+                button.clicked.connect(lambda _, i=i: self._button_clicked(i))
+            tree_scroll.setWidget(self.tree_stacked_widget)
+
+            layout.addWidget(button_widget)
+            layout.addWidget(tree_scroll)
+
+        def _button_clicked(self, i: int) -> None:
+            self._parameter_group_list.selected_operation_tree_index = i
+            self.tree_stacked_widget.current_index = i
 
     @Slot()
     def _update_next_button_state(self) -> None:
-        valid = self._parameter_group_list.run_id_parameter.valid
+        valid = (
+            self._parameter_group_list.run_id_valid
+            and self._parameter_group_list.operations_valid
+        )
         self.next_button.setEnabled(valid)
         if valid:
             self.next_button.setProperty("highlight", "true")
@@ -352,7 +374,6 @@ class OperationSelectionWidget(RunSubWidget):
             self.next_button.setProperty("highlight", "false")
         self.next_button.style().unpolish(self.next_button)
         self.next_button.style().polish(self.next_button)
-
 
 class ParameterInputWidget(RunSubWidget):    
     def __init__(self, run_result: RunResult):
@@ -569,20 +590,19 @@ class RunViewWidget(RunSubWidget):
         step_widget.setObjectName("step_widget")
         self.step_layout = QHBoxLayout(step_widget)
         self.run_indicators = []
-        layout.addWidget(step_widget)
+        layout.addWidget(step_widget,1)
 
-        output_widget = QWidget()
-        output_widget.setObjectName("output_widget")
-        output_widget_layout = QHBoxLayout(output_widget)
-        layout.addWidget(output_widget)
+        self.output_widget = QSplitter()
+        layout.addWidget(self.output_widget,1)
 
         self.execution_output = QTextEdit(readOnly=True)
-        self.execution_output.setObjectName("execution_output") #Todo hide/reveal these with a button
-        output_widget_layout.addWidget(self.execution_output)
+        self.execution_output.setObjectName("execution_output")
+        self.output_widget.addWidget(self.execution_output)
 
         self.error_output = QTextEdit(readOnly=True)
-        self.error_output.setObjectName("error_output") #Todo hide/reveal these with a button
-        output_widget_layout.addWidget(self.error_output)
+        self.error_output.setObjectName("error_output")
+        self.output_widget.addWidget(self.error_output)
+        self.output_widget.setVisible(False)
 
         self._command_executor.output.connect(self._command_executor_output)
         self._command_executor.err_output.connect(self._command_executor_err_output)
@@ -597,17 +617,39 @@ class RunViewWidget(RunSubWidget):
         return widget
 
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
-        self.stop_run_button = QPushButton("Stop Run") #TODO style this
+        self.stop_run_button = QPushButton("Stop Run")
         self.stop_run_button.setEnabled(False)
+        self.stop_run_button.setProperty("highlight", "false")
         self.stop_run_button.clicked.connect(self._stop_run_button_clicked)
-        
+
+        self.toggle_console_button = QPushButton("Toggle Console")
+        self.toggle_console_button.setEnabled(True)
+        self.toggle_console_button.clicked.connect(self._toggle_console_button_clicked)
+
         self.results_button = QPushButton("Results")
         self.results_button.setEnabled(False)
+        self.results_button.setProperty("highlight", "false")
 
-        return NavigationButtonsWidget(middle_button=self.stop_run_button, right_button=self.results_button)
+        return NavigationButtonsWidget(left_button=self.stop_run_button, middle_button=self.toggle_console_button, right_button=self.results_button)
 
     def _stop_run_button_clicked(self) -> None:
         self._stop_execution()
+
+    def _toggle_console_button_clicked(self) -> None:
+        previous_visibility = self.output_widget.isVisible()
+        self.output_widget.setVisible(not previous_visibility)
+
+        layout = self.output_widget.parent().layout()
+        step_widget_index = 1
+
+        if previous_visibility:
+            layout.setStretch(step_widget_index, 1)
+            for indicator in self.run_indicators:
+                indicator.set_indicator_size(120)
+        else:
+            layout.setStretch(step_widget_index, 0)
+            for indicator in self.run_indicators:
+                indicator.set_indicator_size(90)
 
     # methods
     @Slot()
@@ -619,6 +661,9 @@ class RunViewWidget(RunSubWidget):
     def run_start(self, number_of_processes: int) -> None:
         self.setup_execution_indicators(number_of_processes)
         self.stop_run_button.setEnabled(True)
+        self.stop_run_button.setProperty("highlight", "true")
+        self.stop_run_button.style().unpolish(self.stop_run_button)
+        self.stop_run_button.style().polish(self.stop_run_button)
 
     @Slot(bool)
     def run_end(self, run_successful: bool) -> None:
@@ -626,6 +671,9 @@ class RunViewWidget(RunSubWidget):
         Update the execution buttons and close an open confirm dialog.
         """
         self.stop_run_button.setEnabled(False)
+        self.stop_run_button.setProperty("highlight", "false")
+        self.stop_run_button.style().unpolish(self.stop_run_button)
+        self.stop_run_button.style().polish(self.stop_run_button)
         if self.confirm_stop_execution_dialog is not None:
             self.confirm_stop_execution_dialog.close()
         if self.execution_still_running_dialog is not None:
@@ -687,7 +735,6 @@ class RunViewWidget(RunSubWidget):
         for idx in range(max([number_of_indicators, number_of_processes])):
             if idx < number_of_processes and idx < number_of_indicators:
                 self.run_indicators[idx].setVisible(True)
-                self.run_indicators[idx].setStyleSheet("background-color: lightgray;")
             elif idx < number_of_processes and idx >= number_of_indicators:
                 self.add_indicator_widget(idx)
                 continue
@@ -698,26 +745,23 @@ class RunViewWidget(RunSubWidget):
         """
         Add an indicator widget to self.step_layout.
         """
-        widget = QWidget()
-        widget.setFixedSize(50, 50)
-        widget.setStyleSheet("background-color: lightgray;")
-        widget.setObjectName(f"process_{index}")
+        indicator = ProcessIndicator(number=index + 1, size=120)
         self._command_executor.process_started.connect(lambda idx=index: self._process_started(idx))
         self._command_executor.process_finished.connect(lambda idx=index: self._process_finished(idx))
-        self.step_layout.addWidget(widget)
-        self.run_indicators.append(widget)
+        self.step_layout.addWidget(indicator)
+        self.run_indicators.append(indicator)
 
-    def set_execution_view_indicator(self, index: int, color: str) -> None:
+    def set_execution_view_indicator(self, index: int, state: IndicatorState) -> None:
         """
-        Set the indicator to the given color.
+        Set the indicator to the given state.
 
         :param index: the index of the indicator
         :type index: int
 
-        :param color: the new color of the indicator
-        :type color: str
+        :param state: the new state of the indicator
+        :type state: str
         """
-        self.run_indicators[index].setStyleSheet(f"background-color: {color};")
+        self.run_indicators[index].state = state
 
     def clear_outputs(self) -> None:
         """
@@ -770,21 +814,20 @@ class RunViewWidget(RunSubWidget):
         """
         Handle CommandExecutor.process_started.
         """
-        self.set_execution_view_indicator(process_index, "yellow")
-
+        self.set_execution_view_indicator(process_index, IndicatorState.RUNNING)
     @Slot(int)
-    def _process_finished(self, index: int) -> None:
+    def _process_finished(self, process_index: int) -> None:
         """
         Handle CommandExecutor.process_finished.
         """
-        self.set_execution_view_indicator(index, "green")
+        self.set_execution_view_indicator(process_index, IndicatorState.FINISHED)
 
     @Slot(int, QProcess.ProcessError)
     def _process_failed(self, process_index: int, process_error: QProcess.ProcessError) -> None:
         """
         Handle CommandExecutor.process_failed.
         """
-        self.set_execution_view_indicator(process_index, "red")
+        self.set_execution_view_indicator(process_index, IndicatorState.FAILED)
 
         if process_error is not None:
             print(f"Process '{process_index}' failed with process error '{process_error}'")
@@ -797,7 +840,7 @@ class RunViewWidget(RunSubWidget):
         """
         Handle CommandExecutor.process_stopped.
         """
-        self.set_execution_view_indicator(process_index, "purple")
+        self.set_execution_view_indicator(process_index, IndicatorState.STOPPED)
 
 
 class RunResultsWidget(RunSubWidget):
