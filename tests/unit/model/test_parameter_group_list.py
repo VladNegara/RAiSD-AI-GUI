@@ -898,7 +898,7 @@ class TestParameterGroupListFromYaml:
         assert any_file.default_value == []
         assert not any_file.strict
         assert any_file.accepted_formats is None
-        assert any_file.expected_formats == [] # Should this be like this?
+        assert any_file.expected_formats is None
         assert not any_file.multiple
 
         any_files = file_group.parameters[1]
@@ -912,7 +912,7 @@ class TestParameterGroupListFromYaml:
         assert any_files.default_value == []
         assert not any_files.strict
         assert any_files.accepted_formats is None
-        assert any_files.expected_formats == [] # Should this be like this?
+        assert any_files.expected_formats is None
         assert any_files.multiple
 
         not_strict_file = file_group.parameters[2]
