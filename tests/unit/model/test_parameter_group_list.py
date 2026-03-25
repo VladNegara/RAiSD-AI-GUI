@@ -19,6 +19,13 @@ class TestParameterGroupList:
 
     @fixture(autouse=True)
     def set_parameter_group_list(self):
+        self.run_id_parameter = StringParameter(
+            name="runidparam",
+            description="runidparamdescription",
+            flag="-n",
+            operations={"MDL-GEN"},
+            default_value="runid",
+        )
         self.parameter_groups = [
             ParameterGroup(
                 name='img',
@@ -30,7 +37,7 @@ class TestParameterGroupList:
                         name='name',
                         description='description',
                         flag='-flag',
-                        operations={'MDL-GEN'},
+                        operations={'IMG-GEN'},
                         default_value='default',
                         pattern=re.compile(r"\b[a-z]+\b")
                     )
@@ -38,7 +45,7 @@ class TestParameterGroupList:
             )
         ]
         self.parameter_group_list = ParameterGroupList(
-            command="./RAiSD-AI",
+            run_id_parameter=self.run_id_parameter,
             operations={
                 'IMG-GEN': True, 
                 'MDL-GEN': True, 
@@ -51,11 +58,12 @@ class TestParameterGroupList:
     
     def test_init_values(self):
         # arrange
+        run_id_parameter = self.run_id_parameter
         list = self.parameter_group_list
         groups = self.parameter_groups
 
         # assert
-        assert list.command == "./RAiSD-AI"
+        assert list.run_id_parameter == run_id_parameter
         assert list.operations == {'IMG-GEN': True, 
                                     'MDL-GEN': True, 
                                     'MDL-TST': False,
@@ -111,9 +119,10 @@ class TestParameterGroupList:
 
         # assert
         assert len(instructions) == 2
+        print(instructions)
         assert instructions == [
-            './RAiSD-AI -op IMG-GEN',
-            './RAiSD-AI -op MDL-GEN -flag default'
+            ' -op IMG-GEN -flag default',
+            '-n runid -op MDL-GEN'
         ]
 
 
@@ -126,7 +135,12 @@ class TestParameterGroupListFromYaml:
             "builtins.open",
             mocker.mock_open(
                 read_data= """
-                executable: ./RAiSD-AI
+                run_id_parameter:
+                  name: Run ID
+                  description: A name that identifies the run and is used to name the output files. Only letters, digits and underscores allowed
+                  cli: -n
+                  type: str
+                  pattern: "[a-zA-Z0-9_]+"
                 modes:
                   - name: standard
                     operations:
