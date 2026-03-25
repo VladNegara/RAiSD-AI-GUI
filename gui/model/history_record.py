@@ -6,6 +6,10 @@ from gui.model.settings import app_settings
 from gui.model.parameter_group_list import ParameterGroupList
 
 class HistoryRecord():
+    """
+    A history record holds the information of a completed run necessary to
+    show in the history.
+    """
     def __init__(
             self,
             name: str,
@@ -22,6 +26,10 @@ class HistoryRecord():
 
     @classmethod
     def from_history_file(cls) -> list["HistoryRecord"] | None:
+        """
+        Class method that retrieves data from a history file in the workspace
+        and parses it into a list of history records.
+        """
         history_records = []
         try: 
             with open(app_settings.workspace_path.absoluteFilePath("history.json"), "r") as f:
@@ -42,6 +50,13 @@ class HistoryRecord():
         
     @classmethod
     def from_dict(cls, dictionary: dict) -> "HistoryRecord":
+        """
+        Class method that takes a dictionary and parses it to construct a 
+        history record. 
+
+        :param dictionary: the dictionary that contains the record data
+        :type dictionary: dict
+        """
         name = dictionary.get("name")
         if not isinstance(name, str):
             raise ValueError(
@@ -89,21 +104,42 @@ class HistoryRecord():
     
     @property
     def name(self) -> str:
+        """
+        The name of the execution. This is the run_id of the parameter
+        group list and run result. This is also the name of the directory
+        where the output of the operation is stored.
+        """
         return self._name
     
     @property
     def commands(self) -> list[str] | None:
+        """
+        The commands of an execution.
+        """
         return self._commands
 
     @property
     def operations(self) -> dict[str, bool]:
+        """
+        The operatons that were run during an execution. Stored as a dictionary
+        from operation name to a boolean that signifies whether the operation
+        was performed.
+        """
         return self._operations
 
     @property
     def parameters(self) -> dict:
+        """
+        A dictionary that holds the parameters that were used, with their 
+        values.
+        """
         return self._parameters
     
     @property
     def time_completed(self) -> datetime | None:
+        """
+        The time at which the run was completed. This is used to show how long 
+        ago a run was completed.
+        """
         return self._time_completed
     
