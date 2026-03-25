@@ -16,6 +16,7 @@ from PySide6.QtCore import (
     QObject,
     Signal,
     Slot,
+    QFileInfo,
     QDir,
 )
 
@@ -280,7 +281,7 @@ class CommonParentDirectoryNode(FileProducerNode):
         self._file_consumers = []
         for file_structure in self._produces.contents:
             file_consumer = FileConsumerNode(
-                Directory([file_structure]),
+                file_structure,
                 "",
                 "",
             )
@@ -308,7 +309,14 @@ class CommonParentDirectoryNode(FileProducerNode):
         The path to the directory produced by this node's children, if
         available.
         """
-        return self.file_consumers[0].file
+        parent_directories: set[QDir] = set()
+        for consumer in self.file_consumers:
+            if consumer.file is None:
+                return None
+            parent_directories.add(QFileInfo(consumer.file).dir())
+        if len(parent_directories) == 1:
+            return list(parent_directories)[0].absolutePath()
+        return None
 
     def _set_run_id(self, new_run_id: str) -> None:
         for file_consumer in self.file_consumers:
@@ -344,7 +352,7 @@ class CommonParentDirectoryNode(FileProducerNode):
         if not all(consumer.valid for consumer in self.file_consumers):
             return False
 
-        return len(set(consumer.file for consumer in self.file_consumers)) == 1
+        return self.file is not None
 
     def to_cli(self, parameters: list[Parameter]) -> list[str]:
         """
@@ -604,7 +612,11 @@ class OperationNode(FileProducerNode):
         self._parameters = {}
         for parameter_id in operation.parameter_builders:
             parameter_builder = operation.parameter_builders[parameter_id]
-            self._parameters[parameter_id] = parameter_builder()
+            parameter = parameter_builder()
+            self._parameters[parameter_id] = parameter
+            # TODO: consider if there is a way to only connect the
+            # used parameters
+            parameter.value_changed.connect(self._parameter_value_changed)
         self._output_path = [
             OperationNode.PathFragmentGenerator.from_path_fragment(
                 path_fragment=path_fragment,
@@ -740,6 +752,11 @@ class OperationNode(FileProducerNode):
 
     @Slot(bool)
     def _consumer_valid_changed(self, new_valid: bool) -> None:
+        self.valid_changed.emit(self.valid)
+
+    @Slot()
+    def _parameter_value_changed(self) -> None:
+        self.file_changed.emit(self.file)
         self.valid_changed.emit(self.valid)
 
 

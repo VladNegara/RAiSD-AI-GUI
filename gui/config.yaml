@@ -47,11 +47,9 @@ modes:
         output:
           type: directory
           contents:
-            - type: directory
-              contents:
-                - type: single
-                  formats:
-                    - .png
+            - type: single
+              formats:
+                - .png
         overwrite_parameter:
           name: Overwrite existing image data?
           description: You are about to overwrite existing data in the output folder. Are you sure?
@@ -65,6 +63,7 @@ modes:
             cli: "-icl"
             type: str
             pattern: ".+"
+            default: class_label
         path:
           - RAiSD_Images.
           - type: run id
