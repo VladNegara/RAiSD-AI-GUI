@@ -21,15 +21,6 @@ class RunResult():
         self._parameter_group_list = parameter_group_list or ParameterGroupList.from_yaml(app_settings.yaml_path)
         self._time_completed = time_completed
 
-
-    def populate_parameter_group_list(
-            self, 
-            parameter_group_list: ParameterGroupList, 
-            command: str
-        ) -> ParameterGroupList:
-        #TODO: implement
-        pass
-
     def to_history_record(self) -> HistoryRecord:
         parameters_dict = {}
         for parameter_group in self.parameter_group_list:
