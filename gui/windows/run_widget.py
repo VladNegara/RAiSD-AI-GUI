@@ -19,7 +19,8 @@ from PySide6.QtWidgets import (
     QStyle,
     QStyleOption,
     QListWidget,
-    QAbstractItemView
+    QAbstractItemView,
+    QSplitter
 )
 
 from PySide6.QtGui import (
@@ -35,6 +36,7 @@ from gui.widgets.parameter_widget import ParameterWidget
 from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
 from gui.widgets.results_widget import ResultsWidget
+from gui.widgets.process_indicator_widget import ProcessIndicator, IndicatorState
 
 class RunWidget(QWidget):
     """
@@ -578,20 +580,19 @@ class RunViewWidget(RunSubWidget):
         step_widget.setObjectName("step_widget")
         self.step_layout = QHBoxLayout(step_widget)
         self.run_indicators = []
-        layout.addWidget(step_widget)
+        layout.addWidget(step_widget,1)
 
-        output_widget = QWidget()
-        output_widget.setObjectName("output_widget")
-        output_widget_layout = QHBoxLayout(output_widget)
-        layout.addWidget(output_widget)
+        self.output_widget = QSplitter()
+        layout.addWidget(self.output_widget,1)
 
         self.execution_output = QTextEdit(readOnly=True)
-        self.execution_output.setObjectName("execution_output") #Todo hide/reveal these with a button
-        output_widget_layout.addWidget(self.execution_output)
+        self.execution_output.setObjectName("execution_output")
+        self.output_widget.addWidget(self.execution_output)
 
         self.error_output = QTextEdit(readOnly=True)
-        self.error_output.setObjectName("error_output") #Todo hide/reveal these with a button
-        output_widget_layout.addWidget(self.error_output)
+        self.error_output.setObjectName("error_output")
+        self.output_widget.addWidget(self.error_output)
+        self.output_widget.setVisible(False)
 
         self._command_executor.output.connect(self._command_executor_output)
         self._command_executor.err_output.connect(self._command_executor_err_output)
@@ -610,15 +611,35 @@ class RunViewWidget(RunSubWidget):
         self.stop_run_button.setEnabled(False)
         self.stop_run_button.setProperty("highlight", "false")
         self.stop_run_button.clicked.connect(self._stop_run_button_clicked)
-        
+
+        self.toggle_console_button = QPushButton("Toggle Console")
+        self.toggle_console_button.setEnabled(True)
+        self.toggle_console_button.clicked.connect(self._toggle_console_button_clicked)
+
         self.results_button = QPushButton("Results")
         self.results_button.setEnabled(False)
         self.results_button.setProperty("highlight", "false")
 
-        return NavigationButtonsWidget(middle_button=self.stop_run_button, right_button=self.results_button)
+        return NavigationButtonsWidget(left_button=self.stop_run_button, middle_button=self.toggle_console_button, right_button=self.results_button)
 
     def _stop_run_button_clicked(self) -> None:
         self._stop_execution()
+
+    def _toggle_console_button_clicked(self) -> None:
+        previous_visibility = self.output_widget.isVisible()
+        self.output_widget.setVisible(not previous_visibility)
+
+        layout = self.output_widget.parent().layout()
+        step_widget_index = 1
+
+        if previous_visibility:
+            layout.setStretch(step_widget_index, 1)
+            for indicator in self.run_indicators:
+                indicator.set_indicator_size(120)
+        else:
+            layout.setStretch(step_widget_index, 0)
+            for indicator in self.run_indicators:
+                indicator.set_indicator_size(90)
 
     # methods
     @Slot()
@@ -704,7 +725,6 @@ class RunViewWidget(RunSubWidget):
         for idx in range(max([number_of_indicators, number_of_processes])):
             if idx < number_of_processes and idx < number_of_indicators:
                 self.run_indicators[idx].setVisible(True)
-                self.run_indicators[idx].setStyleSheet("background-color: lightgray;")
             elif idx < number_of_processes and idx >= number_of_indicators:
                 self.add_indicator_widget(idx)
                 continue
@@ -715,26 +735,23 @@ class RunViewWidget(RunSubWidget):
         """
         Add an indicator widget to self.step_layout.
         """
-        widget = QWidget()
-        widget.setFixedSize(50, 50)
-        widget.setStyleSheet("background-color: lightgray;")
-        widget.setObjectName(f"process_{index}")
+        indicator = ProcessIndicator(number=index + 1, size=120)
         self._command_executor.process_started.connect(lambda idx=index: self._process_started(idx))
         self._command_executor.process_finished.connect(lambda idx=index: self._process_finished(idx))
-        self.step_layout.addWidget(widget)
-        self.run_indicators.append(widget)
+        self.step_layout.addWidget(indicator)
+        self.run_indicators.append(indicator)
 
-    def set_execution_view_indicator(self, index: int, color: str) -> None:
+    def set_execution_view_indicator(self, index: int, state: IndicatorState) -> None:
         """
-        Set the indicator to the given color.
+        Set the indicator to the given state.
 
         :param index: the index of the indicator
         :type index: int
 
-        :param color: the new color of the indicator
-        :type color: str
+        :param state: the new state of the indicator
+        :type state: str
         """
-        self.run_indicators[index].setStyleSheet(f"background-color: {color};")
+        self.run_indicators[index].state = state
 
     def clear_outputs(self) -> None:
         """
@@ -787,21 +804,20 @@ class RunViewWidget(RunSubWidget):
         """
         Handle CommandExecutor.process_started.
         """
-        self.set_execution_view_indicator(process_index, "yellow")
-
+        self.set_execution_view_indicator(process_index, IndicatorState.RUNNING)
     @Slot(int)
-    def _process_finished(self, index: int) -> None:
+    def _process_finished(self, process_index: int) -> None:
         """
         Handle CommandExecutor.process_finished.
         """
-        self.set_execution_view_indicator(index, "green")
+        self.set_execution_view_indicator(process_index, IndicatorState.FINISHED)
 
     @Slot(int, QProcess.ProcessError)
     def _process_failed(self, process_index: int, process_error: QProcess.ProcessError) -> None:
         """
         Handle CommandExecutor.process_failed.
         """
-        self.set_execution_view_indicator(process_index, "red")
+        self.set_execution_view_indicator(process_index, IndicatorState.FAILED)
 
         if process_error is not None:
             print(f"Process '{process_index}' failed with process error '{process_error}'")
@@ -814,7 +830,7 @@ class RunViewWidget(RunSubWidget):
         """
         Handle CommandExecutor.process_stopped.
         """
-        self.set_execution_view_indicator(process_index, "purple")
+        self.set_execution_view_indicator(process_index, IndicatorState.STOPPED)
 
 
 class RunResultsWidget(RunSubWidget):

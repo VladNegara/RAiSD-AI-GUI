@@ -283,3 +283,38 @@ QTreeView#folder_widget {
 
 /* RUN VIEW */
 
+/* ---- Process Indicators ---- */
+
+QWidget#process_indicator{
+    qproperty-textColor: white;
+}
+
+QWidget#process_indicator[indicator_state="pending"] {
+    qproperty-fillColor: $purplish-background;
+    qproperty-borderColor: $primary-purple;
+}
+
+QWidget#process_indicator[indicator_state="running"] {
+    qproperty-fillColor: $accent-orange;
+    qproperty-borderColor: $process-indicator-running-border;
+}
+
+QWidget#process_indicator[indicator_state="finished"] {
+    qproperty-fillColor: $primary-purple;
+    qproperty-borderColor: $primary-purple;
+}
+
+QWidget#process_indicator[indicator_state="failed"] {
+    qproperty-fillColor: $process-indicator-failed-background;
+    qproperty-borderColor: $process-indicator-failed-border;
+}
+
+QWidget#process_indicator[indicator_state="stopped"] {
+    qproperty-fillColor: $border-gray;
+    qproperty-borderColor: $process-indicator-stopped-border;
+}
+
+QWidget#execution_output,
+QWidget#error_output{
+    font-size: $font-size - 4px;
+}
