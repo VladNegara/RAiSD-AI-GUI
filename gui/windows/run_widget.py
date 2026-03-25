@@ -333,7 +333,7 @@ class OperationSelectionWidget(RunSubWidget):
                 Qt.ScrollBarPolicy.ScrollBarAsNeeded
             )
             tree_scroll.setHorizontalScrollBarPolicy(
-                Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
             )
             tree_scroll.setWidgetResizable(True)
 
