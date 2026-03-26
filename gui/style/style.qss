@@ -93,6 +93,14 @@ QWidget#tree_stacked_widget{
     background: transparent;
 }
 
+QScrollArea#parameter_form_scroll QScrollBar,
+QScrollArea#results_scroll QScrollBar,
+QWidget#commands_view QScrollBar{
+    width: 0px;
+    height: 0px;
+}
+
+
 /* SHARED — PURPLE BUTTONS */
 
 QWidget#parameter_confirmation_widget QPushButton,
