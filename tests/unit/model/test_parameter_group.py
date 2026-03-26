@@ -12,7 +12,7 @@ class TestParameterGroup:
         self.string_param = StringParameter(
             name="string_param",
             description="string_param description",
-            flag="-flag_string",
+            flag="-flag_string ",
             operations={'MDL-GEN'},
             default_value="default",
             max_length=10,
@@ -50,21 +50,22 @@ class TestParameterGroup:
         """Test ParameterGroup initialization as disabled when the parameters are disabled."""
         param_list = [
             BoolParameter(
-            name="disabled_param_1",
-            description="desc",
-            flag="-a",
-            operations={'IMG-GEN'},
-            default_value=False,
-            enabled=False,
+                name="disabled_param_1",
+                description="desc",
+                flag="-a",
+                operations={'IMG-GEN'},
+                default_value=False,
+                enabled=False,
             ),
             BoolParameter(
-            name="disabled_param_2",
-            description="desc",
-            flag="-b",
-            operations={'IMG-GEN'},
-            default_value=True,
-            enabled=False,
-            )]
+                name="disabled_param_2",
+                description="desc",
+                flag="-b",
+                operations={'IMG-GEN'},
+                default_value=True,
+                enabled=False,
+            ),
+        ]
 
         group = ParameterGroup(name="disabled_group", parameters=param_list)
         assert group._enabled is False

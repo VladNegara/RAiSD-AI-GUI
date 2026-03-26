@@ -1,18 +1,34 @@
 import pytest
 import pytestqt
+import tempfile
 import re
-from time import sleep
 
-from PySide6.QtCore import Slot, QProcess
+from PySide6.QtCore import (
+    Slot, 
+    QProcess, 
+    QDir
+)
 
+from gui.model.settings import app_settings
 from gui.execution.command_executor import CommandExecutor
 
 class TestCommandExecutor:
     """Tests for CommandExecutor class."""
 
     @pytest.fixture(autouse=True)
-    def set_command_executor(self):
-        self.command_executor = CommandExecutor()
+    def set_command_executor(self, qtbot, mocker):
+        # Create a real temp dir
+        temp_dir = tempfile.TemporaryDirectory()
+        qdir = QDir(temp_dir.name)
+
+        # Patch app_settings.workspace_path to return the real QDir        
+        workspace_path_mock = mocker.PropertyMock(return_value=qdir)
+        type(app_settings).workspace_path = workspace_path_mock
+
+        mock_run_result = mocker.Mock()
+        mock_run_result.parameter_group_list.run_id = "test-command-executor"
+
+        self.command_executor = CommandExecutor(mock_run_result)
         self.command_executor.output.connect(self.output_signal)
         self.command_executor.err_output.connect(self.err_output_signal)
         self.command_executor.execution_started.connect(self.execution_started_signal)
@@ -35,11 +51,12 @@ class TestCommandExecutor:
         self.process_failed = []
         self.process_stopped = []
 
-        self.command_img_gen = "-n TrainingData2DSNP -I datasets/train/msneutral1_100sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTR -f -frm -O"
+        self.command_img_gen = f"-n TestCommandExecutor -I {app_settings.executable_file_path.absoluteDir().absolutePath()}/datasets/train/msneutral1_100sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTR -f -frm -O"
 
         yield   # everything after this will be run after the test methods.
 
         print("teardown")
+        temp_dir.cleanup()
         self.command_executor.stop_execution()
         self.command_executor._process.waitForFinished(3000)
 

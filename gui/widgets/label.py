@@ -4,12 +4,14 @@ Utility classes for displaying text with an icon, e.g. as a warning.
 
 from PySide6.QtGui import (
     QColor,
+    QPainter
 )
 from PySide6.QtWidgets import(
     QHBoxLayout,
     QLabel,
     QStyle,
     QWidget,
+    QStyleOption,
 )
 
 
@@ -56,6 +58,12 @@ class IconLabel(QWidget):
     def text(self, new_text: str) -> None:
         self.text_label.setText(new_text)
 
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
+
 
 class InfoLabel(IconLabel):
     """
@@ -73,6 +81,7 @@ class InfoLabel(IconLabel):
             pixmapi=QStyle.StandardPixmap.SP_MessageBoxInformation,
             text=text,
         )
+        self.setObjectName("info_label")
 
 
 class WarningLabel(IconLabel):
@@ -91,6 +100,7 @@ class WarningLabel(IconLabel):
             pixmapi=QStyle.StandardPixmap.SP_MessageBoxWarning,
             text=text,
         )
+        self.setObjectName("warning_label")
 
 
 class ErrorLabel(IconLabel):
@@ -109,3 +119,4 @@ class ErrorLabel(IconLabel):
             pixmapi=QStyle.StandardPixmap.SP_MessageBoxCritical,
             text=text,
         )
+        self.setObjectName("error_label")

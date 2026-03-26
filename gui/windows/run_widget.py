@@ -27,6 +27,7 @@ from PySide6.QtGui import (
     QPainter
 )
 
+from gui.model.parameter import MultiParameter, OptionalParameter, Parameter
 from gui.model.settings import app_settings
 from gui.model.parameter_group_list import ParameterGroupList
 from gui.model.run_result import RunResult
@@ -150,7 +151,7 @@ class RunWidget(QWidget):
         # Parameter input widget
         self.parameter_input_widget = ParameterInputWidget(run_result=self._run_result)
         self.parameter_input_widget.back_button.clicked.connect(self._switch_to_operation_selection_widget)
-        self.parameter_input_widget.next_button.clicked.connect(self._switch_to_parameter_confirmation_widget)
+        self.parameter_input_widget.navigate_next.connect(self._switch_to_parameter_confirmation_widget)
         layout.addWidget(self.parameter_input_widget)
 
         # Parameter confirmation widget
@@ -180,6 +181,7 @@ class RunWidget(QWidget):
     # ---------- step button bar switch methods ----------
     @Slot()
     def _switch_to_operation_selection_widget(self) -> None:
+        self.parameter_input_widget.reset_touched()
         self.stacked_step_widget_layout.setCurrentWidget(self.operation_selection_widget)
         self._set_active_step(0)
 
@@ -187,7 +189,7 @@ class RunWidget(QWidget):
     def _switch_to_parameter_input_widget(self) -> None:
         self.stacked_step_widget_layout.setCurrentWidget(self.parameter_input_widget)
         self._set_active_step(1)
-        self.parameter_input_widget._update_next_button_state()
+        self.parameter_input_widget.update_next_button_state()
 
     @Slot()
     def _switch_to_parameter_confirmation_widget(self) -> None:
@@ -296,7 +298,9 @@ class OperationSelectionWidget(RunSubWidget):
             self._parameter_group_list.run_id_parameter,
             editable=True,
         )
-        layout.addWidget(run_id_parameter_widget.build_form_row())
+        run_id_widget = run_id_parameter_widget.build_form_row()
+        run_id_widget.setFixedWidth(510)
+        layout.addWidget(run_id_widget)
 
         self.operation_selector = self.__class__.OperationSelector(
             self._parameter_group_list
@@ -339,6 +343,7 @@ class OperationSelectionWidget(RunSubWidget):
             button_layout = QVBoxLayout(button_widget)
 
             tree_scroll = QScrollArea()
+            tree_scroll.setObjectName("tree_scroll")
             tree_scroll.setVerticalScrollBarPolicy(
                 Qt.ScrollBarPolicy.ScrollBarAsNeeded
             )
@@ -348,6 +353,7 @@ class OperationSelectionWidget(RunSubWidget):
             tree_scroll.setWidgetResizable(True)
 
             self.tree_stacked_widget = ResizableStackedWidget()
+            self.tree_stacked_widget.setObjectName("tree_stacked_widget")
             for i, tree in enumerate(
                     self._parameter_group_list.operation_trees
             ):
@@ -391,7 +397,9 @@ class OperationSelectionWidget(RunSubWidget):
         self.next_button.style().unpolish(self.next_button)
         self.next_button.style().polish(self.next_button)
 
-class ParameterInputWidget(RunSubWidget):    
+
+class ParameterInputWidget(RunSubWidget):
+    navigate_next = Signal()
     def __init__(self, run_result: RunResult):
         self._run_result = run_result
         self._parameter_group_list = run_result.parameter_group_list
@@ -405,15 +413,15 @@ class ParameterInputWidget(RunSubWidget):
         parameter_input_label.setObjectName("parameter_input_label")
         layout.addWidget(parameter_input_label)
 
-        parameter_form = ParameterForm(self._parameter_group_list, editable=True)
-        parameter_form.setObjectName("parameter_form")
+        self._parameter_form = ParameterForm(self._parameter_group_list, editable=True)
+        self._parameter_form.setObjectName("parameter_form")
 
         parameter_form_scroll = QScrollArea()
         parameter_form_scroll.setObjectName("parameter_form_scroll")
         parameter_form_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         parameter_form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         parameter_form_scroll.setWidgetResizable(True)
-        parameter_form_scroll.setWidget(parameter_form)
+        parameter_form_scroll.setWidget(self._parameter_form)
         layout.addWidget(parameter_form_scroll)
 
         self._validity_label = QLabel("")
@@ -424,37 +432,74 @@ class ParameterInputWidget(RunSubWidget):
         check_param_button.clicked.connect(self._check_param_button_clicked)
         layout.addWidget(check_param_button)
         return widget
-    
+
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.back_button = QPushButton("Back")
         self.next_button = QPushButton("Next")
         self.next_button.setObjectName("next_button")
+        self.next_button.clicked.connect(self._next_button_clicked)
 
-        self._update_next_button_state()
+        self.update_next_button_state()
         # TODO: make this just connect to a signal on the parameter group list
         self._parameter_group_list.run_id_parameter.value_changed.connect(
-            self._update_next_button_state
+            self.update_next_button_state
         )
         for group in self._parameter_group_list.parameter_groups:
             for parameter in group.parameters:
-                parameter.value_changed.connect(self._update_next_button_state)
+                self._connect_parameter_to_update_next_button_state(parameter)
                 
         return NavigationButtonsWidget(left_button=self.back_button, right_button=self.next_button)
 
-    def _update_next_button_state(self) -> None:
+    def _connect_parameter_to_update_next_button_state(self, parameter: Parameter) -> None:
+        """
+        Helper function to connect `value_changed` to `update_next_button_state` on all parameter types.
+        """
+        if isinstance(parameter, MultiParameter):
+            for child in parameter.parameters:
+                self._connect_parameter_to_update_next_button_state(child)
+        elif isinstance(parameter, OptionalParameter):
+            parameter.value_changed.connect(self.update_next_button_state)
+            self._connect_parameter_to_update_next_button_state(parameter.parameter)
+        else:
+            parameter.value_changed.connect(self.update_next_button_state)
+
+    def update_next_button_state(self) -> None:
         """
         Helper function to display the error that makes the next_button inactive
         """
         valid = self._parameter_group_list.valid
-        self.next_button.setEnabled(valid)
         if valid:
-            self.next_button.setProperty("highlight", "true")
             self._validity_label.setText("")
         else:
-            self.next_button.setProperty("highlight", "false")
-            self._validity_label.setText("Cannot continue: one or more parameters are invalid.")
-        self.next_button.style().unpolish(self.next_button)
-        self.next_button.style().polish(self.next_button)
+            invalid_params = []
+            for group in self._parameter_group_list.parameter_groups:
+                for parameter in group.parameters:
+                    if isinstance(parameter, MultiParameter):
+                        for child_parameter in parameter.parameters:
+                            if not child_parameter.valid and child_parameter.enabled:
+                                invalid_params.append(child_parameter.name)
+                    else:
+                        if not parameter.valid and parameter.enabled:
+                            invalid_params.append(parameter.name)
+            self._validity_label.setText(
+                "Cannot continue. Invalid parameters:" + "".join(f"  - {name}" for name in invalid_params)
+            )
+
+    def _next_button_clicked(self) -> None:
+        """
+        Helper function that decides next buttons function based on parameter validity
+        """
+        valid = self._parameter_group_list.valid
+        if valid:
+            self.navigate_next.emit()
+        else:
+            self._parameter_form.touch_all()
+
+    def reset_touched(self) -> None:
+        """
+        Helper function to make touched false for all parameters
+        """
+        self._parameter_form.untouch_all()
 
     @Slot()
     def _check_param_button_clicked(self) -> None:

@@ -31,10 +31,6 @@ def main():
 
     app.setStyleSheet(final_stylesheet)
 
-    app_settings.workspace_path = QDir()
-    app_settings.executable_file_path = QFileInfo(QDir().absoluteFilePath("RAiSD-AI"))
-    app_settings.environment_manager = EnvironmentManager.MICROMAMBA
-    app_settings.environment_name = "raisd-ai"
 
     parameter_group_list = ParameterGroupList.from_yaml("gui/config.yaml")
 
@@ -42,7 +38,7 @@ def main():
     app_settings.workspace_path_changed.connect(lambda path: setattr(run_result, 'path', path))
 
     window = MainWindow(run_result)
-    window.resize(1000,800)
+    window.resize(1200,800)
     window.show()
     app.exec()
     print("App closed")
