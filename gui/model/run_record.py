@@ -1015,11 +1015,11 @@ class RunRecord(QObject):
         Populates a parameter with the values from a dict or string. Uses
         recursion for optional parameters and multi parameters.
         """
-        if type(parameter) is MultiParameter:
+        if isinstance(parameter, MultiParameter):
             for param in parameter.parameters:
                 if isinstance(value, dict) and value[param.name]:
                     self.populate_parameter(param, value[param.name])
-        elif type(parameter) is OptionalParameter:
+        elif isinstance(parameter, OptionalParameter):
             if isinstance(value, dict) and 'enabled' not in value:
                 raise ValueError(
                     f"Incorrect format for {parameter.name}: {value}"
