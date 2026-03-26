@@ -13,7 +13,6 @@ from PySide6.QtCore import (
 
 from gui.model.run_result import RunResult
 from gui.model.settings import app_settings
-from gui.model.run_result import RunResult
 
 class CommandExecutor(QObject):
     """
