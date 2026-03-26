@@ -8,16 +8,25 @@ from PySide6.QtCore import (
     Slot,
 )
 
+from gui.model.file_structure import (
+    FileStructure,
+    SingleFile,
+    Directory,
+)
+from gui.model.operation import Operation
+from gui.model.operation_tree import OperationTree
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     Parameter,
     OptionalParameter,
     MultiParameter,
+    CountedMultiParameter,
     BoolParameter,
     IntParameter,
     FloatParameter,
     EnumParameter,
     StringParameter,
+    StringPairListParameter,
     FileParameter,
 )
 from gui.model.dependency import (
@@ -35,58 +44,36 @@ class ParameterGroupList(QObject):
     the operation mode they correspond to and how they relate.
     """
 
-    operations_changed = Signal()
+    run_id_valid_changed = Signal(bool)
+    operations_valid_changed = Signal(bool)
 
     def __init__(
             self,
-            command: str,
             run_id_parameter: StringParameter,
-            operations: dict[str, bool],
+            operation_trees: list[OperationTree],
             parameter_groups: list[ParameterGroup] | None = None,
             dependencies: list[Dependency] | None = None,
     ) -> None:
         """
         Initialize a `ParameterGroupList` object.
 
-        :param command: the terminal command to use
-        :type command: str
-
         :param parameter_groups: the groups of parameters
         :type parameter_groups: list[ParameterGroup] | None
         """
         super().__init__()
-        self.command = command
         self._run_id_parameter = run_id_parameter
         self._run_id = run_id_parameter.value
         self._run_id_parameter.value_changed.connect(
             self._run_id_parameter_value_changed
         )
-        self._operations = operations
+        self._operation_trees = operation_trees
+        for tree in self._operation_trees:
+            tree.valid_changed.connect(self._operation_tree_valid_changed)
+        self._selected_operation_tree_index = 0
         self._parameter_groups = parameter_groups or []
         self._dependencies = dependencies or []
-
-    class OperationEnabledCondition(Dependency.Condition):
-        def __init__(
-                self,
-                parameter_group_list: "ParameterGroupList",
-                operation: str,
-                target_value: bool = True,
-                parent: QObject | None = None,
-        ) -> None:
-            super().__init__(
-                value=parameter_group_list.operations[operation]==target_value,
-                parent=parent,
-            )
-            self._parameter_group_list = parameter_group_list
-            self._operation = operation
-            self._target_value = target_value
-
-            self._parameter_group_list.operations_changed.connect(self._operations_changed)
-
-        @Slot()
-        def _operations_changed(self) -> None:
-            self.value = self._parameter_group_list.operations[self._operation] == self._target_value
-
+        # Set using setter
+        self.selected_operation_tree_index = 0
 
     @classmethod
     def from_yaml(cls, file_path: str) -> "ParameterGroupList":
@@ -102,6 +89,116 @@ class ParameterGroupList(QObject):
 
         id_to_parameter: dict[str, Parameter[Any]] = {}
         parameter_to_condition_objs: dict[Parameter[Any], list[dict]] = {}
+
+        def parse_file_structure(
+                obj: dict,
+        ) -> FileStructure:
+            if "type" not in obj:
+                raise ValueError("File structure type missing.")
+            file_type = obj["type"]
+            match file_type:
+                case "file" | "single" | "single file":
+                    formats = obj.get("formats", [])
+                    if not isinstance(formats, list):
+                        raise ValueError("Invalid format list for single file.")
+                    for format in formats:
+                        if not isinstance(format, str):
+                            raise ValueError(
+                                f"Invalid format for single file: {format}. "
+                                + "Expected string."
+                            )
+
+                    return SingleFile(formats)
+                case "folder" | "directory" | "dir":
+                    contents_list = obj.get("contents", [])
+                    if not isinstance(contents_list, list):
+                        raise ValueError("Invalid contents list for directory.")
+                    contents = []
+                    for contents_obj in contents_list:
+                        if not isinstance (contents_obj, dict):
+                            raise ValueError(
+                                f"Invalid item in contents for directory: {contents_obj}."
+                                + "Expected object."
+                            )
+                        contents.append(parse_file_structure(contents_obj))
+
+                    return Directory(contents)
+                case _:
+                    raise ValueError(
+                        f"Invalid file structure. Unknown file type {file_type}"
+                    )
+                
+        def parse_operation(
+                obj: dict,
+                id: str
+        ) -> Operation:
+            name = obj.get("name", "") or ""
+            if not isinstance(name, str):
+                raise ValueError(
+                    f"Invalid operation name: {name}. Expected string or null."
+                )
+
+            description = obj.get("description", "") or ""
+            if not isinstance(description, str):
+                raise ValueError(
+                    f"Invalid description for operation {name}: {description}."
+                    + " Expected string or null."
+                )
+            
+            cli = obj.get("cli", "") or ""
+            if not isinstance(cli, str):
+                raise ValueError(
+                    f"Invalid CLI representation for operation {name}: {cli}."
+                    + " Expected string or null."
+                )
+
+            requires = []
+            requires_list = obj.get("input", []) or []
+            if not isinstance(requires_list, list):
+                raise ValueError(
+                    f"Invalid input for operation {name}: {requires_list}."
+                    + "Expected list."
+                )
+            for requires_obj in requires_list:
+                if not isinstance (requires_obj, dict):
+                    raise ValueError(
+                        f"Invalid item in input list: {requires_obj}. "
+                        + "Expected object."
+                    )
+                file_name = requires_obj.get("name", "")
+                if not isinstance(file_name, str):
+                    raise ValueError(
+                    f"Invalid file name: {file_name}. Expected string or null."
+                    )
+                file_cli = requires_obj.get("cli", "") or ""
+                if not isinstance(file_cli, str):
+                    raise ValueError(
+                        f"Invalid CLI representation for file {file_name}: "
+                        + f"{file_cli}. Expected string or null."
+                    )
+
+                if "file" not in requires_obj:
+                    raise ValueError("File missing.")
+                file_obj = requires_obj["file"]
+                file = parse_file_structure(file_obj)
+                requires.append((file_name, file_cli, file))
+
+            produces_obj = obj.get("output", "") or ""
+            if not isinstance(produces_obj, dict):
+                raise ValueError(
+                    f"Invalid output for operation: {produces_obj}."
+                    + "Expected object."
+                )
+            produces = parse_file_structure(produces_obj)
+
+            prefix = obj.get("prefix", "") or ""
+            if not isinstance(prefix, str):
+                raise ValueError(
+                    f"Invalid prefix for output path {prefix}."
+                    + " Expected string or null."
+                )
+            
+            return Operation(id, name, description, cli, requires, produces, prefix)
 
         def parse_parameter(
                 obj: dict,
@@ -148,7 +245,7 @@ class ParameterGroupList(QObject):
                             + f"{name}: {operations_add_list} Expected a list."
                         )
                     for operation_id in operations_add_list:
-                        if not isinstance(operation, str):
+                        if not isinstance(operation_id, str):
                             raise ValueError(
                                 "Invalid operation ID added for parameter "
                                 + f"{name}: {operation_id}. Expected a string."
@@ -163,7 +260,7 @@ class ParameterGroupList(QObject):
                             + "Expected a list."
                         )
                     for operation_id in operations_remove_list:
-                        if not isinstance(operation, str):
+                        if not isinstance(operation_id, str):
                             raise ValueError(
                                 "Invalid operation ID removed for parameter "
                                 + f"{name}: {operation_id}. Expected a string."
@@ -348,6 +445,97 @@ class ParameterGroupList(QObject):
                         max_length,
                         compiled_pattern,
                     )
+                case "string pair list" | "string pairs":
+                    default_value_list = obj.get("default", []) or []
+                    if not isinstance(default_value_list, list):
+                        raise ValueError(
+                            "Invalid default value for string pair list "
+                            + f"parameter {name}: {default_value_list}. "
+                            + "Expected a list or null."
+                        )
+                    default_value = []
+                    for pair in default_value_list:
+                        if not isinstance(pair, dict):
+                            raise ValueError(
+                                "Invalid value in default list for string pair"
+                                + f" list parameter {name}: {pair}. Expected "
+                                + "an object."
+                            )
+
+                        left = pair.get("left", "") or ""
+                        if not isinstance(left, str):
+                            raise ValueError(
+                                "Invalid left value in default list for string"
+                                + f" pair list parameter {name}: {left}. "
+                                + "Expected a string or null."
+                            )
+
+                        right = pair.get("right", "") or ""
+                        if not isinstance(right, str):
+                            raise ValueError(
+                                "Invalid right value in default list for "
+                                + f"string pair list parameter {name}: {right}"
+                                + ". Expected a string or null."
+                            )
+
+                        default_value.append((left, right))
+
+                    if "separator" not in obj:
+                        raise ValueError(
+                            "Missing separator for string pair list parameter "
+                            + f"{name}."
+                        )
+                    separator = obj["separator"]
+                    if not isinstance(separator, str):
+                        raise ValueError(
+                            "Invalid separator for string pair list parameter "
+                            + f"{name}: {separator}. Expected a string."
+                        )
+
+                    left_pattern = obj.get("left_pattern", None)
+                    if isinstance(left_pattern, str):
+                        compiled_left_pattern = compile(left_pattern)
+                    elif left_pattern is None:
+                        compiled_left_pattern = None
+                    else:
+                        raise ValueError(
+                            "Invalid left-side pattern for string pair list "
+                            + f"parameter {name}: {left_pattern}. Expected a "
+                            + "string or null."
+                        )
+
+                    right_pattern = obj.get("right_pattern", None)
+                    if isinstance(right_pattern, str):
+                        compiled_right_pattern = compile(right_pattern)
+                    elif right_pattern is None:
+                        compiled_right_pattern = None
+                    else:
+                        raise ValueError(
+                            "Invalid right-side pattern for string pair list "
+                            + f"parameter {name}: {right_pattern}. Expected a "
+                            + "string or null."
+                        )
+
+
+                    min_count = obj.get("min", 0) or 0
+                    if not isinstance(min_count, int):
+                        raise ValueError(
+                            "Invalid minimum count for string pair list "
+                            + f"parameter {name}: {min_count}. Expected an int"
+                            + " or null."
+                        )
+        
+                    parameter = StringPairListParameter(
+                        name,
+                        description,
+                        flag,
+                        operations,
+                        default_value,
+                        separator,
+                        compiled_left_pattern,
+                        compiled_right_pattern,
+                        min_count,
+                    )
                 case "file":
                     accepted_formats = obj.get("formats", None)
                     if accepted_formats is not None and not isinstance(accepted_formats, list):
@@ -441,6 +629,40 @@ class ParameterGroupList(QObject):
                         )
 
                     parameter = MultiParameter(
+                        name,
+                        description,
+                        flag,
+                        parameter_operations,
+                        inner_parameters,
+                    )
+                case (
+                    "multi counted"
+                    | "counted multi"
+                    | "multi count"
+                    | "count multi"
+                ):
+                    if "parameters" not in obj:
+                        raise ValueError(
+                            f"Inner parameters not provided "
+                            + f"for counted multi-value parameter {name}."
+                        )
+                    parameters_list = obj["parameters"]
+                    if not isinstance(parameters_list, list):
+                        raise ValueError(
+                            "Invalid inner parameter list for counted multi-"
+                            + f"value parameter {name}: {parameters_list}. "
+                            + "Expected a list."
+                        )
+                    inner_parameters: list[Parameter[Any]] = []
+                    for inner_parameter_obj in parameters_list:
+                        inner_parameters.append(
+                            parse_parameter(
+                                inner_parameter_obj,
+                                operations,
+                            ),
+                        )
+
+                    parameter = CountedMultiParameter(
                         name,
                         description,
                         flag,
@@ -661,21 +883,33 @@ class ParameterGroupList(QObject):
 
         config_obj = load(config_text, Loader=Loader)
 
-        if "executable" not in config_obj:
-            raise ValueError("Config file is missing executable name.")
-        executable = config_obj["executable"]
-        if not isinstance(executable, str):
+        operations = {}
+        if "modes" not in config_obj:
+            raise ValueError("Configuration file contains no list of modes.")
+        mode_list = config_obj["modes"]
+        if not isinstance(mode_list, list):
             raise ValueError(
-                f"Invalid executable name: {executable}. Expected string."
+                f"Invalid mode list: {mode_list}. Expected a list."
             )
-
-        operations: dict[str, bool] = {}
-        mode_list = config_obj.get("modes", []) or []
         for mode_obj in mode_list:
-            for operation in mode_obj["operations"]:
-                if not isinstance(operation, str):
-                    raise ValueError()
-                operations[operation] = False
+            if not isinstance(mode_obj, dict):
+                raise ValueError(f"Invalid mode: {mode_obj}. Expected object.")
+            if "operations" not in mode_obj:
+                raise ValueError(f"Mode has no operation list.")
+            operations_obj = mode_obj["operations"]
+            if not isinstance(operations_obj, dict):
+                raise ValueError(
+                    f"Invalid operations dictionary: {operations_obj}. "
+                    + "Expected an object."
+                )
+            for operation_id in operations_obj:
+                operation_obj = operations_obj[operation_id]
+                if not isinstance(operation_obj, dict):
+                    raise ValueError(
+                        f"Invalid operation: {operation_obj}"
+                        + "Expected an object."
+                    )
+                operations[operation_id] = parse_operation(operation_obj, operation_id)
 
         if "run_id_parameter" not in config_obj:
             raise ValueError(
@@ -703,7 +937,9 @@ class ParameterGroupList(QObject):
         for parameter_group_obj in config_obj["parameter_groups"]:
             parameter_groups.append(parse_parameter_group(parameter_group_obj))
 
-        result = cls(executable, run_id_parameter, operations, parameter_groups)
+        operation_trees, operation_conditions = OperationTree.build_trees(operations)
+
+        result = cls(run_id_parameter, operation_trees, parameter_groups)
 
         parameter_conditions: dict[Parameter[Any], list[Dependency.Condition]] = {}
 
@@ -715,13 +951,9 @@ class ParameterGroupList(QObject):
                 )
 
             single_operation_conditions = []
-            for operation in param.operations:
+            for operation_id in param.operations:
                 single_operation_conditions.append(
-                        cls.OperationEnabledCondition(
-                        result,
-                        operation,
-                        parent=result,
-                    )
+                    operation_conditions[operation_id]
                 )
             parameter_conditions[param].append(
                 OrCondition(single_operation_conditions)
@@ -741,36 +973,43 @@ class ParameterGroupList(QObject):
 
     @property
     def run_id(self) -> str:
-        return self._run_id
+        return self.run_id_parameter.value
 
     @run_id.setter
     def run_id(self, new_run_id: str) -> None:
-        self._run_id = new_run_id
+        self.run_id_valid_changed.emit(self.run_id_valid)
+        if self.run_id_parameter.value == new_run_id:
+            return # Nothing actually changed
+        self.run_id_parameter.value = new_run_id
+        for operation_tree in self.operation_trees:
+            operation_tree.run_id = new_run_id
 
     @property
-    def operations(self) -> dict[str, bool]:
-        """
-        The active operations of the parameter list.
+    def run_id_valid(self) -> bool:
+        return self.run_id_parameter.valid
 
-        """
-        return self._operations
+    @property
+    def operation_trees(self) -> list[OperationTree]:
+        return self._operation_trees
 
-    def set_operation(self, operation: str, value: bool) -> None:
-        """
-        Set an operation to active or not.
+    @property
+    def selected_operation_tree(self) -> OperationTree:
+        return self.operation_trees[self.selected_operation_tree_index]
 
-        :param operation: the operation to set.
-        :type operation: str
+    @property
+    def selected_operation_tree_index(self) -> int:
+        return self._selected_operation_tree_index
 
-        :param value: the value to set the operation to.
-        :type value: bool
-        """
+    @selected_operation_tree_index.setter
+    def selected_operation_tree_index(self, new_index: int) -> None:
+        self.selected_operation_tree.enabled = False
+        self._selected_operation_tree_index = new_index
+        self.selected_operation_tree.enabled = True
+        self.operations_valid_changed.emit(self.operations_valid)
 
-        if not operation in self._operations:
-            raise Exception(f"Setting an invalid operation: {operation}.")
-        self._operations[operation] = value
-
-        self.operations_changed.emit()
+    @property
+    def operations_valid(self) -> bool:
+        return self.selected_operation_tree.valid
 
     @property
     def parameter_groups(self) -> list[ParameterGroup]:
@@ -778,6 +1017,13 @@ class ParameterGroupList(QObject):
         The list of groups in the parameter list.
         """
         return self._parameter_groups
+
+    @property
+    def parameters(self) -> list[Parameter]:
+        result = [self.run_id_parameter]
+        for parameter_group in self:
+            result.extend(parameter_group)
+        return result
 
     @property
     def valid(self) -> bool:
@@ -804,17 +1050,7 @@ class ParameterGroupList(QObject):
         :rtype: list[str]
         """
 
-        instructions = []
-        operations = [operation for operation in self._operations if self._operations[operation]]
-        for operation in operations:
-            # For each operation get the cli representation from all param_groups
-            # The paramgroups handle the operation by passing it to the parameters
-            instruction = f"{self.command} {self._run_id_parameter.to_cli(operation)} -op {operation}"
-            for param_group in self._parameter_groups:
-                if (param_group.to_cli(operation) != ""): instruction = f"{instruction} {param_group.to_cli(operation)}"
-            instructions.append(instruction)
-
-        return instructions
+        return self.selected_operation_tree.to_cli(self.parameters)
 
     def __iter__(self) -> Iterator[ParameterGroup]:
         return iter(self.parameter_groups)
@@ -829,3 +1065,7 @@ class ParameterGroupList(QObject):
         new_valid: bool,
     ) -> None:
         self.run_id = new_run_id
+
+    @Slot(bool)
+    def _operation_tree_valid_changed(self, new_valid: bool) -> None:
+        self.operations_valid_changed.emit(self.operations_valid)

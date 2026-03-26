@@ -1,12 +1,17 @@
 import queue
+from collections.abc import (
+    Callable,
+)
 
 from PySide6.QtCore import (
         QObject, 
         QProcess, 
         Signal, 
         Slot,
+        QDir,
 )
 
+from gui.model.run_result import RunResult
 from gui.model.settings import app_settings
 
 class CommandExecutor(QObject):
@@ -28,13 +33,15 @@ class CommandExecutor(QObject):
     process_failed = Signal(int, QProcess.ProcessError)     # process_index, process_error
     process_stopped = Signal(int)                   # process_index
 
-    def __init__(self):
+    def __init__(self, run_result: RunResult, command_builder: Callable[[str], str] | None = None):
         """
         Initialize a `CommandExecutor` object.
         """
         super().__init__()
-        self._process = QProcess()
+        self.run_result = run_result
+        self.command_builder = command_builder or self._default_command_builder
 
+        self._process = QProcess()
         self._process.started.connect(self._process_started)
         self._process.readyReadStandardOutput.connect(self._read_output)
         self._process.readyReadStandardError.connect(self._read_error)
@@ -43,6 +50,19 @@ class CommandExecutor(QObject):
         
         self._commands = []
         self._command_queue = queue.Queue()
+
+    def _default_command_builder(self, parameters: str) -> str:
+        """
+        Builds a command using the given parameters.
+
+        :param parameters: the parameters to use
+        :type parameters: str
+        """
+        return (
+            f"{app_settings.environment_manager.value} run "
+            f"-n {app_settings.environment_name} "
+            f"{app_settings.executable_file_path.absoluteFilePath()} {parameters}"
+        )
 
     @Slot(list)
     def start_execution(self, commands:list[str]=[]) -> None:
@@ -57,6 +77,15 @@ class CommandExecutor(QObject):
             raise Exception("Execution is still running")
         
         self.execution_started.emit(len(commands))
+        
+        run_id = self.run_result.parameter_group_list.run_id
+        if not app_settings.workspace_path.mkdir(run_id):
+            raise RuntimeError(f"Creating run folder: '{run_id}' failed.")
+
+        self.run_folder = QDir(app_settings.workspace_path)
+        if not self.run_folder.cd(run_id):
+            raise RuntimeError(f"Failed to move to run folder: '{self.run_folder.absolutePath()}' + '{run_id}'.")
+
         self._commands = commands
         self._command_queue = queue.Queue()
         for command in self._commands:
@@ -91,10 +120,12 @@ class CommandExecutor(QObject):
         :param command: the command to be executed in the process
         :type command: str
         """
-        print(f"Starting process in environment:{app_settings.workspace_path.absolutePath()}")
-        self._process.setWorkingDirectory(app_settings.workspace_path.absolutePath())
+        print(f"Starting process in folder:{self.run_folder.absolutePath()}")
+        self._process.setWorkingDirectory(self.run_folder.absolutePath())
         self._process.setProgram("bash")
-        self._process.setArguments(["-c", f"{app_settings.environment_manager.value} run -n {app_settings.environment_name} {command}"])
+
+        full_command = self.command_builder(command)
+        self._process.setArguments(["-c", full_command])
         self._process.start()
 
     @Slot()

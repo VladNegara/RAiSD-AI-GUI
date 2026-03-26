@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self._run_result = run_result
-        self.command_executor = CommandExecutor()
+        self.command_executor = CommandExecutor(run_result)
         self._setup_ui()
 
     def _setup_ui(self):

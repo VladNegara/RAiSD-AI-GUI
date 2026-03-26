@@ -315,6 +315,25 @@ class MultiParameter(Parameter[tuple[()]]):
             parameter.enabled = new_enabled
 
 
+class CountedMultiParameter(MultiParameter):
+    """
+    A multi-value parameter which includes the number of values in its
+    command-line representation.
+    """
+
+    def to_cli(self, operation: str) -> str:
+        inner_parameters = [p.to_cli(operation) for p in self.parameters]
+        nonempty_inner_parameters = [p for p in inner_parameters if p]
+        if not nonempty_inner_parameters:
+            return ""
+        cli_pieces: list[str] = [
+            self.flag,
+            str(len(nonempty_inner_parameters)),
+            *nonempty_inner_parameters
+        ]
+        return " ".join(cli_pieces)
+
+
 class BoolParameter(Parameter[bool]):
     """
     A boolean parameter in the GUI.
@@ -679,6 +698,91 @@ class StringParameter(Parameter[str]):
             + f'value: {self.value}, '
             + f'valid: {self.valid})'
         )
+
+
+class StringPairListParameter(Parameter[list[tuple[str, str]]]):
+    """
+    A parameter for entering any number of label-value pairs of strings.
+    """
+
+    value_changed = Signal(list, bool)
+    pair_valid_changed = Signal(int, bool, bool)
+
+    def __init__(
+            self,
+            name: str, 
+            description: str,
+            flag: str,
+            operations: set[str],
+            default_value: list[tuple[str, str]],
+            separator: str,
+            left_pattern: Pattern | None = None,
+            right_pattern: Pattern | None = None,
+            min_count: int | None = None,
+            enabled: bool = True,
+    ) -> None:
+        super().__init__(
+            name=name,
+            description=description,
+            flag=flag,
+            operations=operations,
+            default_value=default_value,
+            enabled=enabled,
+        )
+        self._value = default_value.copy()
+        self._separator = separator
+        self._left_pattern = left_pattern
+        self._right_pattern = right_pattern
+        self._min_count = min_count or 0
+
+    @property
+    def min_count(self) -> int:
+        return self._min_count
+
+    def add_pair(self, pair=("", "")) -> None:
+        self.value += [pair]
+        self.value_changed.emit(self.value, self.valid)
+
+    def pair_valid(self, index: int) -> tuple[bool, bool]:
+        left_valid = (
+            self._left_pattern is None
+            or self._left_pattern.fullmatch(self.value[index][0]) is not None
+        )
+        right_valid = (
+            self._right_pattern is None
+            or self._right_pattern.fullmatch(self.value[index][1]) is not None
+        )
+        return left_valid, right_valid
+
+    def set_pair(self, index: int, pair: tuple[str, str]) -> None:
+        self.value[index] = pair
+        self.value_changed.emit(self.value, self.valid)
+        self.pair_valid_changed.emit(index, *self.pair_valid(index))
+
+    def delete_pair(self, i: int) -> None:
+        self.value = self.value[:i] + self.value[i+1:]
+        self.value_changed.emit(self.value, self.valid)
+
+    def reset_value(self) -> None:
+        self.value = self.default_value.copy()
+        self.value_changed.emit(self.value, self.valid)
+
+    @property
+    def valid(self) -> bool:
+        if len(self.value) < self.min_count:
+            return False
+        return all(
+            left_valid and right_valid for left_valid, right_valid in
+            [self.pair_valid(i) for i in range(len(self.value))]
+        )
+
+    def to_cli(self, operation: str) -> str:
+        if not self.in_cli(operation):
+            return ""
+        result = f"{self.flag} {len(self.value)}"
+        for left, right in self.value:
+            result += f" {left}{self._separator}{right}"
+        return result
 
 
 class FileParameter(Parameter[list[str]]):

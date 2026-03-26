@@ -1,4 +1,3 @@
-executable: ./RAiSD-AI
 run_id_parameter:
   name: Run ID
   description: A name that identifies the run and is used to name the output files. Only letters, digits and underscores allowed
@@ -13,110 +12,170 @@ modes:
         description: Do a sweep scan with standard RAiSD.
         cli: ""
         input:
-          - multiple: false
-            extension:
-              - ms
-              - mbs
-              - VCF
-              - FASTA
-        output: report # What and how?
+          - name: Input data
+            cli: -I
+            file:
+              type: single
+              formats:
+                - .ms
+                - .mbs
+                - .vcf
+                - .fasta
+        output:
+          type: directory
+          contents: []
+        prefix: RAiSD_Grid.
   - name: RAiSD-AI
     operations:
       IMG-GEN:
         name: Data formatting
         description: Make raw data into PNGs.
-        cli: -op IMG_GEN
+        cli: -op IMG-GEN
         input:
-          - multiple: false
-            extension:
-              - ms
-              - mbs
-              - VCF
-              - FASTA
+          - name: Input data
+            cli: -I
+            file:
+              type: single
+              formats:
+                - .ms
         output:
-          - multiple: true
-            extension:
-              - png
+          type: directory
+          contents:
+            - type: directory
+              contents:
+                - type: single
+                  formats:
+                    - .png
+        prefix: RAiSD_Images.
       MDL-GEN:
         name: Model training
         description: Train a sweep detection CNN model.
-        cli: -op MDL_GEN
+        cli: -op MDL-GEN
         input:
-          - multiple: true
-            extension:
-              - png
+          - name: Training data
+            cli: -I
+            file:
+              type: directory
+              contents:
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
         output:
-          - multiple: false
-            extension:
-              - pt
-              - keras
+          type: directory
+          contents:
+            - type: single
+              formats:
+                - .pt
+        prefix: RAiSD_Model.
       MDL-TST:
         name: Model testing
         description: Evaluate a model.
-        cli: -op MDL_TST
+        cli: -op MDL-TST
         input:
-          - multiple: false
-            extension:
-              - pt
-              - keras
-          - multiple: true
-            extension:
-              - png
-        output: testing report # What and how?
+          - name: Model
+            cli: -mdl
+            file:
+              type: directory
+              contents: 
+                - type: single
+                  formats:
+                    - .pt
+          - name: Testing data
+            cli: -I
+            file:
+              type: directory
+              contents:
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+                - type: directory
+                  contents:
+                    - type: single
+                      formats:
+                        - .png
+        output: 
+          type: single
+          formats:
+            - .report
+        prefix: RAiSD_Inference.
       SWP-SCN:
         name: Sweep scan
         description: Use a trained model to scan for selective sweeps.
-        cli: -op SWP_SCN
+        cli: -op SWP-SCN
         input:
-          - multiple: false
-            extension:
-              - pt
-              - keras
-          - multiple: true # Can you do multiple?
-            extension:
-              - ms
-              - mbs
-              - VCF
-              - FASTA
-        output: report # What and how?
+          - name: Model
+            cli: -mdl
+            file:
+              type: directory
+              contents: 
+                - type: single
+                  formats:
+                    - .pt
+          - name: Testing data
+            cli: -I
+            file:
+              type: single
+              formats: 
+                - .ms
+        output:
+          type: single
+          formats:
+            - .report
+        prefix: RAiSD_Report.
   - name: Common outlier analysis
     operations:
       CO:
         name: Common outlier analysis
         description: Perform common outlier analysis for a completed RAiSD run.
         cli: ""
-        input:
-          - multiple: false
-            extension:
-              - sweed # Whatever file this produces
-          - multiple: false
-            extensoion:
-              - raisd # Whatever file RAiSD produces
-        output: common outlier report # What?
+        input: []
+        output:
+          type: single
+          formats: 
+            - .co-report
   - name: File conversion
     operations:
       FASTA-VCF:
         name: FASTA to VCF
+        description: Convert a FASTA file to vcf
         cli: -E
         input:
-          - multiple: false
-            extension:
-              - FASTA
+          - name: Input file
+            cli: -I
+            file:
+              type: single
+              formats:
+                - .fasta
         output:
-          - multiple: false
-            extension:
-              - VCF
+          type: single
+          formats:
+            - .vcf
+        prefix: RAiSD_FastaVcf
       VCF-MS:
         name: VCF to ms
+        description: Convert a vcf file to ms
         cli: ""
         input:
-          - multiple: false
-            expension:
-              - VCF
+          - name: Input file
+            cli: -I
+            file:
+              type: single
+              formats:
+                - .vcf
         output:
-          - multiple: false
-            extension:
-              - ms
+          type: single
+          formats:
+            - .ms
+        prefix: RAiSD_VcfMs
 parameter_groups:
   - name: General
     operations:
@@ -155,12 +214,17 @@ parameter_groups:
       - SWP-SCN
     parameters:
       "-L":
-        name: Region length
-        description: The size of the region (in basepairs) for ms file. If not provided, it will be extracted at runtime.
+        name: Override default region length
+        description: Provide a custom size of the region for an ms file. If not provided, it will be extracted at runtime.
         cli: -L
-        type: int
-        min: 1
-        default: 1
+        type: optional
+        default: false
+        parameter:
+          name: Region length
+          description: The region size (in basepairs).
+          type: int
+          min: 1
+          default: 1
         conditions:
           - type: enum
             parameter: input-file-type
@@ -417,18 +481,18 @@ parameter_groups:
           type: multi
           parameters:
             - name: Selection target
-              description: Provide the selection target (in basepairs).
+              description: The selection target (in basepairs).
               cli: -T
               type: int
               min: 1
               default: 1 # Source: I made it up
             - name: Set maximum distance
-              description: 
+              description: Set the maximum distance from the selection target to calculate success rates, i.e., reported locations in the proximity of the target of selection (provided above).
               type: optional
               default: false
               parameter:
                 name: Maximum distance
-                description:
+                description: The maximum distance from the selection target (in basepairs).
                 cli: -d
                 type: int
                 min: 1
@@ -451,7 +515,7 @@ parameter_groups:
         description: Fill in these thresholds using the values reported by a previous RAiSD-AI run with "Report score" activated.
         cli: -l # There also has to be an integer that says how many of the thresholds are provided!
         # The CLI representation here needs more thought
-        type: multi
+        type: count multi
         parameters:
           # Are the thresholds 0-1?
           - name: Provide var threshold
@@ -613,13 +677,13 @@ parameter_groups:
             description: The SweeD scores.
             type: int
             default: 0 #Probably wrong
-      "-CO-already-run": # This is wrong
+      "-CO-already-run":
         operations:
           remove:
             - RSD-DEF
             - SWP-SCN
         name: Common outlier analysis options 
-        description: options for CO # TO DO
+        description: options for CO
         type: multi
         parameters:
           - name: SweeD report
@@ -644,7 +708,7 @@ parameter_groups:
             type: int
             default: 1
           - name: RAiSD column index
-            description: The index of the column you want to use, depending on the RAiSD report. To use the mu-statistic, set X=2 if RAiSD was invoked with the default parameters, or set Y=7 if -R was explicitly provided or implicitly activated through some other command-line parameter.
+            description: The index of the column you want to use, depending on the RAiSD report. To use the mu-statistic, set X=2 if RAiSD was invoked with the default parameters, or set X=7 if -R was explicitly provided or implicitly activated through some other command-line parameter.
             type: int
             default: 1
       "-COT":
@@ -666,7 +730,7 @@ parameter_groups:
                 value: true
       "-COD": # typically 100-400
         name: Maximum distance
-        description: Provides the maximum distance (in number of sites) between outlier points in th eprovided reports to identify matching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD and RAiSD, typically between 100 and 400.
+        description: Provides the maximum distance (in number of sites) between outlier points in the provided reports to identify matching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD and RAiSD, typically between 100 and 400.
         cli: "-COD"
         type: int
         min: 0
@@ -692,7 +756,7 @@ parameter_groups:
         pattern: ".+"
       "-its":
         name: Image target site
-        description: The target site position for generating images, corresponding to the center of the first generated image. Should be smaller than region length
+        description: The target site position for generating images, corresponding to the center of the first generated image. Should be smaller than region length.
         cli: "-its"
         type: int
         min: 1
@@ -720,7 +784,7 @@ parameter_groups:
         default: 1
       "-bin":
         name: Convert image data to .snp
-        description: Converts image data to custom binary format (.snp). ONly supported by the PyTorch implementation.
+        description: Converts image data to custom binary format (.snp). Only supported by the PyTorch implementation.
         cli: "-bin"
         type: bool
         default: false
@@ -766,20 +830,20 @@ parameter_groups:
       - MDL-GEN
     parameters: 
       "-arc": 
-        name: Network arhitecture
-        description: Specifies the neural network arhitecture.
+        name: Network architecture
+        description: Specifies the neural network architecture.
         cli: "-arc"
         type: enum
         default: 2
         options:
           - name: SweepNet
-            cli: "SweepNet"
+            cli: SweepNet
           - name: FAST-NN
-            cli: "FAST-NN"
+            cli: FAST-NN
           - name: FASTER-NN
-            cli: "FASTER-NN"
+            cli: FASTER-NN
           - name: FASTER-NN-G
-            cli: "FASTER-NN-G"
+            cli: FASTER-NN-G
       "-e":
         name: Epochs
         description: Provides the number of epochs
@@ -788,8 +852,8 @@ parameter_groups:
         min: 1
         default: 10
       "-cl4": 
-        name: Parings between class labels
-        description: Provides 4 parings between class labels and corresponding folder names.
+        name: Pairings between class labels
+        description: Provides 4 pairings between class labels and corresponding folder names.
         cli: "-cl4"
         conditions:
           - type: enum
@@ -834,7 +898,7 @@ parameter_groups:
             parameter: -cl4
       "-g":
         name: Provide number of sequence groups to be created
-        description: Provide number of sequence groups to be created by FASTER-NN-G for SFS grouped poling. If not provided, the sample size is used.
+        description: Provide number of sequence groups to be created by FASTER-NN-G for SFS grouped pooling. If not provided, the sample size is used.
         type: optional
         parameter:
           name: Sequence groups
@@ -852,15 +916,17 @@ parameter_groups:
     parameters:
       # -mdl, -I
       "-clp": # This type of parameter not yet supported!
-        name: Class test
-        description: For now, just one label-folder pair is supported!
-        cli: "-clp 1"
-        type: multi
-        parameters:
-          - name: Label
-            type: str
-          - name: Folder name
-            type: str
+        name: Class tests
+        description: Enter one or more label-folder pairs.
+        cli: "-clp"
+        type: string pair list
+        separator: "="
+        left_pattern: "\\w+"
+        right_pattern: "\\w+"
+        min: 1
+        default:
+          - left: label
+            right: folder
   - name: RAiSD-AI sweep scan
     operations:
       - SWP-SCN
@@ -886,7 +952,7 @@ parameter_groups:
               - 0
       "-pci-2":
         name: Positive class indices
-        description: The class indices can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MD-GEN run that generated the CNN model.
+        description: The class indices can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MDL-GEN run that generated the CNN model.
         type: multi
         cli: -pci 2
         parameters:
@@ -917,7 +983,7 @@ parameter_groups:
         default: false
       "-frm-swp-scn":
         name: Remove existing SWP-SCN directory
-        description: Remove the directory RAiSD_Images.runID if it already exists.
+        description: Remove the directory RAiSD_Report.runID if it already exists.
         operations:
           add:
             - SWP-SCN

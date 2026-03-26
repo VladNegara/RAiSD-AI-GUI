@@ -31,10 +31,6 @@ def main():
 
     app.setStyleSheet(final_stylesheet)
 
-    app_settings.workspace_path = QDir()
-    app_settings.executable_file_path = QFileInfo(QDir().absoluteFilePath("RAiSD-AI"))
-    app_settings.environment_manager = EnvironmentManager.MICROMAMBA
-    app_settings.environment_name = "raisd-ai"
 
     parameter_group_list = ParameterGroupList.from_yaml("gui/config.yaml")
 

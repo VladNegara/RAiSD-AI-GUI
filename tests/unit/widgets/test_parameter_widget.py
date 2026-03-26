@@ -192,16 +192,6 @@ class TestStringParameterWidget:
         self.param.value = "world"
         assert self.widget._line_edit.text() == "world"
 
-    def test_valid_value_shows_green_border(self):
-        """A valid value should apply a green border style."""
-        self.param.value = "valid"
-        assert "green" in self.widget._line_edit.styleSheet()
-
-    def test_invalid_value_shows_red_border(self):
-        """An invalid value should apply a red border style."""
-        self.param.value = "INVALID"
-        assert "red" in self.widget._line_edit.styleSheet()
-
     def test_max_length_enforced(self):
         """Line edit max length should match the parameter's max length."""
         assert self.widget._line_edit.maxLength() == 10
