@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QStyle
 )
 
+from gui.model.settings import app_settings
 from gui.model.file_structure import(
     SingleFile,
     Directory,
@@ -279,14 +280,23 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
         return "Choose a file on your computer."
 
     def _browse_button_clicked(self):
-        self.dialog = QFileDialog()
         if self._is_directory:
-            self.dialog.setFileMode(QFileDialog.FileMode.Directory)
-        self.dialog.show()
-        self.dialog.fileSelected.connect(self._file_selected)
-
-    def _file_selected(self, path):
-        self._file_picker.file = path
+            new_path = QFileDialog.getExistingDirectory(
+                None,
+                "Select Directory",
+                app_settings.workspace_path.absolutePath(),
+                QFileDialog.Option.ShowDirsOnly
+            )
+        else:
+            new_path, _ = QFileDialog.getOpenFileName(
+                None,
+                "Select File",
+                app_settings.workspace_path.absolutePath(),
+            )
+        if not new_path:  # Check for empty string (canceled)
+            return  
+        else:
+            self._file_picker.file = new_path
 
     def _file_picker_file_changed(self, new_file: str):
         self.button.setText(new_file)
