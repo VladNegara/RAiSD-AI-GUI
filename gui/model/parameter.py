@@ -710,7 +710,8 @@ class StringPairListParameter(Parameter[list[tuple[str, str]]]):
 
     def __init__(
             self,
-            name: str, description: str,
+            name: str, 
+            description: str,
             flag: str,
             operations: set[str],
             default_value: list[tuple[str, str]],
