@@ -103,7 +103,7 @@ class FileConsumerNodeWidget(QWidget):
         self._file_consumer_node = file_consumer_node
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0,0,0,0)
+        layout.setContentsMargins(5,0,0,0)
 
         heading = QLabel(self._file_consumer_node.label)
         layout.addWidget(heading)
@@ -212,6 +212,7 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
         self._file_picker = file_picker
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(5,0,0,0)
 
         self._is_directory = isinstance(self._file_picker.produces, Directory)
         # TODO: make this code cleaner and more reusable.
@@ -327,7 +328,7 @@ class OperationNodeWidget(FileProducerNodeWidget):
         )
         layout.addWidget(self._output_info_label)
 
-        layout.setContentsMargins(0,0,0,0)
+        layout.setContentsMargins(5,0,0,0)
 
         input_files_widget = QWidget()
         input_files_layout = QHBoxLayout(input_files_widget)
