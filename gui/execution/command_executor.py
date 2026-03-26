@@ -1,4 +1,7 @@
 import queue
+from collections.abc import (
+    Callable,
+)
 
 from PySide6.QtCore import (
         QObject, 
@@ -7,6 +10,7 @@ from PySide6.QtCore import (
         Slot,
 )
 
+from gui.model.run_result import RunResult
 from gui.model.settings import app_settings
 
 class CommandExecutor(QObject):
@@ -28,13 +32,14 @@ class CommandExecutor(QObject):
     process_failed = Signal(int, QProcess.ProcessError)     # process_index, process_error
     process_stopped = Signal(int)                   # process_index
 
-    def __init__(self):
+    def __init__(self, command_builder: Callable[[str], str] | None = None):
         """
         Initialize a `CommandExecutor` object.
         """
         super().__init__()
-        self._process = QProcess()
+        self.command_builder = command_builder or self._default_command_builder
 
+        self._process = QProcess()
         self._process.started.connect(self._process_started)
         self._process.readyReadStandardOutput.connect(self._read_output)
         self._process.readyReadStandardError.connect(self._read_error)
@@ -43,6 +48,19 @@ class CommandExecutor(QObject):
         
         self._commands = []
         self._command_queue = queue.Queue()
+
+    def _default_command_builder(self, parameters: str) -> str:
+        """
+        Builds a command using the given parameters.
+
+        :param parameters: the parameters to use
+        :type parameters: str
+        """
+        return (
+            f"{app_settings.environment_manager.value} run "
+            f"-n {app_settings.environment_name} "
+            f"{app_settings.executable_file_path.absoluteFilePath()} {parameters}"
+        )
 
     @Slot(list)
     def start_execution(self, commands:list[str]=[]) -> None:
@@ -94,7 +112,9 @@ class CommandExecutor(QObject):
         print(f"Starting process in environment:{app_settings.workspace_path.absolutePath()}")
         self._process.setWorkingDirectory(app_settings.workspace_path.absolutePath())
         self._process.setProgram("bash")
-        self._process.setArguments(["-c", f"{app_settings.environment_manager.value} run -n {app_settings.environment_name} {command}"])
+
+        full_command = self.command_builder(command)
+        self._process.setArguments(["-c", full_command])
         self._process.start()
 
     @Slot()
