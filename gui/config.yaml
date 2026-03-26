@@ -38,6 +38,9 @@ modes:
               type: single
               formats:
                 - .ms
+                - .mbs
+                - .vcf
+                - .fasta
         output:
           type: directory
           contents:
