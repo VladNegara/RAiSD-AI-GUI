@@ -358,7 +358,10 @@ class OperationNodeWidget(FileProducerNodeWidget):
 
     @property
     def button_text(self) -> str:
-        return "Run an operation to generate the input file or directory."
+        return (
+            f"Run {self._operation_node.name} to generate the input file or "
+            + "directory."
+        )
 
     @Slot(str)
     def _file_changed(self, new_file: str) -> None:
