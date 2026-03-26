@@ -119,29 +119,7 @@ class HistoryRecord():
         time_completed = datetime.strptime(time_completed, "%Y-%m-%d %H:%M:%S.%f")
 
         return cls(name, commands, operations, parameters, time_completed)
-    
-    @classmethod
-    def from_run_record(cls, run_record: RunRecord) -> "HistoryRecord":
-        """
-        Makes a history record with the information of the current RunResult.
-        """
-        parameters_dict = {}
-        for parameter_group in run_record.parameter_groups:
-            for parameter in parameter_group:
-                parameters_dict[parameter.name] = cls.parameter_to_value(parameter)
-        
-        operations = [tree.root.run_id for tree in run_record.operation_trees]
 
-        #TODO I do not like this, it is a temporary fix that will be resolved 
-        # if we remove the runresult
-
-        return cls(
-            run_record.run_id,
-            run_record.to_cli(),
-            operations,
-            parameters_dict,
-            datetime.now()
-        )
     
     def save_to_history(self) -> None:
         """

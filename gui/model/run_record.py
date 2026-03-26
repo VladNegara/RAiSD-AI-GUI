@@ -20,6 +20,7 @@ from gui.model.settings import app_settings
 from gui.model.operation import Operation
 from gui.model.operation_tree import OperationTree
 from gui.model.parameter_group import ParameterGroup
+from gui.model.history_record import HistoryRecord
 from gui.model.parameter import (
     Parameter,
     OptionalParameter,
@@ -58,7 +59,7 @@ class RunRecord(QObject):
             dependencies: list[Dependency] | None = None,
     ) -> None:
         """
-        Initialize a `ParameterGroupList` object.
+        Initialize a `RunREcord` object.
 
         :param command: the terminal command to use
         :type command: str
@@ -856,7 +857,71 @@ class RunRecord(QObject):
             )
 
         return result
+    
+    def to_history_record(self) -> HistoryRecord:
+        """
+        Makes a history record with the information of the current RunResult.
+        """
+        parameters_dict = {}
+        for parameter_group in self.parameter_groups:
+            for parameter in parameter_group:
+                parameters_dict[parameter.name] = HistoryRecord.parameter_to_value(parameter)
+        
+        operations = [tree.root.run_id for tree in self.operation_trees]
 
+        return HistoryRecord(
+            self.run_id,
+            self.to_cli(),
+            operations,
+            parameters_dict,
+            datetime.now()
+        )
+    
+    def populate(self, history_record: HistoryRecord) -> None:
+        """
+        Populates the current run result with the contents of a history record.
+        This is used to fill the ResultsWidget in history with the contents
+        of records when a user clicks on them.
+        """
+        self.run_id = history_record.name
+        self._commands = history_record.commands
+        dictionary = history_record.parameters
+        for parameter_group in self.parameter_groups:
+            for parameter in parameter_group:
+                if parameter.name in dictionary:
+                    self.populate_parameter(parameter, dictionary[parameter.name])
+                    #TODO: validiity checking?
+        self._time_completed = history_record.time_completed
+        #TODO: complete with Vlad's pr
+        # for operation in history_record.operations:
+        #     self._parameter_group_list.set_operation(operation, history_record.operations[operation])
+
+    def populate_parameter(self, parameter: Parameter, value: dict | str) -> None:
+        """
+        Populates a parameter with the values from a dict or string. Uses
+        recursion for optional parameters and multi parameters.
+        """
+        if type(parameter) is MultiParameter:
+            for param in parameter.parameters:
+                if isinstance(value, dict) and value[param.name]:
+                    self.populate_parameter(param, value[param.name])
+        elif type(parameter) is OptionalParameter:
+            if isinstance(value, dict) and 'enabled' not in value:
+                raise ValueError(
+                    f"Incorrect format for {parameter.name}: {value}"
+                    + "Optional parameter must have 'enabled' value."
+                )
+            
+            if isinstance(value, dict) and isinstance(value["enabled"], bool):
+                parameter.value = value["enabled"]
+                if parameter.parameter in value:
+                    self.populate_parameter(
+                        parameter.parameter, 
+                        value[parameter.parameter.name]
+                    )
+        else:
+            parameter.value = value
+    
     @property
     def run_id_parameter(self) -> StringParameter:
         return self._run_id_parameter
