@@ -35,6 +35,7 @@ class ResizableStackedWidget(QWidget):
 
     def addWidget(self, widget: QWidget) -> None:
         layout = self.layout()
+        layout.setContentsMargins(0,0,0,0)
         if not layout:
             return
         layout.addWidget(widget)

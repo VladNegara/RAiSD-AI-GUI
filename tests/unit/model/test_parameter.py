@@ -97,7 +97,7 @@ class TestIntParameter:
         self.int_param = IntParameter(
             name="testint", 
             description="Test int parameter", 
-            flag="--testint", 
+            flag="--testint ", 
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value=0, 
             lower_bound=-10, 
@@ -109,7 +109,7 @@ class TestIntParameter:
         param = self.int_param
         assert param.name == "testint"
         assert param.description == "Test int parameter"
-        assert param.flag == "--testint"
+        assert param.flag == "--testint "
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == 0
         assert param.default_value == 0
@@ -143,9 +143,9 @@ class TestIntParameter:
     def test_to_cli(self):
         """Test IntParameter command-line representation."""
         param = self.int_param
-        assert param.to_cli('IMG-GEN') == f"{param.flag} {param.value}"
+        assert param.to_cli('IMG-GEN') == f"{param.flag}{param.value}"
         param.value = new_value = 5
-        assert param.to_cli('MDL-GEN') == f"{param.flag} {new_value}"
+        assert param.to_cli('MDL-GEN') == f"{param.flag}{new_value}"
         assert param.to_cli('SWP_SCN') == ""
         param.enabled = False
         assert param.to_cli('IMG-GEN') == ""
@@ -205,7 +205,7 @@ class TestFloatParameter:
         self.float_param = FloatParameter(
             name="testfloat", 
             description="Test float parameter", 
-            flag="--testfloat", 
+            flag="--testfloat ", 
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value=0.0, 
             lower_bound=-10.0, 
@@ -217,7 +217,7 @@ class TestFloatParameter:
         param = self.float_param
         assert param.name == "testfloat"
         assert param.description == "Test float parameter"
-        assert param.flag == "--testfloat"
+        assert param.flag == "--testfloat "
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == 0.0
         assert param.default_value == 0.0
@@ -251,9 +251,9 @@ class TestFloatParameter:
     def test_to_cli(self):
         """Test FloatParameter command-line representation."""
         param = self.float_param
-        assert param.to_cli('IMG-GEN') == f"{param.flag} {param.value}"
+        assert param.to_cli('IMG-GEN') == f"{param.flag}{param.value}"
         param.value = new_value = 5.0
-        assert param.to_cli('MDL-GEN') == f"{param.flag} {new_value}"
+        assert param.to_cli('MDL-GEN') == f"{param.flag}{new_value}"
         assert param.to_cli('SWP-SCN') == ""
         param.enabled = False
         assert param.to_cli('IMG-GEN') == ""
@@ -314,7 +314,7 @@ class TestStringParameter:
         self.string_param = StringParameter(
             name="teststring",
             description="Test string parameter",
-            flag="--teststring",
+            flag="--teststring ",
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value="default",
             max_length=20,
@@ -326,7 +326,7 @@ class TestStringParameter:
         param = self.string_param
         assert param.name == "teststring"
         assert param.description == "Test string parameter"
-        assert param.flag == "--teststring"
+        assert param.flag == "--teststring "
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == "default"
         assert param.default_value == "default"
@@ -366,9 +366,9 @@ class TestStringParameter:
     def test_to_cli(self):
         """Test StringParameter command-line representation."""
         param = self.string_param
-        assert param.to_cli('IMG-GEN') == f"{param.flag} {param.value}"
+        assert param.to_cli('IMG-GEN') == f"{param.flag}{param.value}"
         param.value = new_value = "new_value"
-        assert param.to_cli('MDL-GEN') == f"{param.flag} {new_value}"
+        assert param.to_cli('MDL-GEN') == f"{param.flag}{new_value}"
         assert param.to_cli('SWP-SCN') == ""
         param.enabled = False
         assert param.to_cli('IMG-GEN') == ""
@@ -429,7 +429,7 @@ class TestEnumParameter:
         self.enum_param = EnumParameter(
             name="testenum",
             description="Test enum parameter",
-            flag="--testenum",
+            flag="--testenum ",
             operations={'IMG-GEN', 'MDL-GEN'},
             options=[("discard SNP", "D"), ("input N per SNP", "I"), ("represent N through a mask", "M 2"), ("ignore allele pairs with N", "A")],
             default_value= 0,
@@ -440,7 +440,7 @@ class TestEnumParameter:
         param = self.enum_param
         assert param.name == "testenum"
         assert param.description == "Test enum parameter"
-        assert param.flag == "--testenum"
+        assert param.flag == "--testenum "
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.options[1] == "input N per SNP"
         assert param.default_value == 0
@@ -532,7 +532,7 @@ class TestFileParameter:
         self.file_param = FileParameter(
             name="testfile",
             description="Test file parameter",
-            flag="--testfile",
+            flag="--testfile ",
             operations={'IMG-GEN', 'MDL-GEN'},
             accepted_formats=[".vcf"],
             strict=True,
@@ -545,7 +545,7 @@ class TestFileParameter:
         param = self.file_param
         assert param.name == "testfile"
         assert param.description == "Test file parameter"
-        assert param.flag == "--testfile"
+        assert param.flag == "--testfile "
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.accepted_formats == [".vcf"]
         assert param.strict
@@ -640,7 +640,7 @@ class TestOptionalParameter:
         self.int_param = IntParameter(
             name="testint", 
             description="Test int parameter", 
-            flag="--testint", 
+            flag="--testint ", 
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value=0, 
             lower_bound=-10, 
@@ -779,7 +779,7 @@ class TestMultiParameter:
     def test_to_cli(self):
         """Test MultiParameter command-line representation."""
         param = self.multi_param
-        assert param.to_cli('IMG-GEN') == f"{param.flag} {self.int_param.value}"
+        assert param.to_cli('IMG-GEN') == f"{param.flag}{self.int_param.value}"
         self.bool_param.value = True
-        assert param.to_cli('IMG-GEN') == f"{param.flag} {self.int_param.value} {self.bool_param.flag}"
+        assert param.to_cli('IMG-GEN') == f"{param.flag}{self.int_param.value} {self.bool_param.flag}"
         assert param.to_cli('SWP_SCN') == ""

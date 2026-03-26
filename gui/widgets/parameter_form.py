@@ -37,3 +37,10 @@ class ParameterForm(QWidget):
             layout.addWidget(parameter_form_section)
             self._parameter_form_sections.append(parameter_form_section)
 
+    def touch_all(self) -> None:
+        for section in self._parameter_form_sections:
+            section.touch_all()
+
+    def untouch_all(self) -> None:
+        for section in self._parameter_form_sections:
+            section.untouch_all()

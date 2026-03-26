@@ -33,7 +33,7 @@ def main():
     run_record = RunRecord.from_yaml(app_settings.yaml_path)
 
     window = MainWindow(run_record)
-    window.resize(1000,800)
+    window.resize(1200,800)
     window.show()
     app.exec()
     print("App closed")
