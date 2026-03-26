@@ -416,7 +416,18 @@ class ParameterInputWidget(RunSubWidget):
         check_param_button.clicked.connect(self._check_param_button_clicked)
         layout.addWidget(check_param_button)
         return widget
-    
+
+    def _connect_parameter(self, parameter: Parameter) -> None:
+        """Helper function to connect `value_changed` to `update_next_button_state` on all parameter types."""
+        if isinstance(parameter, MultiParameter):
+            for child in parameter.parameters:
+                self._connect_parameter(child)
+        elif isinstance(parameter, OptionalParameter):
+            parameter.value_changed.connect(self.update_next_button_state)
+            self._connect_parameter(parameter.parameter)
+        else:
+            parameter.value_changed.connect(self.update_next_button_state)
+
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.back_button = QPushButton("Back")
         self.next_button = QPushButton("Next")
