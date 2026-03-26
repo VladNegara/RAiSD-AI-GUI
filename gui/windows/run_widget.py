@@ -299,13 +299,22 @@ class OperationSelectionWidget(RunSubWidget):
             editable=True,
         )
         run_id_widget = run_id_parameter_widget.build_form_row()
-        run_id_widget.setFixedWidth(510)
         layout.addWidget(run_id_widget)
 
-        operation_selector = self.__class__.OperationSelector(
+        self.operation_selector = self.__class__.OperationSelector(
             self._parameter_group_list
         )
-        layout.addWidget(operation_selector)
+        layout.addWidget(self.operation_selector, stretch=1000)
+
+        layout.addStretch(1)
+
+        # Show operation selector only if run ID is valid
+        self.operation_selector.setVisible(
+            self._parameter_group_list.run_id_valid,
+        )
+        self._parameter_group_list.run_id_valid_changed.connect(
+            self._run_id_valid_changed,
+        )
 
         return widget
 
@@ -360,12 +369,18 @@ class OperationSelectionWidget(RunSubWidget):
                 button.clicked.connect(lambda _, i=i: self._button_clicked(i))
             tree_scroll.setWidget(self.tree_stacked_widget)
 
+            button_layout.addStretch()
+
             layout.addWidget(button_widget)
             layout.addWidget(tree_scroll)
 
         def _button_clicked(self, i: int) -> None:
             self._parameter_group_list.selected_operation_tree_index = i
             self.tree_stacked_widget.current_index = i
+
+    @Slot()
+    def _run_id_valid_changed(self, new_valid) -> None:
+        self.operation_selector.setVisible(new_valid)
 
     @Slot()
     def _update_next_button_state(self) -> None:
@@ -725,17 +740,7 @@ class RunViewWidget(RunSubWidget):
             self.execution_still_running_dialog.close()
 
     def _start_execution(self):
-        source_folder = app_settings.executable_file_path.absoluteDir().absolutePath()
-        commands = [
-            f"-n TrainingData2DSNP -I {source_folder}/datasets/train/msneutral1_100sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTR -f -frm -O",
-            # f"-n TrainingData2DSNP -I {source_folder}/datasets/train/msselection1_100sims.out -L 100000 -its 50000 -op IMG-GEN -icl sweepTR -f -O",
-            f"-n TestData2DSNP -I {source_folder}/datasets/test/msneutral1_10sims.out -L 100000 -its 50000 -op IMG-GEN -icl neutralTE -f -frm -O",
-            # f"-n TestData2DSNP -I {source_folder}/datasets/test/msselection1_10sims.out -L 100000 -its 50000 -op IMG-GEN -icl sweepTE -f -frm -O",
-            # f"-n FAST-NN-PT-2DSNP -I {source_folder}/RAiSD_Images.TrainingData2DSNP -f -op MDL-GEN -O -frm -e 3",
-            # f"-n FAST-NN-PT-2DSNP-SCAN -mdl {source_folder}/RAiSD_Model.FAST-NN-PT-2DSNP -f -op SWP-SCN -I {source_folder}/datasets/train/msselection1_100sims.out -L 100000 -frm -T 50000 -d 1000 -G 20 -pci 1 1 -O",
-        ]
-        # self._command_executor.start_execution(self._parameter_group_list.to_cli())
-        # TODO: implement info filename logic and command generation logic
+        commands = self._parameter_group_list.to_cli()
         info_files = ['RAiSD_Info.TrainingData2DSNP.neutralTR',
                       'RAiSD_Info.TrainingData2DSNP.sweepTR',
                       'RAiSD_Info.TestData2DSNP.neutralTE']

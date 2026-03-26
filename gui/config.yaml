@@ -24,7 +24,15 @@ modes:
         output:
           type: directory
           contents: []
-        prefix: RAiSD_Grid.
+        overwrite_parameter:
+          name: Overwrite existing RAiSD report?
+          description: You are about to overwrite existing data in the output folder. Are you sure?
+          cli: "-f"
+          type: bool
+          default: false
+        path:
+          - RAiSD_Grid.
+          - type: run id
   - name: RAiSD-AI
     operations:
       IMG-GEN:
@@ -44,12 +52,29 @@ modes:
         output:
           type: directory
           contents:
-            - type: directory
-              contents:
-                - type: single
-                  formats:
-                    - .png
-        prefix: RAiSD_Images.
+            - type: single
+              formats:
+                - .png
+        overwrite_parameter:
+          name: Overwrite existing image data?
+          description: You are about to overwrite existing data in the output folder. Are you sure?
+          cli: "-f"
+          type: bool
+          default: false
+        parameters:
+          "-icl":
+            name: Image class label
+            description: The output folder will use this name.
+            cli: "-icl "
+            type: str
+            pattern: ".+"
+            default: class_label
+        path:
+          - RAiSD_Images.
+          - type: run id
+          - type: slash
+          - type: parameter
+            id: -icl
       MDL-GEN:
         name: Model training
         description: Train a sweep detection CNN model.
@@ -76,7 +101,15 @@ modes:
             - type: single
               formats:
                 - .pt
-        prefix: RAiSD_Model.
+        overwrite_parameter:
+          name: Overwrite existing model?
+          description: You are about to overwrite existing data in the output folder. Are you sure?
+          cli: "-f"
+          type: bool
+          default: false
+        path:
+          - RAiSD_Model.
+          - type: run id
       MDL-TST:
         name: Model testing
         description: Evaluate a model.
@@ -109,7 +142,15 @@ modes:
           type: single
           formats:
             - .report
-        prefix: RAiSD_Inference.
+        overwrite_parameter:
+          name: Overwrite existing results?
+          description: You are about to overwrite existing data in the output folder. Are you sure?
+          cli: "-f"
+          type: bool
+          default: false
+        path:
+          - RAiSD_Inference. # probably wrong
+          - type: run id
       SWP-SCN:
         name: Sweep scan
         description: Use a trained model to scan for selective sweeps.
@@ -133,7 +174,15 @@ modes:
           type: single
           formats:
             - .report
-        prefix: RAiSD_Report.
+        overwrite_parameter:
+          name: Overwrite existing results?
+          description: You are about to overwrite existing data in the output folder. Are you sure?
+          cli: "-f"
+          type: bool
+          default: false
+        path:
+          - RAiSD_Grid.
+          - type: run id
   - name: Common outlier analysis
     operations:
       CO:
@@ -145,6 +194,15 @@ modes:
           type: single
           formats:
             - .co-report
+        overwrite_parameter:
+          name: Overwrite existing results?
+          description: You are about to overwrite existing output data. Are you sure?
+          cli: "-f"
+          type: bool
+          default: false
+        path:
+          - RAiSD_CommonOutlierAnalysis.
+          - type: run id
   - name: File conversion
     operations:
       FASTA-VCF:
@@ -162,7 +220,15 @@ modes:
           type: single
           formats:
             - .vcf
-        prefix: RAiSD_FastaVcf
+        overwrite_parameter:
+          name: Overwrite existing data?
+          description: You are about to overwrite existing output data. Are you sure?
+          cli: "-f"
+          type: bool
+          default: false
+        path:
+          - RAiSD_FastaVcf.
+          - type: run id
       VCF-MS:
         name: VCF to ms
         description: Convert a vcf file to ms
@@ -178,7 +244,15 @@ modes:
           type: single
           formats:
             - .ms
-        prefix: RAiSD_VcfMs
+        overwrite_parameter:
+          name: Overwrite existing data?
+          description: You are about to overwrite existing output data. Are you sure?
+          cli: "-f"
+          type: bool
+          default: false
+        path:
+          - RAiSD_VcfMs.
+          - type: run id
 parameter_groups:
   - name: General
     operations:
@@ -217,17 +291,12 @@ parameter_groups:
       - SWP-SCN
     parameters:
       "-L":
-        name: Override default region length
-        description: Provide a custom size of the region for an ms file. If not provided, it will be extracted at runtime.
+        name: Region length
+        description: The region size (in basepairs).
         cli: "-L "
-        type: optional
-        default: false
-        parameter:
-          name: Region length
-          description: The region size (in basepairs).
-          type: int
-          min: 1
-          default: 1
+        type: int
+        min: 1
+        default: 1
         conditions:
           - type: enum
             parameter: input-file-type
@@ -752,12 +821,6 @@ parameter_groups:
     operations:
       - IMG-GEN
     parameters:
-      "-icl":
-        name: Image class label
-        description: A folder with this name will be created in RAiSD_Images.runID.
-        cli: "-icl "
-        type: str
-        pattern: ".+"
       "-its":
         name: Image target site
         description: The target site position for generating images, corresponding to the center of the first generated image. Should be smaller than region length.

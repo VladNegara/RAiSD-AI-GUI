@@ -10,12 +10,13 @@ The recommended way to construct operation trees is using the
 `OperationTree#build_trees` factory method.
 """
 
-from typing import Mapping
+from typing import Any, Mapping
 
 from PySide6.QtCore import (
     QObject,
     Signal,
     Slot,
+    QFileInfo,
     QDir,
 )
 
@@ -27,6 +28,7 @@ from gui.model.file_structure import (
 from gui.model.operation import Operation
 from gui.model.parameter import (
     Parameter,
+    StringParameter,
 )
 from gui.model.dependency import (
     Dependency,
@@ -68,6 +70,11 @@ class FileProducerNode(QObject):
 
     run_id = property(fset=_set_run_id)
 
+    def _set_base_directory_path(self, new_base_directory_path: str) -> None:
+        raise NotImplementedError()
+    
+    base_directory_path = property(fset=_set_base_directory_path)
+
     @property
     def enabled(self) -> bool:
         """
@@ -81,7 +88,11 @@ class FileProducerNode(QObject):
     def enabled(self, new_enabled: bool) -> None:
         raise NotImplementedError()
 
-    def to_cli(self, parameters: list[Parameter]) -> list[str]:
+    def to_cli(
+            self,
+            run_id_parameter: StringParameter,
+            parameters: list[Parameter],
+    ) -> list[str]:
         """
         Get the terminal commands needed to produce the file.
 
@@ -209,6 +220,12 @@ class FileConsumerNode(QObject):
 
     run_id = property(fset=_set_run_id)
 
+    def _set_base_directory_path(self, new_base_directory_path: str):
+        for producer in self.producers:
+            producer.base_directory_path = new_base_directory_path
+
+    base_directory_path = property(fset=_set_base_directory_path)
+
     @property
     def enabled(self) -> bool:
         """
@@ -237,7 +254,11 @@ class FileConsumerNode(QObject):
         """
         return self.selected_producer.valid
     
-    def to_cli(self, parameters: list[Parameter]) -> list[str]:
+    def to_cli(
+            self,
+            run_id_parameter: StringParameter,
+            parameters: list[Parameter],
+    ) -> list[str]:
         """
         Get the terminal commands needed to produce the file.
 
@@ -247,7 +268,7 @@ class FileConsumerNode(QObject):
         :return: the (possibly empty) list of commands
         :rtype: list[str]
         """
-        return self.selected_producer.to_cli(parameters)
+        return self.selected_producer.to_cli(run_id_parameter, parameters)
 
     def to_dict(self) -> dict:
         return {
@@ -322,7 +343,7 @@ class CommonParentDirectoryNode(FileProducerNode):
         self._file_consumers = []
         for file_structure in self._produces.contents:
             file_consumer = FileConsumerNode(
-                Directory([file_structure]),
+                file_structure,
                 "",
                 "",
             )
@@ -350,7 +371,16 @@ class CommonParentDirectoryNode(FileProducerNode):
         The path to the directory produced by this node's children, if
         available.
         """
-        return self.file_consumers[0].file
+        parent_directory_paths: set[str] = set()
+        for consumer in self.file_consumers:
+            if consumer.file is None:
+                return None
+            parent_directory_paths.add(
+                QFileInfo(consumer.file).dir().absolutePath()
+            )
+        if len(parent_directory_paths) == 1:
+            return list(parent_directory_paths)[0]
+        return None
 
     def _set_run_id(self, new_run_id: str) -> None:
         for file_consumer in self.file_consumers:
@@ -358,6 +388,13 @@ class CommonParentDirectoryNode(FileProducerNode):
         self.file_changed.emit(self.file)
 
     run_id = property(fset=_set_run_id)
+
+    def _set_base_directory_path(self, new_base_directory_path: str) -> None:
+        for file_consumer in self.file_consumers:
+            file_consumer.base_directory_path = new_base_directory_path
+        self.file_changed.emit(self.file)
+
+    base_directory_path = property(fset=_set_base_directory_path)
 
     @property
     def enabled(self) -> bool:
@@ -386,9 +423,13 @@ class CommonParentDirectoryNode(FileProducerNode):
         if not all(consumer.valid for consumer in self.file_consumers):
             return False
 
-        return len(set(consumer.file for consumer in self.file_consumers)) == 1
+        return self.file is not None
 
-    def to_cli(self, parameters: list[Parameter]) -> list[str]:
+    def to_cli(
+            self,
+            run_id_parameter: StringParameter,
+            parameters: list[Parameter],
+    ) -> list[str]:
         """
         Get the terminal commands needed to produce the directory.
 
@@ -400,7 +441,7 @@ class CommonParentDirectoryNode(FileProducerNode):
         """
         commands = []
         for consumer in self.file_consumers:
-            commands.extend(consumer.to_cli(parameters))
+            commands.extend(consumer.to_cli(run_id_parameter, parameters))
         return commands
 
     def to_dict(self) -> dict:
@@ -487,6 +528,11 @@ class FilePickerNode(FileProducerNode):
 
     run_id = property(fset=_set_run_id)
 
+    def _set_base_directory_path(self, new_base_directory_path: str) -> None:
+        pass
+
+    base_directory_path = property(fset=_set_base_directory_path)
+
     @property
     def enabled(self) -> bool:
         """
@@ -507,7 +553,11 @@ class FilePickerNode(FileProducerNode):
             return False
         return self.produces.matches(self.file)
 
-    def to_cli(self, parameters: list[Parameter]) -> list[str]:
+    def to_cli(
+            self,
+            run_id_parameter: StringParameter,
+            parameters: list[Parameter],
+    ) -> list[str]:
         """
         Get the terminal commands needed to produce the file.
 
@@ -545,6 +595,73 @@ class OperationNode(FileProducerNode):
     Implements `FileProducerNode` by producing the output file of
     the operation.
     """
+
+    class PathFragmentGenerator:
+        @classmethod
+        def from_path_fragment(
+            cls,
+            path_fragment: Operation.PathFragment,
+            operation_node: "OperationNode",
+        ) -> "OperationNode.PathFragmentGenerator":
+            if isinstance(path_fragment, Operation.ConstPathFragment):
+                return OperationNode.ConstPathFragmentGenerator(
+                    value=path_fragment.value,
+                )
+            if isinstance(path_fragment, Operation.RunIdPathFragment):
+                return OperationNode.RunIdPathFragmentGenerator(
+                    operation_node=operation_node,
+                )
+            if isinstance(path_fragment, Operation.SlashPathFragment):
+                return OperationNode.SlashPathFragmentGenerator()
+            if isinstance(path_fragment, Operation.ParameterValuePathFragment):
+                return OperationNode.ParameterValuePathFragmentGenerator(
+                    parameter=operation_node.parameters[
+                        path_fragment.parameter_id
+                    ]
+                )
+            raise NotImplementedError("Unknown path fragment type!")
+
+        @property
+        def value(self) -> str:
+            raise NotImplementedError()
+
+    class ConstPathFragmentGenerator(PathFragmentGenerator):
+        def __init__(
+                self,
+                value: str,
+        ) -> None:
+            self._value = value
+
+        @property
+        def value(self) -> str:
+            return self._value
+
+    class RunIdPathFragmentGenerator(PathFragmentGenerator):
+        def __init__(
+                self,
+                operation_node: "OperationNode",
+        ) -> None:
+            self._operation_node = operation_node
+
+        @property
+        def value(self) -> str:
+            return self._operation_node.run_id
+
+    class SlashPathFragmentGenerator(PathFragmentGenerator):
+        @property
+        def value(self) -> str:
+            return "/"
+
+    class ParameterValuePathFragmentGenerator(PathFragmentGenerator):
+        def __init__(
+                self,
+                parameter: Parameter[Any],
+        ) -> None:
+            self._parameter = parameter
+
+        @property
+        def value(self) -> str:
+            return str(self._parameter.value)
 
     class EnabledCondition(Dependency.Condition):
         """
@@ -587,6 +704,7 @@ class OperationNode(FileProducerNode):
     def __init__(self,
         operation: Operation,
         run_id: str = "",
+        base_directory_path: str = "",
         enabled: bool = False,
     ) -> None:
         """
@@ -608,7 +726,6 @@ class OperationNode(FileProducerNode):
         self._description = operation.description
         self._cli = operation.cli
         self._produces = operation.produces
-        self._output_path_prefix = operation.output_path_prefix
         self._file_consumers = []
         for file_name, cli, file_structure in operation.requires:
             file_consumer = FileConsumerNode(
@@ -620,7 +737,24 @@ class OperationNode(FileProducerNode):
             file_consumer.add_producer(file_picker)
             self._file_consumers.append(file_consumer)
             file_consumer.valid_changed.connect(self._consumer_valid_changed)
+        self._overwrite_parameter = operation.overwrite_parameter_builder()
+        self._parameters = {}
+        for parameter_id in operation.parameter_builders:
+            parameter_builder = operation.parameter_builders[parameter_id]
+            parameter = parameter_builder()
+            self._parameters[parameter_id] = parameter
+            # TODO: consider if there is a way to only connect the
+            # used parameters
+            parameter.value_changed.connect(self._parameter_value_changed)
+        self._output_path = [
+            OperationNode.PathFragmentGenerator.from_path_fragment(
+                path_fragment=path_fragment,
+                operation_node=self,
+            )
+            for path_fragment in operation.output_path
+        ]
         self._run_id = run_id
+        self._base_directory_path = base_directory_path
         self._enabled = enabled
 
     @property
@@ -652,6 +786,10 @@ class OperationNode(FileProducerNode):
         return self._produces
 
     @property
+    def parameters(self) -> dict[str, Parameter[Any]]:
+        return self._parameters
+
+    @property
     def file_consumers(self) -> list[FileConsumerNode]:
         """
         The list of `FileConsumerNode` children.
@@ -667,9 +805,20 @@ class OperationNode(FileProducerNode):
 
     @run_id.setter
     def run_id(self, new_run_id: str) -> None:
-        self._run_id = new_run_id
+        self._run_id = f"{new_run_id}_{self.id}"
         for file_consumer in self.file_consumers:
             file_consumer.run_id = self.run_id
+        self.file_changed.emit(self.file)
+
+    @property
+    def base_directory_path(self) -> str:
+        return self._base_directory_path
+    
+    @base_directory_path.setter
+    def base_directory_path(self, new_base_directory_path: str) -> None:
+        self._base_directory_path = new_base_directory_path
+        for file_consumer in self.file_consumers:
+            file_consumer.base_directory_path = self.base_directory_path
         self.file_changed.emit(self.file)
 
     @property
@@ -692,8 +841,8 @@ class OperationNode(FileProducerNode):
         """
         The path to the output file of the operation.
         """
-        return QDir.current().absoluteFilePath(
-            f"{self._output_path_prefix}{self.run_id}",
+        return QDir(self.base_directory_path).absoluteFilePath(
+            "".join(generator.value for generator in self._output_path)
         )
 
     @property
@@ -701,9 +850,17 @@ class OperationNode(FileProducerNode):
         """
         Whether the operation's inputs are in a valid state.
         """
-        return all([consumer.valid for consumer in self._file_consumers])
+        return all(
+            [self._overwrite_parameter.valid] # TODO: implement this
+            + [parameter.valid for parameter in self.parameters.values()]
+            + [consumer.valid for consumer in self._file_consumers]
+        )
 
-    def to_cli(self, parameters: list[Parameter]) -> list[str]:
+    def to_cli(
+            self,
+            run_id_parameter: StringParameter,
+            parameters: list[Parameter],
+    ) -> list[str]:
         """
         Get the terminal commands needed to produce the operation's
         input files, then run the operation.
@@ -721,8 +878,17 @@ class OperationNode(FileProducerNode):
         own_command_pieces = [self._cli]
 
         for file_consumer in self.file_consumers:
-            commands.extend(file_consumer.to_cli(parameters))
+            commands.extend(file_consumer.to_cli(run_id_parameter, parameters))
             own_command_pieces.append(file_consumer.cli_parameter)
+
+        own_command_pieces.append(
+            run_id_parameter.to_cli(self.id, self.run_id)
+        )
+
+        own_command_pieces.append(self._overwrite_parameter.to_cli(self.id))
+
+        for parameter in self.parameters.values():
+            own_command_pieces.append(parameter.to_cli(self.id))
 
         for parameter in parameters:
             own_command_pieces.append(parameter.to_cli(self.id))
@@ -763,6 +929,11 @@ class OperationNode(FileProducerNode):
 
     @Slot(bool)
     def _consumer_valid_changed(self, new_valid: bool) -> None:
+        self.valid_changed.emit(self.valid)
+
+    @Slot()
+    def _parameter_value_changed(self) -> None:
+        self.file_changed.emit(self.file)
         self.valid_changed.emit(self.valid)
 
 
@@ -810,6 +981,11 @@ class OperationTree(QObject):
 
     run_id = property(fset=_set_run_id)
 
+    def _set_base_directory_path(self, new_base_directory_path: str) -> None:
+        self.root.base_directory_path = new_base_directory_path
+
+    base_directory_path = property(fset=_set_base_directory_path)
+
     @property
     def enabled(self) -> bool:
         """
@@ -831,6 +1007,7 @@ class OperationTree(QObject):
             cls,
             operations: dict[str, Operation],
             run_id: str = "",
+            base_directory_path: str = "",
     ) -> tuple[list["OperationTree"], Mapping[str, Dependency.Condition]]:
         """
         For each operation in a given list, create an operation tree
@@ -871,6 +1048,7 @@ class OperationTree(QObject):
             root_node = OperationNode(
                 root_operation,
                 run_id=run_id,
+                base_directory_path=base_directory_path,
             )
             # Create an EnabledCondition for the root node.
             operation_id_to_conditions[root_operation_id].append(
@@ -893,6 +1071,7 @@ class OperationTree(QObject):
                             operation_node = OperationNode(
                                 candidate_operation,
                                 run_id=run_id,
+                                base_directory_path=base_directory_path,
                             )
                             file_consumer.add_producer(operation_node)
                             unexplored_nodes.append(operation_node)
@@ -927,6 +1106,7 @@ class OperationTree(QObject):
                                     operation_node = OperationNode(
                                         candidate_operation,
                                         run_id=run_id,
+                                        base_directory_path=base_directory_path,
                                     )
                                     possible_conditions[candidate_id].append(
                                         OperationNode.EnabledCondition(
@@ -962,7 +1142,11 @@ class OperationTree(QObject):
 
         return trees, operation_id_to_condition
 
-    def to_cli(self, parameters: list[Parameter]) -> list[str]:
+    def to_cli(
+            self,
+            run_id_parameter: StringParameter,
+            parameters: list[Parameter],
+    ) -> list[str]:
         """
         Get the terminal commands generated by the tree's root node.
 
@@ -972,7 +1156,7 @@ class OperationTree(QObject):
         :return: the list of commands
         :rtype: list[str]
         """
-        return self.root.to_cli(parameters)
+        return self.root.to_cli(run_id_parameter, parameters)
 
     def to_dict(self) -> dict:
         return self.root.to_dict()
