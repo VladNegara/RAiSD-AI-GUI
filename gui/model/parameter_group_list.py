@@ -1153,7 +1153,10 @@ class ParameterGroupList(QObject):
         :rtype: list[str]
         """
 
-        return self.selected_operation_tree.to_cli(self.parameters)
+        return self.selected_operation_tree.to_cli(
+            self.run_id_parameter,
+            self.parameters,
+        )
 
     def __iter__(self) -> Iterator[ParameterGroup]:
         return iter(self.parameter_groups)
