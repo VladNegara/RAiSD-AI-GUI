@@ -31,7 +31,6 @@ import json
 
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
-from gui.model.run_result import RunResult
 from gui.model.history_record import HistoryRecord
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets.parameter_widget import ParameterWidget
@@ -52,12 +51,12 @@ class RunWidget(QWidget):
     run_ended = Signal(bool)  # if run was successful
     run_saved = Signal(HistoryRecord)
 
-    def __init__(self, run_result: RunResult, command_executor: CommandExecutor):
+    def __init__(self, run_record: RunRecord, command_executor: CommandExecutor):
         """
         Initialize a `RunWidget` object.
         """
         super().__init__()
-        self._run_result = run_result
+        self._run_record = run_record
         self._command_executor = command_executor
         self._setup_ui()
         self.run_started.connect(self._handle_run_start)
@@ -147,18 +146,18 @@ class RunWidget(QWidget):
         Set up the stacked step widget.
         """
         # Operation selection widget
-        self.operation_selection_widget = OperationSelectionWidget(run_result=self._run_result)
+        self.operation_selection_widget = OperationSelectionWidget(run_record=self._run_record)
         self.operation_selection_widget.next_button.clicked.connect(self._switch_to_parameter_input_widget)
         layout.addWidget(self.operation_selection_widget)
 
         # Parameter input widget
-        self.parameter_input_widget = ParameterInputWidget(run_result=self._run_result)
+        self.parameter_input_widget = ParameterInputWidget(run_record=self._run_record)
         self.parameter_input_widget.back_button.clicked.connect(self._switch_to_operation_selection_widget)
         self.parameter_input_widget.next_button.clicked.connect(self._switch_to_parameter_confirmation_widget)
         layout.addWidget(self.parameter_input_widget)
 
         # Parameter confirmation widget
-        self.parameter_confirmation_widget = ParameterConfirmationWidget(run_result=self._run_result)
+        self.parameter_confirmation_widget = ParameterConfirmationWidget(run_record=self._run_record)
         self.parameter_confirmation_widget.edit_button.clicked.connect(self._switch_to_parameter_input_widget)
         # run_button clicked is handled via the start_run signal
         self.parameter_confirmation_widget.start_run.connect(self.start_run)
@@ -167,7 +166,7 @@ class RunWidget(QWidget):
         layout.addWidget(self.parameter_confirmation_widget)
 
         # Run view widget
-        self.run_view_widget = RunViewWidget(self._run_result, self._command_executor)
+        self.run_view_widget = RunViewWidget(run_record=self._run_record, command_executor=self._command_executor)
         self.run_view_widget.results_button.clicked.connect(self._switch_to_run_results_widget)
         self.run_view_widget.run_ended.connect(self.run_ended)
         self.run_view_widget.run_started.connect(self.run_started)
@@ -177,7 +176,7 @@ class RunWidget(QWidget):
         layout.addWidget(self.run_view_widget)
 
         # Results widget
-        self.run_results_widget = RunResultsWidget(self._run_result)
+        self.run_results_widget = RunResultsWidget(run_record=self._run_record)
         self.run_ended.connect(self.run_results_widget.run_end)
         layout.addWidget(self.run_results_widget)
 
@@ -221,9 +220,8 @@ class RunWidget(QWidget):
     @Slot()
     def _handle_run_end(self, run_successful: bool) -> None:
         if run_successful:
-            self._run_result.set_completed()
-            self._run_result.save_to_history()
-            self.run_saved.emit(self._run_result.to_history_record())            
+            history_record = HistoryRecord.from_run_record(self._run_record)  
+            history_record.save_to_history()     
             self._switch_to_run_results_widget()
             self.run_view_widget.results_button.setEnabled(True)
             self.run_view_widget.results_button.setProperty("highlight", "true")
@@ -286,8 +284,8 @@ class OperationSelectionWidget(RunSubWidget):
     A widget that allows the user to select operations to be run.
     """
 
-    def __init__(self, run_result: RunResult):
-        self._parameter_group_list = run_result.parameter_group_list
+    def __init__(self, run_record: RunRecord):
+        self._run_record = run_record
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -300,13 +298,13 @@ class OperationSelectionWidget(RunSubWidget):
         layout.addWidget(operation_selection_label)
 
         run_id_parameter_widget = ParameterWidget.from_parameter(
-            self._parameter_group_list.run_id_parameter,
+            self._run_record.run_id_parameter,
             editable=True,
         )
         layout.addWidget(run_id_parameter_widget.build_form_row())
 
         operation_selector = self.__class__.OperationSelector(
-            self._parameter_group_list
+            self._run_record
         )
         layout.addWidget(operation_selector)
 
@@ -316,19 +314,19 @@ class OperationSelectionWidget(RunSubWidget):
         self.next_button = QPushButton("Next")
         self.next_button.setObjectName("next_button")
         self._update_next_button_state()
-        self._parameter_group_list.run_id_valid_changed.connect(
+        self._run_record.run_id_valid_changed.connect(
             self._update_next_button_state,
         )
-        self._parameter_group_list.operations_valid_changed.connect(
+        self._run_record.operations_valid_changed.connect(
             self._update_next_button_state,
         )
         return NavigationButtonsWidget(right_button=self.next_button)
 
     class OperationSelector(QWidget):
-        def __init__(self, parameter_group_list: RunRecord):
+        def __init__(self, run_record: RunRecord):
             super().__init__()
 
-            self._parameter_group_list = parameter_group_list
+            self._run_record = run_record
 
             layout = QHBoxLayout(self)
 
@@ -346,12 +344,12 @@ class OperationSelectionWidget(RunSubWidget):
 
             self.tree_stacked_widget = ResizableStackedWidget()
             for i, tree in enumerate(
-                    self._parameter_group_list.operation_trees
+                    self._run_record.operation_trees
             ):
                 button = QRadioButton(tree.root.name)
                 button.setChecked(
                     i
-                    == self._parameter_group_list.selected_operation_tree_index
+                    == self._run_record.selected_operation_tree_index
                 )
                 button_layout.addWidget(button)
 
@@ -365,14 +363,14 @@ class OperationSelectionWidget(RunSubWidget):
             layout.addWidget(tree_scroll)
 
         def _button_clicked(self, i: int) -> None:
-            self._parameter_group_list.selected_operation_tree_index = i
+            self._run_record.selected_operation_tree_index = i
             self.tree_stacked_widget.current_index = i
 
     @Slot()
     def _update_next_button_state(self) -> None:
         valid = (
-            self._parameter_group_list.run_id_valid
-            and self._parameter_group_list.operations_valid
+            self._run_record.run_id_valid
+            and self._run_record.operations_valid
         )
         self.next_button.setEnabled(valid)
         if valid:
@@ -383,9 +381,8 @@ class OperationSelectionWidget(RunSubWidget):
         self.next_button.style().polish(self.next_button)
 
 class ParameterInputWidget(RunSubWidget):    
-    def __init__(self, run_result: RunResult):
-        self._run_result = run_result
-        self._parameter_group_list = run_result.parameter_group_list
+    def __init__(self, run_record: RunRecord):
+        self._run_record = run_record
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -396,7 +393,7 @@ class ParameterInputWidget(RunSubWidget):
         parameter_input_label.setObjectName("parameter_input_label")
         layout.addWidget(parameter_input_label)
 
-        parameter_form = ParameterForm(self._parameter_group_list, editable=True)
+        parameter_form = ParameterForm(self._run_record, editable=True)
         parameter_form.setObjectName("parameter_form")
 
         parameter_form_scroll = QScrollArea()
@@ -423,10 +420,10 @@ class ParameterInputWidget(RunSubWidget):
 
         self._update_next_button_state()
         # TODO: make this just connect to a signal on the parameter group list
-        self._parameter_group_list.run_id_parameter.value_changed.connect(
+        self._run_record.run_id_parameter.value_changed.connect(
             self._update_next_button_state
         )
-        for group in self._parameter_group_list.parameter_groups:
+        for group in self._run_record.parameter_groups:
             for parameter in group.parameters:
                 parameter.value_changed.connect(self._update_next_button_state)
                 
@@ -436,7 +433,7 @@ class ParameterInputWidget(RunSubWidget):
         """
         Helper function to display the error that makes the next_button inactive
         """
-        valid = self._parameter_group_list.valid
+        valid = self._run_record.valid
         self.next_button.setEnabled(valid)
         if valid:
             self.next_button.setProperty("highlight", "true")
@@ -453,15 +450,14 @@ class ParameterInputWidget(RunSubWidget):
         Prints the current result of `parameter_group_list.to_cli()`.
         """
         print("check parameters:")
-        print(self._parameter_group_list.to_cli())
+        print(self._run_record.to_cli())
 
 
 class ParameterConfirmationWidget(RunSubWidget):
     start_run = Signal()
 
-    def __init__(self, run_result: RunResult):
-        self._run_result = run_result
-        self._parameter_group_list = run_result.parameter_group_list
+    def __init__(self, run_record: RunRecord):
+        self._run_record = run_record
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -502,7 +498,7 @@ class ParameterConfirmationWidget(RunSubWidget):
         layout.addWidget(commands_widget)
 
         # Parameters
-        parameter_form = ParameterForm(self._parameter_group_list, editable=False)
+        parameter_form = ParameterForm(self._run_record, editable=False)
         parameter_form.setObjectName("parameter_form")
 
         parameter_form_scroll = QScrollArea()
@@ -526,10 +522,9 @@ class ParameterConfirmationWidget(RunSubWidget):
         Updates the ParameterConfirmationWidget with the commands from
         the RunResult.
         """
-        self._run_result.set_commands()
         self.commands_view.clear()
-        if self._run_result.commands:
-            self.commands_view.addItems(self._run_result.commands)
+        if self._run_record.to_cli():
+            self.commands_view.addItems(self._run_record.to_cli())
             self.commands_view.setMaximumHeight(self.commands_view.sizeHintForRow(0)*(self.commands_view.count()+1))
 
     @Slot(int)
@@ -546,14 +541,14 @@ class ParameterConfirmationWidget(RunSubWidget):
         """
         Copies all commands from the run result to the clipboard.
         """
-        if self._run_result.commands:
-            string = '; '.join(self._run_result.commands)
+        if self._run_record.to_cli():
+            string = '; '.join(self._run_record.to_cli())
             cb = QGuiApplication.clipboard()
             cb.setText(string)
 
     @Slot()
     def _run_button_clicked(self) -> None:
-        if self._parameter_group_list.valid:
+        if self._run_record.valid:
             self.start_run.emit()
         else:
             dialog = ErrorDialog(self, "Invalid input", "Input parameters are invalid")
@@ -575,9 +570,8 @@ class RunViewWidget(RunSubWidget):
     run_started = Signal(int)  # Number of processes
     run_ended = Signal(bool)  # Run successful
 
-    def __init__(self, run_result: RunResult, command_executor: CommandExecutor):
-        self._run_result = run_result
-        self._parameter_group_list = self._run_result.parameter_group_list
+    def __init__(self, run_record: RunRecord, command_executor: CommandExecutor):
+        self._run_result = run_record
         self._command_executor = command_executor
 
         self.confirm_stop_execution_dialog = None
@@ -698,7 +692,6 @@ class RunViewWidget(RunSubWidget):
         ]
         # self._command_executor.start_execution(self._parameter_group_list.to_cli())
         # TODO: implement info filename logic and command generation logic
-        self._run_result.set_commands()
         info_files = ['RAiSD_Info.TrainingData2DSNP.neutralTR',
                       'RAiSD_Info.TrainingData2DSNP.sweepTR',
                       'RAiSD_Info.TestData2DSNP.neutralTE']
@@ -851,8 +844,8 @@ class RunViewWidget(RunSubWidget):
 
 
 class RunResultsWidget(RunSubWidget):
-    def __init__(self, run_result: RunResult):
-        self._run_result = run_result
+    def __init__(self, run_record: RunRecord):
+        self._run_record = run_record
         super().__init__()
 
     def _setup_widget(self) -> QWidget:
@@ -864,7 +857,7 @@ class RunResultsWidget(RunSubWidget):
         run_results_label.setObjectName("run_results_label")
         layout.addWidget(run_results_label)
 
-        self.results_widget = ResultsWidget(self._run_result)
+        self.results_widget = ResultsWidget(self._run_record)
 
         results_scroll = QScrollArea()
         results_scroll.setObjectName("results_scroll")
