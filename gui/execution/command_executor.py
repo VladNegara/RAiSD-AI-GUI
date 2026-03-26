@@ -34,7 +34,7 @@ class CommandExecutor(QObject):
     process_failed = Signal(int, QProcess.ProcessError)     # process_index, process_error
     process_stopped = Signal(int)                   # process_index
 
-    def __init__(self, run_result : RunResult, command_builder: Callable[[str], str] | None = None):
+    def __init__(self, run_result: RunResult, command_builder: Callable[[str], str] | None = None):
         """
         Initialize a `CommandExecutor` object.
         """
