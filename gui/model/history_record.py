@@ -3,7 +3,6 @@ import json
 from datetime import datetime
 
 from gui.model.settings import app_settings
-from gui.model.run_record import RunRecord
 from gui.model.parameter import (
     Parameter,
     MultiParameter,
