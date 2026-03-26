@@ -13,8 +13,6 @@ from PySide6.QtWidgets import (
 from gui.model.settings import app_settings, EnvironmentManager
 from gui.model.run_record import RunRecord
 from gui.windows.main import MainWindow
-from gui.model.run_result import RunResult
-
 
 
 def main():
@@ -36,10 +34,9 @@ def main():
     app_settings.environment_manager = EnvironmentManager.MICROMAMBA
     app_settings.environment_name = "raisd-ai"
 
-    run_result = RunResult()
-    app_settings.workspace_path_changed.connect(lambda path: setattr(run_result, 'path', path))
+    run_record = RunRecord.from_yaml(app_settings.yaml_path)
 
-    window = MainWindow(run_result)
+    window = MainWindow(run_record)
     window.resize(1000,800)
     window.show()
     app.exec()

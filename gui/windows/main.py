@@ -22,13 +22,12 @@ from gui.execution.command_executor import CommandExecutor
 from gui.windows.run_widget import RunWidget
 from gui.windows.history_widget import HistoryWidget
 from gui.windows.settings_widget import SettingsWidget
-from gui.model.run_result import RunResult
  
 class MainWindow(QMainWindow):
     """
     The main window of the RAiSD-AI GUI application.
     """
-    def __init__(self, run_result: RunResult):
+    def __init__(self, run_record: RunRecord):
         """
         Initialize the main window.
 
@@ -36,7 +35,7 @@ class MainWindow(QMainWindow):
         :type run_result: RunResult
         """
         super().__init__()
-        self._run_result = run_result
+        self._run_record = run_record
         self.command_executor = CommandExecutor()
         self._setup_ui()
 
@@ -115,7 +114,7 @@ class MainWindow(QMainWindow):
             button.style().polish(button)
 
     def _setup_main_widget(self, layout: QStackedLayout):
-        self.run_widget = RunWidget(self._run_result, self.command_executor)
+        self.run_widget = RunWidget(self._run_record, self.command_executor)
         self.history_widget = HistoryWidget()
         self.settings_widget = SettingsWidget()
         self.run_widget.run_saved.connect(self.history_widget.add_completed_run)
