@@ -1123,7 +1123,7 @@ class ParameterGroupList(QObject):
 
     @property
     def parameters(self) -> list[Parameter]:
-        result = [self.run_id_parameter]
+        result = []
         for parameter_group in self:
             result.extend(parameter_group)
         return result

@@ -683,9 +683,20 @@ class StringParameter(Parameter[str]):
             return False
         return True
 
-    def to_cli(self, operation: str) -> str:
+    def to_cli(self, operation: str, value: str | None = None) -> str:
+        """
+        Represent the parameter for the command line.
+
+        A value can optionally be provided as an argument. If not
+        provided, the current value of the parameter is used.
+
+        :return: the command-line representation
+        :rtype: str
+        """
+        if value is None:
+            value = self.value
         if self.in_cli(operation):
-            return f"{self.flag} {self.value}"
+            return f"{self.flag} {value}"
         else: return ""
 
     def __str__(self) -> str:
