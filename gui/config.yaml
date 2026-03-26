@@ -1,4 +1,3 @@
-executable: ./RAiSD-AI
 run_id_parameter:
   name: Run ID
   description: A name that identifies the run and is used to name the output files. Only letters, digits and underscores allowed

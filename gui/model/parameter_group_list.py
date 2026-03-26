@@ -47,7 +47,6 @@ class ParameterGroupList(QObject):
 
     def __init__(
             self,
-            command: str,
             run_id_parameter: StringParameter,
             operation_trees: list[OperationTree],
             parameter_groups: list[ParameterGroup] | None = None,
@@ -56,14 +55,10 @@ class ParameterGroupList(QObject):
         """
         Initialize a `ParameterGroupList` object.
 
-        :param command: the terminal command to use
-        :type command: str
-
         :param parameter_groups: the groups of parameters
         :type parameter_groups: list[ParameterGroup] | None
         """
         super().__init__()
-        self.command = command
         self._run_id_parameter = run_id_parameter
         self._run_id = run_id_parameter.value
         self._run_id_parameter.value_changed.connect(
@@ -761,14 +756,6 @@ class ParameterGroupList(QObject):
 
         config_obj = load(config_text, Loader=Loader)
 
-        if "executable" not in config_obj:
-            raise ValueError("Config file is missing executable name.")
-        executable = config_obj["executable"]
-        if not isinstance(executable, str):
-            raise ValueError(
-                f"Invalid executable name: {executable}. Expected string."
-            )
-
         operations = {}
         if "modes" not in config_obj:
             raise ValueError("Configuration file contains no list of modes.")
@@ -825,7 +812,7 @@ class ParameterGroupList(QObject):
 
         operation_trees, operation_conditions = OperationTree.build_trees(operations)
 
-        result = cls(executable, run_id_parameter, operation_trees, parameter_groups)
+        result = cls(run_id_parameter, operation_trees, parameter_groups)
 
         parameter_conditions: dict[Parameter[Any], list[Dependency.Condition]] = {}
 

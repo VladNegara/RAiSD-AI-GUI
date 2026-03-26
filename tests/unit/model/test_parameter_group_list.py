@@ -24,10 +24,17 @@ class TestParameterGroupList:
 
     @fixture(autouse=True)
     def set_parameter_group_list(self):
+        self.run_id_parameter = StringParameter (
+            name="Run ID",
+            description="Fill in a name to identify your run.",
+            flag="-n",
+            operations={"IMG-GEN", "MDL-GEN"},
+            default_value="my_run",
+        )
         self.parameter_groups = [
             ParameterGroup(
                 name='img',
-                parameters=[]),
+                parameters=[]), 
             ParameterGroup(
                 name='mdl',
                 parameters=[
@@ -35,7 +42,7 @@ class TestParameterGroupList:
                         name='name',
                         description='description',
                         flag='-flag',
-                        operations={'MDL-GEN'},
+                        operations={'IMG-GEN'},
                         default_value='default',
                         pattern=re.compile(r"\b[a-z]+\b")
                     )
@@ -55,14 +62,7 @@ class TestParameterGroupList:
         }
         self.operation_trees, _ = OperationTree.build_trees(self.operations)
         self.parameter_group_list = ParameterGroupList(
-            command="./RAiSD-AI",
-            run_id_parameter=StringParameter(
-                name="Run ID",
-                description="Fill in a name to identify your run.",
-                flag="-n",
-                operations={"IMG-GEN", "MDL-GEN"},
-                default_value="my_run",
-            ),
+            run_id_parameter=self.run_id_parameter,
             operation_trees=self.operation_trees,
             parameter_groups=self.parameter_groups,
             dependencies=None,
@@ -70,11 +70,12 @@ class TestParameterGroupList:
     
     def test_init_values(self):
         # arrange
+        run_id_parameter = self.run_id_parameter
         list = self.parameter_group_list
         groups = self.parameter_groups
 
         # assert
-        assert list.command == "./RAiSD-AI"
+        assert list.run_id_parameter == run_id_parameter
         assert list.operation_trees == self.operation_trees
         assert list.parameter_groups == groups
         assert list._dependencies == []
@@ -107,7 +108,6 @@ class TestParameterGroupListFromYaml:
             "builtins.open",
             mocker.mock_open(
                 read_data= """
-                executable: ./RAiSD-AI
                 run_id_parameter:
                   type: str
                   name: Run ID
