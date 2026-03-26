@@ -172,7 +172,7 @@ class FileConsumerNode(QObject):
         """
         The representation of this file as a command-line argument.
         """
-        return f"{self._cli} {self.file}"
+        return f"{self._cli}{self.file}"
 
     @property
     def selected_index(self) -> int:
