@@ -93,6 +93,12 @@ class FileProducerNode(QObject):
         """
         raise NotImplementedError()
 
+    def to_dict(self) -> dict:
+        raise NotImplementedError()
+
+    def populate_from_dict(self, values: dict) -> None:
+        raise NotImplementedError()
+
 
 class FileConsumerNode(QObject):
     """
@@ -243,6 +249,42 @@ class FileConsumerNode(QObject):
         """
         return self.selected_producer.to_cli(parameters)
 
+    def to_dict(self) -> dict:
+        return {
+            "selected": self.selected_index,
+            "file_producers": [
+                producer.to_dict() for producer in self.producers
+            ]
+        }
+
+    def populate_from_dict(self, values: dict) -> None:
+        if "selected" not in values:
+            raise ValueError("Missing 'selected' in dict.")
+        selected_index = values["selected"]
+        if not isinstance(selected_index, int):
+            raise ValueError(
+                f"Invalid 'selected' in dict: {selected_index}. Expected int."
+            )
+
+        if "file_producers" not in values:
+            raise ValueError("Missing 'file_producers' in dict.")
+        file_producer_values_list = values["file_producers"]
+        if not isinstance(file_producer_values_list, list):
+            raise ValueError(
+                "Invalid 'file_producers' in dict: "
+                + f"{file_producer_values_list}. Expected a list."
+            )
+        if len(file_producer_values_list) != len(self.producers):
+            raise ValueError("Mismatch in 'file_producers' length.")
+        for i, file_producer_values in enumerate(file_producer_values_list):
+            if not isinstance(file_producer_values, dict):
+                raise ValueError(
+                    f"Invalid item in 'file_producers': {file_producer_values}"
+                    + ". Expected an object."
+                )
+            self.producers[i].populate_from_dict(file_producer_values)
+            
+
     @Slot(bool)
     def _producer_valid_changed(self, new_valid: bool) -> None:
         self.valid_changed.emit(self.valid)
@@ -361,6 +403,34 @@ class CommonParentDirectoryNode(FileProducerNode):
             commands.extend(consumer.to_cli(parameters))
         return commands
 
+    def to_dict(self) -> dict:
+        return {
+            "file_consumers": [
+                consumer.to_dict() for consumer in self.file_consumers
+            ]
+        }
+
+    def populate_from_dict(self, values: dict) -> None:
+        if "file_consumers" not in values:
+            raise ValueError("Missing 'file_consumers' key in dict.")
+        file_consumer_values_list = values["file_consumers"]
+        if not isinstance(file_consumer_values_list, list):
+            raise ValueError(
+                f"Wrong 'file_consumers': {file_consumer_values_list}. "
+                + "Expected a list."
+            )
+        if len(file_consumer_values_list) != len(self.file_consumers):
+            raise ValueError(
+                "Mismatched length of 'file_consumers'."
+            )
+        for i, file_consumer_values in enumerate(file_consumer_values_list):
+            if not isinstance(file_consumer_values, dict):
+                raise ValueError(
+                    f"Wrong item in 'file_consumers': {file_consumer_values}. "
+                    + "Expected a dict."
+                )
+            self.file_consumers[i].populate_from_dict(file_consumer_values)
+
     @Slot(bool)
     def _consumer_valid_changed(self, new_valid: bool) -> None:
         self.valid_changed.emit(self.valid)
@@ -450,6 +520,22 @@ class FilePickerNode(FileProducerNode):
         :rtype: list[str]
         """
         return []
+
+    def to_dict(self) -> dict:
+        return {
+            "file_path": self.file
+        }
+
+    def populate_from_dict(self, values: dict) -> None:
+        if "file_path" not in values:
+            raise ValueError("Missing file path in dict.")
+        file_path = values["file_path"]
+        if file_path is not None and not isinstance(file_path, str):
+            raise ValueError(
+                f"Invalid file path in dict: {file_path}. Expected a string "
+                + "or null."
+            )
+        self.file = file_path
 
 
 class OperationNode(FileProducerNode):
@@ -646,6 +732,34 @@ class OperationNode(FileProducerNode):
         commands.append(own_command)
 
         return commands
+
+    def to_dict(self) -> dict:
+        return {
+            "file_consumers": [
+                consumer.to_dict() for consumer in self.file_consumers
+            ]
+        }
+
+    def populate_from_dict(self, values: dict) -> None:
+        if "file_consumers" not in values:
+            raise ValueError("Missing 'file_consumers' key in dict.")
+        file_consumer_values_list = values["file_consumers"]
+        if not isinstance(file_consumer_values_list, list):
+            raise ValueError(
+                f"Wrong 'file_consumers': {file_consumer_values_list}. "
+                + "Expected a list."
+            )
+        if len(file_consumer_values_list) != len(self.file_consumers):
+            raise ValueError(
+                "Mismatched length of 'file_consumers'."
+            )
+        for i, file_consumer_values in enumerate(file_consumer_values_list):
+            if not isinstance(file_consumer_values, dict):
+                raise ValueError(
+                    f"Wrong item in 'file_consumers': {file_consumer_values}. "
+                    + "Expected a dict."
+                )
+            self.file_consumers[i].populate_from_dict(file_consumer_values)
 
     @Slot(bool)
     def _consumer_valid_changed(self, new_valid: bool) -> None:
@@ -859,6 +973,12 @@ class OperationTree(QObject):
         :rtype: list[str]
         """
         return self.root.to_cli(parameters)
+
+    def to_dict(self) -> dict:
+        return self.root.to_dict()
+
+    def populate_from_dict(self, values: dict) -> None:
+        self.root.populate_from_dict(values)
 
     @Slot(bool)
     def _root_valid_changed(self, new_valid: bool) -> None:

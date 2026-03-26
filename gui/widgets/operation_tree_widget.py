@@ -9,6 +9,7 @@ from PySide6.QtCore import (
     Qt,
     Slot,
 )
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QFileDialog,
@@ -17,6 +18,8 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QVBoxLayout,
     QWidget,
+    QStyleOption,
+    QStyle
 )
 
 from gui.model.file_structure import(
@@ -100,9 +103,11 @@ class FileConsumerNodeWidget(QWidget):
         self._file_consumer_node = file_consumer_node
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(5,0,0,0)
 
         heading = QLabel(self._file_consumer_node.label)
         layout.addWidget(heading)
+        heading.setObjectName("heading")
 
         self.file_producer_widget = ResizableStackedWidget()
         if len(self._file_consumer_node.producers) == 1:
@@ -122,6 +127,7 @@ class FileConsumerNodeWidget(QWidget):
             button_heading = QLabel(
                 "Select how you want to provide this input file or directory:"
             )
+            button_heading.setWordWrap(True)
             button_layout.addWidget(button_heading)
 
             for i, producer in enumerate(self._file_consumer_node.producers):
@@ -141,6 +147,12 @@ class FileConsumerNodeWidget(QWidget):
     def _button_clicked(self, i: int) -> None:
         self._file_consumer_node.selected_index = i
         self.file_producer_widget.current_index = i
+
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
 
 class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
@@ -170,6 +182,7 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         )
         heading.setWordWrap(True)
         layout.addWidget(heading)
+        layout.setContentsMargins(0,0,0,0)
 
         for file_consumer in self._common_parent_directory.file_consumers:
             file_consumer_widget = FileConsumerNodeWidget(file_consumer)
@@ -199,6 +212,7 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
         self._file_picker = file_picker
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(5,0,0,0)
 
         self._is_directory = isinstance(self._file_picker.produces, Directory)
         # TODO: make this code cleaner and more reusable.
@@ -251,6 +265,7 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
         layout.addWidget(heading)
 
         self.button = QPushButton("Browse")
+        self.button.setObjectName("file_selector_button")
         self.button.clicked.connect(self._browse_button_clicked) 
         layout.addWidget(self.button)
 
@@ -295,10 +310,13 @@ class OperationNodeWidget(FileProducerNodeWidget):
         """
         super().__init__()
         self._operation_node = operation_node
+        self.setObjectName("operation_node_widget")
 
         layout = QVBoxLayout(self)
 
         name = QLabel(operation_node.name)
+        name.setObjectName("heading")
+        name.setWordWrap(True)
         layout.addWidget(name)
 
         description = QLabel(operation_node.description)
@@ -310,10 +328,13 @@ class OperationNodeWidget(FileProducerNodeWidget):
         )
         layout.addWidget(self._output_info_label)
 
+        layout.setContentsMargins(5,0,0,0)
+
         input_files_widget = QWidget()
         input_files_layout = QHBoxLayout(input_files_widget)
         for file_consumer in operation_node.file_consumers:
             file_consumer_widget = FileConsumerNodeWidget(file_consumer)
+            file_consumer_widget.setObjectName("file_consumer_widget")
             input_files_layout.addWidget(
                 file_consumer_widget,
                 alignment=Qt.AlignmentFlag.AlignTop,
@@ -329,6 +350,12 @@ class OperationNodeWidget(FileProducerNodeWidget):
     @Slot(str)
     def _file_changed(self, new_file: str) -> None:
         self._output_info_label.text = self.output_label_text + new_file
+
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
 
 class OperationTreeWidget(QWidget):
@@ -347,6 +374,7 @@ class OperationTreeWidget(QWidget):
         :type operation_tree: OperationTree
         """
         super().__init__()
+        self.setObjectName("operation_tree_widget")
         self._operation_tree = operation_tree
 
         layout = QHBoxLayout(self)
@@ -356,3 +384,9 @@ class OperationTreeWidget(QWidget):
             body,
             alignment=Qt.AlignmentFlag.AlignTop,
         )
+
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
