@@ -457,7 +457,7 @@ void flagCheck (char ** argv, int i, int * flagVector, int flagIndex)
 	if(flagVector[flagIndex]!=0)
 	{
 		fprintf(stderr, "\nERROR: Flag %s is given more than once!\n\n",argv[i]);
-		exit(1):
+		exit(1);
 	}
 
 	flagVector[flagIndex]=1;
@@ -483,7 +483,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(1):	
+				exit(1);	
 			}
 			
 #ifdef _RSDAI
@@ -515,7 +515,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(1):	
+				exit(1);
 			}
 
 			continue;
