@@ -11,7 +11,7 @@ from PySide6.QtCore import (
         QDir,
 )
 
-from gui.model.run_result import RunResult
+from gui.model.run_record import RunRecord
 from gui.model.settings import app_settings
 
 class CommandExecutor(QObject):
@@ -33,12 +33,12 @@ class CommandExecutor(QObject):
     process_failed = Signal(int, QProcess.ProcessError)     # process_index, process_error
     process_stopped = Signal(int)                   # process_index
 
-    def __init__(self, run_result: RunResult, command_builder: Callable[[str], str] | None = None):
+    def __init__(self, run_record: RunRecord, command_builder: Callable[[str], str] | None = None):
         """
         Initialize a `CommandExecutor` object.
         """
         super().__init__()
-        self.run_result = run_result
+        self.run_record = run_record
         self.command_builder = command_builder or self._default_command_builder
 
         self._process = QProcess()
@@ -78,7 +78,7 @@ class CommandExecutor(QObject):
         
         self.execution_started.emit(len(commands))
         
-        run_id = self.run_result.parameter_group_list.run_id
+        run_id = self.run_record.run_id
         if not app_settings.workspace_path.exists(run_id):
             if not app_settings.workspace_path.mkdir(run_id):
                 raise RuntimeError(f"Creating run folder: '{run_id}' failed.")

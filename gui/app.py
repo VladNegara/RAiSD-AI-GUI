@@ -11,10 +11,8 @@ from PySide6.QtWidgets import (
 )
 
 from gui.model.settings import app_settings, EnvironmentManager
-from gui.model.parameter_group_list import ParameterGroupList
+from gui.model.run_record import RunRecord
 from gui.windows.main import MainWindow
-from gui.model.run_result import RunResult
-
 
 
 def main():
@@ -32,12 +30,9 @@ def main():
     app.setStyleSheet(final_stylesheet)
 
 
-    parameter_group_list = ParameterGroupList.from_yaml("gui/config.yaml")
+    run_record = RunRecord.from_yaml(app_settings.yaml_path)
 
-    run_result = RunResult(parameter_group_list, app_settings.workspace_path)
-    app_settings.workspace_path_changed.connect(lambda path: setattr(run_result, 'path', path))
-
-    window = MainWindow(run_result)
+    window = MainWindow(run_record)
     window.resize(1200,800)
     window.show()
     app.exec()

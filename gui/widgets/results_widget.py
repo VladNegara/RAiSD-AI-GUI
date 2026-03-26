@@ -19,24 +19,26 @@ from PySide6.QtCore import (
 
 from PySide6.QtGui import QDesktopServices, QPainter
 
-from gui.model.parameter_group_list import ParameterGroupList
+
+from gui.model.settings import app_settings
+from gui.model.run_record import RunRecord
 from gui.widgets.parameter_form import ParameterForm
 from gui.widgets.collapsible import Collapsible
-from gui.model.run_result import RunResult
+
 
 class ResultsWidget(QWidget):
     """
     The results of a completed execution shown.
     """
-    def __init__(self, run_result: RunResult):
+    def __init__(self, run_record: RunRecord):
         """
         Initialize a `ResultsWidget` object.
 
-        :param run_result: the result to display
-        :type run_result: RunResult
+        :param run_record: the result to display
+        :type run_record: RunResult
         """
         super().__init__()
-        self._run_result = run_result
+        self._run_record = run_record
         self.setObjectName('results_widget')
         layout = QVBoxLayout(self)
 
@@ -64,27 +66,31 @@ class ResultsWidget(QWidget):
 
         # Parameter widget
         parameters_header = QLabel("Parameters used")
-        parameter_form = ParameterForm(self._run_result.parameter_group_list, editable=False)
+        parameter_form = ParameterForm(self._run_record, editable=False)
         parameters_collapsible = Collapsible(parameters_header, parameter_form)
         layout.addWidget(parameters_collapsible)
 
     def show_results(self) -> None:
         """
-        Updates the ResultWidget with results in the RunResult.
+        Updates the ResultWidget with results in the RunRecord.
         """
         # Update summary widgets
         self.status_label.setText("This run was completed successfully. For more information, see the info files below.")
-        for file in self._run_result.info_files:
+
+        info_files = [] # TODO implement infofile gen logic
+        output_folder_path = QDir(app_settings.workspace_path.filePath(self._run_record.run_id))
+        for file in info_files:
             button = QPushButton(file)
             button.setObjectName("file_button")
-            path = self._run_result.path.filePath(file)
+            path = output_folder_path.absoluteFilePath(file)
             button.clicked.connect(lambda _, p=path: self.open_file(p))
             self.info_files_layout.addWidget(button)
 
         # Set folder widget to right folder
-        self.folder_structure.setRootPath(self._run_result.path.absolutePath())
+        path = app_settings.workspace_path.filePath(self._run_record.run_id)
+        self.folder_structure.setRootPath(path)
         self.folder_widget.setModel(self.folder_structure)
-        self.folder_widget.setRootIndex(self.folder_structure.index(self._run_result.path.absolutePath()))
+        self.folder_widget.setRootIndex(self.folder_structure.index(path))
         self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def open_file(self, path) -> None:

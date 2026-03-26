@@ -17,27 +17,26 @@ from PySide6.QtGui import (
 )
 
 from gui.model.settings import app_settings
-from gui.model.parameter_group_list import ParameterGroupList
+from gui.model.run_record import RunRecord
 from gui.execution.command_executor import CommandExecutor
 from gui.windows.run_widget import RunWidget
 from gui.windows.history_widget import HistoryWidget
 from gui.windows.settings_widget import SettingsWidget
-from gui.model.run_result import RunResult
  
 class MainWindow(QMainWindow):
     """
     The main window of the RAiSD-AI GUI application.
     """
-    def __init__(self, run_result: RunResult):
+    def __init__(self, run_record: RunRecord):
         """
         Initialize the main window.
 
-        :param run_result: the run_result object used by the RunWidget
-        :type run_result: RunResult
+        :param run_record: the run_record object used by the RunWidget
+        :type run_record: RunResult
         """
         super().__init__()
-        self._run_result = run_result
-        self.command_executor = CommandExecutor(run_result)
+        self._run_record = run_record
+        self.command_executor = CommandExecutor(run_record)
         self._setup_ui()
 
     def _setup_ui(self):
@@ -115,9 +114,10 @@ class MainWindow(QMainWindow):
             button.style().polish(button)
 
     def _setup_main_widget(self, layout: QStackedLayout):
-        self.run_widget = RunWidget(self._run_result, self.command_executor)
+        self.run_widget = RunWidget(self._run_record, self.command_executor)
         self.history_widget = HistoryWidget()
         self.settings_widget = SettingsWidget()
+        self.run_widget.run_saved.connect(self.history_widget.add_completed_run)
 
         layout.addWidget(self.run_widget)
         layout.addWidget(self.history_widget)
@@ -130,6 +130,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _history_button_clicked(self) -> None:
+        self.history_widget.update_history_time()
         self.main_widget_layout.setCurrentWidget(self.history_widget)
         self._set_active_view(1)
 

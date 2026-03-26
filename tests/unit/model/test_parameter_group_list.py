@@ -4,7 +4,7 @@ import re
 from gui.model.operation_tree import OperationTree
 from gui.model.operation import Operation
 from gui.model.file_structure import SingleFile
-from gui.model.parameter_group_list import ParameterGroupList
+from gui.model.run_record import RunRecord
 from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
     OptionalParameter,
@@ -61,7 +61,7 @@ class TestParameterGroupList:
             )
         }
         self.operation_trees, _ = OperationTree.build_trees(self.operations)
-        self.parameter_group_list = ParameterGroupList(
+        self.parameter_group_list = RunRecord(
             run_id_parameter=self.run_id_parameter,
             operation_trees=self.operation_trees,
             parameter_groups=self.parameter_groups,
@@ -574,7 +574,7 @@ class TestParameterGroupListFromYaml:
         )
 
         # act
-        parameter_list = ParameterGroupList.from_yaml('path')
+        parameter_list = RunRecord.from_yaml('path')
 
         # assert
         assert len(parameter_list.operation_trees) == 2

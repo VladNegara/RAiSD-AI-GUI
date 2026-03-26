@@ -479,7 +479,7 @@ parameter_groups:
         type: optional
         default: false
         parameter:
-          name: null
+          name: Multi calculate distance
           description: null
           type: multi
           parameters:

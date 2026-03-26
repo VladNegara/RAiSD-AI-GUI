@@ -44,6 +44,7 @@ class Settings(QObject):
         self._executable_file_path = QFileInfo("RAiSD-AI")
         self._environment_manager = EnvironmentManager.MICROMAMBA
         self._environment_name = "raisd-ai-gui"
+        self._yaml_path = "gui/config.yaml"
 
     @property
     def workspace_path(self) -> QDir:
@@ -132,6 +133,14 @@ class Settings(QObject):
         if self._environment_name != value:
             self._environment_name = value
             self.environment_name_changed.emit(value)
+
+    @property
+    def yaml_path(self) -> str:
+        return self._yaml_path
+    
+    @yaml_path.setter
+    def yaml_path(self, path: str) -> None:
+        self._yaml_path = path
 
     def set_workspace_folder(self) -> None:
         """
