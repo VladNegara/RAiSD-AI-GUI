@@ -296,7 +296,9 @@ class OperationSelectionWidget(RunSubWidget):
             self._parameter_group_list.run_id_parameter,
             editable=True,
         )
-        layout.addWidget(run_id_parameter_widget.build_form_row())
+        run_id_widget = run_id_parameter_widget.build_form_row()
+        run_id_widget.setFixedWidth(510)
+        layout.addWidget(run_id_widget)
 
         operation_selector = self.__class__.OperationSelector(
             self._parameter_group_list
