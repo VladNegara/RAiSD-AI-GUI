@@ -25,10 +25,10 @@ class TestCommandExecutor:
         workspace_path_mock = mocker.PropertyMock(return_value=qdir)
         type(app_settings).workspace_path = workspace_path_mock
 
-        mock_run_result = mocker.Mock()
-        mock_run_result.parameter_group_list.run_id = "test-command-executor"
+        mock_run_record = mocker.Mock()
+        mock_run_record.run_id = "test-command-executor"
 
-        self.command_executor = CommandExecutor(mock_run_result)
+        self.command_executor = CommandExecutor(mock_run_record)
         self.command_executor.output.connect(self.output_signal)
         self.command_executor.err_output.connect(self.err_output_signal)
         self.command_executor.execution_started.connect(self.execution_started_signal)
