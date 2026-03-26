@@ -416,7 +416,7 @@ class ParameterInputWidget(RunSubWidget):
         check_param_button.clicked.connect(self._check_param_button_clicked)
         layout.addWidget(check_param_button)
         return widget
-    
+
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.back_button = QPushButton("Back")
         self.next_button = QPushButton("Next")
@@ -430,7 +430,7 @@ class ParameterInputWidget(RunSubWidget):
         )
         for group in self._parameter_group_list.parameter_groups:
             for parameter in group.parameters:
-                self._connect_parameter(parameter)
+                self._connect_parameter_to_update_next_button_state(parameter)
                 
         return NavigationButtonsWidget(left_button=self.back_button, right_button=self.next_button)
 
@@ -440,10 +440,10 @@ class ParameterInputWidget(RunSubWidget):
         """
         if isinstance(parameter, MultiParameter):
             for child in parameter.parameters:
-                self._connect_parameter(child)
+                self._connect_parameter_to_update_next_button_state(child)
         elif isinstance(parameter, OptionalParameter):
             parameter.value_changed.connect(self.update_next_button_state)
-            self._connect_parameter(parameter.parameter)
+            self._connect_parameter_to_update_next_button_state(parameter.parameter)
         else:
             parameter.value_changed.connect(self.update_next_button_state)
 
