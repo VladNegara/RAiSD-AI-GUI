@@ -332,3 +332,23 @@ QWidget#execution_output,
 QWidget#error_output{
     font-size: $font-size - 4px;
 }
+/* OP SELECTION */
+QWidget#file_consumer_widget{
+    border-left: 1px solid $border-gray;
+    padding: 0px;
+}
+
+QLabel#heading{
+    font-size: $font-size + 2px;
+    font-weight: 600;
+}
+
+QRadioButton{
+    color: $primary-dark
+}
+
+QWidget#info_label{
+    border: 1px solid #46a2da;
+    border-radius: 5px;
+    background-color: #b5e3ff;
+}

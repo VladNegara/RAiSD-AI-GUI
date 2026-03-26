@@ -17,7 +17,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QRadioButton,
     QVBoxLayout,
-    QWidget, QStyleOption, QStyle,
+    QWidget,
+    QStyleOption,
+    QStyle
 )
 
 from gui.model.file_structure import(
@@ -101,9 +103,11 @@ class FileConsumerNodeWidget(QWidget):
         self._file_consumer_node = file_consumer_node
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0,0,0,0)
 
         heading = QLabel(self._file_consumer_node.label)
         layout.addWidget(heading)
+        heading.setObjectName("heading")
 
         self.file_producer_widget = ResizableStackedWidget()
         if len(self._file_consumer_node.producers) == 1:
@@ -123,6 +127,7 @@ class FileConsumerNodeWidget(QWidget):
             button_heading = QLabel(
                 "Select how you want to provide this input file or directory:"
             )
+            button_heading.setWordWrap(True)
             button_layout.addWidget(button_heading)
 
             for i, producer in enumerate(self._file_consumer_node.producers):
@@ -142,6 +147,12 @@ class FileConsumerNodeWidget(QWidget):
     def _button_clicked(self, i: int) -> None:
         self._file_consumer_node.selected_index = i
         self.file_producer_widget.current_index = i
+
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
 
 class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
@@ -171,6 +182,7 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         )
         heading.setWordWrap(True)
         layout.addWidget(heading)
+        layout.setContentsMargins(0,0,0,0)
 
         for file_consumer in self._common_parent_directory.file_consumers:
             file_consumer_widget = FileConsumerNodeWidget(file_consumer)
@@ -302,6 +314,8 @@ class OperationNodeWidget(FileProducerNodeWidget):
         layout = QVBoxLayout(self)
 
         name = QLabel(operation_node.name)
+        name.setObjectName("heading")
+        name.setWordWrap(True)
         layout.addWidget(name)
 
         description = QLabel(operation_node.description)
@@ -313,10 +327,13 @@ class OperationNodeWidget(FileProducerNodeWidget):
         )
         layout.addWidget(self._output_info_label)
 
+        layout.setContentsMargins(0,0,0,0)
+
         input_files_widget = QWidget()
         input_files_layout = QHBoxLayout(input_files_widget)
         for file_consumer in operation_node.file_consumers:
             file_consumer_widget = FileConsumerNodeWidget(file_consumer)
+            file_consumer_widget.setObjectName("file_consumer_widget")
             input_files_layout.addWidget(
                 file_consumer_widget,
                 alignment=Qt.AlignmentFlag.AlignTop,
