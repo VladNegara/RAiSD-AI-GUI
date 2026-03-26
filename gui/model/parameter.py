@@ -305,9 +305,9 @@ class MultiParameter(Parameter[tuple[()]]):
     def to_cli(self, operation: str) -> str:
         if not self.in_cli(operation):
             return ""
-        cli_params = [self.flag] + [p.to_cli(operation) for p in self.parameters]
+        cli_params = [p.to_cli(operation) for p in self.parameters]
         nonempty_params = [p for p in cli_params if p]
-        return " ".join(nonempty_params)
+        return f"{self.flag}{" ".join(nonempty_params)}"
 
     @Slot(bool)
     def _enabled_changed(self, new_enabled: bool) -> None:
@@ -322,14 +322,15 @@ class CountedMultiParameter(MultiParameter):
     """
 
     def to_cli(self, operation: str) -> str:
+        if not self.in_cli(operation):
+            return ""
         inner_parameters = [p.to_cli(operation) for p in self.parameters]
         nonempty_inner_parameters = [p for p in inner_parameters if p]
         if not nonempty_inner_parameters:
             return ""
         cli_pieces: list[str] = [
-            self.flag,
-            str(len(nonempty_inner_parameters)),
-            *nonempty_inner_parameters
+            f"{self.flag}{str(len(nonempty_inner_parameters))}",
+            *nonempty_inner_parameters,
         ]
         return " ".join(cli_pieces)
 
@@ -462,9 +463,7 @@ class NumberParameter(Parameter[X]):
         # A numeric parameter is represented in the command line by
         # its flag and its value.
         if self.in_cli(operation):
-            if self.flag:
-                return f"{self.flag} {self.value}"
-            return f"{self.value}"
+            return f"{self.flag}{self.value}"
         else:
             return ""
 
@@ -609,7 +608,7 @@ class EnumParameter(Parameter[int]):
 
     def to_cli(self, operation: str) -> str:
         if self.in_cli(operation):
-            return f"{self.flag} {self._options[self.value][1]}"
+            return f"{self.flag}{self._options[self.value][1]}"
         else: return ""
 
     def __str__(self) -> str:
@@ -685,7 +684,7 @@ class StringParameter(Parameter[str]):
 
     def to_cli(self, operation: str) -> str:
         if self.in_cli(operation):
-            return f"{self.flag} {self.value}"
+            return f"{self.flag}{self.value}"
         else: return ""
 
     def __str__(self) -> str:
@@ -779,7 +778,7 @@ class StringPairListParameter(Parameter[list[tuple[str, str]]]):
     def to_cli(self, operation: str) -> str:
         if not self.in_cli(operation):
             return ""
-        result = f"{self.flag} {len(self.value)}"
+        result = f"{self.flag}{len(self.value)}"
         for left, right in self.value:
             result += f" {left}{self._separator}{right}"
         return result
@@ -902,5 +901,5 @@ class FileParameter(Parameter[list[str]]):
 
     def to_cli(self, operation: str) -> str:
         if self.in_cli(operation):
-            return " ".join(f"{self.flag} {f}" for f in self.value)
+            return " ".join(f"{self.flag}{f}" for f in self.value)
         return ""

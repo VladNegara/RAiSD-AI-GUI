@@ -1,7 +1,7 @@
 run_id_parameter:
   name: Run ID
   description: A name that identifies the run and is used to name the output files. Only letters, digits and underscores allowed
-  cli: -n
+  cli: "-n "
   type: str
   pattern: "[a-zA-Z0-9_]+"
 modes:
@@ -13,7 +13,7 @@ modes:
         cli: ""
         input:
           - name: Input data
-            cli: -I
+            cli: "-I "
             file:
               type: single
               formats:
@@ -30,10 +30,10 @@ modes:
       IMG-GEN:
         name: Data formatting
         description: Make raw data into PNGs.
-        cli: -op IMG-GEN
+        cli: "-op IMG-GEN"
         input:
           - name: Input data
-            cli: -I
+            cli: "-I "
             file:
               type: single
               formats:
@@ -53,10 +53,10 @@ modes:
       MDL-GEN:
         name: Model training
         description: Train a sweep detection CNN model.
-        cli: -op MDL-GEN
+        cli: "-op MDL-GEN"
         input:
           - name: Training data
-            cli: -I
+            cli: "-I "
             file:
               type: directory
               contents:
@@ -80,10 +80,10 @@ modes:
       MDL-TST:
         name: Model testing
         description: Evaluate a model.
-        cli: -op MDL-TST
+        cli: "-op MDL-TST"
         input:
           - name: Model
-            cli: -mdl
+            cli: "-mdl "
             file:
               type: directory
               contents: 
@@ -91,7 +91,7 @@ modes:
                   formats:
                     - .pt
           - name: Testing data
-            cli: -I
+            cli: "-I "
             file:
               type: directory
               contents:
@@ -113,10 +113,10 @@ modes:
       SWP-SCN:
         name: Sweep scan
         description: Use a trained model to scan for selective sweeps.
-        cli: -op SWP-SCN
+        cli: "-op SWP-SCN"
         input:
           - name: Model
-            cli: -mdl
+            cli: "-mdl "
             file:
               type: directory
               contents: 
@@ -124,7 +124,7 @@ modes:
                   formats:
                     - .pt
           - name: Testing data
-            cli: -I
+            cli: "-I "
             file:
               type: single
               formats: 
@@ -143,17 +143,17 @@ modes:
         input: []
         output:
           type: single
-          formats: 
+          formats:
             - .co-report
   - name: File conversion
     operations:
       FASTA-VCF:
         name: FASTA to VCF
         description: Convert a FASTA file to vcf
-        cli: -E
+        cli: "-E"
         input:
           - name: Input file
-            cli: -I
+            cli: "-I "
             file:
               type: single
               formats:
@@ -169,7 +169,7 @@ modes:
         cli: ""
         input:
           - name: Input file
-            cli: -I
+            cli: "-I "
             file:
               type: single
               formats:
@@ -201,7 +201,7 @@ parameter_groups:
           - name: ms
             cli: null
           - name: mbs
-            cli: -b
+            cli: "-b"
           - name: FASTA
             cli: null
           - name: Single-chromosome VCF
@@ -219,7 +219,7 @@ parameter_groups:
       "-L":
         name: Override default region length
         description: Provide a custom size of the region for an ms file. If not provided, it will be extracted at runtime.
-        cli: -L
+        cli: "-L "
         type: optional
         default: false
         parameter:
@@ -236,7 +236,7 @@ parameter_groups:
       "-S":
         name: Sample file
         description: A file containing the list of samples to be processed for VCF files.
-        cli: -S
+        cli: "-S "
         type: file
         conditions:
           - type: enum
@@ -247,7 +247,7 @@ parameter_groups:
       "-m":
         name: maf # What?
         description: The threshold value for excluding SNPs with minor allele frequency.
-        cli: -m
+        cli: "-m "
         type: float
         min: 0.0
         max: 1.0
@@ -255,14 +255,14 @@ parameter_groups:
       "-y":
         name: Ploidy
         description: The ploidy used to correctly represent missing data.
-        cli: -y
+        cli: "-y "
         type: int
         min: 1
         default: 2
       "-M":
         name: Missing data handling strategy
         description: How to handle missing data.
-        cli: -M
+        cli: "-M "
         type: enum
         options:
           - name: Discard SNP
@@ -282,7 +282,7 @@ parameter_groups:
         parameter:
           name: Excluded regions file
           description: "A tab-delimited file that contains regions per chromosome (one per line) to be excluded from the analysis (Format: chromosome [tab] regionStart [tab] regionStop)."
-          cli: -X
+          cli: "-X "
           type: file
       "-B":
         name: Provide chromosome size
@@ -292,7 +292,7 @@ parameter_groups:
         parameter:
           name: Chromosome size
           description: The chromosome size.
-          cli: -B
+          cli: "-B "
           type: multi
           parameters:
             - type: int
@@ -311,7 +311,7 @@ parameter_groups:
       "-o":
         name: Order VCF
         description: Enables dataset check and reordering of the input VCF file (only for unzipped VCF files).
-        cli: -o
+        cli: "-o"
         type: bool
         default: false
         conditions:
@@ -337,14 +337,14 @@ parameter_groups:
             - MDL-TST
         name: Sweep scan window size
         description: The window size. The default value is empirically determined.
-        cli: -w
+        cli: "-w "
         type: int # Must be even!
         min: 6
         default: 50
       "-c":
         name: SFS slack
         description: The slack for the SFS edges to be used for the calculation of mu_SFS.
-        cli: -c
+        cli: "-c "
         type: int
         min: 1
         default: 1
@@ -356,14 +356,14 @@ parameter_groups:
         parameter:
           name: Grid size
           description: The total number of evaluation points across the data.
-          cli: -G
+          cli: "-G "
           type: int
           min: 3
           default: -1 # ?!
       "-VAREXP":
         name: mu-var exponent
         description: The exponent for the mu-var factor.
-        cli: -VAREXP
+        cli: "-VAREXP "
         type: float
         min: 0.0 # Exclusive!
         max: 10.0 # Exclusive!
@@ -371,7 +371,7 @@ parameter_groups:
       "-SFSEXP":
         name: mu-sfs exponent
         description: The exponent for the mu-sfs factor.
-        cli: -SFSEXP
+        cli: "-SFSEXP "
         type: float
         min: 0.0 # Exclusive!
         max: 10.0 # Exclusive!
@@ -379,7 +379,7 @@ parameter_groups:
       "-LDEXP":
         name: mu-ld exponent
         description: The exponent for the mu-ld factor.
-        cli: -LDEXP
+        cli: "-LDEXP "
         type: float
         min: 0.0 # Exclusive!
         max: 10.0 # Exclusive!
@@ -395,7 +395,7 @@ parameter_groups:
       "-f":
         name: Overwrite output
         description: Overwrite existing run files under the same run ID.
-        cli: -f
+        cli: "-f"
         type: bool
         default: false
         operations:
@@ -406,19 +406,19 @@ parameter_groups:
       "-s":
         name: Split output
         description: Generate a separate report file per set.
-        cli: -s
+        cli: "-s"
         type: bool
         default: false
       "-t":
         name: Remove set separator
         description: Remove the set separator from the report(s).
-        cli: -t
+        cli: "-t"
         type: bool
         default: false
       "-p":
         name: Print sample list
         description: Generate the output
-        cli: -p
+        cli: "-p"
         type: bool
         default: false
         conditions:
@@ -430,26 +430,26 @@ parameter_groups:
       "-O":
         name: Display progress
         description: Show progress on the display device (at SNP set granularity).
-        cli: -O
+        cli: "-O"
         type: bool
         default: false
         # Probably don't offer this to the user?
       "-R":
         name: Full report
         description: Include additional information in the report file(s), i.e. window start and end, and the mu-statistic factors for variation, SFS and LD.
-        cli: -R
+        cli: "-R"
         type: bool
         default: false
       "-P":
         name: Create plots
         description: Generate four plots (for the three mu-statistic factors and the final score) in one PDF file per set of SNPs in the input file using Rscript. # Activates -s, -t, -R
-        cli: -P
+        cli: "-P"
         type: bool
         default: false
       "-D":
         name: Generate a site report
         description: Generate a site report, e.g. total, discarded, imputed etc.
-        cli: -D
+        cli: "-D"
         type: bool
         default: false
       "-A":
@@ -460,7 +460,7 @@ parameter_groups:
         parameter:
           name: Probability value
           description: Provide a probability value to be used for the quantile function in R.
-          cli: -A
+          cli: "-A "
           type: float
           min: 0.0
           max: 1.0
@@ -485,7 +485,7 @@ parameter_groups:
           parameters:
             - name: Selection target
               description: The selection target (in basepairs).
-              cli: -T
+              cli: "-T "
               type: int
               min: 1
               default: 1 # Source: I made it up
@@ -496,7 +496,7 @@ parameter_groups:
               parameter:
                 name: Maximum distance
                 description: The maximum distance from the selection target (in basepairs).
-                cli: -d
+                cli: "-d "
                 type: int
                 min: 1
                 default: 1 # Made up
@@ -508,7 +508,7 @@ parameter_groups:
         parameter:
           name: False positive rate
           description: The false positive rate to use.
-          cli: -k
+          cli: "-k "
           type: float
           min: 0.0
           max: 1.0
@@ -516,8 +516,7 @@ parameter_groups:
       "-l":
         name: Thresholds
         description: Fill in these thresholds using the values reported by a previous RAiSD-AI run with "Report score" activated.
-        cli: -l # There also has to be an integer that says how many of the thresholds are provided!
-        # The CLI representation here needs more thought
+        cli: "-l "
         type: count multi
         parameters:
           # Are the thresholds 0-1?
@@ -608,7 +607,7 @@ parameter_groups:
         parameter:
           name: Outgroup name
           description: The outgroup to be used.
-          cli: -C
+          cli: "-C "
           type: str
           default: ""
           pattern: ".+"
@@ -620,14 +619,14 @@ parameter_groups:
         parameter:
           name: Outgroup name
           description: The outgroup to be used.
-          cli: -C2
+          cli: "-C2 "
           type: str
           default: ""
           pattern: ".+"
       "-H":
         name: Chromosome name
         description: Provide the chromosome name.
-        cli: -H
+        cli: "-H "
         type: str
         default: "chrom"
         pattern: ".+"
@@ -646,7 +645,7 @@ parameter_groups:
         parameter:
           name: Memory size
           description: The memory size to be allocated for the conversion.
-          cli: -Q
+          cli: "-Q "
           type: int
           min: 1
           default: 8
@@ -662,6 +661,7 @@ parameter_groups:
             - CO
         name: Perform common outlier analysis
         description: Do stuff #
+        cli: "-CO "
         type: optional
         default: false
         parameter:
@@ -685,8 +685,9 @@ parameter_groups:
           remove:
             - RSD-DEF
             - SWP-SCN
-        name: Common outlier analysis options 
+        name: Common outlier analysis options
         description: options for CO
+        cli: "-CO "
         type: multi
         parameters:
           - name: SweeD report
@@ -717,7 +718,7 @@ parameter_groups:
       "-COT":
         name: Cut-off threshold
         description: The cut-off threshold for identifying top outliers per report.
-        cli: "-COT"
+        cli: "-COT "
         type: float
         min: 0.0
         max: 1.0
@@ -726,15 +727,15 @@ parameter_groups:
           - type: or
             conditions:
               - type: optional
-                parameter: -CO
+                parameter: "-CO"
                 value: true
               - type: enabled
-                parameter: -CO-already-run
+                parameter: "-CO-already-run"
                 value: true
       "-COD": # typically 100-400
         name: Maximum distance
         description: Provides the maximum distance (in number of sites) between outlier points in the provided reports to identify matching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD and RAiSD, typically between 100 and 400.
-        cli: "-COD"
+        cli: "-COD "
         type: int
         min: 0
         default: 1
@@ -742,10 +743,10 @@ parameter_groups:
           - type: or
             conditions:
               - type: optional
-                parameter: -CO
+                parameter: "-CO"
                 value: true
               - type: enabled
-                parameter: -CO-already-run
+                parameter: "-CO-already-run"
                 value: true
   - name: RAiSD-AI data generation
     operations:
@@ -754,13 +755,13 @@ parameter_groups:
       "-icl":
         name: Image class label
         description: A folder with this name will be created in RAiSD_Images.runID.
-        cli: "-icl"
+        cli: "-icl "
         type: str
         pattern: ".+"
       "-its":
         name: Image target site
         description: The target site position for generating images, corresponding to the center of the first generated image. Should be smaller than region length.
-        cli: "-its"
+        cli: "-its "
         type: int
         min: 1
         # max: < region_length
@@ -774,14 +775,14 @@ parameter_groups:
       "-ips":
         name: Images per simulation
         description: Provides the number of images to be created per simulation.
-        cli: "-ips"
+        cli: "-ips "
         type: int
         min: 1
         default: 1
       "-iws":
         name: Image window step
         description: Provides the windo step for creating images.
-        cli: "-iws"
+        cli: "-iws "
         type: int
         min: 1
         default: 1
@@ -794,7 +795,7 @@ parameter_groups:
       "-typ":
         name: Data type
         description: 
-        cli: "-typ"
+        cli: "-typ "
         type: enum
         options:
           - name: Raw data in all channels
@@ -810,7 +811,7 @@ parameter_groups:
       "-typ-bin":
         name: Data type
         description: 
-        cli: "-typ"
+        cli: "-typ "
         type: enum
         options:
           - name: Raw snp data and positions
@@ -824,7 +825,7 @@ parameter_groups:
       "-w-img-gen":
         name: Window size
         description: The window width provided is used to generate SNP windows as CNN input data.
-        cli: "-w"
+        cli: "-w "
         type: int 
         min: 6 # must be even
         default: 400
@@ -835,7 +836,7 @@ parameter_groups:
       "-arc": 
         name: Network architecture
         description: Specifies the neural network architecture.
-        cli: "-arc"
+        cli: "-arc "
         type: enum
         default: 2
         options:
@@ -850,19 +851,14 @@ parameter_groups:
       "-e":
         name: Epochs
         description: Provides the number of epochs
-        cli: "-e"
+        cli: "-e "
         type: int
         min: 1
         default: 10
       "-cl4": 
         name: Pairings between class labels
         description: Provides 4 pairings between class labels and corresponding folder names.
-        cli: "-cl4"
-        conditions:
-          - type: enum
-            parameter: -arc
-            values:
-              - 3
+        cli: "-cl4 "
         type: multi
         parameters:
           - name: First folder name
@@ -877,9 +873,15 @@ parameter_groups:
           - name: Fourth folder name
             type: str
             cli: "label11="
+        conditions:
+          - type: enum
+            parameter: "-arc"
+            values:
+              - 3
       "-cl4_1x_label":
         name: Provide identifier for Group 1x
         description: If checked, provide an identifier string to be used in the output for Group 1x. Otherwise, the label names provided in IMG-GEN will be used instead.
+        cli: "-cl4_1x_label "
         type: optional
         parameter:
           name: Identifier
@@ -887,10 +889,11 @@ parameter_groups:
           pattern: "\\w+"
         conditions:
           - type: enabled
-            parameter: -cl4
+            parameter: "-cl4"
       "-cl4_x1_label":
         name: Provide identifier for Group x1
         description: If checked, provide an identifier string to be used in the output for Group x1. Otherwise, the label names provided in IMG-GEN will be used instead.
+        cli: "-cl4_x1_label "
         type: optional
         parameter:
           name: Identifier
@@ -898,10 +901,11 @@ parameter_groups:
           pattern: "\\w+"
         conditions:
           - type: enabled
-            parameter: -cl4
+            parameter: "-cl4"
       "-g":
         name: Provide number of sequence groups to be created
         description: Provide number of sequence groups to be created by FASTER-NN-G for SFS grouped pooling. If not provided, the sample size is used.
+        cli: "-g "
         type: optional
         parameter:
           name: Sequence groups
@@ -910,18 +914,17 @@ parameter_groups:
           min: 1
         conditions:
           - type: enum
-            parameter: -arc
+            parameter: "-arc"
             values:
               - 3
   - name: RAiSD-AI inference mode
     operations:
       - MDL-TST
     parameters:
-      # -mdl, -I
-      "-clp": # This type of parameter not yet supported!
+      "-clp":
         name: Class tests
         description: Enter one or more label-folder pairs.
-        cli: "-clp"
+        cli: "-clp "
         type: string pair list
         separator: "="
         left_pattern: "\\w+"
@@ -945,19 +948,19 @@ parameter_groups:
         name: Positive class index
         description: The class index can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MD-GEN run that generated the CNN model.
         type: int
-        cli: -pci 1
+        cli: "-pci 1 "
         min: 0
         default: 0
         conditions:
           - type: enum
-            parameter: -pci-class-count
+            parameter: "-pci-class-count"
             values:
               - 0
       "-pci-2":
         name: Positive class indices
         description: The class indices can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MDL-GEN run that generated the CNN model.
         type: multi
-        cli: -pci 2
+        cli: "-pci 2 "
         parameters:
           - name: First positive class index
             type: int
@@ -969,7 +972,7 @@ parameter_groups:
             default: 0
         conditions:
           - type: enum
-            parameter: -pci-class-count
+            parameter: "-pci-class-count"
             values:
               - 1
   - name: RAiSD-AI additional parameters
@@ -981,8 +984,8 @@ parameter_groups:
         operations:
           add:
             - IMG-GEN
+        cli: "-frm"
         type: bool
-        cli: -frm
         default: false
       "-frm-swp-scn":
         name: Remove existing SWP-SCN directory
@@ -990,8 +993,8 @@ parameter_groups:
         operations:
           add:
             - SWP-SCN
+        cli: "-frm"
         type: bool
-        cli: -frm
         default: false
       "-gpu":
         name: Use GPU
@@ -1001,8 +1004,8 @@ parameter_groups:
             - MDL-GEN
             - MDL-TST
             - SWP-SCN
+        cli: "-gpu"
         type: bool
-        cli: -gpu
         default: false
       "-useTF":
         name: Use TensorFlow
@@ -1012,12 +1015,12 @@ parameter_groups:
             - MDL-GEN
             - MDL-TST
             - SWP-SCN
+        cli: "-useTF"
         type: bool
-        cli: -useTF
         default: false
         conditions:
           - type: enum
-            parameter: -arc
+            parameter: "-arc"
             values:
               - 0
   - name: Miscellaneous parameters
@@ -1034,8 +1037,8 @@ parameter_groups:
       "-a":
         name: Provide RNG seed
         description: Provide a seed to initialize the random number generator. If not provided, the current time of day is used for initialization.
+        cli: "-a "
         type: optional
-        cli: -a
         parameter:
           name: Seed
           type: int
