@@ -154,22 +154,18 @@ class RunResult():
                 if isinstance(value, dict) and value[param.name]:
                     self.populate_parameter(param, value[param.name])
         elif type(parameter) is OptionalParameter:
-            if isinstance(value, dict) and not value['enabled']:
+            if isinstance(value, dict) and 'enabled' not in value:
                 raise ValueError(
-                    "Optional parameter must have 'enabled' value."
+                    f"Incorrect format for {parameter.name}: {value}"
+                    + "Optional parameter must have 'enabled' value."
                 )
             
             if isinstance(value, dict) and isinstance(value["enabled"], bool):
                 parameter.value = value["enabled"]
-                if value[parameter.parameter]:
+                if parameter.parameter in value:
                     self.populate_parameter(
                         parameter.parameter, 
                         value[parameter.parameter.name]
                     )
         else:
-            if not isinstance(value, str):
-                raise ValueError(
-                    f"Incorrect value for {parameter.name}: {value}"
-                    + "Expected str."
-                )
             parameter.value = value
