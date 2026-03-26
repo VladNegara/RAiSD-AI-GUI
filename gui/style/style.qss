@@ -221,17 +221,21 @@ QWidget#parameter_form_section QLineEdit {
     border-radius: 2px;
 }
 
-QWidget#parameter_form_section QLineEdit[valid="true"]
- {   border-color: green;}
+QWidget#parameter_form_section QLineEdit[valid="true"] {
+    border-color: green;
+ }
 
-QWidget#parameter_form_section QPushButton[valid="true"]
- {   border: 1px solid green;}
+QWidget#parameter_form_section QPushButton[valid="true"] {
+ border: 1px solid green;
+ }
 
-QWidget#parameter_form_section QLineEdit[valid="false"]
- {    border-color: red;}
+QWidget#parameter_form_section QLineEdit[valid="false"] {
+    border-color: red;
+    }
 
-QWidget#parameter_form_section QPushButton[valid="false"]
- {    border: 1px solid red;}
+QWidget#parameter_form_section QPushButton[valid="false"] {
+    border: 1px solid red;
+    }
 
 QWidget#parameter_form_section QLabel[valid="false"] {
     color: red;
