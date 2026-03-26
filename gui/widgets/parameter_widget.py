@@ -191,6 +191,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             reset_button = ParameterWidget.ResetButton(self.parameter)
             layout.addWidget(reset_button)
 
+        row.setContentsMargins(0,5,0,0)
         return row
 
 
