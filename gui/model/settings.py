@@ -38,7 +38,9 @@ class Settings(QObject):
         Initialize the `Settings` class.
         """
         super().__init__()
-        self._workspace_path = QDir()
+        workspace_directory = "workspace"
+        QDir().mkdir(workspace_directory)
+        self._workspace_path = QDir(workspace_directory)
         self._executable_file_path = QFileInfo("RAiSD-AI")
         self._environment_manager = EnvironmentManager.MICROMAMBA
         self._environment_name = "raisd-ai-gui"

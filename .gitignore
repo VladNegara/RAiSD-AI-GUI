@@ -1,5 +1,6 @@
 .vscode/
 # RAiSD-AI specific folders and files
+workspace/
 
 #build
 bin/
