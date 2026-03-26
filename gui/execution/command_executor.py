@@ -79,8 +79,9 @@ class CommandExecutor(QObject):
         self.execution_started.emit(len(commands))
         
         run_id = self.run_result.parameter_group_list.run_id
-        if not app_settings.workspace_path.mkdir(run_id):
-            raise RuntimeError(f"Creating run folder: '{run_id}' failed.")
+        if not app_settings.workspace_path.exists(run_id):
+            if not app_settings.workspace_path.mkdir(run_id):
+                raise RuntimeError(f"Creating run folder: '{run_id}' failed.")
 
         self.run_folder = QDir(app_settings.workspace_path)
         if not self.run_folder.cd(run_id):
