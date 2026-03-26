@@ -769,6 +769,8 @@ class StringPairListParameter(Parameter[list[tuple[str, str]]]):
 
     @property
     def valid(self) -> bool:
+        if len(self.value) < self.min_count:
+            return False
         return all(
             left_valid and right_valid for left_valid, right_valid in
             [self.pair_valid(i) for i in range(len(self.value))]
