@@ -329,6 +329,7 @@ class OperationSelectionWidget(RunSubWidget):
             button_layout = QVBoxLayout(button_widget)
 
             tree_scroll = QScrollArea()
+            tree_scroll.setObjectName("tree_scroll")
             tree_scroll.setVerticalScrollBarPolicy(
                 Qt.ScrollBarPolicy.ScrollBarAsNeeded
             )
@@ -338,6 +339,7 @@ class OperationSelectionWidget(RunSubWidget):
             tree_scroll.setWidgetResizable(True)
 
             self.tree_stacked_widget = ResizableStackedWidget()
+            self.tree_stacked_widget.setObjectName("tree_stacked_widget")
             for i, tree in enumerate(
                     self._parameter_group_list.operation_trees
             ):

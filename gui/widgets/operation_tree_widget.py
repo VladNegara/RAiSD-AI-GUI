@@ -9,6 +9,7 @@ from PySide6.QtCore import (
     Qt,
     Slot,
 )
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QFileDialog,
@@ -16,7 +17,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QRadioButton,
     QVBoxLayout,
-    QWidget,
+    QWidget, QStyleOption, QStyle,
 )
 
 from gui.model.file_structure import(
@@ -251,6 +252,7 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
         layout.addWidget(heading)
 
         self.button = QPushButton("Browse")
+        self.button.setObjectName("file_selector_button")
         self.button.clicked.connect(self._browse_button_clicked) 
         layout.addWidget(self.button)
 
@@ -295,6 +297,7 @@ class OperationNodeWidget(FileProducerNodeWidget):
         """
         super().__init__()
         self._operation_node = operation_node
+        self.setObjectName("operation_node_widget")
 
         layout = QVBoxLayout(self)
 
@@ -330,6 +333,12 @@ class OperationNodeWidget(FileProducerNodeWidget):
     def _file_changed(self, new_file: str) -> None:
         self._output_info_label.text = self.output_label_text + new_file
 
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
+
 
 class OperationTreeWidget(QWidget):
     """
@@ -347,6 +356,7 @@ class OperationTreeWidget(QWidget):
         :type operation_tree: OperationTree
         """
         super().__init__()
+        self.setObjectName("operation_tree_widget")
         self._operation_tree = operation_tree
 
         layout = QHBoxLayout(self)
@@ -356,3 +366,9 @@ class OperationTreeWidget(QWidget):
             body,
             alignment=Qt.AlignmentFlag.AlignTop,
         )
+
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
