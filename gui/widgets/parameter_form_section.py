@@ -35,6 +35,7 @@ class ParameterFormSection(QWidget):
         self._parameter_group = parameter_group
         self._parameter_group.enabled_changed.connect(self._parameter_group_enabled_changed)
         self._editable = editable
+        self._parameter_widgets: list[ParameterWidget] = []
 
         # Make widgets
         heading = QLabel(self._parameter_group.name)
@@ -42,9 +43,11 @@ class ParameterFormSection(QWidget):
         form_body = QWidget()
         form_layout = QVBoxLayout(form_body)
         form_layout.setContentsMargins(0, 0, 0, 0)
+
         for parameter in parameter_group:
-            form_row = ParameterWidget.from_parameter(parameter, self._editable).build_form_row()
-            form_layout.addWidget(form_row)
+            widget = ParameterWidget.from_parameter(parameter, self._editable)
+            self._parameter_widgets.append(widget)
+            form_layout.addWidget(widget.build_form_row())
 
         layout = QVBoxLayout(self)
         heading.setObjectName("heading")
@@ -70,6 +73,14 @@ class ParameterFormSection(QWidget):
         :new_value type: bool
         """
         self.setVisible(new_value)
+
+    def touch_all(self) -> None:
+        for widget in self._parameter_widgets:
+            widget.touch()
+
+    def untouch_all(self) -> None:
+        for widget in self._parameter_widgets:
+            widget.untouch()
 
     def paintEvent(self, event) -> None:
         """

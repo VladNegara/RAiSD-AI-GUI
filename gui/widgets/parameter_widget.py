@@ -98,14 +98,44 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         super().__init__()
         self._parameter = parameter
         self._editable = editable
+        self._touched = False #variable for activating show_validity
 
-    def _show_validity(self, widget: QWidget, valid: bool) -> None:
+    def show_validity(self, widget: QWidget, valid: bool) -> None:
+        """
+        Validity is only shown after the user first interacts with it.
+        """
+        if not self._touched:
+            return
         if valid and self._editable:
             widget.setProperty("valid", "true")
         elif self._editable:
             widget.setProperty("valid", "false")
         widget.style().unpolish(widget)
         widget.style().polish(widget)
+
+    def touch(self) -> None:
+        """
+        Helper function to call for setting touched as True
+        """
+        self._touched = True
+        for widget in self.validity_widgets():
+            self.show_validity(widget, self.parameter.valid)
+
+    def untouch(self) -> None:
+        """
+        Helper function to call for setting touched as False
+        """
+        self._touched = False
+        for widget in self.validity_widgets():
+            widget.setProperty("valid", "")
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
+
+    def validity_widgets(self) -> list[QWidget]:
+        """
+        Returns list of widgets for validity to be displayed
+        """
+        return []
 
     @property
     def parameter(self) -> Parameter[Any]:
@@ -209,6 +239,7 @@ class OptionalParameterWidget(ParameterWidget):
         :type editable: bool
         """
         super().__init__(parameter, editable)
+        self._child_widget: ParameterWidget | None = None
 
         layout = QVBoxLayout(self)
         self._checkbox = QCheckBox()
@@ -232,11 +263,11 @@ class OptionalParameterWidget(ParameterWidget):
 
         # `self.parameter`` should always be of type OptionalParameter,
         # even though the type checker doesn't agree.
-        child_widget = ParameterWidget.from_parameter(
+        self._child_widget = ParameterWidget.from_parameter(
             self.parameter.parameter, # type: ignore
             self._editable
         )
-        child_row = child_widget.build_form_row()
+        child_row = self._child_widget.build_form_row()
         layout.addWidget(child_row)
 
         return row
@@ -244,6 +275,7 @@ class OptionalParameterWidget(ParameterWidget):
 
     @Slot(Qt.CheckState)
     def _check_state_changed(self, new_check_state: Qt.CheckState) -> None:
+        self._touched = True
         match new_check_state:
             case Qt.CheckState.Checked:
                 self.parameter.value = True
@@ -254,6 +286,15 @@ class OptionalParameterWidget(ParameterWidget):
     def _parameter_value_changed(self, new_value: bool, valid: bool) -> None:
         self._checkbox.setChecked(new_value)
 
+    def touch(self) -> None:
+        self._touched = True
+        if self._child_widget is not None and self.parameter.value:
+            self._child_widget.touch()
+
+    def untouch(self) -> None:
+        self._touched = False
+        if self._child_widget is not None:
+            self._child_widget.untouch()
 
 class MultiParameterWidget(ParameterWidget):
     """
@@ -271,6 +312,7 @@ class MultiParameterWidget(ParameterWidget):
         :type editable: bool
         """
         super().__init__(parameter, editable)
+        self._child_widgets: list[ParameterWidget] = []
 
     def build_form_row(self) -> QWidget:
         row = QWidget()
@@ -283,10 +325,21 @@ class MultiParameterWidget(ParameterWidget):
         # MultiParameter object.
         for child_parameter in self.parameter.parameters: # type: ignore
             child_widget = ParameterWidget.from_parameter(child_parameter, self._editable)
+            self._child_widgets.append(child_widget)
             child_row = child_widget.build_form_row()
             layout.addWidget(child_row)
 
         return row
+
+    def touch(self) -> None:
+        self._touched = True
+        for child in self._child_widgets:
+            child.touch()
+
+    def untouch(self) -> None:
+        self._touched = False
+        for child in self._child_widgets:
+            child.untouch()
 
 
 class BoolParameterWidget(ParameterWidget):
@@ -321,6 +374,7 @@ class BoolParameterWidget(ParameterWidget):
 
     @Slot(Qt.CheckState)
     def _check_state_changed(self, new_check_state: Qt.CheckState) -> None:
+        self._touched = True
         match new_check_state:
             case Qt.CheckState.Checked:
                 self.parameter.value = True
@@ -371,21 +425,32 @@ class IntParameterWidget(ParameterWidget):
             case (True, False):
                 label = QLabel(f'(maximum {parameter.upper_bound})')
                 layout.addWidget(label)
-    
-        self._line_edit.editingFinished.connect(self._text_changed)
+
+        self._line_edit.textChanged.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(str)
     def _text_changed(self) -> None:
-        try: 
+        self._touched = True
+        try:
             self.parameter.value = int(self._line_edit.text())
         except:
-            self._line_edit.setText(str(self.parameter.value))
+            pass
 
     @Slot(int, bool)
     def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
-        self._line_edit.setText(str(new_value))
-        self._show_validity(self._line_edit, valid)
+        self._touched = True
+        try:
+            current = int(self._line_edit.text())
+            values_differ = current != new_value
+        except ValueError:
+            values_differ = True
+        if values_differ:
+            self._line_edit.setText(str(new_value))
+        self.show_validity(self._line_edit, valid)
+
+    def validity_widgets(self) -> list[QWidget]:
+        return [self._line_edit]
 
 
 class FloatParameterWidget(ParameterWidget):
@@ -430,21 +495,32 @@ class FloatParameterWidget(ParameterWidget):
             case (True, False):
                 label = QLabel(f'(maximum {parameter.upper_bound})')
                 layout.addWidget(label)
-    
-        self._line_edit.editingFinished.connect(self._text_changed)
+
+        self._line_edit.textChanged.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(str)
     def _text_changed(self) -> None:
+        self._touched = True
         try:
             self.parameter.value = float(self._line_edit.text())
         except:
-            self._line_edit.setText(str(self.parameter.value))
+            pass
 
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
-        self._line_edit.setText(str(new_value))
-        self._show_validity(self._line_edit, valid)
+        self._touched = True
+        try:
+            current = float(self._line_edit.text())
+            values_differ = current != new_value
+        except ValueError:
+           values_differ = True
+        if values_differ:
+            self._line_edit.setText(str(new_value))
+        self.show_validity(self._line_edit, valid)
+
+    def validity_widgets(self) -> list[QWidget]:
+        return [self._line_edit]
 
 
 class EnumParameterWidget(ParameterWidget):
@@ -476,6 +552,7 @@ class EnumParameterWidget(ParameterWidget):
 
     @Slot(int)
     def _combo_box_current_index_changed(self, new_index: int) -> None:
+        self._touched = True
         self.parameter.value = new_index
 
     @Slot(int, bool)
@@ -515,17 +592,22 @@ class StringParameterWidget(ParameterWidget):
             hint = QLabel(f"Max length: {parameter.max_length}")
             layout.addWidget(hint)
 
-        self._line_edit.editingFinished.connect(self._editing_finished)
+        self._line_edit.textChanged.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(str)
-    def _editing_finished(self) -> None:
+    def _text_changed(self) -> None:
+        self._touched = True
         self.parameter.value = self._line_edit.text()
 
     @Slot(str, bool)
     def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
+        self._touched = True
         self._line_edit.setText(new_value)
-        self._show_validity(self._line_edit, valid)
+        self.show_validity(self._line_edit, valid)
+
+    def validity_widgets(self) -> list[QWidget]:
+        return [self._line_edit]
 
 
 class StringPairListParameterWidget(ParameterWidget):
@@ -737,7 +819,6 @@ class FileParameterWidget(ParameterWidget):
         :type editable: bool
         """
         super().__init__(parameter, editable)
-        self.parameter: FileParameter
 
         layout = QVBoxLayout(self)
         parameter.value_changed.connect(self._parameter_value_changed)
@@ -745,19 +826,21 @@ class FileParameterWidget(ParameterWidget):
         # If the widget is locked: create a list with the selected files
         if not self._editable:
             self.list_widget = QListWidget()
+            self.list_widget.collapsible = False
             self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
             self.list_widget.setSortingEnabled(True)
             if self.parameter.value:
                 self.list_widget.addItems(self.parameter.value)
             else:
                 self.list_widget.addItem("No files selected")
-            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.05))
+            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.01))
             self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
             self.list_widget.doubleClicked.connect(self._on_double_click)
             layout.addWidget(self.list_widget)
             return
 
         # If the widget is not locked:
+        self.setFixedWidth(300)
         self._path_label = QLabel("No file selected")
         layout.addWidget(self._path_label)
 
@@ -766,6 +849,7 @@ class FileParameterWidget(ParameterWidget):
         if parameter.strict and parameter.accepted_formats is not None:
             allowed = ', '.join(parameter.accepted_formats)
             hint = QLabel(f"Select {mode} — Allowed types: {allowed}")
+            hint.setWordWrap(True)
             layout.addWidget(hint)
         elif (not parameter.strict
               and parameter.accepted_formats is None
@@ -778,17 +862,19 @@ class FileParameterWidget(ParameterWidget):
             expected = ', '.join(parameter.expected_formats)
             hint = QLabel(f"Select {mode} — Expected file types: {expected}. "
                           + f"You can still upload a different file.")
+            hint.setWordWrap(True)
             layout.addWidget(hint)
         elif (parameter.strict is False
               and parameter.accepted_formats is None
               and parameter.expected_formats is None):
             hint = QLabel(f"Select {mode} — Allowed types: any type.")
+            hint.setWordWrap(True)
             layout.addWidget(hint)
 
-        file_browse = QPushButton('Browse')
-        file_browse.clicked.connect(self._open_file_dialog)
+        self._file_browse = QPushButton('Browse')
+        self._file_browse.clicked.connect(self._open_file_dialog)
 
-        layout.addWidget(file_browse)
+        layout.addWidget(self._file_browse)
 
     @Slot(int)
     def _on_double_click(self, index) -> None:
@@ -813,13 +899,19 @@ class FileParameterWidget(ParameterWidget):
                 self.list_widget.addItems(file_paths)
             else:
                 self.list_widget.addItem("No files selected")
-            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.05))
+            self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.01))
+            self.list_widget.setMinimumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
             self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
+            self.list_widget.setVisible(True)
             return
 
         # If the widget is not locked
         if file_paths:
             self._path_label.setText("\n".join(file_paths))
+            full_text = "\n".join(file_paths)
+            self._path_label.setToolTip(full_text)
+            display = "\n".join(Path(f).name for f in file_paths)
+            self._path_label.setText(display)
         else:
             self._path_label.setText("No file selected")
 
@@ -840,6 +932,8 @@ class FileParameterWidget(ParameterWidget):
         else:
             pass
 
+        self._touched = True
+        self.show_validity(self._file_browse, valid)
 
     @Slot()
     def _open_file_dialog(self) -> None:
@@ -849,6 +943,7 @@ class FileParameterWidget(ParameterWidget):
         file selection. Otherwise, it uses `getOpenFileName` to allow
         only a single file.
         """
+        self._touched = True
         if self.parameter.multiple:
             filenames, _ = QFileDialog.getOpenFileNames(
                 self,
@@ -867,6 +962,8 @@ class FileParameterWidget(ParameterWidget):
 
         if filenames:
             self.parameter.value = [Path(f).as_posix() for f in filenames]
+        else:
+            self.show_validity(self._file_browse, self.parameter.valid)
 
     def _build_filter(self) -> str:
         """
@@ -879,3 +976,8 @@ class FileParameterWidget(ParameterWidget):
             f"*{ext}" for ext in self.parameter.accepted_formats
         )
         return f"Allowed files ({extensions})"
+
+    def validity_widgets(self) -> list[QWidget]:
+        if self._editable and hasattr(self, '_file_browse'):
+            return [self._file_browse]
+        return []
