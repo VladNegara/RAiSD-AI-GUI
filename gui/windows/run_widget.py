@@ -176,6 +176,8 @@ class RunWidget(QWidget):
         # Results widget
         self.run_results_widget = RunResultsWidget(self._run_result)
         self.run_ended.connect(self.run_results_widget.run_end)
+        self.run_results_widget.new_run_button.clicked.connect(self._new_run_button_clicked)
+        self.run_results_widget.edit_run_button.clicked.connect(self._switch_to_operation_selection_widget)
         layout.addWidget(self.run_results_widget)
 
     # ---------- step button bar switch methods ----------
@@ -226,6 +228,10 @@ class RunWidget(QWidget):
             self.run_view_widget.results_button.style().polish(self.run_view_widget.results_button)
         else:
             self._switch_to_run_view_widget()
+
+    @Slot()
+    def _new_run_button_clicked(self) -> None:
+        pass
 
 class NavigationButtonsWidget(QWidget):
     def __init__(self, left_button: QPushButton | None = None, middle_button: QPushButton | None = None, right_button: QPushButton | None = None):
@@ -913,13 +919,19 @@ class RunResultsWidget(RunSubWidget):
         layout.addWidget(results_scroll, 1)
         return widget
 
+    def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
+        self.new_run_button = QPushButton("New Run")
+        self.new_run_button.setEnabled(True)
+        self.new_run_button.setProperty("highlight", "true")
+
+        self.edit_run_button = QPushButton("Edit Run")
+        self.edit_run_button.setEnabled(True)
+        self.edit_run_button.setProperty("highlight", "true")
+
+        return NavigationButtonsWidget(left_button=self.new_run_button, right_button=self.edit_run_button)
+
     @Slot(bool)
     def run_end(self, run_successful: bool) -> None:
         self._run_result.run_completed = run_successful
         if (run_successful):
             self.results_widget.show_results()
-
-    def _setup_navigation_buttons(self) -> QWidget:
-        return QWidget()
-        # TODO: Implement
-        # raise NotImplementedError
