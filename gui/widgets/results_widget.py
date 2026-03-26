@@ -30,7 +30,7 @@ class ResultsWidget(QWidget):
     """
     The results of a completed execution shown.
     """
-    def __init__(self, run_result: RunResult):
+    def __init__(self, run_record: RunRecord):
         """
         Initialize a `ResultsWidget` object.
 
@@ -38,7 +38,7 @@ class ResultsWidget(QWidget):
         :type run_result: RunResult
         """
         super().__init__()
-        self._run_result = run_result
+        self._run_record = run_record
         self.setObjectName('results_widget')
         layout = QVBoxLayout(self)
 
@@ -66,7 +66,7 @@ class ResultsWidget(QWidget):
 
         # Parameter widget
         parameters_header = QLabel("Parameters used")
-        parameter_form = ParameterForm(self._run_result.parameter_group_list, editable=False)
+        parameter_form = ParameterForm(self._run_record, editable=False)
         parameters_collapsible = Collapsible(parameters_header, parameter_form)
         layout.addWidget(parameters_collapsible)
 
@@ -78,15 +78,16 @@ class ResultsWidget(QWidget):
         self.status_label.setText("This run was completed successfully. For more information, see the info files below.")
 
         info_files = [] # TODO implement infofile gen logic
+        output_folder_path = QDir(app_settings.workspace_path.filePath(self._run_record.run_id))
         for file in info_files:
             button = QPushButton(file)
             button.setObjectName("file_button")
-            path = self._run_result.path.absoluteFilePath(file)
+            path = output_folder_path.absoluteFilePath(file)
             button.clicked.connect(lambda _, p=path: self.open_file(p))
             self.info_files_layout.addWidget(button)
 
         # Set folder widget to right folder
-        path = app_settings.workspace_path.filePath(self._run_result.parameter_group_list.run_id)
+        path = app_settings.workspace_path.filePath(self._run_record.run_id)
         self.folder_structure.setRootPath(path)
         self.folder_widget.setModel(self.folder_structure)
         self.folder_widget.setRootIndex(self.folder_structure.index(path))
