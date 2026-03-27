@@ -55,7 +55,9 @@ QWidget#parameter_input_widget,
 QWidget#parameter_confirmation_widget,
 QWidget#run_view_widget,
 QWidget#run_results_widget,
-QWidget#settings_widget {
+QWidget#settings_widget,
+QScrollArea#history_results_scroll,
+QWidget#history_list_container{
     background-color: $purplish-background;
 }
 
@@ -66,7 +68,8 @@ QWidget#parameter_input_widget QLabel,
 QWidget#parameter_confirmation_widget QLabel,
 QWidget#run_view_widget QLabel,
 QWidget#run_results_widget QLabel,
-QWidget#settings_widget QLabel {
+QWidget#settings_widget QLabel,
+QWidget#history_widget QLabel{
     color: $primary-dark;
 }
 
@@ -75,7 +78,8 @@ QLabel#parameter_input_label,
 QLabel#parameter_confirmation_label,
 QLabel#run_view_label,
 QLabel#run_results_label,
-QLabel#settings_label {
+QLabel#settings_label,
+QLabel#history_list_widget_title{
     font-size: 24px;
     font-weight: 800;
     margin-left: 20px;
@@ -95,7 +99,8 @@ QWidget#tree_stacked_widget{
 
 QScrollArea#parameter_form_scroll QScrollBar,
 QScrollArea#results_scroll QScrollBar,
-QWidget#commands_view QScrollBar{
+QWidget#commands_view QScrollBar,
+QScrollArea#history_results_scroll QScrollBar{
     width: 0px;
     height: 0px;
 }
@@ -359,4 +364,16 @@ QWidget#info_label{
     border: 1px solid #46a2da;
     border-radius: 5px;
     background-color: #b5e3ff;
+}
+
+/* History */
+QWidget#history_record_widget{
+    padding: 5px 15px;
+    background-color: white;
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+QWidget#history_record_widget:hover{
+    background-color: $sidebar-button-hover;
 }

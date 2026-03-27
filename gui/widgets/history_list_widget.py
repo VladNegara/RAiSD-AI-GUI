@@ -1,9 +1,12 @@
 from PySide6.QtCore import Signal
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QScrollArea,
     QLabel,
+    QStyleOption,
+    QStyle,
 )
 
 from gui.widgets.history_record_widget import HistoryRecordWidget
@@ -23,10 +26,12 @@ class HistoryListWidget(QWidget):
         super().__init__()
         self._history_records = history_records or []
         self._history_widgets: list[HistoryRecordWidget] = []
+        self.setObjectName('history_list_widget')
 
         layout = QVBoxLayout(self)
 
         title = QLabel("History")
+        title.setObjectName("history_list_widget_title")
         layout.addWidget(title)
 
         # The list of history widgets
@@ -38,6 +43,7 @@ class HistoryListWidget(QWidget):
         layout.addWidget(scroll_area)
 
         self._list_container = QWidget()
+        self._list_container.setObjectName("history_list_container")
         self._list_layout = QVBoxLayout(self._list_container)
         self._list_layout.setSpacing(4)
         self._list_layout.addStretch()
@@ -77,3 +83,9 @@ class HistoryListWidget(QWidget):
         """
         for widget in self._history_widgets:
             widget.update_time()
+
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)

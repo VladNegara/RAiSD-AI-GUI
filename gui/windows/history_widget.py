@@ -1,4 +1,4 @@
-import datetime as dt
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -6,7 +6,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QSplitter,
     QStackedWidget,
-    QScrollArea
+    QScrollArea,
+    QStyleOption,
+    QStyle
 )
 from PySide6.QtCore import Slot, Qt
 
@@ -31,6 +33,8 @@ class HistoryWidget(QWidget):
         self._run_record = RunRecord.from_yaml(app_settings.config_path)
         self._selected : HistoryRecord | None = None
         self._setup_ui()
+        self.setObjectName("history_widget")
+        self._history_list.setObjectName("history_list")
 
     def _setup_ui(self):
         # Main layout with a splitter
@@ -50,14 +54,15 @@ class HistoryWidget(QWidget):
         self._right_panel = QStackedWidget()
         splitter.addWidget(self._right_panel)
         self.results_panel = QWidget()
-        self.results_panel.setStyleSheet("background-color: lightblue;")
         results_layout = QVBoxLayout(self.results_panel)
 
         run_results_label = QLabel("Run Results")
+        run_results_label.setObjectName("run_results_label")
         results_layout.addWidget(run_results_label)
 
         self.results_widget = ResultsWidget(self._run_record)
         results_scroll = QScrollArea()
+        results_scroll.setObjectName("history_results_scroll")
         results_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         results_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         results_scroll.setWidgetResizable(True)
@@ -98,3 +103,9 @@ class HistoryWidget(QWidget):
         Update the time labels of the history record widgets
         """
         self._history_list.update_time()
+
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)

@@ -1,6 +1,7 @@
 import datetime as dt
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QHBoxLayout
+from PySide6.QtGui import QPainter
+from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QStyleOption, QStyle
 
 from gui.model.settings import app_settings
 from gui.model.history_record import HistoryRecord
@@ -12,6 +13,7 @@ class HistoryRecordWidget(QWidget):
     def __init__(self, history_record: HistoryRecord):
         super().__init__()
         self._history_record = history_record
+        self.setObjectName('history_record_widget')
 
         layout = QGridLayout(self)
         layout.setColumnStretch(0, 1)
@@ -70,3 +72,9 @@ class HistoryRecordWidget(QWidget):
         Re-sets the time label of the widget.
         """
         self.time_label.setText(self._format_time_ago(self._history_record.time_completed))
+
+    def paintEvent(self, event) -> None:
+        opt = QStyleOption()
+        opt.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
