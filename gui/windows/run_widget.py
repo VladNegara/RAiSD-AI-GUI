@@ -743,9 +743,6 @@ class RunViewWidget(RunSubWidget):
 
     def _start_execution(self):
         commands = self._run_record.to_cli()
-        info_files = ['RAiSD_Info.TrainingData2DSNP.neutralTR',
-                      'RAiSD_Info.TrainingData2DSNP.sweepTR',
-                      'RAiSD_Info.TestData2DSNP.neutralTE']
         try:
             self._command_executor.start_execution(commands)
         except Exception:
