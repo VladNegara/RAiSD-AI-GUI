@@ -180,7 +180,7 @@ class CommandExecutor(QObject):
         """
         Reads the stdout of the process and emits the data.
         """
-        data = bytes(self._process.readAllStandardOutput().data()).decode()
+        data = bytes(self._process.readAllStandardOutput().data()).decode(errors="ignore")
         self.output.emit(data.strip())
         print(f"stdout:{data.strip()}")
         # TODO: filter output for substeps (self.sub_step_finished)
@@ -190,7 +190,7 @@ class CommandExecutor(QObject):
         """
         Reads the stderr of the process and compiles the error message.
         """
-        data = bytes(self._process.readAllStandardError().data()).decode()
+        data = bytes(self._process.readAllStandardError().data()).decode(errors="ignore")
         self.err_output.emit(data.strip())
         print(f"stderr:{data.strip()}")
 

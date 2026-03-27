@@ -42,9 +42,8 @@ class HistoryWidget(QWidget):
 
         # Left panel with history records
         history_records = HistoryRecord.from_history_file()
-        if history_records:
-            for op_rec in history_records:
-                self._history_list.add_record(op_rec)
+        for op_rec in history_records:
+            self._history_list.add_record(op_rec)
         splitter.addWidget(self._history_list)
 
         # Right panel has results detail view
@@ -84,7 +83,6 @@ class HistoryWidget(QWidget):
     def _on_run_selected(self, history_record: HistoryRecord) -> None:
         """
         Update the detail panel when a record is selected from the list.
-        #TODO: this will be changed, once we get the results from actual operation records
         """
         if self._selected == history_record:
             self.results_panel.hide()

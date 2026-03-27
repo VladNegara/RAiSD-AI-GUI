@@ -16,8 +16,6 @@ from gui.model.file_structure import (
     SingleFile,
     Directory,
 )
-
-from gui.model.settings import app_settings
 from gui.model.operation import Operation
 from gui.model.operation_tree import OperationTree
 from gui.model.parameter_group import ParameterGroup
@@ -1094,7 +1092,7 @@ class RunRecord(QObject):
     
     def populate(self, history_record: HistoryRecord) -> None:
         """
-        Populates the current run result with the contents of a history record.
+        Populate the current run result with the contents of a history record.
         This is used to fill the ResultsWidget in history with the contents
         of records when a user clicks on them.
         """
@@ -1105,25 +1103,25 @@ class RunRecord(QObject):
                 tree.populate_from_dict(operations_list[i])
         index = history_record.operations.get("index")
         if index != None:
-            self.operation_trees[index].enabled=True
+            self.selected_operation_tree_index = index
         
         dictionary = history_record.parameters
         for parameter_group in self.parameter_groups:
             for parameter in parameter_group:
                 if parameter.name in dictionary:
                     self.populate_parameter(parameter, dictionary[parameter.name])
-                    #TODO: validiity checking?
+                    #TODO: validity checking?
         self._time_completed = history_record.time_completed
     
     def populate_parameter(self, parameter: Parameter, value: dict | str) -> None:
         """
-        Populates a parameter with the values from a dict or string. Uses
+        Populate a parameter with the values from a dict or string. Uses
         recursion for optional parameters and multi parameters.
         """
         # This could be moved to the parameters?
         if isinstance(parameter, MultiParameter):
             for param in parameter.parameters:
-                if isinstance(value, dict) and value[param.name]:
+                if isinstance(value, dict) and value[param.name] is not None:
                     self.populate_parameter(param, value[param.name])
         elif isinstance(parameter, OptionalParameter):
             if isinstance(value, dict) and 'enabled' not in value:

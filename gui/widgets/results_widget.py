@@ -42,16 +42,6 @@ class ResultsWidget(QWidget):
         self.setObjectName('results_widget')
         layout = QVBoxLayout(self)
 
-        # Summary widget
-        results_summary_body = QWidget()
-        results_summary_layout = QVBoxLayout(results_summary_body)
-        self.status_label = QLabel()
-        results_summary_layout.addWidget(self.status_label)
-        layout.addWidget(results_summary_body)
-        info__files_widget = QWidget()
-        self.info_files_layout = QVBoxLayout(info__files_widget)
-        layout.addWidget(info__files_widget)
-
         # Folder widget
         files_widget = QWidget()
         files_layout = QVBoxLayout(files_widget)
@@ -74,18 +64,6 @@ class ResultsWidget(QWidget):
         """
         Updates the ResultWidget with results in the RunRecord.
         """
-        # Update summary widgets
-        self.status_label.setText("This run was completed. For more information, see the files below.")
-
-        info_files = [] # TODO implement infofile gen logic
-        output_folder_path = QDir(app_settings.workspace_path.filePath(self._run_record.run_id))
-        for file in info_files:
-            button = QPushButton(file)
-            button.setObjectName("file_button")
-            path = output_folder_path.absoluteFilePath(file)
-            button.clicked.connect(lambda _, p=path: self.open_file(p))
-            self.info_files_layout.addWidget(button)
-
         # Set folder widget to right folder
         path = app_settings.workspace_path.filePath(self._run_record.run_id)
         self.folder_structure.setRootPath(path)
@@ -93,14 +71,11 @@ class ResultsWidget(QWidget):
         self.folder_widget.setRootIndex(self.folder_structure.index(path))
         self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
-    def open_file(self, path) -> None:
-        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
-
     @Slot(int)
     def _on_double_click(self, index) -> None:
         if not self.folder_structure.isDir(index):
             path = self.folder_structure.filePath(index)
-            self.open_file(path)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
     def paintEvent(self, event) -> None:
         opt = QStyleOption()

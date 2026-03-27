@@ -29,7 +29,7 @@ class HistoryRecord():
         self._time_completed = time_completed
 
     @classmethod
-    def from_history_file(cls) -> list["HistoryRecord"] | None:
+    def from_history_file(cls) -> list["HistoryRecord"]:
         """
         Class method that retrieves data from a history file in the workspace
         and parses it into a list of history records.
@@ -47,13 +47,13 @@ class HistoryRecord():
                     if not isinstance(data[key], dict):
                         raise ValueError(
                             f"Incorrect format in history.json for {key}: {data[key]}"
-                            + "Expected string."
+                            + "Expected dict."
                         )
                     history_records.append(cls.from_dict(data[key]))
                 return history_records
         except FileNotFoundError:
             print("No history file found in this workspace")
-            return None
+            return []
         except json.JSONDecodeError:
             print("History file not parseable. Might be empty or formatted incorrectly")
             return []
@@ -71,7 +71,7 @@ class HistoryRecord():
         if not isinstance(name, str):
             raise ValueError(
                 f"Invalid run name: {name}. "
-                + "Expected string name."
+                + "Expected string."
             )
 
         commands = dictionary.get("commands")
