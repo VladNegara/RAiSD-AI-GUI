@@ -5,6 +5,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QScrollArea,
     QLabel,
+    QStyleOption,
+    QStyle,
 )
 
 from gui.widgets.history_record_widget import HistoryRecordWidget
