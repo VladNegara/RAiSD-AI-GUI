@@ -3,6 +3,7 @@ from PySide6.QtCore import (
     QDir
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QMainWindow,
     QWidget,
     QHBoxLayout,
@@ -37,6 +38,10 @@ class MainWindow(QMainWindow):
 
     def _init_main_window(self) -> None:
         run_record = RunRecord.from_yaml(app_settings.config_path)
+        # I don't fully understand why, but you need this line here too
+        # for the splash screen to show. Moving it before the run
+        # record initialization makes it no longer get displayed.
+        QApplication.processEvents()
         self._run_record = run_record
         self.command_executor = CommandExecutor(run_record)
         self._setup_ui()
