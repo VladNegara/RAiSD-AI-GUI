@@ -432,9 +432,6 @@ class ParameterInputWidget(RunSubWidget):
         self._validity_label.setObjectName("validity_label")
         layout.addWidget(self._validity_label)
 
-        check_param_button = QPushButton("Check parameters")
-        check_param_button.clicked.connect(self._check_param_button_clicked)
-        layout.addWidget(check_param_button)
         return widget
 
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
@@ -504,14 +501,6 @@ class ParameterInputWidget(RunSubWidget):
         Helper function to make touched false for all parameters
         """
         self._parameter_form.untouch_all()
-
-    @Slot()
-    def _check_param_button_clicked(self) -> None:
-        """
-        Prints the current result of `run_record.to_cli()`.
-        """
-        print("check parameters:")
-        print(self._run_record.to_cli())
 
 
 class ParameterConfirmationWidget(RunSubWidget):
