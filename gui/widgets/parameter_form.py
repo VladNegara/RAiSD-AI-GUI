@@ -19,7 +19,7 @@ class ParameterForm(QWidget):
         """
         Initialize a `ParameterForm` object.
 
-        :param run_record: the parameters to be filled in by
+        :param run_record: the `RunRecord` holding the parameters to be filled in by
         the user
         :type run_record: RunRecord
         """
