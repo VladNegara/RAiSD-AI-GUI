@@ -88,6 +88,9 @@ class FileProducerNode(QObject):
     def enabled(self, new_enabled: bool) -> None:
         raise NotImplementedError()
 
+    def reset(self) -> None:
+        raise NotImplementedError()
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
@@ -254,6 +257,11 @@ class FileConsumerNode(QObject):
         """
         return self.selected_producer.valid
     
+    def reset(self) -> None:
+        self.selected_index = 0
+        for producer in self.producers:
+            producer.reset()
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
@@ -425,6 +433,10 @@ class CommonParentDirectoryNode(FileProducerNode):
 
         return self.file is not None
 
+    def reset(self) -> None:
+        for consumer in self.file_consumers:
+            consumer.reset()
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
@@ -552,6 +564,9 @@ class FilePickerNode(FileProducerNode):
         if self.file is None:
             return False
         return self.produces.matches(self.file)
+
+    def reset(self) -> None:
+        self.file = None
 
     def to_cli(
             self,
@@ -855,6 +870,10 @@ class OperationNode(FileProducerNode):
             + [parameter.valid for parameter in self.parameters.values()]
             + [consumer.valid for consumer in self._file_consumers]
         )
+    
+    def reset(self) -> None:
+        for consumer in self.file_consumers:
+            consumer.reset()
 
     def to_cli(
             self,
@@ -1141,6 +1160,9 @@ class OperationTree(QObject):
         }
 
         return trees, operation_id_to_condition
+
+    def reset(self) -> None:
+        self.root.reset()
 
     def to_cli(
             self,

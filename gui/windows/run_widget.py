@@ -237,7 +237,9 @@ class RunWidget(QWidget):
 
     @Slot()
     def _new_run_button_clicked(self) -> None:
-        pass
+        self._run_record.reset()
+        self.operation_selection_widget.reset()
+        self._switch_to_operation_selection_widget()
 
 class NavigationButtonsWidget(QWidget):
     def __init__(self, left_button: QPushButton | None = None, middle_button: QPushButton | None = None, right_button: QPushButton | None = None):
@@ -329,6 +331,9 @@ class OperationSelectionWidget(RunSubWidget):
         )
 
         return widget
+    
+    def reset(self) -> None:
+        self.operation_selector.reset()
 
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.next_button = QPushButton("Next")
@@ -365,20 +370,23 @@ class OperationSelectionWidget(RunSubWidget):
 
             self.tree_stacked_widget = ResizableStackedWidget()
             self.tree_stacked_widget.setObjectName("tree_stacked_widget")
+            
+            self.tree_selectors : list[tuple[QRadioButton, OperationTreeWidget]]= []
             for i, tree in enumerate(
                     self._run_record.operation_trees
             ):
-                button = QRadioButton(tree.root.name)
-                button.setChecked(
+                self.button = QRadioButton(tree.root.name)
+                self.button.setChecked(
                     i
                     == self._run_record.selected_operation_tree_index
                 )
-                button_layout.addWidget(button)
+                button_layout.addWidget(self.button)
 
                 widget = OperationTreeWidget(tree)
                 self.tree_stacked_widget.addWidget(widget)
 
-                button.clicked.connect(lambda _, i=i: self._button_clicked(i))
+                self.button.clicked.connect(lambda _, i=i: self._button_clicked(i))
+                self.tree_selectors.append((self.button, widget))
             tree_scroll.setWidget(self.tree_stacked_widget)
 
             button_layout.addStretch()
@@ -389,6 +397,12 @@ class OperationSelectionWidget(RunSubWidget):
         def _button_clicked(self, i: int) -> None:
             self._run_record.selected_operation_tree_index = i
             self.tree_stacked_widget.current_index = i
+
+        def reset(self) -> None:
+            self.tree_stacked_widget.current_index = 0
+            for i, (button, widget) in enumerate(self.tree_selectors):
+                button.setChecked(i == self._run_record.selected_operation_tree_index) 
+                widget.reset()
 
     @Slot()
     def _run_id_valid_changed(self, new_valid) -> None:

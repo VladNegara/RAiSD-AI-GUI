@@ -80,6 +80,9 @@ class FileProducerNodeWidget(QWidget):
         The text to be displayed on the button that selects this widget.
         """
         raise NotImplementedError()
+    
+    def reset(self) -> None:
+        raise NotImplementedError()
 
 
 class FileConsumerNodeWidget(QWidget):
@@ -111,6 +114,7 @@ class FileConsumerNodeWidget(QWidget):
         heading.setObjectName("heading")
 
         self.file_producer_widget = ResizableStackedWidget()
+        self.file_selectors : list[tuple[QRadioButton | None, FileProducerNodeWidget]] = []
         if len(self._file_consumer_node.producers) == 1:
             # There is only one way to produce the required file, so
             # simply display that to the user.
@@ -119,6 +123,7 @@ class FileConsumerNodeWidget(QWidget):
                 producer,
             )
             self.file_producer_widget.addWidget(producer_widget)
+            self.file_selectors.append((None, producer_widget))
         else:
             # There are multiple options for obtaining the file, so
             # present the user with a choice through radio buttons.
@@ -140,6 +145,7 @@ class FileConsumerNodeWidget(QWidget):
                 button_layout.addWidget(button)
 
                 self.file_producer_widget.addWidget(producer_widget)
+                self.file_selectors.append((button, producer_widget))
 
                 button.clicked.connect(lambda _, i=i: self._button_clicked(i))
             layout.addWidget(button_widget)
@@ -148,6 +154,13 @@ class FileConsumerNodeWidget(QWidget):
     def _button_clicked(self, i: int) -> None:
         self._file_consumer_node.selected_index = i
         self.file_producer_widget.current_index = i
+
+    def reset(self) -> None:
+        self.file_producer_widget.current_index = 0
+        for (i, (button, widget)) in enumerate(self.file_selectors):
+            if button:
+                button.setChecked(i == self._file_consumer_node.selected_index)
+            widget.reset()
 
     def paintEvent(self, event) -> None:
         opt = QStyleOption()
@@ -185,9 +198,15 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         layout.addWidget(heading)
         layout.setContentsMargins(0,0,0,0)
 
+        self.widgets : list[FileConsumerNodeWidget]= []
         for file_consumer in self._common_parent_directory.file_consumers:
             file_consumer_widget = FileConsumerNodeWidget(file_consumer)
             layout.addWidget(file_consumer_widget)
+            self.widgets.append(file_consumer_widget)
+
+    def reset(self) -> None:
+        for widget in self.widgets:
+            widget.reset()
 
     @property
     def button_text(self) -> str:
@@ -272,6 +291,9 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
 
         self._file_picker.file_changed.connect(self._file_picker_file_changed)
 
+    def reset(self) -> None:
+        pass
+
     @property
     def button_text(self) -> str:
         if self._is_directory:
@@ -289,7 +311,10 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
         self._file_picker.file = path
 
     def _file_picker_file_changed(self, new_file: str):
-        self.button.setText(new_file)
+        if new_file == "":
+            self.button.setText("Browse")
+        else:
+            self.button.setText(new_file)
 
 
 class OperationNodeWidget(FileProducerNodeWidget):
@@ -326,11 +351,14 @@ class OperationNodeWidget(FileProducerNodeWidget):
 
         parameter_rows_widget = QWidget()
         parameter_rows_layout = QVBoxLayout(parameter_rows_widget)
+
+        self.parameter_widgets : list[ParameterWidget] = []
         for parameter in self._operation_node.parameters.values():
             parameter_widget = ParameterWidget.from_parameter(
                 parameter=parameter,
                 editable=True,
             )
+            self.parameter_widgets.append(parameter_widget)
             parameter_row = parameter_widget.build_form_row()
             parameter_rows_layout.addWidget(parameter_row)
         layout.addWidget(parameter_rows_widget)
@@ -344,8 +372,11 @@ class OperationNodeWidget(FileProducerNodeWidget):
 
         input_files_widget = QWidget()
         input_files_layout = QHBoxLayout(input_files_widget)
+
+        self.file_consumer_widgets : list[FileConsumerNodeWidget] = []
         for file_consumer in operation_node.file_consumers:
             file_consumer_widget = FileConsumerNodeWidget(file_consumer)
+            self.file_consumer_widgets.append(file_consumer_widget)
             file_consumer_widget.setObjectName("file_consumer_widget")
             input_files_layout.addWidget(
                 file_consumer_widget,
@@ -355,6 +386,12 @@ class OperationNodeWidget(FileProducerNodeWidget):
         layout.addWidget(input_files_widget)
 
         self._operation_node.file_changed.connect(self._file_changed)
+
+    def reset(self) -> None:
+        for widget in self.parameter_widgets:
+            widget.parameter.reset_value()
+        for file_consumer in self.file_consumer_widgets:
+            file_consumer.reset()
 
     @property
     def button_text(self) -> str:
@@ -395,11 +432,14 @@ class OperationTreeWidget(QWidget):
 
         layout = QHBoxLayout(self)
 
-        body = OperationNodeWidget(self._operation_tree.root)
+        self.body = OperationNodeWidget(self._operation_tree.root)
         layout.addWidget(
-            body,
+            self.body,
             alignment=Qt.AlignmentFlag.AlignTop,
         )
+
+    def reset(self) -> None:
+        self.body.reset()
 
     def paintEvent(self, event) -> None:
         opt = QStyleOption()
