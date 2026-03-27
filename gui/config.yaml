@@ -254,18 +254,11 @@ modes:
           - RAiSD_VcfMs.
           - type: run id
 parameter_groups:
-  - name: General
+  - name: SNP and sample handling
     operations:
       - RSD-DEF
       - IMG-GEN
-      - MDL-GEN
-      - MDL-TST
-      - SWP-SCN
-      - CO
-      - FASTA-VCF
-      - VCF-MS
     parameters:
-      # Where to handle -I?
       input-file-type:
         name: Input file type
         description: The type of the input file. This may change which parameters can be filled in.
@@ -282,14 +275,6 @@ parameter_groups:
             cli: null
           - name: Multiple-chromosome VCF
         default: 0
-  - name: SNP and sample handling
-    operations:
-      - RSD-DEF
-      - IMG-GEN
-      - MDL-GEN
-      - MDL-TST
-      - SWP-SCN
-    parameters:
       "-L":
         name: Region length
         description: The region size (in basepairs).
@@ -393,17 +378,9 @@ parameter_groups:
   - name: Sliding window and mu statistic
     operations:
       - RSD-DEF
-      - IMG-GEN
-      - MDL-GEN
-      - MDL-TST
       - SWP-SCN
     parameters:
       "-w":
-        operations:
-          remove:
-            - IMG-GEN
-            - MDL-GEN
-            - MDL-TST
         name: Sweep scan window size
         description: The window size. The default value is empirically determined.
         cli: "-w "
@@ -471,7 +448,6 @@ parameter_groups:
           add:
             - FASTA-VCF
             - VCF-MS
-        # We probably don't want this as a normal parameter
       "-s":
         name: Split output
         description: Generate a separate report file per set.
@@ -486,8 +462,13 @@ parameter_groups:
         default: false
       "-p":
         name: Print sample list
-        description: Generate the output
+        description: Generate the output file RAiSD_Samples.runID, comprising a list of samples in the input file. Only supported with VCF.
         cli: "-p"
+        operations:
+          remove:
+            - MDL-GEN
+            - MDL-TST
+            - SWP-SCN
         type: bool
         default: false
         conditions:
@@ -501,18 +482,27 @@ parameter_groups:
         description: Show progress on the display device (at SNP set granularity).
         cli: "-O"
         type: bool
-        default: false
-        # Probably don't offer this to the user?
+        default: true
       "-R":
         name: Full report
         description: Include additional information in the report file(s), i.e. window start and end, and the mu-statistic factors for variation, SFS and LD.
         cli: "-R"
+        operations:
+          remove:
+            - IMG-GEN
+            - MDL-GEN
+            - MDL-TST
         type: bool
         default: false
       "-P":
         name: Create plots
         description: Generate four plots (for the three mu-statistic factors and the final score) in one PDF file per set of SNPs in the input file using Rscript. # Activates -s, -t, -R
         cli: "-P"
+        operations:
+          remove:
+            - IMG-GEN
+            - MDL-GEN
+            - MDL-TST
         type: bool
         default: false
       "-D":
@@ -524,6 +514,11 @@ parameter_groups:
       "-A":
         name: Create Manhattan plot
         description: Generate a Manhattan plot for the final mu-statistic score using Rscript.
+        operations:
+          remove:
+            - IMG-GEN
+            - MDL-GEN
+            - MDL-TST
         type: optional
         default: false
         parameter:
@@ -537,9 +532,6 @@ parameter_groups:
   - name: Accuracy and sensitivity evaluation
     operations:
       - RSD-DEF
-      - IMG-GEN
-      - MDL-GEN
-      - MDL-TST
       - SWP-SCN
     parameters:
       "-Td":
@@ -664,9 +656,6 @@ parameter_groups:
   - name: FASTA to VCF conversion
     operations:
       - FASTA-VCF
-      - RSD-DEF
-      - IMG-GEN
-      - SWP-SCN
     parameters:
       "-C":
         name: Provide outgroup name
@@ -702,9 +691,6 @@ parameter_groups:
   - name: VCF to ms conversion
     operations:
       - VCF-MS
-      - RSD-DEF
-      - IMG-GEN
-      - SWP-SCN
     parameters:
       "-Q": # What is the relation to L?
         name: Convert VCF to ms
@@ -892,7 +878,7 @@ parameter_groups:
         type: int 
         min: 6 # must be even
         default: 400
-  - name: RAiSD-AI training mode
+  - name: RAiSD-AI model training
     operations:
       - MDL-GEN
     parameters: 
@@ -980,7 +966,7 @@ parameter_groups:
             parameter: "-arc"
             values:
               - 3
-  - name: RAiSD-AI inference mode
+  - name: RAiSD-AI model testing
     operations:
       - MDL-TST
     parameters:
@@ -1038,7 +1024,7 @@ parameter_groups:
             parameter: "-pci-class-count"
             values:
               - 1
-  - name: RAiSD-AI additional parameters
+  - name: Additional parameters
     operations: []
     parameters:
       "-frm-img-gen":
@@ -1086,7 +1072,7 @@ parameter_groups:
             parameter: "-arc"
             values:
               - 0
-  - name: Miscellaneous parameters
+  - name: Miscellaneous
     operations:
       - RSD-DEF
       - IMG-GEN
