@@ -8,7 +8,7 @@ modes:
   - name: Standard RAiSD
     operations:
       RSD-DEF:
-        name: Sweep scan
+        name: Standard sweep scan
         description: Do a sweep scan with standard RAiSD.
         cli: ""
         input:
@@ -152,7 +152,7 @@ modes:
           - RAiSD_Inference. # probably wrong
           - type: run id
       SWP-SCN:
-        name: Sweep scan
+        name: Model sweep scan
         description: Use a trained model to scan for selective sweeps.
         cli: "-op SWP-SCN"
         input:
