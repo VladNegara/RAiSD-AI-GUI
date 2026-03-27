@@ -29,7 +29,7 @@ class HistoryRecord():
         self._time_completed = time_completed
 
     @classmethod
-    def from_history_file(cls) -> list["HistoryRecord"] | None:
+    def from_history_file(cls) -> list["HistoryRecord"]:
         """
         Class method that retrieves data from a history file in the workspace
         and parses it into a list of history records.
@@ -53,7 +53,7 @@ class HistoryRecord():
                 return history_records
         except FileNotFoundError:
             print("No history file found in this workspace")
-            return None
+            return []
         except json.JSONDecodeError:
             print("History file not parseable. Might be empty or formatted incorrectly")
             return []
