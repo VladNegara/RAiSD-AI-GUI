@@ -939,7 +939,6 @@ class RunResultsWidget(RunSubWidget):
     def _setup_navigation_buttons(self) -> NavigationButtonsWidget:
         self.new_run_button = QPushButton("New Run")
         self.new_run_button.setEnabled(True)
-        self.new_run_button.setProperty("highlight", "true")
 
         self.edit_run_button = QPushButton("Edit Run")
         self.edit_run_button.setEnabled(True)
