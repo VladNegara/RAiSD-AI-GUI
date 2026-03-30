@@ -29,7 +29,7 @@ from PySide6.QtGui import (
 
 import json
 
-from .page import Page
+from ..page import Page
 from gui.model.parameter import MultiParameter, OptionalParameter, Parameter
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord

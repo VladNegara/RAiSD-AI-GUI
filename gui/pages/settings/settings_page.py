@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QPushButton, QStyleOption, QStyle,
 )
 
-from .page import Page
+from ..page import Page
 from gui.model.settings import EnvironmentManager, app_settings
 
 

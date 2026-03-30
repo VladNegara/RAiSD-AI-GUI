@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Slot, Qt
 
-from .page import Page
+from ..page import Page
 from gui.widgets.history import HistoryListWidget
 from gui.widgets.results import ResultsWidget
 from gui.model.settings import app_settings

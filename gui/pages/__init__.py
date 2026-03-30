@@ -1,3 +1,3 @@
-from .run_page import RunPage
-from .history_page import HistoryPage
-from .settings_page import SettingsPage
+from .run.run_page import RunPage
+from .history.history_page import HistoryPage
+from .settings.settings_page import SettingsPage
