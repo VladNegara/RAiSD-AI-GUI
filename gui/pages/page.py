@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
 
 class Page(QWidget):
     """
-    Base class for the main pages of the application.
+    An abstract base class for the main pages of the application.
     Each page should inherit from this class and 
     implement the _setup_ui and update_ui methods.
     """
