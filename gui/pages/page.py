@@ -21,14 +21,3 @@ class Page(QWidget):
         This method should be implemented by each page subclass.
         """
         raise NotImplementedError()
-
-    def update_ui(self) -> None:
-        """
-        Update the UI elements of the page.
-
-        This method is called when the page is shown, and can be used to update
-        any dynamic elements of the page.
-
-        This method should be implemented by each page subclass.
-        """
-        raise NotImplementedError()

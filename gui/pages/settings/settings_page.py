@@ -79,12 +79,6 @@ class SettingsPage(Page):
         layout.addWidget(container_widget)
         layout.addStretch()
 
-    def update_ui(self) -> None:
-        """
-        Update the UI elements of the page when it is shown.
-        """
-        pass
-
     def _set_workspace_label(self) -> None:
         """Set the workspace label with the workspace folder path."""
         self.workspace_label.setText(f"Current Workspace: '{app_settings.workspace_path.absolutePath()}'")

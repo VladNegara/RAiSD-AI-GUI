@@ -76,12 +76,6 @@ class HistoryPage(Page):
         # Give the list 1/3 and the detail panel 2/3 of the width
         splitter.setSizes([200, 400])
 
-    def update_ui(self) -> None:
-        """
-        Update the UI elements of the page when it is shown.
-        """
-        pass
-
     @Slot(HistoryRecord)
     def add_completed_run(self, history_record: HistoryRecord) -> None:
         """
