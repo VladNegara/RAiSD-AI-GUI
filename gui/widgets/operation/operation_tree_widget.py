@@ -23,10 +23,6 @@ from PySide6.QtWidgets import (
 )
 
 from gui.model.settings import app_settings
-from gui.model.operation.file_structure import(
-    SingleFile,
-    Directory,
-)
 from gui.model.operation import (
     FileProducerNode,
     FileConsumerNode,
@@ -34,6 +30,8 @@ from gui.model.operation import (
     FilePickerNode,
     OperationNode,
     OperationTree,
+    SingleFile,
+    Directory,
 )
 from gui.widgets.label import (
     InfoLabel,
