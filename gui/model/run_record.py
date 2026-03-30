@@ -1098,11 +1098,11 @@ class RunRecord(QObject):
         """
         self.run_id = history_record.name
         for i, tree in enumerate(self.operation_trees):
-            operations_list = history_record.operations.get("operations")
+            operations_list = history_record.operations.get("trees")
             if operations_list != None:
                 tree.populate_from_dict(operations_list[i])
         index = history_record.operations.get("index")
-        if index != None:
+        if index is not None:
             self.selected_operation_tree_index = index
         
         dictionary = history_record.parameters
