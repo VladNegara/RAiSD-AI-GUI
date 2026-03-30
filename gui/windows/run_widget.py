@@ -34,13 +34,12 @@ from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.model.history_record import HistoryRecord
 from gui.execution.command_executor import CommandExecutor
-from gui.widgets.parameter_widget import ParameterWidget
-from gui.widgets.operation_tree_widget import OperationTreeWidget
+from gui.widgets.parameter import ParameterWidget, ParameterForm
+from gui.widgets.operation import OperationTreeWidget
 from gui.widgets.resizable_stacked_widget import ResizableStackedWidget
-from gui.widgets.parameter_form import ParameterForm
 from gui.windows.dialog import ConfirmDialog, ErrorDialog
-from gui.widgets.results_widget import ResultsWidget
-from gui.widgets.process_indicator_widget import ProcessIndicator, IndicatorState
+from gui.widgets.results import ResultsWidget
+from gui.widgets.run import ProcessIndicator, IndicatorState
 
 class RunWidget(QWidget):
     """

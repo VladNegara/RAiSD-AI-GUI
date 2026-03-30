@@ -41,7 +41,7 @@ from gui.widgets.label import (
 from gui.widgets.resizable_stacked_widget import (
     ResizableStackedWidget,
 )
-from gui.widgets.parameter_widget import ParameterWidget
+from gui.widgets.parameter import ParameterWidget
 
 
 class FileProducerNodeWidget(QWidget):

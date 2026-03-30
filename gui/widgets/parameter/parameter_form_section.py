@@ -3,7 +3,7 @@ from PySide6.QtGui import QPainter
 from PySide6.QtCore import Signal, Slot
 
 from gui.model.parameter import ParameterGroup
-from gui.widgets.parameter_widget import ParameterWidget
+from .parameter_widget import ParameterWidget
 from gui.widgets.collapsible import Collapsible
 
 class ParameterFormSection(QWidget):
