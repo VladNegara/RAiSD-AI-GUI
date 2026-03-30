@@ -20,7 +20,7 @@ from PySide6.QtCore import (
     QDir,
 )
 
-from gui.model.file_structure import (
+from gui.model.operation.file_structure import (
     FileStructure,
     SingleFile,
     Directory,

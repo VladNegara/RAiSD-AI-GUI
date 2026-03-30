@@ -1,7 +1,7 @@
 from pytest import fixture, raises
 import re
 
-from gui.model.parameter_group import ParameterGroup
+from gui.model.parameter import ParameterGroup
 from gui.model.parameter import StringParameter, BoolParameter
 
 class TestParameterGroup:

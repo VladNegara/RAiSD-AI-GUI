@@ -11,14 +11,14 @@ from PySide6.QtCore import (
 )
 
 from gui.model.settings import app_settings
-from gui.model.file_structure import (
+from gui.model.operation.file_structure import (
     FileStructure,
     SingleFile,
     Directory,
 )
 from gui.model.operation import Operation
-from gui.model.operation_tree import OperationTree
-from gui.model.parameter_group import ParameterGroup
+from gui.model.operation import OperationTree
+from gui.model.parameter import ParameterGroup
 from gui.model.history_record import HistoryRecord
 from gui.model.parameter import (
     Parameter,

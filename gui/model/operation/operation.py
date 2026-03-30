@@ -5,7 +5,7 @@ A module containing the `Operation` class.
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from gui.model.file_structure import FileStructure
+from gui.model.operation.file_structure import FileStructure
 from gui.model.parameter import Parameter
 
 

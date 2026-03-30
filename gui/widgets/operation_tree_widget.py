@@ -23,11 +23,11 @@ from PySide6.QtWidgets import (
 )
 
 from gui.model.settings import app_settings
-from gui.model.file_structure import(
+from gui.model.operation.file_structure import(
     SingleFile,
     Directory,
 )
-from gui.model.operation_tree import (
+from gui.model.operation import (
     FileProducerNode,
     FileConsumerNode,
     CommonParentDirectoryNode,
