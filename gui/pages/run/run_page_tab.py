@@ -28,7 +28,7 @@ class NavigationButtonsHolder(QWidget):
         self.middle_button = middle_button
         self.right_button = right_button
 
-        self.setObjectName("navigation_buttons_widget")
+        self.setObjectName("navigation_buttons_holder")
 
         layout = QHBoxLayout(self)
         for button, alignment in ((self.left_button, Qt.AlignmentFlag.AlignLeft), 
