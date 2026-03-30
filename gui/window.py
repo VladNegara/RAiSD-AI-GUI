@@ -119,9 +119,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.history_page)
         layout.addWidget(self.settings_page)
 
-    def _set_active_view(self, button: QPushButton) -> None:
+    def _set_active_view(self, active_button: QPushButton) -> None:
         for i, (button, page) in enumerate(self.button_page_pairs.items()):
-            if button == button:
+            if button == active_button:
                 state = "active"
                 self.main_widget_layout.setCurrentWidget(page)
             else:
