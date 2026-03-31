@@ -41,7 +41,7 @@ class Settings(QObject):
             executable_file_path: QFileInfo,
             environment_manager: EnvironmentManager,
             environment_name: str,
-            config_path: str
+            config_path: QFileInfo
             ):
         """
         Initialize the `Settings` class.
@@ -164,7 +164,7 @@ class Settings(QObject):
             self.settings_changed.emit()
 
     @property
-    def config_path(self) -> str:
+    def config_path(self) -> QFileInfo:
         """
         Get the current config path.
 
@@ -174,7 +174,7 @@ class Settings(QObject):
         return self._config_path
 
     @config_path.setter
-    def config_path(self, value: str) -> None:
+    def config_path(self, value: QFileInfo) -> None:
         """
         Set the config path.
 

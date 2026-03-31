@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         self._init_main_window()
 
     def _init_main_window(self) -> None:
-        run_record = RunRecord.from_yaml(app_settings.config_path)
+        run_record = RunRecord.from_yaml(app_settings.config_path.absoluteFilePath())
         self._run_record = run_record
         self.command_executor = CommandExecutor(run_record)
         self._setup_ui()
