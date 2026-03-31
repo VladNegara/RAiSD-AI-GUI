@@ -41,11 +41,11 @@ class Settings(QObject):
 
     def __init__(
             self,
-            workspace_path: QDir,
-            executable_file_path: QFileInfo,
-            environment_manager: str,
-            environment_name: str,
-            config_path: QFileInfo
+            workspace_path: QDir | None = None,
+            executable_file_path: QFileInfo | None = None,
+            environment_manager: str | None = None,
+            environment_name: str | None = None,
+            config_path: QFileInfo | None = None,
             ):
         """
         Initialize the `Settings` class.
@@ -166,6 +166,8 @@ class Settings(QObject):
         :return: The current workspace path.
         :rtype: QDir
         """
+        if not self._workspace_path:
+            raise RuntimeError("Workspace path used before it is set.")
         return self._workspace_path
 
     @workspace_path.setter
@@ -189,7 +191,9 @@ class Settings(QObject):
         :return: The current executable file path.
         :rtype: QFileInfo
         """
-        return self._executable_file_path
+        if not self.executable_file_path:
+            raise RuntimeError("Executable used before it is set.")
+        return self.executable_file_path
 
     @executable_file_path.setter
     def executable_file_path(self, value: QFileInfo) -> None:
@@ -199,8 +203,8 @@ class Settings(QObject):
         :param value: The new executable file path.
         :type value: QFileInfo
         """
-        if self._executable_file_path != value:
-            self._executable_file_path = value
+        if self.executable_file_path != value:
+            self.executable_file_path = value
             self.executable_file_path_changed.emit(value)
             self.settings_changed.emit()
 
@@ -212,6 +216,8 @@ class Settings(QObject):
         :return: The current environment manager.
         :rtype: EnvironmentManager
         """
+        if not self._environment_manager:
+            raise RuntimeError("Environment manager used before it is set.")
         return self._environment_manager
 
     @environment_manager.setter
@@ -235,6 +241,8 @@ class Settings(QObject):
         :return: The current environment name.
         :rtype: str
         """
+        if not self._environment_name:
+            raise RuntimeError("Environment name used before it is set.")
         return self._environment_name
 
     @environment_name.setter
@@ -258,6 +266,8 @@ class Settings(QObject):
         :return: The current config path.
         :rtype: str
         """
+        if not self._config_path:
+            raise RuntimeError("Config path used before it is set.")
         return self._config_path
 
     @config_path.setter
@@ -286,7 +296,7 @@ class Settings(QObject):
         new_workspace_folder_str = QFileDialog.getExistingDirectory(
             None,
             "Select Workspace Folder",
-            self._workspace_path.absolutePath(),
+            self.workspace_path.absolutePath(),
             QFileDialog.Option.ShowDirsOnly | QFileDialog.Option.DontResolveSymlinks
         )
         if not new_workspace_folder_str:  # Check for empty string (canceled)
@@ -297,4 +307,4 @@ class Settings(QObject):
             print(f"Error setting workspace: {e}")
 
 # create a global singleton instance
-app_settings = Settings.from_yaml("gui/settings.yaml")
+app_settings = Settings()
