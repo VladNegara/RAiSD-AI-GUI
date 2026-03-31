@@ -10,6 +10,9 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import (
     QFileDialog,
+    QDialog,
+    QVBoxLayout,
+    QLabel
 )
 
 
@@ -30,6 +33,33 @@ class Settings(QObject):
     Do not instantiate this class directly. 
     Use the `app_settings` singleton instance instead.
     """
+
+    class SetupDialog(QDialog):
+        """
+        A dialog for displaying and setting the application settings.
+        """
+
+        def __init__(
+                self, 
+                workspace: bool,
+                executable_file: bool,
+                environment_manager: bool,
+                environment_name : bool,
+                config_file : bool,
+                parent=None, 
+                ):
+            super().__init__(parent)
+            self.setWindowTitle("Setup")
+            self.setModal(True)
+            self.resize(400, 300)
+            
+            layout = QVBoxLayout(self)
+
+            # workspace
+            if workspace:
+                workspace_header = QLabel("Select workspace")
+                layout.addWidget(workspace_header)
+
     workspace_path_changed = Signal(QDir)
     executable_file_path_changed = Signal(QFileInfo)
     environment_manager_changed = Signal(EnvironmentManager)
