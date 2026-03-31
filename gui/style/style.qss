@@ -372,10 +372,22 @@ QRadioButton{
     color: $primary-dark
 }
 
-QWidget#info_label{
+QWidget#info_label {
     border: 1px solid $info;
     border-radius: 5px;
     background-color: $info-background;
+}
+
+QWidget#warning_label {
+    border: 1px solid $warning;
+    border-radius: 5px;
+    background-color: $warning-background;
+}
+
+QWidget#error_label {
+    border: 1px solid $invalid;
+    border-radius: 5px;
+    background-color: $invalid-background;
 }
 
 /* History */
