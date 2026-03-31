@@ -7,8 +7,8 @@ from gui.model.operation import (
 )
 from gui.model.operation.file_structure import SingleFile
 from gui.model.run_record import RunRecord
-from gui.model.parameter import ParameterGroup
 from gui.model.parameter import (
+    ParameterGroup,
     OptionalParameter,
     MultiParameter,
     BoolParameter,
