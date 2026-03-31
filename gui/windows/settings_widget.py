@@ -90,9 +90,9 @@ class SettingsWidget(QWidget):
         """Update the executable label with the new executable file path."""
         self.executable_label.setText(f"Current Executable: '{path.absoluteFilePath()}'")
 
-    def _update_environment_manager_label(self, manager: EnvironmentManager) -> None:
+    def _update_environment_manager_label(self, manager: str) -> None:
         """Update the environment manager label with the new environment manager value."""
-        self.environment_manager_label.setText(f"Current Environment Manager: '{manager.value}'")
+        self.environment_manager_label.setText(f"Current Environment Manager: '{manager}'")
 
     def _update_environment_name_label(self, name: str) -> None:
         """Update the enviroment name label with the new environment name."""

@@ -39,7 +39,7 @@ class Settings(QObject):
             self,
             workspace_path: QDir,
             executable_file_path: QFileInfo,
-            environment_manager: EnvironmentManager,
+            environment_manager: str,
             environment_name: str,
             config_path: QFileInfo
             ):
@@ -118,7 +118,7 @@ class Settings(QObject):
             self.settings_changed.emit()
 
     @property
-    def environment_manager(self) -> EnvironmentManager:
+    def environment_manager(self) -> str:
         """
         Get the current environment manager.
 
@@ -128,7 +128,7 @@ class Settings(QObject):
         return self._environment_manager
 
     @environment_manager.setter
-    def environment_manager(self, value: EnvironmentManager) -> None:
+    def environment_manager(self, value: str) -> None:
         """
         Set the environment manager.
 
