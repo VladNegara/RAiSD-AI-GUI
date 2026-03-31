@@ -40,6 +40,7 @@ from gui.model.parameter import (
     StringPairListParameter,
     FileParameter,
 )
+from gui.widgets.utils import set_bool_property
 from gui.widgets.collapsible import Collapsible
 
 
@@ -117,48 +118,58 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             self._hint_labels.append(hint_label)
         self._layout.addWidget(hints_widget)
 
+        self._parameter.value_changed.connect(self._parameter_value_changed)
         self._parameter.hint_added.connect(self._hint_added)
         self._parameter.constraints_valid_changed.connect(
             self._constraints_valid_changed,
         )
 
-    def show_validity(self, widget: QWidget, valid: bool) -> None:
+    def show_validity(self) -> None:
         """
-        Validity is only shown after the user first interacts with it.
-        """
-        if not self._touched:
-            return
-        if not self._editable:
-            return
+        Set the validity property on the relevant widgets.
 
-        if valid:
-            widget.setProperty("valid", "true")
-        else:
-            widget.setProperty("valid", "false")
-        widget.style().unpolish(widget)
-        widget.style().polish(widget)
+        The validity is set on this widget's `validity_widgets` and on
+        each of its hint labels.
 
-    def touch(self) -> None:
+        Validity is only shown if the widget is editable, and if the
+        user has interacted with it. Otherwise, it is hidden.
         """
-        Helper function to call for setting touched as True
-        """
-        self._touched = True
-        for widget in self.validity_widgets():
-            self.show_validity(widget, self.parameter.valid)
+        show: bool = self._editable and self.touched
 
-    def untouch(self) -> None:
-        """
-        Helper function to call for setting touched as False
-        """
-        self._touched = False
-        for widget in self.validity_widgets():
-            widget.setProperty("valid", "")
-            widget.style().unpolish(widget)
-            widget.style().polish(widget)
+        parameter_valid = self._parameter.valid
+        for widget in self.validity_widgets:
+            if show:
+                set_bool_property(widget, "valid", parameter_valid)
+            else:
+                set_bool_property(widget, "valid", None)
 
+        constraints_valid = self._parameter.constraints_valid
+        for i, constraint_valid in enumerate(constraints_valid):
+            hint_label = self._hint_labels[i]
+            if show:
+                set_bool_property(hint_label, "valid", constraint_valid)
+            else:
+                set_bool_property(hint_label, "valid", None)
+
+    @property
+    def touched(self) -> bool:
+        """
+        Whether this widget has been interacted with by the user.
+
+        Setting this property will update the validity displayed on the
+        widget accordingly.
+        """
+        return self._touched
+
+    @touched.setter
+    def touched(self, new_touched: bool) -> None:
+        self._touched = new_touched
+        self.show_validity()
+
+    @property
     def validity_widgets(self) -> list[QWidget]:
         """
-        Returns list of widgets for validity to be displayed
+        The widgets that show the validity of this parameter widget.
         """
         return []
 
@@ -247,19 +258,21 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
 
         return row
 
+    @Slot()
+    def _parameter_value_changed(self) -> None:
+        self.touched = True
+
     @Slot(str)
     def _hint_added(self, new_hint: str) -> None:
         hint_label = self.__class__.HintLabel(new_hint)
         self._hints_layout.addWidget(hint_label)
         self._hint_labels.append(hint_label)
 
-    @Slot(list)
+    @Slot()
     def _constraints_valid_changed(
             self,
-            new_constraints_valid: list[bool],
     ) -> None:
-        for i, valid in enumerate(new_constraints_valid):
-            self.show_validity(self._hint_labels[i], valid)
+        self.show_validity()
 
 
 class OptionalParameterWidget(ParameterWidget):
@@ -313,7 +326,7 @@ class OptionalParameterWidget(ParameterWidget):
 
     @Slot(Qt.CheckState)
     def _check_state_changed(self, new_check_state: Qt.CheckState) -> None:
-        self._touched = True
+        self.touched = True
         match new_check_state:
             case Qt.CheckState.Checked:
                 self.parameter.value = True
@@ -324,15 +337,12 @@ class OptionalParameterWidget(ParameterWidget):
     def _parameter_value_changed(self, new_value: bool, valid: bool) -> None:
         self._checkbox.setChecked(new_value)
 
-    def touch(self) -> None:
-        self._touched = True
-        if self._child_widget is not None and self.parameter.value:
-            self._child_widget.touch()
-
-    def untouch(self) -> None:
-        self._touched = False
+    @ParameterWidget.touched.setter
+    def touched(self, new_touched: bool) -> None:
+        ParameterWidget.touched.__set__(self, new_touched)
         if self._child_widget is not None:
-            self._child_widget.untouch()
+            self._child_widget.touched = self.touched
+
 
 class MultiParameterWidget(ParameterWidget):
     """
@@ -369,15 +379,11 @@ class MultiParameterWidget(ParameterWidget):
 
         return row
 
-    def touch(self) -> None:
-        self._touched = True
+    @ParameterWidget.touched.setter
+    def touched(self, new_touched: bool) -> None:
+        ParameterWidget.touched.__set__(self, new_touched)
         for child in self._child_widgets:
-            child.touch()
-
-    def untouch(self) -> None:
-        self._touched = False
-        for child in self._child_widgets:
-            child.untouch()
+            child.touched = self.touched
 
 
 class BoolParameterWidget(ParameterWidget):
@@ -411,7 +417,7 @@ class BoolParameterWidget(ParameterWidget):
 
     @Slot(Qt.CheckState)
     def _check_state_changed(self, new_check_state: Qt.CheckState) -> None:
-        self._touched = True
+        self.touched = True
         match new_check_state:
             case Qt.CheckState.Checked:
                 self.parameter.value = True
@@ -454,7 +460,7 @@ class IntParameterWidget(ParameterWidget):
 
     @Slot(str)
     def _text_changed(self) -> None:
-        self._touched = True
+        self.touched = True
         try:
             self.parameter.value = int(self._line_edit.text())
         except:
@@ -462,7 +468,7 @@ class IntParameterWidget(ParameterWidget):
 
     @Slot(int, bool)
     def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
-        self._touched = True
+        self.touched = True
         try:
             current = int(self._line_edit.text())
             values_differ = current != new_value
@@ -470,8 +476,8 @@ class IntParameterWidget(ParameterWidget):
             values_differ = True
         if values_differ:
             self._line_edit.setText(str(new_value))
-        self.show_validity(self._line_edit, valid)
 
+    @property
     def validity_widgets(self) -> list[QWidget]:
         return [self._line_edit]
 
@@ -510,7 +516,7 @@ class FloatParameterWidget(ParameterWidget):
 
     @Slot(str)
     def _text_changed(self) -> None:
-        self._touched = True
+        self.touched = True
         try:
             self.parameter.value = float(self._line_edit.text())
         except:
@@ -518,7 +524,6 @@ class FloatParameterWidget(ParameterWidget):
 
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
-        self._touched = True
         try:
             current = float(self._line_edit.text())
             values_differ = current != new_value
@@ -526,8 +531,8 @@ class FloatParameterWidget(ParameterWidget):
            values_differ = True
         if values_differ:
             self._line_edit.setText(str(new_value))
-        self.show_validity(self._line_edit, valid)
 
+    @property
     def validity_widgets(self) -> list[QWidget]:
         return [self._line_edit]
 
@@ -559,7 +564,7 @@ class EnumParameterWidget(ParameterWidget):
 
     @Slot(int)
     def _combo_box_current_index_changed(self, new_index: int) -> None:
-        self._touched = True
+        self.touched = True
         self.parameter.value = new_index
 
     @Slot(int, bool)
@@ -597,15 +602,14 @@ class StringParameterWidget(ParameterWidget):
 
     @Slot(str)
     def _text_changed(self) -> None:
-        self._touched = True
+        self.touched = True
         self.parameter.value = self._line_edit.text()
 
     @Slot(str, bool)
     def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
-        self._touched = True
         self._line_edit.setText(new_value)
-        self.show_validity(self._line_edit, valid)
 
+    @property
     def validity_widgets(self) -> list[QWidget]:
         return [self._line_edit]
 
@@ -775,12 +779,14 @@ class StringPairListParameterWidget(ParameterWidget):
         new_left_valid: bool, 
         new_right_valid: bool,
     ) -> None:
-        self._show_validity(
+        set_bool_property(
             self.rows[index].left_line_edit,
+            "valid",
             new_left_valid,
         )
-        self._show_validity(
+        set_bool_property(
             self.rows[index].right_line_edit,
+            "valid",
             new_right_valid,
         )
 
@@ -929,9 +935,6 @@ class FileParameterWidget(ParameterWidget):
         else:
             pass
 
-        self._touched = True
-        self.show_validity(self._file_browse, valid)
-
     @Slot()
     def _open_file_dialog(self) -> None:
         """
@@ -940,7 +943,7 @@ class FileParameterWidget(ParameterWidget):
         file selection. Otherwise, it uses `getOpenFileName` to allow
         only a single file.
         """
-        self._touched = True
+        self.touched = True
         if self.parameter.multiple:
             filenames, _ = QFileDialog.getOpenFileNames(
                 self,
@@ -959,8 +962,6 @@ class FileParameterWidget(ParameterWidget):
 
         if filenames:
             self.parameter.value = [Path(f).as_posix() for f in filenames]
-        else:
-            self.show_validity(self._file_browse, self.parameter.valid)
 
     def _build_filter(self) -> str:
         """
@@ -974,7 +975,8 @@ class FileParameterWidget(ParameterWidget):
         )
         return f"Allowed files ({extensions})"
 
+    @property
     def validity_widgets(self) -> list[QWidget]:
-        if self._editable and hasattr(self, '_file_browse'):
+        if self._editable and self._file_browse is not None:
             return [self._file_browse]
         return []
