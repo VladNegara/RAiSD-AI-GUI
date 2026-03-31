@@ -1,12 +1,14 @@
 from pytest import approx, fixture, raises
 import re
 
-from gui.model.operation_tree import OperationTree
-from gui.model.operation import Operation
-from gui.model.file_structure import SingleFile
+from gui.model.operation import (
+    Operation, 
+    OperationTree,
+)
+from gui.model.operation.file_structure import SingleFile
 from gui.model.run_record import RunRecord
-from gui.model.parameter_group import ParameterGroup
 from gui.model.parameter import (
+    ParameterGroup,
     OptionalParameter,
     MultiParameter,
     BoolParameter,

@@ -20,12 +20,12 @@ from PySide6.QtCore import (
     QDir,
 )
 
-from gui.model.file_structure import (
+from .file_structure import (
     FileStructure,
     SingleFile,
     Directory,
 )
-from gui.model.operation import Operation
+from .operation import Operation
 from gui.model.parameter import (
     Parameter,
     StringParameter,
@@ -294,7 +294,8 @@ class FileConsumerNode(QObject):
             raise ValueError(
                 f"Invalid 'selected' in dict: {selected_index}. Expected int."
             )
-
+        self.selected_index = selected_index
+        
         if "file_producers" not in values:
             raise ValueError("Missing 'file_producers' in dict.")
         file_producer_values_list = values["file_producers"]

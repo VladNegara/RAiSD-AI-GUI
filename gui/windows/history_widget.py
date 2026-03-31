@@ -12,9 +12,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Slot, Qt
 
-from gui.widgets.history_record_widget import HistoryRecordWidget
-from gui.widgets.history_list_widget import HistoryListWidget
-from gui.widgets.results_widget import ResultsWidget
+from gui.widgets.history import HistoryListWidget
+from gui.widgets.results import ResultsWidget
 
 
 from gui.model.settings import app_settings
