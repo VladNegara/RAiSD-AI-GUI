@@ -180,11 +180,11 @@ QWidget#step_button_bar QPushButton[step_role="past_step"]:pressed {
 
 /* NAVIGATION BUTTONS */
 
-QWidget#navigation_buttons_widget {
+QWidget#navigation_buttons_holder {
     background-color: $purplish-background;
 }
 
-QWidget#navigation_buttons_widget QPushButton {
+QWidget#navigation_buttons_holder QPushButton {
     padding: 10px 40px;
     background-color: $primary-purple;
     color: $primary-dark;
@@ -193,15 +193,15 @@ QWidget#navigation_buttons_widget QPushButton {
     font-weight: 500;
 }
 
-QWidget#navigation_buttons_widget QPushButton:hover {
+QWidget#navigation_buttons_holder QPushButton:hover {
     background-color: $button-hover;
 }
 
-QWidget#navigation_buttons_widget QPushButton:pressed {
+QWidget#navigation_buttons_holder QPushButton:pressed {
     background-color: $button-pressed;
 }
 
-QWidget#navigation_buttons_widget QPushButton[highlight="false"] {
+QWidget#navigation_buttons_holder QPushButton[highlight="false"] {
     background-color: $button-disabled-background;
     color: $button-disabled-text-color;
     border: $button-disabled-border;

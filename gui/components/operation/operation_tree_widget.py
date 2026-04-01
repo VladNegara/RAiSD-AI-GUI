@@ -33,13 +33,13 @@ from gui.model.operation import (
     SingleFile,
     Directory,
 )
-from gui.widgets.label import (
+from gui.components.label import (
     InfoLabel,
 )
-from gui.widgets.resizable_stacked_widget import (
+from gui.components.resizable_stacked_widget import (
     ResizableStackedWidget,
 )
-from gui.widgets.parameter import ParameterWidget
+from gui.components.parameter import ParameterWidget
 
 
 class FileProducerNodeWidget(QWidget):

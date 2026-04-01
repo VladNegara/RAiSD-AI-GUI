@@ -22,8 +22,8 @@ from PySide6.QtGui import QDesktopServices, QPainter
 
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
-from gui.widgets.parameter import ParameterForm
-from gui.widgets.collapsible import Collapsible
+from gui.components.parameter import ParameterForm
+from gui.components.collapsible import Collapsible
 
 
 class ResultsWidget(QWidget):

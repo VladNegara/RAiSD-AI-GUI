@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 
 from gui.model.settings import app_settings, EnvironmentManager
 from gui.model.run_record import RunRecord
-from gui.windows.main import MainWindow
+from gui.window import MainWindow
 
 
 def main():
