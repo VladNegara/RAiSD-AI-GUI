@@ -7,12 +7,15 @@ from PySide6.QtCore import (
     QDir,
     QFileInfo,
     Signal,
+    Slot
 )
 from PySide6.QtWidgets import (
     QFileDialog,
     QDialog,
     QVBoxLayout,
-    QLabel
+    QLabel,
+    QPushButton,
+    QDialogButtonBox
 )
 
 
@@ -41,24 +44,50 @@ class Settings(QObject):
 
         def __init__(
                 self, 
-                workspace: bool,
-                executable_file: bool,
-                environment_manager: bool,
-                environment_name : bool,
-                config_file : bool,
                 parent=None, 
                 ):
             super().__init__(parent)
-            self.setWindowTitle("Setup")
+            self.setWindowTitle("Complete setup")
             self.setModal(True)
             self.resize(400, 300)
             
             layout = QVBoxLayout(self)
 
             # workspace
-            if workspace:
-                workspace_header = QLabel("Select workspace")
-                layout.addWidget(workspace_header)
+            workspace_header = QLabel("Select workspace")
+            layout.addWidget(workspace_header)
+
+            self._file_browse = QPushButton('Browse')
+            self._file_browse.clicked.connect(lambda _, i=self._file_browse: self._open_file_dialog_folder(i))
+            layout.addWidget(self._file_browse)
+
+            self.buttonbox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+            self.buttonbox.setCenterButtons(True)
+            layout.addWidget(self.buttonbox)
+
+            
+    
+        @Slot(QPushButton)
+        def _open_file_dialog_folder(self, button : QPushButton) -> None:
+            """
+            Helper function that opens the OS file picker. If `multiple`
+            is `True`, it uses `getOpenFileNames` to allow for multiple
+            file selection. Otherwise, it uses `getOpenFileName` to allow
+            only a single file.
+            """
+            new_path = QFileDialog.getExistingDirectory(
+                None,
+                "Select Directory",
+                "",
+                QFileDialog.Option.ShowDirsOnly
+            )
+            if not new_path:  # Check for empty string (canceled)
+                return  
+            try:
+                app_settings.workspace_path = QDir(new_path)
+                button.setText(new_path)
+            except Exception as e:
+                print(f"Error setting workspace: {e}")
 
     workspace_path_changed = Signal(QDir)
     executable_file_path_changed = Signal(QFileInfo)
