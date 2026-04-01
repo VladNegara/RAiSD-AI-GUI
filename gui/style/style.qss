@@ -222,7 +222,12 @@ QWidget#parameter_form_section {
 }
 
 QWidget#heading{
+    font-size: $font-size + 3px;
+}
+
+QWidget#label_header {
     font-size: $font-size + 2px;
+    font-weight: 700;
 }
 
 QWidget#label_body{

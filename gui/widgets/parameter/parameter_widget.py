@@ -202,17 +202,26 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             lambda new_enabled: row.setVisible(new_enabled)
         )
         layout = QHBoxLayout(row)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        label_widget = QWidget()
+        label_layout = QVBoxLayout(label_widget)
+        label_layout.setContentsMargins(0, 0, 0, 0)
 
         label_header = QLabel(self.parameter.name)
         label_header.setAlignment(Qt.AlignmentFlag.AlignLeft)
         label_header.setObjectName("label_header")
+        label_layout.addWidget(label_header)
+
         label_body = QLabel(self.parameter.description)
+        label_body.setWordWrap(True)
         label_body.setObjectName("label_body")
-        label: QWidget = Collapsible(
-            label_header,
-            label_body,
-        )
-        layout.addWidget(label, stretch=1)
+        label_layout.addWidget(label_body)
+
+        label_layout.addStretch()
+
+        layout.addWidget(label_widget, stretch=3)
+        layout.addStretch(2)
 
         layout.addWidget(self)
 
@@ -257,10 +266,15 @@ class OptionalParameterWidget(ParameterWidget):
     def build_form_row(self) -> QWidget:
         row = QWidget()
         layout = QVBoxLayout(row)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
 
         own_row = super().build_form_row()
         layout.addWidget(own_row)
 
+        child_row_widget = QWidget()
+        child_row_layout = QVBoxLayout(child_row_widget)
+        child_row_layout.setContentsMargins(15, 0, 0, 0)
         # `self.parameter`` should always be of type OptionalParameter,
         # even though the type checker doesn't agree.
         self._child_widget = ParameterWidget.from_parameter(
@@ -268,7 +282,8 @@ class OptionalParameterWidget(ParameterWidget):
             self._editable
         )
         child_row = self._child_widget.build_form_row()
-        layout.addWidget(child_row)
+        child_row_layout.addWidget(child_row)
+        layout.addWidget(child_row_widget)
 
         return row
 
@@ -317,17 +332,24 @@ class MultiParameterWidget(ParameterWidget):
     def build_form_row(self) -> QWidget:
         row = QWidget()
         layout = QVBoxLayout(row)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
 
         own_row = super().build_form_row()
         layout.addWidget(own_row)
 
+        child_row_widget = QWidget()
+        child_row_layout = QVBoxLayout(child_row_widget)
+        child_row_layout.setContentsMargins(15, 0, 0, 0)
+        child_row_layout.setSpacing(12)
         # This should always work, since the constructor is given a
         # MultiParameter object.
         for child_parameter in self.parameter.parameters: # type: ignore
             child_widget = ParameterWidget.from_parameter(child_parameter, self._editable)
             self._child_widgets.append(child_widget)
             child_row = child_widget.build_form_row()
-            layout.addWidget(child_row)
+            child_row_layout.addWidget(child_row)
+        layout.addWidget(child_row_widget)
 
         return row
 

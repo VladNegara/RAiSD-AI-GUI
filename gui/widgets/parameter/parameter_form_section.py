@@ -42,7 +42,8 @@ class ParameterFormSection(QWidget):
 
         form_body = QWidget()
         form_layout = QVBoxLayout(form_body)
-        form_layout.setContentsMargins(0, 0, 0, 0)
+        form_layout.setContentsMargins(8, 8, 8, 8)
+        form_layout.setSpacing(16)
 
         for parameter in parameter_group:
             widget = ParameterWidget.from_parameter(parameter, self._editable)
