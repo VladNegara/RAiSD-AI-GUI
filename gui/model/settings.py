@@ -249,9 +249,9 @@ class Settings(QObject):
         :return: The current executable file path.
         :rtype: QFileInfo
         """
-        if not self.executable_file_path:
+        if not self._executable_file_path:
             raise RuntimeError("Executable used before it is set.")
-        return self.executable_file_path
+        return self._executable_file_path
 
     @executable_file_path.setter
     def executable_file_path(self, value: QFileInfo) -> None:
