@@ -1,6 +1,7 @@
 from PySide6.QtCore import (
     QFileInfo,
     QDir,
+    Signal
 )
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
@@ -36,27 +37,14 @@ class SettingsWidget(QWidget):
         container_widget.setObjectName("container_widget")
         container_layout = QVBoxLayout(container_widget)
 
-        # Widget to hold the workspace label and workspace choice button
-        workspace_widget = QWidget()
-        workspace_widget.setObjectName("workspace_widget")
-        workspace_layout = QHBoxLayout(workspace_widget)
-        workspace_layout.setContentsMargins(0,0,0,0)
-        workspace_layout.setSpacing(0)
-
-        # Label to show the workspace folderpath
-        self.workspace_label = QLabel()
-        self._update_workspace_label(app_settings.workspace_path)
-        app_settings.workspace_path_changed.connect(self._update_workspace_label)
-        workspace_layout.addWidget(self.workspace_label, 1)
-
-        # Button to select a new workspace
-        self.workspace_chooser = QPushButton("Set Workspace")
-        self.workspace_chooser.clicked.connect(app_settings.set_workspace_folder)
-        workspace_layout.addWidget(self.workspace_chooser)
-
+        # Workspace
+        workspace_widget = SettingsItemWidget("Workspace", app_settings.workspace_path.absolutePath())
+        app_settings.workspace_path_changed.connect(
+            lambda p = app_settings.workspace_path.absolutePath: workspace_widget._update_label(p))
+        workspace_widget.button_clicked.connect(app_settings.set_workspace_folder)
         container_layout.addWidget(workspace_widget)
-        container_layout.addSpacing(10)
 
+        # Executable
         # Label to show the executable file path
         self.executable_label = QLabel()
         self._update_executable_label(app_settings.executable_file_path)
@@ -107,3 +95,32 @@ class SettingsWidget(QWidget):
         opt.initFrom(self)
         painter = QPainter(self)
         self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
+
+class SettingsItemWidget(QWidget):
+
+    button_clicked = Signal()
+
+    def __init__(self, name: str, value: str):
+        super().__init__()
+        self._name = name
+        self._value = value
+        self.setObjectName("workspace_widget")
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0,0,0,0)
+        layout.setSpacing(0)
+
+        # Label to show the workspace folderpath
+        self.label = QLabel()
+        self._update_label(self._value)
+        layout.addWidget(self.label, 1)
+
+        # Button to select a new workspace
+        self.chooser = QPushButton(f"Set {self._name}")
+        self.chooser.clicked.connect(self.button_clicked)
+        layout.addWidget(self.chooser)
+
+        layout.addSpacing(10)   
+        
+    def _update_label(self, value: str) -> None:
+        self._value = value
+        self.label.setText(f"Current {self._name}: '{self._value}'")
