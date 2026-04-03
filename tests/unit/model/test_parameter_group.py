@@ -1,13 +1,13 @@
 from pytest import fixture, raises
 import re
 
-from gui.model.constraint import (
-    IntervalConstraint,
+from gui.model.parameter import (
     MaxLengthConstraint,
     RegexConstraint,
+    ParameterGroup,
+    StringParameter,
+    BoolParameter,
 )
-from gui.model.parameter import ParameterGroup
-from gui.model.parameter import StringParameter, BoolParameter
 
 class TestParameterGroup:
     """Tests for ParameterGroup class."""

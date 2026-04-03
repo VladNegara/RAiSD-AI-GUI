@@ -4,12 +4,10 @@ from unittest.mock import patch
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from gui.model.constraint import (
+from gui.model.parameter import (
     IntervalConstraint,
     MaxLengthConstraint,
     RegexConstraint,
-)
-from gui.model.parameter import (
     BoolParameter,
     IntParameter,
     FloatParameter,

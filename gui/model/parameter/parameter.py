@@ -12,7 +12,7 @@ from PySide6.QtCore import (
 
 from gui.model.meta import AbstractQObjectMeta
 from gui.model.dependency import Dependency
-from gui.model.constraint import Constraint, IntervalConstraint
+from .constraint import Constraint, IntervalConstraint
 
 T = TypeVar("T")
 

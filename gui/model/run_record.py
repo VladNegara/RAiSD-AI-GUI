@@ -19,14 +19,12 @@ from gui.model.operation import (
     Directory,
 )
 from gui.model.history_record import HistoryRecord
-from gui.model.constraint import (
+from gui.model.parameter import (
     Constraint,
     IntervalConstraint,
     EvenConstraint,
     MaxLengthConstraint,
     RegexConstraint,
-)
-from gui.model.parameter import (
     ParameterGroup,
     Parameter,
     OptionalParameter,

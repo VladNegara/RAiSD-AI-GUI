@@ -1,13 +1,10 @@
 from pytest import fixture
 import re
 
-from gui.model.constraint import (
+from gui.model.parameter import (
     IntervalConstraint,
     MaxLengthConstraint,
     RegexConstraint,
-)
-from gui.model.parameter import (
-    Parameter,
     BoolParameter,
     IntParameter,
     FloatParameter,
