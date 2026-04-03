@@ -282,7 +282,7 @@ class Settings(QObject):
             except:
                 settings_obj = {}
             self._executable_file_path = value
-            settings_obj["executable"] = value.absolutePath()
+            settings_obj["executable"] = value.absoluteFilePath()
             with open(self.settings_file_path, "w") as f:
                 dump(settings_obj, f)
             self.executable_file_path_changed.emit(value)
