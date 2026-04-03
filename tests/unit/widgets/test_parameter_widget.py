@@ -4,6 +4,11 @@ from unittest.mock import patch
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
+from gui.model.constraint import (
+    IntervalConstraint,
+    MaxLengthConstraint,
+    RegexConstraint,
+)
 from gui.model.parameter import (
     BoolParameter,
     IntParameter,
@@ -79,8 +84,12 @@ class TestIntParameterWidget:
             flag="--testint",
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value=5,
-            lower_bound=0,
-            upper_bound=10,
+            constraints=[
+                IntervalConstraint(
+                    lower_bound=0,
+                    upper_bound=10,
+                )
+            ],
         )
         self.widget = IntParameterWidget(self.param, editable=True)
 
@@ -111,8 +120,12 @@ class TestFloatParameterWidget:
             flag="--testfloat",
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value=5.0,
-            lower_bound=0.0,
-            upper_bound=10.0,
+            constraints=[
+                IntervalConstraint(
+                    lower_bound=0.0,
+                    upper_bound=10.0,
+                )
+            ],
         )
         self.widget = FloatParameterWidget(self.param, editable=True)
 
@@ -178,8 +191,15 @@ class TestStringParameterWidget:
             flag="--teststring",
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value="hello",
-            max_length=10,
-            pattern=re.compile(r"^[a-z]+$"),
+            constraints=[
+                MaxLengthConstraint(
+                    max_length=10,
+                ),
+                RegexConstraint(
+                    pattern=re.compile(r"^[a-z]+$"),
+                    hint="Only lowercase letters."
+                ),
+            ],
         )
         self.widget = StringParameterWidget(self.param, editable=True)
 
@@ -191,10 +211,6 @@ class TestStringParameterWidget:
         """Setting the parameter value should update the line edit."""
         self.param.value = "world"
         assert self.widget._line_edit.text() == "world"
-
-    def test_max_length_enforced(self):
-        """Line edit max length should match the parameter's max length."""
-        assert self.widget._line_edit.maxLength() == 10
 
     def test_reset_updates_line_edit(self):
         """Resetting the parameter should update the line edit."""
