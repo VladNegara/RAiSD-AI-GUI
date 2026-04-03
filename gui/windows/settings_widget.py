@@ -36,28 +36,28 @@ class SettingsWidget(QWidget):
         container_layout = QVBoxLayout(container_widget)
 
         # Workspace
-        workspace_widget = SettingsButtonWidget("Workspace", app_settings.workspace_path.absolutePath())
+        workspace_widget = SettingsItemWidget("Workspace", app_settings.workspace_path.absolutePath())
         app_settings.workspace_path_changed.connect(
             lambda p : workspace_widget._update_label(p.absolutePath()))
         workspace_widget.button_clicked.connect(app_settings.set_workspace_folder)
         container_layout.addWidget(workspace_widget)
 
         # Executable
-        executable_widget = SettingsButtonWidget("Executable", app_settings.executable_file_path.absoluteFilePath())
+        executable_widget = SettingsItemWidget("Executable", app_settings.executable_file_path.absoluteFilePath())
         app_settings.executable_file_path_changed.connect(
             lambda p : executable_widget._update_label(p.absoluteFilePath()))
         executable_widget.button_clicked.connect(app_settings.set_executable_path)
         container_layout.addWidget(executable_widget)
 
         # Environment manager
-        environment_manager_widget = SettingsButtonWidget("Environment manager", app_settings.environment_manager_name)
+        environment_manager_widget = SettingsItemWidget("Environment manager", app_settings.environment_manager_name)
         app_settings.environment_manager_changed.connect(
             lambda _ : environment_manager_widget._update_label(app_settings.environment_manager_name))
         environment_manager_widget.button_clicked.connect(app_settings.set_environment_manager)
         container_layout.addWidget(environment_manager_widget)
 
         # Environment name
-        environment_name_widget = SettingsButtonWidget("Environment name", app_settings.environment_name)
+        environment_name_widget = SettingsItemWidget("Environment name", app_settings.environment_name)
         app_settings.environment_name_changed.connect(
             lambda _ : environment_name_widget._update_label(app_settings.environment_name)
         )
@@ -65,7 +65,7 @@ class SettingsWidget(QWidget):
         container_layout.addWidget(environment_name_widget)
 
         # Config file
-        config_widget = SettingsButtonWidget("Config file", app_settings.config_path.absoluteFilePath())
+        config_widget = SettingsItemWidget("Config file", app_settings.config_path.absoluteFilePath())
         config_widget.button_clicked.connect(app_settings.set_config_path)
         container_layout.addWidget(config_widget)
 
@@ -83,11 +83,18 @@ class SettingsWidget(QWidget):
         painter = QPainter(self)
         self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
-class SettingsButtonWidget(QWidget):
+class SettingsItemWidget(QWidget):
+    """
+    A widget for a single setting. 
+    Includes a name, current value and button to set it.
+    """
 
     button_clicked = Signal()
 
     def __init__(self, name: str, value: str):
+        """
+        Initialize the widget for a single setting.
+        """
         super().__init__()
         self._name = name
         self._value = value
@@ -109,5 +116,8 @@ class SettingsButtonWidget(QWidget):
         layout.addSpacing(10)   
         
     def _update_label(self, value: str) -> None:
+        """
+        Update the label of a setting when the current value changes. 
+        """
         self._value = value
         self.label.setText(f"Current {self._name}: '{self._value}'")
