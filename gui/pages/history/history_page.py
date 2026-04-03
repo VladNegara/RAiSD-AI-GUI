@@ -76,6 +76,20 @@ class HistoryPage(Page):
         # Give the list 1/3 and the detail panel 2/3 of the width
         splitter.setSizes([200, 400])
 
+    def reset_page(self) -> None:
+        """
+        Reset the page to its initial state.
+        """
+        self._history_list.clear()
+
+        history_records = HistoryRecord.from_history_file()
+        for op_rec in history_records:
+            self._history_list.add_record(op_rec)
+
+        self.results_panel.hide()
+        self._selected = None
+    
+
     @Slot(HistoryRecord)
     def add_completed_run(self, history_record: HistoryRecord) -> None:
         """
