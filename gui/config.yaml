@@ -6,7 +6,7 @@ run_id_parameter:
   constraints:
     - type: regex
       pattern: "\\w+"
-      hint: Letters, numbers and underscores.
+      hint: Letters, numbers and underscores allowed.
 modes:
   - name: Standard RAiSD
     operations:
@@ -74,6 +74,7 @@ modes:
             constraints:
               - type: regex
                 pattern: ".+"
+                hint: "Cannot be empty."
         path:
           - RAiSD_Images.
           - type: run id
@@ -723,7 +724,7 @@ parameter_groups:
           constraints:
             - type: regex
               pattern: ".+"
-              hint: Must be non-empty.
+              hint: Cannot be empty.
       "-C2": # No clue if this should be allowed without C.
         name: Provide a second outgroup name
         description: Provide the second outgroup to be used for the ancestral states.
@@ -738,7 +739,7 @@ parameter_groups:
           constraints:
             - type: regex
               pattern: ".+"
-              hint: Must be non-empty.
+              hint: Cannot be empty.
       "-H":
         name: Chromosome name
         description: Provide the chromosome name.
@@ -748,7 +749,7 @@ parameter_groups:
         constraints:
           - type: regex
             pattern: ".+"
-            hint: Must be non-empty.
+            hint: Cannot be empty.
   - name: VCF to ms conversion
     operations:
       - VCF-MS
