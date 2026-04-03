@@ -2,7 +2,7 @@ from typing import Any, Iterator
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from gui.model.parameter import Parameter
+from .parameter import Parameter
 
 
 class ParameterGroup(QObject):

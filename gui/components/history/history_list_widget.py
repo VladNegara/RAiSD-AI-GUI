@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QStyle,
 )
 
-from gui.widgets.history_record_widget import HistoryRecordWidget
+from .history_record_widget import HistoryRecordWidget
 from gui.model.history_record import HistoryRecord
 
 

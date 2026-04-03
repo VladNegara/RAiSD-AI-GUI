@@ -40,7 +40,7 @@ from gui.model.parameter import (
     StringPairListParameter,
     FileParameter,
 )
-from gui.widgets.collapsible import Collapsible
+from gui.components.collapsible import Collapsible
 
 
 class AbstractQWidgetMeta(type(ABC), type(QWidget)):
@@ -778,11 +778,11 @@ class StringPairListParameterWidget(ParameterWidget):
         new_left_valid: bool, 
         new_right_valid: bool,
     ) -> None:
-        self._show_validity(
+        self.show_validity(
             self.rows[index].left_line_edit,
             new_left_valid,
         )
-        self._show_validity(
+        self.show_validity(
             self.rows[index].right_line_edit,
             new_right_valid,
         )

@@ -23,25 +23,23 @@ from PySide6.QtWidgets import (
 )
 
 from gui.model.settings import app_settings
-from gui.model.file_structure import(
-    SingleFile,
-    Directory,
-)
-from gui.model.operation_tree import (
+from gui.model.operation import (
     FileProducerNode,
     FileConsumerNode,
     CommonParentDirectoryNode,
     FilePickerNode,
     OperationNode,
     OperationTree,
+    SingleFile,
+    Directory,
 )
-from gui.widgets.label import (
+from gui.components.label import (
     InfoLabel,
 )
-from gui.widgets.resizable_stacked_widget import (
+from gui.components.resizable_stacked_widget import (
     ResizableStackedWidget,
 )
-from gui.widgets.parameter_widget import ParameterWidget
+from gui.components.parameter import ParameterWidget
 
 
 class FileProducerNodeWidget(QWidget):

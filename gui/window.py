@@ -19,10 +19,13 @@ from PySide6.QtGui import (
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.execution.command_executor import CommandExecutor
-from gui.windows.run_widget import RunWidget
-from gui.windows.history_widget import HistoryWidget
-from gui.windows.settings_widget import SettingsWidget
- 
+from gui.pages import (
+    Page,
+    RunPage,
+    HistoryPage,
+    SettingsPage
+)
+
 class MainWindow(QMainWindow):
     """
     The main window of the RAiSD-AI GUI application.
@@ -38,9 +41,10 @@ class MainWindow(QMainWindow):
 
     def _init_main_window(self) -> None:
         run_record = RunRecord.from_yaml(app_settings.config_path.absoluteFilePath())
-        self._run_record = run_record
+        self.run_record = run_record
         self.command_executor = CommandExecutor(run_record)
         self._setup_ui()
+        self.run_page.run_saved.connect(self.history_page.add_completed_run)
 
     def _setup_ui(self):
         app_settings.workspace_path_changed.connect(self._set_workspace_path_title)
@@ -64,9 +68,17 @@ class MainWindow(QMainWindow):
         central_layout.addWidget(main_widget)
         self._setup_main_widget(self.main_widget_layout)
 
+        # Mapping between sidebar buttons and stack pages
+        self.button_page_pairs = {
+            self.run_button: self.run_page,
+            self.history_button: self.history_page,
+            self.settings_button: self.settings_page
+        }
+
         for button in self.findChildren(QPushButton):
             button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
+        self._set_active_view(self.run_button)
 
     def _setup_left_sidebar(self, layout: QVBoxLayout):
         layout.setContentsMargins(0,20,0,0)
@@ -77,70 +89,47 @@ class MainWindow(QMainWindow):
         layout.addWidget(logo_widget)
 
         # Run Button
-        run_button = QPushButton()
-        run_button.clicked.connect(self._run_button_clicked)
-        run_button.setObjectName("run_button")
-        run_button.setProperty("state", "active")
-        run_button.setFixedSize(40, 40)
-        layout.addWidget(run_button)
+        self.run_button = QPushButton()
+        self.run_button.clicked.connect(lambda: self._set_active_view(self.run_button))
+        self.run_button.setObjectName("run_button")
+        self.run_button.setFixedSize(40, 40)
+        layout.addWidget(self.run_button)
 
         # History Button
-        history_button = QPushButton()
-        history_button.clicked.connect(self._history_button_clicked)
-        history_button.setObjectName("history_button")
-        history_button.setFixedSize(40, 40)
-        layout.addWidget(history_button)
+        self.history_button = QPushButton()
+        self.history_button.clicked.connect(lambda: self._set_active_view(self.history_button))
+        self.history_button.setObjectName("history_button")
+        self.history_button.setFixedSize(40, 40)
+        layout.addWidget(self.history_button)
 
         # Settings Button
-        settings_button = QPushButton()
-        settings_button.clicked.connect(self._settings_button_clicked)
-        settings_button.setObjectName("settings_button")
-        settings_button.setFixedSize(40, 40)
-        layout.addWidget(settings_button)
-
-        self._buttons = [
-            run_button,
-            history_button,
-            settings_button
-        ]
+        self.settings_button = QPushButton()
+        self.settings_button.clicked.connect(lambda: self._set_active_view(self.settings_button))
+        self.settings_button.setObjectName("settings_button")
+        self.settings_button.setFixedSize(40, 40)
+        layout.addWidget(self.settings_button)
 
         layout.addStretch()
 
-    def _set_active_view(self, active_index: int) -> None:
-        for i, button in enumerate(self._buttons):
-            if i == active_index:
+    def _setup_main_widget(self, layout: QStackedLayout):
+        self.run_page = RunPage(self.run_record, self.command_executor)
+        self.history_page = HistoryPage()
+        self.settings_page = SettingsPage()
+
+        layout.addWidget(self.run_page)
+        layout.addWidget(self.history_page)
+        layout.addWidget(self.settings_page)
+
+    def _set_active_view(self, active_button: QPushButton) -> None:
+        for i, (button, page) in enumerate(self.button_page_pairs.items()):
+            if button == active_button:
                 state = "active"
+                self.main_widget_layout.setCurrentWidget(page)
             else:
                 state = "default"
             button.setProperty("state", state)
             button.style().unpolish(button)  # Required to apply styling dynamically
             button.style().polish(button)
-
-    def _setup_main_widget(self, layout: QStackedLayout):
-        self.run_widget = RunWidget(self._run_record, self.command_executor)
-        self.history_widget = HistoryWidget()
-        self.settings_widget = SettingsWidget()
-        self.run_widget.run_saved.connect(self.history_widget.add_completed_run)
-
-        layout.addWidget(self.run_widget)
-        layout.addWidget(self.history_widget)
-        layout.addWidget(self.settings_widget)
-
-    @Slot()
-    def _run_button_clicked(self) -> None:
-        self.main_widget_layout.setCurrentWidget(self.run_widget)
-        self._set_active_view(0)
-
-    @Slot()
-    def _history_button_clicked(self) -> None:
-        self.history_widget.update_history_time()
-        self.main_widget_layout.setCurrentWidget(self.history_widget)
-        self._set_active_view(1)
-
-    @Slot()
-    def _settings_button_clicked(self) -> None:
-        self.main_widget_layout.setCurrentWidget(self.settings_widget)
-        self._set_active_view(2)
 
     def _set_workspace_path_title(self, new_workspace: QDir, max_len: int = 30) -> None:
         """

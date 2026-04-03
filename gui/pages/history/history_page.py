@@ -12,22 +12,24 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Slot, Qt
 
-from gui.widgets.history_record_widget import HistoryRecordWidget
-from gui.widgets.history_list_widget import HistoryListWidget
-from gui.widgets.results_widget import ResultsWidget
-
-
+from ..page import Page
+from gui.components.history import HistoryListWidget
+from gui.components.results import ResultsWidget
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.model.history_record import HistoryRecord
 
-class HistoryWidget(QWidget):
+class HistoryPage(Page):
     """
-    The history page, showing a list of completed runs on the left
-    and the details of the selected run on the right.
+    The history page of the RAiSD-AI GUI application,
+    showing a list of completed runs on the left and
+    the details of the selected run on the right.
     """
 
     def __init__(self):
+        """
+        Initialize a `HistoryPage` object.
+        """
         super().__init__()
         self._history_list: HistoryListWidget = HistoryListWidget()
         self._run_record = RunRecord.from_yaml(app_settings.config_path.absoluteFilePath())

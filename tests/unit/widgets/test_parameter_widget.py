@@ -12,7 +12,7 @@ from gui.model.parameter import (
     StringParameter,
     FileParameter,
 )
-from gui.widgets.parameter_widget import (
+from gui.components.parameter import (
     BoolParameterWidget,
     IntParameterWidget,
     FloatParameterWidget,
@@ -368,14 +368,14 @@ class TestFileParameterWidgetDialog:
 
     def test_open_file_dialog_single(self):
         """_open_file_dialog should set parameter value for single file."""
-        with patch("gui.widgets.parameter_widget.QFileDialog.getOpenFileName",
+        with patch("gui.components.parameter.QFileDialog.getOpenFileName",
                    return_value=(str(self.valid_file), "")):
             self.widget._open_file_dialog()
         assert self.param.value == [str(self.valid_file).replace("\\", "/")]
 
     def test_open_file_dialog_cancelled(self):
         """Cancelling the dialog should not change the parameter value."""
-        with patch("gui.widgets.parameter_widget.QFileDialog.getOpenFileName",
+        with patch("gui.components.parameter.QFileDialog.getOpenFileName",
                    return_value=("", "")):
             self.widget._open_file_dialog()
         assert self.param.value == []
@@ -391,7 +391,7 @@ class TestFileParameterWidgetDialog:
             operations={"TEST"}, accepted_formats=["vcf"], multiple=True,
         )
         widget = FileParameterWidget(param, editable=True)
-        with patch("gui.widgets.parameter_widget.QFileDialog.getOpenFileNames",
+        with patch("gui.components.parameter.QFileDialog.getOpenFileNames",
                    return_value=([str(f1), str(f2)], "")):
             widget._open_file_dialog()
         assert len(param.value) == 2

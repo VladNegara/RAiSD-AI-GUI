@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Slot
 
 from gui.model.run_record import RunRecord
-from gui.widgets.parameter_form_section import ParameterFormSection
+from .parameter_form_section import ParameterFormSection
 
 
 class ParameterForm(QWidget):

@@ -1,4 +1,6 @@
 from PySide6.QtCore import (
+    QFileInfo,
+    QDir,
     Signal
 )
 from PySide6.QtGui import QPainter
@@ -10,16 +12,17 @@ from PySide6.QtWidgets import (
     QPushButton, QStyleOption, QStyle,
 )
 
+from ..page import Page
 from gui.model.settings import app_settings
 
 
-class SettingsWidget(QWidget):
+class SettingsPage(Page):
     """
-    The settings widget of the RAiSD-AI GUI application.
+    The settings page of the RAiSD-AI GUI application.
     """
     def __init__(self):
         """
-        Initialize the `SettingsWidget`.
+        Initialize the `SettingsPage`.
         """
         super().__init__()
         self._setup_ui()
