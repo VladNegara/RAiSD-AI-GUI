@@ -75,7 +75,7 @@ The executable is placed in the path bin/release. A link to the executable is pl
 RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values based on interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native grid-based implementation that is used with both the μ statistic and the CNN.  
 Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be found [here](https://github.com/pephco/RAiSD?tab=readme-ov-file#download-and-compile).
 
-### GUI Installation
+### Installing the GUI
 
 RAiSD-AI includes an optional graphical user interface (GUI).
 
@@ -83,11 +83,13 @@ Use the provided `setup-gui.sh` script to install the  dependencies of the gui. 
 
 To also install the dependencies of RAiSD-AI and compile RAiSD-AI use the `-a` flag.
 
-To set the package manager used use the `-p` flag, `conda` is the default. For example:
-
-	./setup-gui.sh -p micromamba
+Conda is the default package manager used. To use micromamba use the `-m` flag.
 
 > Note: the setup script compiles RAiSD-AI-ZLIB in order to allow for all functionality of the RAiSD-AI tool in the GUI. To force compiling just RAiSD-AI use the `-r` flag. This is not recommended since it can break some GUI functionality!
+
+### Running the GUI
+
+To run the GUI use the `./run-gui.sh` script. Again, Conda is the default package manager used. To use micromamba use the `-m` flag.
 
 Quick Test Run
 --------
@@ -97,7 +99,6 @@ To verify that RAiSD-AI is installed correctly, a test run can be done with the 
     $ ./RAiSD-AI -n test_run -I datasets/test/msselection1_10sims.out -L 100000 -O
     
 Upon completion, the output files RAiSD_Info.test_run and RAiSD_Report.test_run are generated. 
-
 
 Extensive Test Run
 ---------
