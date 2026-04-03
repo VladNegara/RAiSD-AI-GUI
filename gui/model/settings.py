@@ -45,9 +45,8 @@ class Settings(QObject):
         QDir().mkdir(workspace_directory)
 
         self._workspace_path = QDir(workspace_directory)
-        self._executable_file_path = QFileInfo("RAiSD-AI")
-        self._environment_manager = EnvironmentManager.MICROMAMBA
-        self._environment_name = "raisd-ai"
+        self._executable_file_path = QFileInfo("RAiSD-AI-ZLIB")
+        self._environment_manager = EnvironmentManager.CONDA
         self._config_path = "gui/config.yaml"
 
     @property
