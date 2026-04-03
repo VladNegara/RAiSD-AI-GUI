@@ -398,7 +398,7 @@ class Settings(QObject):
             except:
                 settings_obj = {}
             self._config_path = value
-            settings_obj["config_file"] = value.absolutePath()
+            settings_obj["config_file"] = value.absoluteFilePath()
             with open(self.settings_file_path, "w") as f:
                 dump(settings_obj, f)
             self.config_path_changed.emit(value)
@@ -503,7 +503,26 @@ class Settings(QObject):
         self.dialog.close()
 
     def set_config_path(self) -> None:
-        pass
+        """
+        Open a file dialog to select a new workspace folder and update the workspace path.
+
+        If the user selects a new workspace folder, 
+        the workspace path is updated and the `workspace_path_changed` signal is emitted.
+
+        If the user cancels the dialog, the workspace path remains unchanged.
+        If the the selected path is invalid, the workspace path remains unchanged.
+        """
+        new_config_path, _ = QFileDialog.getOpenFileName(
+                None,
+                "Select File",
+                app_settings.config_path.absolutePath(),
+            )
+        if not new_config_path:  # Check for empty string (canceled)
+            return  
+        try:
+            app_settings.config_path = QFileInfo(new_config_path)
+        except Exception as e:
+            print(f"Error setting workspace: {e}")
 
 # create a global singleton instance
 app_settings = Settings()
