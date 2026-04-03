@@ -95,19 +95,19 @@ class Settings(QObject):
 
     workspace_path_changed = Signal(QDir)
     executable_file_path_changed = Signal(QFileInfo)
-    environment_manager_changed = Signal(EnvironmentManager)
+    environment_manager_changed = Signal(int)
     environment_name_changed = Signal(str)
     config_path_changed = Signal(str)
     settings_changed = Signal()
 
     settings_file_path = "gui/settings.yaml"
-    environment_managers = Literal["micromamba", "conda"]
+    environment_managers = ["micromamba", "conda"]
 
     def __init__(
             self,
             workspace_path: QDir | None = None,
             executable_file_path: QFileInfo | None = None,
-            environment_manager: str | None = None,
+            environment_manager: int | None = None,
             environment_name: str | None = None,
             config_path: QFileInfo | None = None,
             ):
@@ -180,14 +180,14 @@ class Settings(QObject):
                     + "Expected string."
                 )
             
-            if environment_manager not in self.environment_managers.__args__:
+            if environment_manager not in self.environment_managers:
                 raise ValueError(
                     f"Incorrect environment manager: {environment_manager}."
                     + f"Must be one of: {", ".join([str(x) for x in self.environment_managers])}"
                 )
-            self._environment_manager = environment_manager
-        if not self._environment_manager:
-            self._environment_manager = "micromamba"
+            self._environment_manager = self.environment_managers.index(environment_manager)
+        if self._environment_manager is None:
+            self._environment_manager = 0
 
         # Environment name
         if "environment_name" in settings_obj:
@@ -296,12 +296,12 @@ class Settings(QObject):
         :return: The current environment manager.
         :rtype: EnvironmentManager
         """
-        if not self._environment_manager:
+        if self._environment_manager is None:
             raise RuntimeError("Environment manager used before it is set.")
-        return self._environment_manager
+        return self.environment_managers[self._environment_manager]
 
     @environment_manager.setter
-    def environment_manager(self, value: str) -> None:
+    def environment_manager(self, value: int) -> None:
         """
         Set the environment manager.
 
