@@ -1,6 +1,11 @@
 from pytest import fixture
 import re
 
+from gui.model.constraint import (
+    IntervalConstraint,
+    MaxLengthConstraint,
+    RegexConstraint,
+)
 from gui.model.parameter import (
     Parameter,
     BoolParameter,
@@ -100,8 +105,12 @@ class TestIntParameter:
             flag="--testint ", 
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value=0, 
-            lower_bound=-10, 
-            upper_bound=10
+            constraints=[
+                IntervalConstraint(
+                    lower_bound=-10,
+                    upper_bound=10,
+                ),
+            ],
         )
     
     def test_init_values(self):
@@ -113,8 +122,7 @@ class TestIntParameter:
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == 0
         assert param.default_value == 0
-        assert param.lower_bound == -10
-        assert param.upper_bound == 10
+        assert len(param.hints) == 1
 
     def test_set_value(self):
         """Test setting IntParameter value."""
@@ -132,13 +140,13 @@ class TestIntParameter:
     def test_valid(self):
         """Test IntParameter validity."""
         param = self.int_param
-        assert param.valid is True
+        assert param.valid
         param.value = -15
-        assert param.valid is False
+        assert not param.valid
         param.value = 15
-        assert param.valid is False
+        assert not param.valid
         param.value = 5
-        assert param.valid is True
+        assert param.valid
 
     def test_to_cli(self):
         """Test IntParameter command-line representation."""
@@ -170,9 +178,9 @@ class TestIntParameter:
         param.value = self.new_value
 
         # assert
-        assert self.signal_emitted is True
+        assert self.signal_emitted
         assert self.value == self.new_value
-        assert self.valid == True
+        assert self.valid
 
     def test_invalid_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when IntParameter value changes."""
@@ -193,9 +201,9 @@ class TestIntParameter:
         param.value = self.new_value
 
         # assert
-        assert self.signal_emitted is True
+        assert self.signal_emitted
         assert self.value == self.new_value
-        assert self.valid == False
+        assert not self.valid
 
 class TestFloatParameter:
     """Tests for FloatParameter class."""
@@ -208,8 +216,12 @@ class TestFloatParameter:
             flag="--testfloat ", 
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value=0.0, 
-            lower_bound=-10.0, 
-            upper_bound=10.0
+            constraints=[
+                IntervalConstraint(
+                    lower_bound=-10.0,
+                    upper_bound=10.0,
+                ),
+            ],
         )
     
     def test_init_values(self):
@@ -221,8 +233,7 @@ class TestFloatParameter:
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == 0.0
         assert param.default_value == 0.0
-        assert param.lower_bound == -10.0
-        assert param.upper_bound == 10.0
+        assert len(param.hints) == 1
 
     def test_set_value(self):
         """Test setting FloatParameter value."""
@@ -240,13 +251,13 @@ class TestFloatParameter:
     def test_valid(self):
         """Test FloatParameter validity."""
         param = self.float_param
-        assert param.valid is True
+        assert param.valid
         param.value = -15.0
-        assert param.valid is False
+        assert not param.valid
         param.value = 15.0
-        assert param.valid is False
+        assert not param.valid
         param.value = 5.0
-        assert param.valid is True
+        assert param.valid
 
     def test_to_cli(self):
         """Test FloatParameter command-line representation."""
@@ -278,9 +289,9 @@ class TestFloatParameter:
         param.value = self.new_value
 
         # assert
-        assert self.signal_emitted is True
+        assert self.signal_emitted
         assert self.value == self.new_value
-        assert self.valid == True
+        assert self.valid
 
     def test_invalid_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when FloatParameter value changes."""
@@ -302,9 +313,9 @@ class TestFloatParameter:
         param.value = self.new_value
 
         # assert
-        assert self.signal_emitted is True
+        assert self.signal_emitted
         assert self.value == self.new_value
-        assert self.valid == False
+        assert not self.valid
 
 class TestStringParameter:
     """Tests for StringParameter class."""
@@ -317,8 +328,13 @@ class TestStringParameter:
             flag="--teststring ",
             operations={'IMG-GEN', 'MDL-GEN'},
             default_value="default",
-            max_length=20,
-            pattern=re.compile(r"\b[a-z]+\b")
+            constraints=[
+                MaxLengthConstraint(20),
+                RegexConstraint(
+                    pattern=re.compile(r"\b[a-z]+\b"),
+                    hint="Only lowercase letters.",
+                ),
+            ],
         )
 
     def test_init_values(self):
@@ -330,7 +346,7 @@ class TestStringParameter:
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == "default"
         assert param.default_value == "default"
-        assert param.max_length == 20
+        assert len(param.hints) == 2
 
     def test_set_value(self):
         """Test setting StringParameter value."""
@@ -348,20 +364,20 @@ class TestStringParameter:
     def test_valid_length(self):
         """Test StringParameter length validity."""
         param = self.string_param
-        assert param.valid is True
+        assert param.valid
         param.value = "2invalidvaluesarewalkingonthestreet"
-        assert param.valid is False
+        assert not param.valid
         param.value = "validvalue"
-        assert param.valid is True
+        assert param.valid
 
     def test_valid_pattern(self):
         """Test StringParameter pattern validity."""
         param = self.string_param
-        assert param.valid is True
+        assert param.valid
         param.value = "invalid value"
-        assert param.valid is False
+        assert not param.valid
         param.value = "validvalue"
-        assert param.valid is True
+        assert param.valid
 
     def test_to_cli(self):
         """Test StringParameter command-line representation."""
@@ -393,9 +409,9 @@ class TestStringParameter:
         param.value = self.new_value
 
         # assert
-        assert self.signal_emitted is True
+        assert self.signal_emitted
         assert self.value == self.new_value
-        assert self.valid == True
+        assert self.valid
 
     def test_invalid_value_changed_signal_emitted(self):
         """Test that value_changed signal is emitted when StringParameter value changes."""
@@ -417,9 +433,9 @@ class TestStringParameter:
         param.value = self.new_value
 
         # assert
-        assert self.signal_emitted is True
+        assert self.signal_emitted
         assert self.value == self.new_value
-        assert self.valid == False
+        assert not self.valid
 
 class TestEnumParameter:
     """Tests for EnumParameter class."""
@@ -638,20 +654,24 @@ class TestOptionalParameter:
     @fixture(autouse=True)
     def set_optional_parameter(self):
         self.int_param = IntParameter(
-            name="testint", 
-            description="Test int parameter", 
-            flag="--testint ", 
+            name="testint",
+            description="Test int parameter",
+            flag="--testint ",
             operations={'IMG-GEN', 'MDL-GEN'},
-            default_value=0, 
-            lower_bound=-10, 
-            upper_bound=10
-            )
+            default_value=0,
+            constraints=[
+                IntervalConstraint(
+                    lower_bound=-10,
+                    upper_bound=10,
+                ),
+            ],
+        )
         self.optional_param = OptionalParameter(
             name="testoptional",
             description="Test optional parameter",
             operations={"IMG-GEN", "MDL-GEN"},
             default_value = True,
-            parameter=self.int_param
+            parameter=self.int_param,
         )
 
     def test_init_values(self):
@@ -728,21 +748,25 @@ class TestMultiParameter:
     @fixture(autouse=True)
     def set_multi_param(self):
         self.int_param = IntParameter(
-            name="testint", 
-            description="Test int parameter", 
-            flag="", 
+            name="testint",
+            description="Test int parameter",
+            flag="",
             operations={'IMG-GEN', 'MDL-GEN'},
-            default_value=0, 
-            lower_bound=-10, 
-            upper_bound=10
-            )
+            default_value=0,
+            constraints=[
+                IntervalConstraint(
+                    lower_bound=-10,
+                    upper_bound=10,
+                ),
+            ],
+        )
         self.bool_param = BoolParameter(
             name="testbool", 
             description="Test bool parameter", 
             flag="--testbool", 
             operations={'IMG-GEN'},
             default_value=False
-            )
+        )
         self.multi_param = MultiParameter(
             name="testmulti",
             description="Test multi parameter",

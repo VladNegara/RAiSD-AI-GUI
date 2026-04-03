@@ -103,6 +103,7 @@ class RunRecord(QObject):
         """
 
         id_to_parameter: dict[str, Parameter[Any]] = {}
+        parameters = []
         parameter_to_constraint_objs: dict[Parameter[Any], list[dict]] = {}
         parameter_to_condition_objs: dict[Parameter[Any], list[dict]] = {}
 
@@ -739,6 +740,8 @@ class RunRecord(QObject):
                         + f"{parameter_type}."
                     )
 
+            parameters.append(parameter)
+
             constraint_objs = obj.get("constraints", []) or []
             if not isinstance(constraint_objs, list):
                 raise ValueError(
@@ -1106,7 +1109,7 @@ class RunRecord(QObject):
 
         result = cls(run_id_parameter, operation_trees, parameter_groups)
 
-        for param in id_to_parameter.values():
+        for param in parameters:
             for constraint_obj in parameter_to_constraint_objs[param]:
                 if not isinstance(constraint_obj, dict):
                     raise ValueError(
