@@ -40,8 +40,8 @@ from gui.model.parameter import (
     StringPairListParameter,
     FileParameter,
 )
-from gui.widgets.utils import set_bool_property
-from gui.widgets.collapsible import Collapsible
+from gui.components.utils import set_bool_property
+from gui.components.collapsible import Collapsible
 
 
 class AbstractQWidgetMeta(type(ABC), type(QWidget)):

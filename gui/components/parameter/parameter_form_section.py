@@ -4,7 +4,8 @@ from PySide6.QtCore import Signal, Slot
 
 from gui.model.parameter import ParameterGroup
 from .parameter_widget import ParameterWidget
-from gui.widgets.collapsible import Collapsible
+from gui.components.collapsible import Collapsible
+
 
 class ParameterFormSection(QWidget):
     """
