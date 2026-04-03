@@ -38,53 +38,42 @@ class SettingsWidget(QWidget):
         container_layout = QVBoxLayout(container_widget)
 
         # Workspace
-        workspace_widget = SettingsItemWidget("Workspace", app_settings.workspace_path.absolutePath())
+        workspace_widget = SettingsButtonWidget("Workspace", app_settings.workspace_path.absolutePath())
         app_settings.workspace_path_changed.connect(
-            lambda p = app_settings.workspace_path.absolutePath: workspace_widget._update_label(p))
+            lambda p : workspace_widget._update_label(p.absolutePath()))
         workspace_widget.button_clicked.connect(app_settings.set_workspace_folder)
         container_layout.addWidget(workspace_widget)
 
         # Executable
-        # Label to show the executable file path
-        self.executable_label = QLabel()
-        self._update_executable_label(app_settings.executable_file_path)
-        app_settings.executable_file_path_changed.connect(self._update_executable_label)
-        container_layout.addWidget(self.executable_label)
-        container_layout.addSpacing(15)
+        executable_widget = SettingsButtonWidget("Executable", app_settings.executable_file_path.absoluteFilePath())
+        app_settings.executable_file_path_changed.connect(
+            lambda p : executable_widget._update_label(p.absoluteFilePath()))
+        executable_widget.button_clicked.connect(app_settings.set_executable_path)
+        container_layout.addWidget(executable_widget)
 
-        # Label to show the environment manager
-        self.environment_manager_label = QLabel()
-        self._update_environment_manager_label(app_settings.environment_manager)
-        app_settings.environment_manager_changed.connect(self._update_environment_manager_label)
-        container_layout.addWidget(self.environment_manager_label)
-        container_layout.addSpacing(15)
+        # Environment manager
+        environment_manager_widget = SettingsButtonWidget("Environment manager", app_settings.environment_manager)
+        app_settings.environment_manager_changed.connect(
+            lambda _ : environment_manager_widget._update_label(app_settings.environment_manager))
+        environment_manager_widget.button_clicked.connect(app_settings.set_environment_manager)
+        container_layout.addWidget(environment_manager_widget)
 
-        # Label to show the environment name
-        self.environment_name_label = QLabel()
-        self._update_environment_name_label(app_settings.environment_name)
-        app_settings.environment_name_changed.connect(self._update_environment_name_label)
-        container_layout.addWidget(self.environment_name_label)
-        container_layout.addSpacing(15)
+        # Environment name
+        environment_name_widget = SettingsButtonWidget("Environment name", app_settings.environment_name)
+        app_settings.environment_name_changed.connect(
+            lambda _ : environment_name_widget._update_label(app_settings.environment_name)
+        )
+        environment_name_widget.button_clicked.connect(app_settings.set_environment_name)
+        container_layout.addWidget(environment_name_widget)
 
-        layout.addSpacing(20)
+        # Config file
+        config_widget = SettingsButtonWidget("Config file", app_settings.config_path.absoluteFilePath())
+        config_widget.button_clicked.connect(app_settings.set_config_path)
+        container_layout.addWidget(config_widget)
+
+        layout.addSpacing(40)
         layout.addWidget(container_widget)
         layout.addStretch()
-
-    def _update_workspace_label(self, path: QDir) -> None:
-        """Update the workspace label with the new workspace folder path."""
-        self.workspace_label.setText(f"Current Workspace: '{path.absolutePath()}'")
-
-    def _update_executable_label(self, path: QFileInfo) -> None:
-        """Update the executable label with the new executable file path."""
-        self.executable_label.setText(f"Current Executable: '{path.absoluteFilePath()}'")
-
-    def _update_environment_manager_label(self, manager: str) -> None:
-        """Update the environment manager label with the new environment manager value."""
-        self.environment_manager_label.setText(f"Current Environment Manager: '{manager}'")
-
-    def _update_environment_name_label(self, name: str) -> None:
-        """Update the enviroment name label with the new environment name."""
-        self.environment_name_label.setText(f"Current Environment Name: '{name}'")
 
     def paintEvent(self, event) -> None:
         """
@@ -96,7 +85,7 @@ class SettingsWidget(QWidget):
         painter = QPainter(self)
         self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
-class SettingsItemWidget(QWidget):
+class SettingsButtonWidget(QWidget):
 
     button_clicked = Signal()
 
@@ -110,7 +99,7 @@ class SettingsItemWidget(QWidget):
         layout.setSpacing(0)
 
         # Label to show the workspace folderpath
-        self.label = QLabel()
+        self.label = QLabel(self)
         self._update_label(self._value)
         layout.addWidget(self.label, 1)
 

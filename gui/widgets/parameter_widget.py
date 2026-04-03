@@ -296,6 +296,7 @@ class OptionalParameterWidget(ParameterWidget):
         if self._child_widget is not None:
             self._child_widget.untouch()
 
+
 class MultiParameterWidget(ParameterWidget):
     """
     A widget to edit a multi-value parameter.

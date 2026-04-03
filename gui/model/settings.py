@@ -413,6 +413,36 @@ class Settings(QObject):
         except Exception as e:
             print(f"Error setting workspace: {e}")
 
+    def set_executable_path(self) -> None:
+        """
+        Open a file dialog to select a new workspace folder and update the workspace path.
+
+        If the user selects a new workspace folder, 
+        the workspace path is updated and the `workspace_path_changed` signal is emitted.
+
+        If the user cancels the dialog, the workspace path remains unchanged.
+        If the the selected path is invalid, the workspace path remains unchanged.
+        """
+        new_executable_path, _ = QFileDialog.getOpenFileName(
+                None,
+                "Select File",
+                app_settings.executable_file_path.absolutePath(),
+            )
+        if not new_executable_path:  # Check for empty string (canceled)
+            return  
+        try:
+            app_settings.executable_file_path = QFileInfo(new_executable_path)
+        except Exception as e:
+            print(f"Error setting workspace: {e}")
+
+    def set_environment_manager(self) -> None:
+        pass
+
+    def set_environment_name(self) -> None:
+        pass
+
+    def set_config_path(self) -> None:
+        pass
 
 # create a global singleton instance
 app_settings = Settings()
