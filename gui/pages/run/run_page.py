@@ -197,3 +197,10 @@ class RunPage(Page):
         self.operation_tab.reset()
         self._switch_to_operation_tab()
 
+    @Slot()
+    def reset_page(self) -> None:
+        self._run_record.reset()
+        for tab in self.button_tab_pairs.values():
+            tab.reset()
+        self._set_active_tab(self.operation_tab)
+

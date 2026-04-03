@@ -1141,11 +1141,9 @@ class RunRecord(QObject):
             parameter.value = value
     
     def reset(self) -> None:
-        print(self._operation_trees[1].to_dict())
         self.selected_operation_tree_index = 0
         for tree in self._operation_trees:
             tree.reset()
-        print(self.operation_trees[1].to_dict())
         self.run_id_parameter.reset_value()
         for parameter_group in self.parameter_groups:
             for parameter in parameter_group:

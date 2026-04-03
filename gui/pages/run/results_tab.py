@@ -59,6 +59,9 @@ class ResultsTab(RunPageTab):
     def refresh(self) -> None:
         pass
 
+    def reset(self) -> None:
+        pass
+
     @Slot(bool)
     def run_ended(self, run_successful: bool) -> None:
         if (run_successful):
