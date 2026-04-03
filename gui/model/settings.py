@@ -16,7 +16,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QDialogButtonBox,
-    QComboBox
+    QComboBox,
+    QLineEdit
 )
 
 
@@ -476,7 +477,30 @@ class Settings(QObject):
         self.dialog.close()
 
     def set_environment_name(self) -> None:
-        pass
+        self.dialog = QDialog()
+        self.dialog.setWindowTitle("Choose environment name")
+        self.dialog.setModal(True)
+        self.dialog.resize(300, 200)
+
+        layout = QVBoxLayout(self.dialog)
+
+        line_edit = QLineEdit()
+        line_edit.setText(self.environment_name)
+        layout.addWidget(line_edit)
+
+        self.buttonbox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        self.buttonbox.setCenterButtons(True)
+        self.buttonbox.accepted.connect(
+            lambda : self._on_environment_name_select(line_edit.text()))
+        layout.addWidget(self.buttonbox)
+
+        self.dialog.exec()
+
+    @Slot(str)
+    def _on_environment_name_select(self, name: str) -> None:
+        if name != self.environment_name:
+            self.environment_name = name
+        self.dialog.close()
 
     def set_config_path(self) -> None:
         pass
