@@ -118,7 +118,8 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
             self._hint_labels.append(hint_label)
         self._layout.addWidget(hints_widget)
 
-        self._parameter.value_changed.connect(self._parameter_value_changed)
+        # `show_validity` is not annotated as a Slot.
+        self._parameter.value_changed.connect(self.show_validity)
         self._parameter.hint_added.connect(self._hint_added)
         self._parameter.constraints_valid_changed.connect(
             self._constraints_valid_changed,
@@ -258,10 +259,6 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
 
         return row
 
-    @Slot()
-    def _parameter_value_changed(self) -> None:
-        self.touched = True
-
     @Slot(str)
     def _hint_added(self, new_hint: str) -> None:
         hint_label = self.__class__.HintLabel(new_hint)
@@ -323,10 +320,8 @@ class OptionalParameterWidget(ParameterWidget):
 
         return row
 
-
     @Slot(Qt.CheckState)
     def _check_state_changed(self, new_check_state: Qt.CheckState) -> None:
-        self.touched = True
         match new_check_state:
             case Qt.CheckState.Checked:
                 self.parameter.value = True
