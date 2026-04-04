@@ -46,6 +46,7 @@ class HistoryListWidget(QWidget):
         self._list_container = QWidget()
         self._list_container.setObjectName("history_list_container")
         self._list_layout = QVBoxLayout(self._list_container)
+        self._list_layout.setContentsMargins(0, 0, 0, 0)
         self._list_layout.setSpacing(4)
         self._list_layout.addStretch()
         scroll_area.setWidget(self._list_container)

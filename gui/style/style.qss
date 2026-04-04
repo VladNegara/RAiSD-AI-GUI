@@ -8,6 +8,10 @@ QFrame {
     border: none;
 }
 
+QSplitter::handle:vertical {
+    height: 20px;
+}
+
 /* LEFT SIDEBAR */
 
 QWidget#left_sidebar,
