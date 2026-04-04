@@ -18,6 +18,15 @@ from PySide6.QtGui import (
 
 
 class StylableWidget(QWidget):
+    """
+    A base class for `QWidgets` that will be targeted by an object name
+    selector in QSS.
+
+    `QWidget` subclasses that use the `setObjectName` should instead
+    subclass `StylableWidget` to have `paintEvent` automatically
+    overriden. This ensures QSS is applied to the widget.
+    """
+
     def paintEvent(self, event) -> None:
         # Override paintEvent so that QSS styling is applied.
         opt = QStyleOption()
@@ -32,6 +41,10 @@ class StylableWidget(QWidget):
 
 
 class HBoxLayout(QHBoxLayout):
+    """
+    A wrapper around `QHBoxLayout` with no margins or spacing.
+    """
+
     def __init__(
             self,
             parent: QWidget,
@@ -42,12 +55,37 @@ class HBoxLayout(QHBoxLayout):
             bottom: int = 0,
             spacing: int = 0,
     ) -> None:
+        """
+        Initialize an `HBoxLayout` object.
+
+        :param parent: the parent widget of this layout
+        :type parent: QWidget
+
+        :param left: the left margin
+        :type left: int
+
+        :param top: the top margin
+        :type top: int
+
+        :param right: the right margin
+        :type right: int
+
+        :param bottom: the bottom margin
+        :type bottom: int
+
+        :param spacing: the spacing between children
+        :type spacing: int
+        """
         super().__init__(parent)
         self.setContentsMargins(left, top, right, bottom)
         self.setSpacing(spacing)
 
 
 class VBoxLayout(QVBoxLayout):
+    """
+    A wrapper around `QVBoxLayout` with no margins or spacing.
+    """
+
     def __init__(
             self,
             parent: QWidget,
@@ -58,6 +96,27 @@ class VBoxLayout(QVBoxLayout):
             bottom: int = 0,
             spacing: int = 0,
     ) -> None:
+        """
+        Initialize a `VBoxLayout` object.
+
+        :param parent: the parent widget of this layout
+        :type parent: QWidget
+
+        :param left: the left margin
+        :type left: int
+
+        :param top: the top margin
+        :type top: int
+
+        :param right: the right margin
+        :type right: int
+
+        :param bottom: the bottom margin
+        :type bottom: int
+
+        :param spacing: the spacing between children
+        :type spacing: int
+        """
         super().__init__(parent)
         self.setContentsMargins(left, top, right, bottom)
         self.setSpacing(spacing)
