@@ -107,10 +107,10 @@ class FileConsumerNodeWidget(StylableWidget):
 
         layout = VBoxLayout(
             self,
-            left=constants.MARGIN_SMALL,
-            top=constants.MARGIN_TINY,
-            bottom=constants.MARGIN_TINY,
-            spacing=constants.MARGIN_TINY,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_TINY,
+            bottom=constants.GAP_TINY,
+            spacing=constants.GAP_TINY,
         )
 
         if self._file_consumer_node.label:
@@ -191,7 +191,7 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         layout = VBoxLayout(
             self,
             # left=constants.MARGIN_SMALL,
-            spacing=constants.MARGIN_SMALL,
+            spacing=constants.GAP_SMALL,
         )
 
         heading = QLabel(
@@ -236,7 +236,7 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
 
         layout = VBoxLayout(
             self,
-            spacing=constants.MARGIN_TINY,
+            spacing=constants.GAP_TINY,
         )
 
         self._is_directory = isinstance(self._file_picker.produces, Directory)
@@ -354,7 +354,7 @@ class OperationNodeWidget(FileProducerNodeWidget):
 
         layout = VBoxLayout(
             self,
-            spacing=constants.MARGIN_TINY,
+            spacing=constants.GAP_TINY,
         )
 
         name = QLabel(operation_node.name)
@@ -389,7 +389,7 @@ class OperationNodeWidget(FileProducerNodeWidget):
         input_files_widget = QWidget()
         input_files_layout = HBoxLayout(
             input_files_widget,
-            spacing=constants.MARGIN_DEFAULT,
+            spacing=constants.GAP_DEFAULT,
         )
 
         self.file_consumer_widgets: list[FileConsumerNodeWidget] = []
@@ -444,10 +444,10 @@ class OperationTreeWidget(StylableWidget):
 
         layout = HBoxLayout(
             self,
-            left=constants.MARGIN_SMALL,
-            top=constants.MARGIN_SMALL,
-            right=constants.MARGIN_SMALL,
-            bottom=constants.MARGIN_SMALL,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_SMALL,
         )
 
         self.body = OperationNodeWidget(self._operation_tree.root)

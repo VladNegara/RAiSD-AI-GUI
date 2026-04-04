@@ -205,7 +205,7 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         )
         layout = HBoxLayout(
             row,
-            spacing=constants.MARGIN_SMALL,
+            spacing=constants.GAP_SMALL,
         )
 
         label_widget = QWidget()
@@ -270,7 +270,7 @@ class OptionalParameterWidget(ParameterWidget):
         row = QWidget()
         layout = VBoxLayout(
             row,
-            spacing=constants.MARGIN_TINY,
+            spacing=constants.GAP_TINY,
         )
 
         own_row = super().build_form_row()
@@ -279,7 +279,7 @@ class OptionalParameterWidget(ParameterWidget):
         child_row_widget = QWidget()
         child_row_layout = VBoxLayout(
             child_row_widget,
-            left=constants.MARGIN_SMALL,
+            left=constants.GAP_SMALL,
         )
         # `self.parameter`` should always be of type OptionalParameter,
         # even though the type checker doesn't agree.
@@ -339,7 +339,7 @@ class MultiParameterWidget(ParameterWidget):
         row = QWidget()
         layout = VBoxLayout(
             row,
-            spacing=constants.MARGIN_TINY,
+            spacing=constants.GAP_TINY,
         )
 
         own_row = super().build_form_row()
@@ -348,8 +348,8 @@ class MultiParameterWidget(ParameterWidget):
         child_row_widget = QWidget()
         child_row_layout = VBoxLayout(
             child_row_widget,
-            left=constants.MARGIN_SMALL,
-            spacing=constants.MARGIN_TINY,
+            left=constants.GAP_SMALL,
+            spacing=constants.GAP_TINY,
         )
         # This should always work, since the constructor is given a
         # MultiParameter object.

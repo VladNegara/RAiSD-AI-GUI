@@ -40,11 +40,11 @@ class IconLabel(StylableWidget):
 
         layout = HBoxLayout(
             self,
-            left=constants.MARGIN_SMALL,
-            top=constants.MARGIN_TINY,
-            right=constants.MARGIN_TINY,
-            bottom=constants.MARGIN_TINY,
-            spacing=constants.MARGIN_SMALL,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_TINY,
+            right=constants.GAP_TINY,
+            bottom=constants.GAP_TINY,
+            spacing=constants.GAP_SMALL,
         )
 
         icon_label = QLabel()

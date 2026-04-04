@@ -53,11 +53,11 @@ class ParameterFormSection(StylableWidget):
         row_widget = QWidget()
         row_layout = VBoxLayout(
             row_widget,
-            left=constants.MARGIN_SMALL,
-            top=constants.MARGIN_SMALL,
-            right=constants.MARGIN_SMALL,
-            bottom=constants.MARGIN_SMALL,
-            spacing=constants.MARGIN_SMALL,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_SMALL,
+            spacing=constants.GAP_SMALL,
         )
         for parameter in parameter_group:
             widget = ParameterWidget.from_parameter(

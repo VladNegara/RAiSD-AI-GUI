@@ -36,7 +36,7 @@ class ResultsTab(RunPageTab):
         widget.setObjectName("run_results_widget")
         layout = VBoxLayout(
             widget,
-            spacing=constants.MARGIN_DEFAULT,
+            spacing=constants.GAP_DEFAULT,
         )
 
         title_label = QLabel("Run Results")

@@ -27,11 +27,11 @@ class SettingsPage(Page):
     def _setup_ui(self):
         layout = VBoxLayout(
             self,
-            left=constants.MARGIN_DEFAULT,
-            top=constants.MARGIN_DEFAULT,
-            right=constants.MARGIN_DEFAULT,
-            bottom=constants.MARGIN_DEFAULT,
-            spacing=constants.MARGIN_DEFAULT,
+            left=constants.GAP_DEFAULT,
+            top=constants.GAP_DEFAULT,
+            right=constants.GAP_DEFAULT,
+            bottom=constants.GAP_DEFAULT,
+            spacing=constants.GAP_DEFAULT,
         )
 
         title_label = QLabel("Settings")
@@ -42,11 +42,11 @@ class SettingsPage(Page):
         container_widget.setObjectName("container_widget")
         container_layout = VBoxLayout(
             container_widget,
-            left=constants.MARGIN_SMALL,
-            top=constants.MARGIN_SMALL,
-            right=constants.MARGIN_SMALL,
-            bottom=constants.MARGIN_DEFAULT,
-            spacing=constants.MARGIN_SMALL,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_DEFAULT,
+            spacing=constants.GAP_SMALL,
         )
 
         # Widget to hold the workspace label and workspace choice button

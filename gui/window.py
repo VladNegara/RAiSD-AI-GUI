@@ -62,11 +62,11 @@ class MainWindow(QMainWindow):
         left_sidebar.setObjectName("left_sidebar")
         left_sidebar_layout = VBoxLayout(
             left_sidebar,
-            left=constants.MARGIN_TINY,
-            top=constants.MARGIN_DEFAULT,
-            right=constants.MARGIN_TINY,
-            bottom=constants.MARGIN_DEFAULT,
-            spacing=constants.MARGIN_TINY,
+            left=constants.GAP_TINY,
+            top=constants.GAP_DEFAULT,
+            right=constants.GAP_TINY,
+            bottom=constants.GAP_DEFAULT,
+            spacing=constants.GAP_TINY,
         )
 
         central_layout.addWidget(left_sidebar)

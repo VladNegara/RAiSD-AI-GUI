@@ -39,7 +39,7 @@ class OperationTab(RunPageTab):
         widget.setObjectName("operation_selection_widget")
         layout = VBoxLayout(
             widget,
-            spacing=constants.MARGIN_DEFAULT,
+            spacing=constants.GAP_DEFAULT,
         )
 
         title_label = QLabel("Operation Selection")
@@ -98,7 +98,7 @@ class OperationTab(RunPageTab):
 
             layout = HBoxLayout(
                 self,
-                spacing=constants.MARGIN_TINY,
+                spacing=constants.GAP_TINY,
             )
 
             button_widget = QWidget()

@@ -30,7 +30,7 @@ class HistoryListWidget(StylableWidget):
         self.setObjectName('history_list_widget')
 
         layout = VBoxLayout(self)
-        layout.setSpacing(constants.MARGIN_SMALL)
+        layout.setSpacing(constants.GAP_SMALL)
 
         title = QLabel("History")
         title.setProperty("title", "true")
@@ -47,7 +47,7 @@ class HistoryListWidget(StylableWidget):
         self._list_container = QWidget()
         self._list_container.setObjectName("history_list_container")
         self._list_layout = VBoxLayout(self._list_container)
-        self._list_layout.setSpacing(constants.MARGIN_TINY)
+        self._list_layout.setSpacing(constants.GAP_TINY)
         self._list_layout.addStretch()
         scroll_area.setWidget(self._list_container)
 

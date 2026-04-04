@@ -29,7 +29,7 @@ class ParameterForm(QWidget):
         self._parameter_form_sections = []
         layout = VBoxLayout(
             self,
-            spacing=constants.MARGIN_TINY,
+            spacing=constants.GAP_TINY,
         )
 
         for parameter_group in self._run_record.parameter_groups:

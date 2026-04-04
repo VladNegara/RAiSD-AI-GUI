@@ -60,11 +60,11 @@ class RunPage(Page):
         step_button_bar.setObjectName("step_button_bar")
         step_button_bar_layout = HBoxLayout(
             step_button_bar,
-            left=constants.MARGIN_SMALL,
-            top=constants.MARGIN_SMALL,
-            right=constants.MARGIN_SMALL,
-            bottom=constants.MARGIN_SMALL,
-            spacing=constants.MARGIN_TINY,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_SMALL,
+            spacing=constants.GAP_TINY,
         )
         layout.addWidget(step_button_bar)
         self._setup_step_button_bar(step_button_bar_layout)
@@ -72,10 +72,10 @@ class RunPage(Page):
         # Step stacked widget
         stacked_step_widget = QWidget()
         stacked_step_widget.setContentsMargins(
-            constants.MARGIN_DEFAULT,
-            constants.MARGIN_DEFAULT,
-            constants.MARGIN_DEFAULT,
-            constants.MARGIN_DEFAULT,
+            constants.GAP_DEFAULT,
+            constants.GAP_DEFAULT,
+            constants.GAP_DEFAULT,
+            constants.GAP_DEFAULT,
         )
         self.stacked_step_widget_layout = QStackedLayout(stacked_step_widget)
         self.stacked_step_widget_layout.setContentsMargins(0, 0, 0, 0)

@@ -60,7 +60,7 @@ class RunPageTab(StylableWidget):
     def _setup_layout(self, widget: QWidget, navigation: QWidget) -> None:
         layout = VBoxLayout(
             self,
-            spacing=constants.MARGIN_DEFAULT,
+            spacing=constants.GAP_DEFAULT,
         )
         layout.addWidget(widget, 1)
         layout.addWidget(navigation)

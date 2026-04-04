@@ -64,10 +64,10 @@ class Collapsible(QWidget):
 
             layout = HBoxLayout(
                 self,
-                left=constants.MARGIN_SMALL,
-                top=constants.MARGIN_TINY,
-                bottom=constants.MARGIN_TINY,
-                spacing=constants.MARGIN_TINY,
+                left=constants.GAP_SMALL,
+                top=constants.GAP_TINY,
+                bottom=constants.GAP_TINY,
+                spacing=constants.GAP_TINY,
             )
             layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
