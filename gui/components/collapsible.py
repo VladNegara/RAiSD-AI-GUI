@@ -131,7 +131,6 @@ class Collapsible(QWidget):
         self._collapsed = collapsed
 
         layout = VBoxLayout(self)
-        # layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self._header = Collapsible.Header(
             header,

@@ -20,7 +20,8 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QListWidget,
-    QAbstractItemView
+    QAbstractItemView,
+    QSizePolicy,
 )
 from PySide6.QtGui import (
     QRegularExpressionValidator,
@@ -199,6 +200,10 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         :rtype: QWidget
         """
         row = QWidget()
+        row.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed,
+        )
         row.setVisible(self.parameter.enabled)
         self.parameter.enabled_changed.connect(
             lambda new_enabled: row.setVisible(new_enabled)
