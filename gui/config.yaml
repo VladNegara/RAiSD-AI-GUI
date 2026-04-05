@@ -266,24 +266,48 @@ parameter_groups:
       - IMG-GEN
     parameters:
       input-file-type:
-        name: Input file type
-        description: The type of the input file. This may change which parameters can be filled in.
+        name: Input file format
+        description: Choose the format of your input file(s). Choosing the correct file format is important because it may change the available parameters.
         cli: null
         type: enum
         options:
           - name: ms
-            cli: null
           - name: mbs
             cli: "-b"
           - name: FASTA
-            cli: null
-          - name: Single-chromosome VCF
-            cli: null
-          - name: Multiple-chromosome VCF
+          - name: VCF
         default: 0
+      vcf-chromosome-count:
+        name: Number of chromosomes
+        description: Choose whether your VCF file contains one chromosome or multiple.
+        cli: null
+        type: enum
+        options:
+          - name: A single chromosome
+          - name: Multiple chromosomes
+        default: 1
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
+      vcf-compressed:
+        name: Compressed VCF
+        description: Choose whether your VCF file is compressed.
+        cli: null
+        type: enum
+        options:
+          - name: Uncompressed
+          - name: Compressed
+        default: 0
+        conditions:
+          - type: enum
+            parameter: input-file-type
+            values:
+              - 3
       "-L":
         name: Region length
-        description: The region size (in basepairs).
+        description: The region size (in basepairs) for an ms file.
         cli: "-L "
         type: int
         default: 1
@@ -296,18 +320,21 @@ parameter_groups:
             values:
               - 0
       "-S":
-        name: Sample file
-        description: A file containing the list of samples to be processed for VCF files.
-        cli: "-S "
-        type: file
+        name: Provide sample file
+        description: Provide a file containing the list of samples to be processed for VCF files.
+        type: optional
+        parameter:
+          name: Sample file
+          description: The file containing the list of samples to be processed.
+          cli: "-S "
+          type: file
         conditions:
           - type: enum
             parameter: input-file-type
             values:
               - 3
-              - 4
       "-m":
-        name: maf # What?
+        name: Minor allele frequency
         description: The threshold value for excluding SNPs with minor allele frequency.
         cli: "-m "
         default: 0.0
@@ -318,7 +345,7 @@ parameter_groups:
             max: 1.0
       "-y":
         name: Ploidy
-        description: The ploidy used to correctly represent missing data.
+        description: The ploidy, which is used to correctly represent missing data.
         cli: "-y "
         type: int
         default: 2
@@ -327,7 +354,7 @@ parameter_groups:
             min: 1
       "-M":
         name: Missing data handling strategy
-        description: How to handle missing data.
+        description: Choose the method to handle missing data.
         cli: "-M "
         type: enum
         options:
@@ -342,7 +369,7 @@ parameter_groups:
         default: 0
       "-X":
         name: Exclude regions
-        description: Exclude regions from the analysis.
+        description: Exclude specific regions in the input file from the analysis.
         type: optional
         default: false
         parameter:
@@ -352,28 +379,37 @@ parameter_groups:
           type: file
       "-B":
         name: Provide chromosome size
-        description: For VCF files with a single chromosome. If not provided, the values will be determined at runtime by parsing each chromosome in its entirety before processing, leading to slightly longer overall execution time. # Not very good description
+        description: For VCF files with a single chromosome, you can provide the chromosome size. If not provided, the values will be determined at runtime by parsing each chromosome in its entirety before processing, leading to slightly longer overall execution time.
         type: optional
         default: false
         parameter:
           name: Chromosome size
-          description: The chromosome size.
+          description: The two values that describe the chromosome size.
           cli: "-B "
           type: multi
           parameters:
             - type: int
               name: Region length in basepairs
-              default: 1 # ?
+              default: 1
+              constraints:
+                - type: interval
+                  min: 1
             - type: int
-              name: Region length in SNPs
-              default: 1 # ?
+              name: Number of SNPs
+              default: 1
+              constraints:
+                - type: interval
+                  min: 1
+                # number of SNPs <= region length in basepairs
           # selection target <= region length
           # selection target D threshold <= region length
         conditions:
+          - type: enabled
+            parameter: vcf-chromosome-count
           - type: enum
-            parameter: input-file-type
+            parameter: vcf-chromosome-count
             values:
-              - 3
+              - 0
       "-o":
         name: Order VCF
         description: Enables dataset check and reordering of the input VCF file (only for unzipped VCF files).
@@ -381,12 +417,12 @@ parameter_groups:
         type: bool
         default: false
         conditions:
+          - type: enabled
+            parameter: vcf-compressed
           - type: enum
-            parameter: input-file-type
+            parameter: vcf-compressed
             values:
-              - 3
-              - 4
-              # Only if unzipped, though
+              - 0
   - name: Sliding window and mu statistic
     operations:
       - RSD-DEF
@@ -421,7 +457,7 @@ parameter_groups:
           description: The total number of evaluation points across the data.
           cli: "-G "
           type: int
-          default: 3
+          default: 10
           constraints:
             - type: interval
               min: 3
@@ -575,7 +611,7 @@ parameter_groups:
         type: optional
         default: false
         parameter:
-          name: Multi calculate distance
+          name: Average distance parameters
           description: null
           type: multi
           parameters:
@@ -583,10 +619,11 @@ parameter_groups:
               description: The selection target (in basepairs).
               cli: "-T "
               type: int
-              default: 1 # Source: I made it up
+              default: 1
               constraints:
                 - type: interval
                   min: 1
+                # <= region length
             - name: Set maximum distance
               description: Set the maximum distance from the selection target to calculate success rates, i.e., reported locations in the proximity of the target of selection (provided above).
               type: optional
@@ -596,10 +633,11 @@ parameter_groups:
                 description: The maximum distance from the selection target (in basepairs).
                 cli: "-d "
                 type: int
-                default: 1 # Made up
+                default: 1
                 constraints:
                   - type: interval
                     min: 1
+                  # <= region length
       "-k": # May be wrong!
         name: Report score
         description: Report the corresponding reported score after sorting reported locations for all the datasets in the input file.
@@ -621,91 +659,84 @@ parameter_groups:
         cli: "-l "
         type: count multi
         parameters:
-          # Are the thresholds 0-1?
           - name: Provide var threshold
-            description: null
+            description: Provide a threshold for the var statistic to report the true positive rate.
             type: optional
             default: false
             parameter:
               name: var threshold
-              description: null
+              description: The threshold for the var statistic.
               cli: "var="
               type: float
               default: 0.0
               constraints:
                 - type: interval
                   min: 0.0
-                  max: 1.0
           - name: Provide sfs threshold
-            description: null
+            description: Provide a threshold for the sfs statistic to report the true positive rate.
             type: optional
             default: false
             parameter:
               name: sfs threshold
-              description: null
+              description: The threshold for the sfs statistic.
               cli: "sfs="
               type: float
               default: 0.0
               constraints:
                 - type: interval
                   min: 0.0
-                  max: 1.0
           - name: Provide ld threshold
-            description: null
+            description: Provide a threshold for the ld statistic to report the true positive rate.
             type: optional
             default: false
             parameter:
               name: ld threshold
-              description: null
+              description: The threshold for the ld statistic.
               cli: "ld="
               type: float
               default: 0.0
               constraints:
                 - type: interval
                   min: 0.0
-                  max: 1.0
           - name: Provide mu threshold
-            description: null
+            description: Provide a threshold for the mu statistic to report the true positive rate.
             type: optional
             default: false
             parameter:
               name: mu threshold
-              description: null
+              description: The threshold for the mu statistic.
               cli: "mu="
               type: float
               default: 0.0
               constraints:
                 - type: interval
                   min: 0.0
-                  max: 1.0
           - name: Provide pcl0 threshold
-            description: null
+            description: Provide a threshold for the pcl0 statistic to report the true positive rate.
             type: optional
             default: false
             parameter:
               name: pcl0 threshold
-              description: null
+              description: The threshold for the pcl0 statistic.
               cli: "pcl0="
               type: float
               default: 0.0
               constraints:
                 - type: interval
                   min: 0.0
-                  max: 1.0
           - name: Provide pcl1 threshold
-            description: null
+            description: Provide a threshold for the pcl1 statistic to report the true positive rate.
             type: optional
             default: false
             parameter:
               name: pcl1 threshold
-              description: null
+              description: The threshold for the pcl1 statistic.
               cli: "pcl1="
               type: float
               default: 0.0
               constraints:
                 - type: interval
                   min: 0.0
-                  max: 1.0
   - name: FASTA to VCF conversion
     operations:
       - FASTA-VCF
@@ -725,8 +756,8 @@ parameter_groups:
             - type: regex
               pattern: ".+"
               hint: Cannot be empty.
-      "-C2": # No clue if this should be allowed without C.
-        name: Provide a second outgroup name
+      "-C2":
+        name: Provide second outgroup name
         description: Provide the second outgroup to be used for the ancestral states.
         type: optional
         default: false
@@ -740,6 +771,9 @@ parameter_groups:
             - type: regex
               pattern: ".+"
               hint: Cannot be empty.
+          conditions:
+            - type: optional
+              parameter: "-C"
       "-H":
         name: Chromosome name
         description: Provide the chromosome name.
@@ -754,21 +788,25 @@ parameter_groups:
     operations:
       - VCF-MS
     parameters:
+      "-L-vcf-ms":
+        name: Region length
+        description: The region size (in basepairs) for the ms file obtained from the conversion. # ?
+        cli: "-L "
+        type: int
+        default: 1
+        constraints:
+          - type: interval
+            min: 1
       "-Q": # What is the relation to L?
-        name: Convert VCF to ms
-        description: Converts an input VCF to ms.
-        type: optional
-        default: false
-        parameter:
-          name: Memory size
-          description: The memory size to be allocated for the conversion.
-          cli: "-Q "
-          type: int
-          default: 8
-          constraints:
-            - type: interval
-              min: 1
-  - name: Common outlier analysis
+        name: Memory size
+        description: The memory size (in MB) to be allocated for the conversion.
+        cli: "-Q "
+        type: int
+        default: 8
+        constraints:
+          - type: interval
+            min: 1
+  - name: Common outlier analysis # TODO: review this section! the user should not be able to edit the column indices except for the last one
     operations:
       - CO
       - RSD-DEF
@@ -784,27 +822,29 @@ parameter_groups:
         type: optional
         default: false
         parameter:
-          name: Options
-          description: Common outlier analysis options
+          name: Common outlier analysis options
+          description: The options for performing common outlier analysis.
           type: multi
           parameters:
-          - name: SweeD report
-            description: The SweeD report file. The report must not contain a header.
-            type: file
-          - name: SweeD position index # ?
-            description: The column indices for positions.
-            type: int
-            default: 1 # Probably wrong
-            constraints:
-              - type: interval
-                min: 1
-          - name: SweeD score index # ?
-            description: The SweeD scores.
-            type: int
-            default: 1 # Probably wrong
-            constraints:
-              - type: interval
-                min: 1
+            - name: SweeD/OmegaPlus report
+              description: Upload the report file produced by SweeD or OmegaPlus. The report must not contain a header.
+              type: file
+            - name: First column
+              description: The index of the first column of the SweeD/OmegaPlus report to be used for common outlier analysis.
+              type: int
+              default: 1
+              constraints:
+                - type: interval
+                  min: 1
+                  max: 1
+            - name: Second column
+              description: The index of the second column of the SweeD/OmegaPlus report to be used for common outlier analysis.
+              type: int
+              default: 2
+              constraints:
+                - type: interval
+                  min: 2
+                  max: 2
       "-CO-already-run":
         operations:
           remove:
@@ -815,41 +855,44 @@ parameter_groups:
         cli: "-CO "
         type: multi
         parameters:
-          - name: SweeD report
-            description: The SweeD report file. The report must not contain a header.
+          - name: SweeD/OmegaPlus report
+            description: Upload the report file produced by SweeD or OmegaPlus. The report must not contain a header.
             type: file
-          - name: SweeD position index # ?
-            description: The column indices for positions.
+          - name: First SweeD/OmegaPlus column
+            description: The index of the first column of the SweeD/OmegaPlus report to be used for common outlier analysis.
             type: int
             default: 1
             constraints:
               - type: interval
                 min: 1
-          - name: SweeD score index # ?
-            description: The SweeD scores.
+                max: 1
+          - name: Second SweeD/OmegaPlus column
+            description: The index of the second column of the SweeD/OmegaPlus report to be used for common outlier analysis.
             type: int
-            default: 1
+            default: 2
             constraints:
               - type: interval
-                min: 1
-            #position index != score index
+                min: 2
+                max: 2
           - name: RAiSD report
             description: The RAiSD report to be used for common outlier analysis. The report must not contain a header.
             type: file
-          - name: RAiSD position index #Are these the same as the ones above?
-            description: The position index for the RAiSD report. 
+          - name: First RAiSD column
+            description: The index of the first column of the RAiSD report to be used for common outlier analysis.
             type: int
             default: 1
             constraints:
               - type: interval
                 min: 1
-          - name: RAiSD column index
-            description: The index of the column you want to use, depending on the RAiSD report. To use the mu-statistic, set X=2 if RAiSD was invoked with the default parameters, or set X=7 if -R was explicitly provided or implicitly activated through some other command-line parameter.
+                max: 1
+          - name: Second RAiSD column
+            description: The index of the column you want to use for common outlier analysis, depending on the RAiSD report. To use the mu-statistic, set it to 2 if RAiSD was invoked with the default parameters, or set it to 7 if "Full report" was explicitly provided or implicitly activated through some other parameter.
             type: int
-            default: 1
+            default: 2
             constraints:
               - type: interval
-                min: 1
+                min: 2
+                max: 7
       "-COT":
         name: Cut-off threshold
         description: The cut-off threshold for identifying top outliers per report.
@@ -874,7 +917,7 @@ parameter_groups:
         description: Provides the maximum distance (in number of sites) between outlier points in the provided reports to identify matching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD and RAiSD, typically between 100 and 400.
         cli: "-COD "
         type: int
-        default: 1
+        default: 100
         constraints:
           - type: interval
             min: 0
@@ -919,7 +962,7 @@ parameter_groups:
             min: 1
       "-iws":
         name: Image window step
-        description: Provides the windo step for creating images.
+        description: The window step for creating images.
         cli: "-iws "
         type: int
         default: 1
@@ -928,7 +971,7 @@ parameter_groups:
             min: 1
       "-bin":
         name: Convert image data to .snp
-        description: Converts image data to custom binary format (.snp). Only supported by the PyTorch implementation.
+        description: Convert image data to a custom binary format (.snp). Only supported by the PyTorch implementation.
         cli: "-bin"
         type: bool
         default: false
@@ -978,7 +1021,7 @@ parameter_groups:
     parameters: 
       "-arc": 
         name: Network architecture
-        description: Specifies the neural network architecture.
+        description: The neural network architecture of the sweep detection model.
         cli: "-arc "
         type: enum
         default: 2
@@ -993,7 +1036,7 @@ parameter_groups:
             cli: FASTER-NN-G
       "-e":
         name: Epochs
-        description: Provides the number of epochs
+        description: The number of epochs to train the CNN model for.
         cli: "-e "
         type: int
         default: 10
@@ -1002,7 +1045,7 @@ parameter_groups:
             min: 1
       "-cl4": 
         name: Pairings between class labels
-        description: Provides 4 pairings between class labels and corresponding folder names.
+        description: The 4 pairings between class labels and corresponding folder names.
         cli: "-cl4 "
         type: multi
         parameters:
@@ -1025,11 +1068,11 @@ parameter_groups:
               - 3
       "-cl4_1x_label":
         name: Provide identifier for Group 1x
-        description: If checked, provide an identifier string to be used in the output for Group 1x. Otherwise, the label names provided in IMG-GEN will be used instead.
+        description: If checked, provide an identifier string to be used in the output for Group 1x. Otherwise, the label names provided in the Data generation operation will be used instead.
         cli: "-cl4_1x_label "
         type: optional
         parameter:
-          name: Identifier
+          name: Identifier for Group 1x
           type: str
           constraints:
             - type: regex
@@ -1040,11 +1083,11 @@ parameter_groups:
             parameter: "-cl4"
       "-cl4_x1_label":
         name: Provide identifier for Group x1
-        description: If checked, provide an identifier string to be used in the output for Group x1. Otherwise, the label names provided in IMG-GEN will be used instead.
+        description: If checked, provide an identifier string to be used in the output for Group x1. Otherwise, the label names provided in the Data generation operation will be used instead.
         cli: "-cl4_x1_label "
         type: optional
         parameter:
-          name: Identifier
+          name: Identifier for Group x1
           type: str
           constraints:
             - type: regex
@@ -1054,12 +1097,13 @@ parameter_groups:
           - type: enabled
             parameter: "-cl4"
       "-g":
-        name: Provide number of sequence groups to be created
-        description: Provide number of sequence groups to be created by FASTER-NN-G for SFS grouped pooling. If not provided, the sample size is used.
+        name: Provide number of sequence groups
+        description: Provide the number of sequence groups to be created by FASTER-NN-G for SFS grouped pooling. If not provided, the sample size will be used.
         cli: "-g "
         type: optional
         parameter:
-          name: Sequence groups
+          name: Number of sequence groups
+          description: The number of sequence groups to be created.
           type: int
           default: 1
           constraints:
@@ -1076,7 +1120,7 @@ parameter_groups:
     parameters:
       "-clp":
         name: Class tests
-        description: Enter one or more label-folder pairs.
+        description: Enter one or more label-folder pairs. # improve this
         cli: "-clp "
         type: string pair list
         separator: "="
@@ -1138,7 +1182,7 @@ parameter_groups:
     operations: []
     parameters:
       "-frm-img-gen":
-        name: Remove exising IMG-GEN directory
+        name: Remove existing IMG-GEN directory
         description: Remove the directory RAiSD_Images.runID if it already exists.
         operations:
           add:
