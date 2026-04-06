@@ -79,17 +79,17 @@ Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be foun
 
 RAiSD-AI includes an optional graphical user interface (GUI).
 
-Use the provided `setup-gui.sh` script to install the  dependencies of the gui. To see all options use the help menu (`./setup-gui.sh -h`):
+Run the provided `setup-gui.sh` script to install the dependencies of the GUI. To see all options, use the help option: `./setup-gui.sh -h`.
 
-To also install the dependencies of RAiSD-AI and compile RAiSD-AI use the `-a` flag.
+By default, the set-up script assumes RAiSD-AI-ZLIB has been compiled. To also install the dependencies of RAiSD-AI and compile RAiSD-AI-ZLIB, use the `-a` flag.
 
-Conda is the default package manager used. To use micromamba use the `-m` flag.
+By default, the set-up script uses Conda as the package manager. To use micromamba instead, use the `-m` flag.
 
-> Note: the setup script compiles RAiSD-AI-ZLIB in order to allow for all functionality of the RAiSD-AI tool in the GUI. To force compiling just RAiSD-AI use the `-r` flag. This is not recommended since it can break some GUI functionality!
+> Note: the set-up script compiles the RAiSD-AI-ZLIB executable in order to allow for all functionality of the RAiSD-AI tool in the GUI. To force compiling just the RAiSD-AI executable, use the `-r` flag. This is not recommended since it can break some GUI functionality!
 
 ### Running the GUI
 
-To run the GUI use the `./run-gui.sh` script. Again, Conda is the default package manager used. To use micromamba use the `-m` flag.
+To use the GUI, run the `run-gui.sh` script. Again, Conda is the default package manager used. To use micromamba, use the `-m` flag.
 
 Quick Test Run
 --------
