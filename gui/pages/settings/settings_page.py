@@ -77,6 +77,39 @@ class SettingsPage(Page):
 
         layout.addSpacing(20)
         layout.addWidget(container_widget)
+
+        info_label = QLabel("Developers")
+        info_label.setObjectName("settings_label")
+        layout.addWidget(info_label)
+
+        info_container_widget = QWidget()
+        info_container_widget.setObjectName("container_widget")
+        info_container_layout = QVBoxLayout(info_container_widget)
+
+        raisd_ai_label = QLabel(
+            """<a href='https://www.nature.com/articles/s42003-018-0085-8'>
+            RAiSD-AI</a> (Raised Accuracy in Sweep Detection using AI) is a
+            command-line tool for detecting selective sweeps in genomic data
+            developed by <b>Nikolaos Alachiotis</b> & <b>Pavlos Pavlidis</b>
+            (<a href='https://github.com/alachins/RAiSD-AI'>GitHub</a>).
+            """
+        )
+        raisd_ai_label.setWordWrap(True)
+        info_container_layout.addWidget(raisd_ai_label)
+
+        raisd_ai_gui_label = QLabel(
+            """<a href='https://github.com/VladNegara/RAiSD-AI-GUI'>RAiSD-AI 
+            GUI</a> developed by <b>Loes Baart de la Faille</b>, <b>Steef 
+            Broeder</b>, <b>Taylan Kıncır</b>, <b>Alphan Mete</b>, <b>Vlad 
+            Negară</b> and <b>Giulia Tălău</b>."""
+        )
+        raisd_ai_gui_label.setWordWrap(True)
+        info_container_layout.addWidget(raisd_ai_gui_label)
+
+        # TODO: add a link to the user manual
+
+        layout.addWidget(info_container_widget)
+
         layout.addStretch()
 
     def _set_workspace_label(self) -> None:
