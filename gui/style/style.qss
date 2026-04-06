@@ -357,7 +357,28 @@ QLabel#heading{
 }
 
 QRadioButton{
-    color: $primary-dark
+    color: $primary-dark;
+}
+
+QRadioButton:unchecked:pressed{
+    color: $button-pressed;
+}
+
+QRadioButton::indicator {
+    width: 15px;
+    height: 15px;
+}
+
+QRadioButton::indicator:checked {
+    background-image: url("gui/style/resources/radio_checked.svg");
+}
+
+QRadioButton::indicator:unchecked {
+    background-image: url("gui/style/resources/radio_unchecked.svg");
+}
+
+QRadioButton::indicator:unchecked:hover {
+    background-image: url("gui/style/resources/radio_unchecked_hover.svg");
 }
 
 QWidget#info_label{
