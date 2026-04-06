@@ -190,7 +190,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
 
         layout = VBoxLayout(
             self,
-            # left=constants.MARGIN_SMALL,
             spacing=constants.GAP_SMALL,
         )
 
