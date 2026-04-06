@@ -22,8 +22,9 @@ modes:
                 - .vcf
                 - .fasta
         output:
-          type: directory
-          contents: []
+          type: file
+          formats: 
+            - .txt
         overwrite_parameter:
           name: Overwrite existing RAiSD report?
           description: You are about to overwrite existing data in the output folder. Are you sure?
@@ -31,7 +32,7 @@ modes:
           type: bool
           default: false
         path:
-          - RAiSD_Grid.
+          - RAiSD_Report.
           - type: run id
   - name: RAiSD-AI
     operations:
@@ -141,7 +142,7 @@ modes:
         output: 
           type: single
           formats:
-            - .report
+            - .txt
         overwrite_parameter:
           name: Overwrite existing results?
           description: You are about to overwrite existing data in the output folder. Are you sure?
@@ -149,7 +150,7 @@ modes:
           type: bool
           default: false
         path:
-          - RAiSD_Inference. # probably wrong
+          - RAiSD_Info.
           - type: run id
       SWP-SCN:
         name: Model sweep scan
@@ -438,16 +439,6 @@ parameter_groups:
       - MDL-TST
       - SWP-SCN
     parameters:
-      "-f":
-        name: Overwrite output
-        description: Overwrite existing run files under the same run ID.
-        cli: "-f"
-        type: bool
-        default: false
-        operations:
-          add:
-            - FASTA-VCF
-            - VCF-MS
       "-s":
         name: Split output
         description: Generate a separate report file per set.

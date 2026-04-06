@@ -28,6 +28,7 @@ from .file_structure import (
 from .operation import Operation
 from gui.model.parameter import (
     Parameter,
+    BoolParameter,
     StringParameter,
 )
 from gui.model.dependency import (
@@ -715,6 +716,7 @@ class OperationNode(FileProducerNode):
         def _enabled_changed(self, new_enabled: bool):
             self.value = new_enabled==self._target_value
 
+    overwrite_changed = Signal(bool)
     enabled_changed = Signal(bool)
 
     def __init__(self,
@@ -753,7 +755,19 @@ class OperationNode(FileProducerNode):
             file_consumer.add_producer(file_picker)
             self._file_consumers.append(file_consumer)
             file_consumer.valid_changed.connect(self._consumer_valid_changed)
-        self._overwrite_parameter = operation.overwrite_parameter_builder()
+
+        overwrite_parameter = operation.overwrite_parameter_builder()
+        if not isinstance(overwrite_parameter, BoolParameter):
+            raise ValueError(
+                f"Invalid overwrite parameter for operation {self._name}: "
+                + f"{overwrite_parameter}. Expected a bool parameter."
+            )
+        # Assigned in a roundabout way for type checker purposes.
+        self._overwrite_parameter = overwrite_parameter
+        self._overwrite_parameter.value_changed.connect(
+            self._overwrite_parameter_value_changed,
+        )
+
         self._parameters = {}
         for parameter_id in operation.parameter_builders:
             parameter_builder = operation.parameter_builders[parameter_id]
@@ -762,6 +776,7 @@ class OperationNode(FileProducerNode):
             # TODO: consider if there is a way to only connect the
             # used parameters
             parameter.value_changed.connect(self._parameter_value_changed)
+
         self._output_path = [
             OperationNode.PathFragmentGenerator.from_path_fragment(
                 path_fragment=path_fragment,
@@ -802,6 +817,10 @@ class OperationNode(FileProducerNode):
         return self._produces
 
     @property
+    def overwrite_parameter(self) -> BoolParameter:
+        return self._overwrite_parameter
+
+    @property
     def parameters(self) -> dict[str, Parameter[Any]]:
         return self._parameters
 
@@ -821,10 +840,17 @@ class OperationNode(FileProducerNode):
 
     @run_id.setter
     def run_id(self, new_run_id: str) -> None:
+        old_file = self.file
+        old_overwrite = self.overwrite
+
         self._run_id = f"{new_run_id}_{self.id}"
         for file_consumer in self.file_consumers:
             file_consumer.run_id = self.run_id
-        self.file_changed.emit(self.file)
+
+        if self.file != old_file:
+            self.file_changed.emit(self.file)
+        if self.overwrite != old_overwrite:
+            self.overwrite_changed.emit(self.overwrite)
 
     @property
     def base_directory_path(self) -> str:
@@ -832,10 +858,17 @@ class OperationNode(FileProducerNode):
     
     @base_directory_path.setter
     def base_directory_path(self, new_base_directory_path: str) -> None:
+        old_file = self.file
+        old_overwrite = self.overwrite
+
         self._base_directory_path = new_base_directory_path
         for file_consumer in self.file_consumers:
             file_consumer.base_directory_path = self.base_directory_path
-        self.file_changed.emit(self.file)
+
+        if self.file != old_file:
+            self.file_changed.emit(self.file)
+        if self.overwrite != old_overwrite:
+            self.overwrite_changed.emit(self.overwrite)
 
     @property
     def enabled(self) -> bool:
@@ -862,12 +895,20 @@ class OperationNode(FileProducerNode):
         )
 
     @property
+    def overwrite(self) -> bool:
+        """
+        Whether the output of this operation will overwrite an existing
+        file or directory.
+        """
+        return QFileInfo(self.file).exists()
+
+    @property
     def valid(self) -> bool:
         """
         Whether the operation's inputs are in a valid state.
         """
         return all(
-            [self._overwrite_parameter.valid] # TODO: implement this
+            [self._overwrite_parameter.value or not self.overwrite]
             + [parameter.valid for parameter in self.parameters.values()]
             + [consumer.valid for consumer in self._file_consumers]
         )
@@ -949,6 +990,10 @@ class OperationNode(FileProducerNode):
 
     @Slot(bool)
     def _consumer_valid_changed(self, new_valid: bool) -> None:
+        self.valid_changed.emit(self.valid)
+
+    @Slot()
+    def _overwrite_parameter_value_changed(self) -> None:
         self.valid_changed.emit(self.valid)
 
     @Slot()

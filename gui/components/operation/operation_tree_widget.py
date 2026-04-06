@@ -35,6 +35,7 @@ from gui.model.operation import (
 )
 from gui.components.label import (
     InfoLabel,
+    WarningLabel,
 )
 from gui.components.resizable_stacked_widget import (
     ResizableStackedWidget,
@@ -376,6 +377,24 @@ class OperationNodeWidget(FileProducerNodeWidget):
         )
         layout.addWidget(self._output_info_label)
 
+        self._overwrite_warning_label = WarningLabel(
+            "You are about to overwrite existing data! Confirm before "
+            + "proceeding."
+        )
+        self._overwrite_warning_label.setVisible(
+            self._operation_node.overwrite,
+        )
+        layout.addWidget(self._overwrite_warning_label)
+
+        self._overwrite_parameter_row = ParameterWidget.from_parameter(
+            self._operation_node.overwrite_parameter,
+            editable=True,
+        ).build_form_row()
+        self._overwrite_parameter_row.setVisible(
+            self._operation_node.overwrite,
+        )
+        layout.addWidget(self._overwrite_parameter_row)
+
         layout.setContentsMargins(5,0,0,0)
 
         input_files_widget = QWidget()
@@ -394,6 +413,7 @@ class OperationNodeWidget(FileProducerNodeWidget):
         layout.addWidget(input_files_widget)
 
         self._operation_node.file_changed.connect(self._file_changed)
+        self._operation_node.overwrite_changed.connect(self._overwrite_changed)
 
     def reset(self) -> None:
         for widget in self.parameter_widgets:
@@ -411,6 +431,11 @@ class OperationNodeWidget(FileProducerNodeWidget):
     @Slot(str)
     def _file_changed(self, new_file: str) -> None:
         self._output_info_label.text = self.output_label_text + new_file
+
+    @Slot(bool)
+    def _overwrite_changed(self, new_overwrite: bool) -> None:
+        self._overwrite_warning_label.setVisible(new_overwrite)
+        self._overwrite_parameter_row.setVisible(new_overwrite)
 
     def paintEvent(self, event) -> None:
         opt = QStyleOption()
