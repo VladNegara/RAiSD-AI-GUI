@@ -57,7 +57,7 @@ while getopts "hamr" opt; do
         h)
         echo "Usage: $0 [-h] [-a] [-m] [-r]"
         echo "  -h  Show this help message and exit"
-        echo "  -a  Install the dependencies for both RAiSD-AI and its GUI"
+        echo "  -a  Install the dependencies for both RAiSD-AI and its GUI, then compile RAiSD-AI-ZLIB"
         echo "  -m  Use micromamba instead of conda as the package manager"
         echo "  -r  Compile RAiSD-AI instead of RAiSD-AI-ZLIB (not recommended)"
         exit 0
