@@ -40,6 +40,7 @@ class ParameterFormSection(QWidget):
 
         # Make widgets
         heading = QLabel(self._parameter_group.name)
+        heading.setObjectName("heading")
 
         form_body = QWidget()
         form_layout = QVBoxLayout(form_body)
@@ -51,10 +52,8 @@ class ParameterFormSection(QWidget):
             form_layout.addWidget(widget.build_form_row())
 
         layout = QVBoxLayout(self)
-        heading.setObjectName("heading")
         widget = Collapsible(heading, form_body)
         layout.addWidget(widget)
-
         self.setVisible(self._parameter_group.enabled)
 
     @property
@@ -82,6 +81,14 @@ class ParameterFormSection(QWidget):
     def untouch_all(self) -> None:
         for widget in self._parameter_widgets:
             widget.untouch()
+
+    def set_invalid(self, invalid: bool) -> None:
+        """
+        Set invalid property on the parameter_form_section
+        """
+        self.setProperty("invalid", "true" if invalid else "false")
+        self.style().unpolish(self)
+        self.style().polish(self)
 
     def paintEvent(self, event) -> None:
         """
