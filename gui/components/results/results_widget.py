@@ -1,32 +1,28 @@
+from PySide6.QtCore import (
+    Slot,
+    QUrl
+)
 from PySide6.QtWidgets import (
     QWidget,
-    QHBoxLayout,
-    QVBoxLayout,
     QLabel,
     QFileSystemModel,
     QTreeView,
     QHeaderView,
-    QPushButton,
-    QStyleOption,
-    QStyle
 )
-
-from PySide6.QtCore import (
-    QDir,
-    Slot,
-    QUrl
-)
-
-from PySide6.QtGui import QDesktopServices, QPainter
-
+from PySide6.QtGui import QDesktopServices
 
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
+from gui.widgets import (
+    StylableWidget,
+    VBoxLayout,
+)
 from gui.components.parameter import ParameterForm
 from gui.components.collapsible import Collapsible
+from gui.style import constants
 
 
-class ResultsWidget(QWidget):
+class ResultsWidget(StylableWidget):
     """
     The results of a completed execution shown.
     """
@@ -40,11 +36,17 @@ class ResultsWidget(QWidget):
         super().__init__()
         self._run_record = run_record
         self.setObjectName('results_widget')
-        layout = QVBoxLayout(self)
+        layout = VBoxLayout(
+            self,
+            spacing=constants.GAP_TINY,
+        )
 
         # Folder widget
         files_widget = QWidget()
-        files_layout = QVBoxLayout(files_widget)
+        files_layout = VBoxLayout(
+            files_widget,
+            spacing=constants.GAP_TINY,
+        )
         files_label = QLabel("Files in the generated directory")
         files_layout.addWidget(files_label)
         self.folder_structure = QFileSystemModel()
@@ -76,9 +78,3 @@ class ResultsWidget(QWidget):
         if not self.folder_structure.isDir(index):
             path = self.folder_structure.filePath(index)
             QDesktopServices.openUrl(QUrl.fromLocalFile(path))
-
-    def paintEvent(self, event) -> None:
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
