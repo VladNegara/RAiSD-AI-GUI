@@ -99,10 +99,11 @@ QScrollArea#history_results_scroll QScrollBar{
 /* SHARED — PURPLE BUTTONS */
 
 QWidget#parameter_confirmation_widget QPushButton,
-QWidget#settings_widget QPushButton,
+QWidget#settings_item_widget QPushButton,
 QPushButton#reset_button,
 QPushButton#file_button,
-QPushButton#file_selector_button {
+QPushButton#file_selector_button,
+QPushButton#toggle_all_button{
     padding: 5px 15px;
     background-color: $primary-purple;
     color: $primary-dark;
@@ -111,18 +112,20 @@ QPushButton#file_selector_button {
 }
 
 QWidget#parameter_confirmation_widget QPushButton:hover,
-QWidget#settings_widget QPushButton:hover,
+QWidget#settings_item_widget QPushButton:hover,
 QPushButton#reset_button:hover,
 QPushButton#file_button:hover,
-QPushButton#file_selector_button:hover {
+QPushButton#file_selector_button:hover,
+QPushButton#toggle_all_button:hover{
     background-color: $button-hover;
 }
 
 QWidget#parameter_confirmation_widget QPushButton:pressed,
-QWidget#settings_widget QPushButton:pressed,
+QWidget#settings_item_widget QPushButton:pressed,
 QPushButton#reset_button:pressed,
 QPushButton#file_button:pressed,
-QPushButton#file_selector_button:pressed{
+QPushButton#file_selector_button:pressed,
+QPushButton#toggle_all_button:pressed{
     background-color: $button-pressed;
 }
 
@@ -204,9 +207,17 @@ QWidget#parameter_form {
     padding: 16px;
 }
 
+QPushButton#toggle_all_button{
+margin-top: 20px;
+}
+
 QWidget#parameter_form_section {
     background-color: white;
     border-radius: 12px;
+}
+
+QWidget#parameter_form_section[invalid="true"] {
+    border: 2px solid red;
 }
 
 QWidget#heading{
@@ -362,7 +373,28 @@ QLabel#heading{
 }
 
 QRadioButton{
-    color: $primary-dark
+    color: $primary-dark;
+}
+
+QRadioButton:unchecked:pressed{
+    color: $button-pressed;
+}
+
+QRadioButton::indicator {
+    width: 15px;
+    height: 15px;
+}
+
+QRadioButton::indicator:checked {
+    background-image: url("gui/style/resources/radio_checked.svg");
+}
+
+QRadioButton::indicator:unchecked {
+    background-image: url("gui/style/resources/radio_unchecked.svg");
+}
+
+QRadioButton::indicator:unchecked:hover {
+    background-image: url("gui/style/resources/radio_unchecked_hover.svg");
 }
 
 QWidget#info_label {
@@ -383,6 +415,11 @@ QWidget#error_label {
     background-color: $invalid-background;
 }
 
+QLabel#mode_label{
+    font-size: $font-size + 1px;
+    font-weight: 600;
+}
+
 /* History */
 QWidget#history_record_widget{
     padding: 5px 15px;
@@ -393,4 +430,26 @@ QWidget#history_record_widget{
 
 QWidget#history_record_widget:hover{
     background-color: $sidebar-button-hover;
+}
+
+QWidget#info_label[expanded="false"],
+QWidget#warning_label[expanded="false"],
+QWidget#error_label[expanded="false"] {
+    background: transparent;
+    border: 0px;
+}
+
+QWidget#info_label[expanded="true"] {
+    background-color: #d4eaf7;
+    border-radius: 8px;
+}
+
+QWidget#warning_label[expanded="true"] {
+    background-color: #fff3cd;
+    border-radius: 8px;
+}
+
+QWidget#error_label[expanded="true"] {
+    background-color: #f8d7da;
+    border-radius: 8px;
 }

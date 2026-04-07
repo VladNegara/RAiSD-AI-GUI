@@ -365,11 +365,11 @@ class OperationNodeWidget(FileProducerNodeWidget):
         description.setWordWrap(True)
         layout.addWidget(description)
 
+        self.parameter_widgets: list[ParameterWidget] = []
         if self._operation_node.parameters:
             parameter_rows_widget = QWidget()
             parameter_rows_layout = VBoxLayout(parameter_rows_widget)
 
-            self.parameter_widgets : list[ParameterWidget] = []
             for parameter in self._operation_node.parameters.values():
                 parameter_widget = ParameterWidget.from_parameter(
                     parameter=parameter,
@@ -385,22 +385,22 @@ class OperationNodeWidget(FileProducerNodeWidget):
         )
         layout.addWidget(self._output_info_label)
 
-        input_files_widget = QWidget()
-        input_files_layout = HBoxLayout(
-            input_files_widget,
-            spacing=constants.GAP_MEDIUM,
-        )
-
         self.file_consumer_widgets: list[FileConsumerNodeWidget] = []
-        for file_consumer in operation_node.file_consumers:
-            file_consumer_widget = FileConsumerNodeWidget(file_consumer)
-            self.file_consumer_widgets.append(file_consumer_widget)
-            input_files_layout.addWidget(
-                file_consumer_widget,
-                alignment=Qt.AlignmentFlag.AlignTop,
-                stretch=1,
+        if operation_node.file_consumers:
+            input_files_widget = QWidget()
+            input_files_layout = HBoxLayout(
+                input_files_widget,
+                spacing=constants.GAP_MEDIUM,
             )
-        layout.addWidget(input_files_widget)
+            for file_consumer in operation_node.file_consumers:
+                file_consumer_widget = FileConsumerNodeWidget(file_consumer)
+                self.file_consumer_widgets.append(file_consumer_widget)
+                input_files_layout.addWidget(
+                    file_consumer_widget,
+                    alignment=Qt.AlignmentFlag.AlignTop,
+                    stretch=1,
+                )
+            layout.addWidget(input_files_widget)
 
         self._operation_node.file_changed.connect(self._file_changed)
 

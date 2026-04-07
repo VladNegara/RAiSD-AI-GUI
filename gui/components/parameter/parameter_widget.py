@@ -98,7 +98,7 @@ class ParameterWidget(QWidget):
         self._parameter = parameter
         self._editable = editable
         self._touched = False #variable for activating show_validity
-
+        self._parameter.enabled_changed.connect(self._on_enabled_changed)
         grid_layout = GridLayout(
             self,
             horizontal_spacing=constants.GAP_SMALL,
@@ -139,6 +139,11 @@ class ParameterWidget(QWidget):
         self._parameter.constraints_valid_changed.connect(
             self._constraints_valid_changed,
         )
+
+    @Slot(bool)
+    def _on_enabled_changed(self, enabled: bool) -> None:
+        if enabled:
+            self.touched = False
 
     def show_validity(self) -> None:
         """
@@ -371,6 +376,7 @@ class OptionalParameterWidget(ParameterWidget):
         ParameterWidget.touched.__set__(self, new_touched)
         if self._child_widget is not None:
             self._child_widget.touched = self.touched
+
 
 
 class MultiParameterWidget(ParameterWidget):

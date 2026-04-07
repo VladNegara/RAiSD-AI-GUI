@@ -103,6 +103,8 @@ class OperationTab(RunPageTab):
 
             button_widget = QWidget()
             button_layout = VBoxLayout(button_widget)
+            button_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+            button_layout.setSpacing(constants.GAP_TINY)
 
             tree_scroll = QScrollArea()
             tree_scroll.setObjectName("tree_scroll")
@@ -116,26 +118,32 @@ class OperationTab(RunPageTab):
 
             self.tree_stacked_widget = ResizableStackedWidget()
             self.tree_stacked_widget.setObjectName("tree_stacked_widget")
-            
-            self.tree_selectors : list[tuple[QRadioButton, OperationTreeWidget]]= []
-            for i, tree in enumerate(
-                    self._run_record.operation_trees
-            ):
-                self.button = QRadioButton(tree.root.name)
-                self.button.setChecked(
-                    i
-                    == self._run_record.selected_operation_tree_index
-                )
-                button_layout.addWidget(self.button)
 
-                widget = OperationTreeWidget(tree)
-                self.tree_stacked_widget.addWidget(widget)
+            self.tree_selectors: list[tuple[QRadioButton, OperationTreeWidget]] = []
+            flat_index = 0
+            for mode_name, trees in self._run_record.categorized_operation_trees:
+                mode_label = QLabel(mode_name + " Operations")
+                mode_label.setObjectName("mode_label")
+                button_layout.addWidget(mode_label)
 
-                self.button.clicked.connect(lambda _, i=i: self._button_clicked(i))
-                self.tree_selectors.append((self.button, widget))
+                for tree in trees:
+                    self.button = QRadioButton(tree.root.name)
+                    self.button.setChecked(
+                        flat_index == self._run_record.selected_operation_tree_index
+                    )
+                    button_layout.addWidget(self.button)
+
+                    widget = OperationTreeWidget(tree)
+                    self.tree_stacked_widget.addWidget(widget)
+
+                    idx = flat_index
+                    self.button.clicked.connect(lambda _, i=idx: self._button_clicked(i))
+                    self.tree_selectors.append((self.button, widget))
+                    flat_index += 1
+
+                button_layout.addSpacing(constants.GAP_SMALL)
+
             tree_scroll.setWidget(self.tree_stacked_widget)
-
-            button_layout.addStretch()
 
             layout.addWidget(button_widget)
             layout.addWidget(tree_scroll)

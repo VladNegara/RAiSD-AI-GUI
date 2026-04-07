@@ -83,15 +83,31 @@ class ConfirmationTab(RunPageTab):
         layout.addWidget(commands_widget)
 
         # Parameters
-        parameter_form = ParameterForm(self._run_record, editable=False)
-        parameter_form.setObjectName("parameter_form")
+        header_widget = QWidget()
+        header_layout = HBoxLayout(header_widget)
+
+        text_label = QLabel("Given parameters:")
+
+        header_layout.addWidget(text_label)
+        header_layout.addStretch(1)
+
+        self._all_expanded = False
+        self._toggle_all_button = QPushButton("Expand All")
+        self._toggle_all_button.setObjectName("toggle_all_button")
+        self._toggle_all_button.clicked.connect(self._toggle_all_sections)
+        header_layout.addWidget(self._toggle_all_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+        layout.addWidget(header_widget)
+
+        self._parameter_form = ParameterForm(self._run_record, editable=False)
+        self._parameter_form.setObjectName("parameter_form")
 
         parameter_form_scroll = QScrollArea()
         parameter_form_scroll.setObjectName("parameter_form_scroll")
         parameter_form_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         parameter_form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         parameter_form_scroll.setWidgetResizable(True)
-        parameter_form_scroll.setWidget(parameter_form)
+        parameter_form_scroll.setWidget(self._parameter_form)
         layout.addWidget(parameter_form_scroll, 1)
 
         return widget
@@ -103,6 +119,15 @@ class ConfirmationTab(RunPageTab):
         self.run_button.clicked.connect(self._run_button_clicked)
 
         return NavigationButtonsHolder(left_button=self.edit_button, right_button=self.run_button)
+
+    def _toggle_all_sections(self) -> None:
+        self._all_expanded = not self._all_expanded
+        for section in self._parameter_form._parameter_form_sections:
+            section._collapsible.collapsed = not self._all_expanded
+        if self._all_expanded:
+            self._toggle_all_button.setText("Collapse All")
+        else:
+            self._toggle_all_button.setText("Expand All")
 
     def refresh(self) -> None:
         self.update_commands()

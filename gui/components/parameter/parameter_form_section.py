@@ -37,13 +37,10 @@ class ParameterFormSection(StylableWidget):
         super().__init__()
         self.setObjectName("parameter_form_section")
 
-        layout = VBoxLayout(
-            self,
-        )
-
         self._parameter_group = parameter_group
         self._parameter_group.enabled_changed.connect(self._parameter_group_enabled_changed)
         self._editable = editable
+        self._invalid = False
         self._parameter_widgets: list[ParameterWidget] = []
 
         # Make parameter widgets
@@ -67,8 +64,11 @@ class ParameterFormSection(StylableWidget):
             self._parameter_widgets.append(widget)
             row_layout.addWidget(widget.build_form_row())
 
-        widget = Collapsible(heading, row_widget)
-        layout.addWidget(widget)
+        layout = VBoxLayout(
+            self,
+        )
+        self._collapsible = Collapsible(heading, row_widget)
+        layout.addWidget(self._collapsible)
 
         self.setVisible(self._parameter_group.enabled)
 
@@ -97,3 +97,20 @@ class ParameterFormSection(StylableWidget):
     def untouch_all(self) -> None:
         for widget in self._parameter_widgets:
             widget.touched = False
+
+    @property
+    def invalid(self) -> bool:
+        """
+        Get invalid property on the parameter_form_section
+        """
+        return self._invalid
+
+    @invalid.setter
+    def invalid(self, value: bool) -> None:
+        """
+        Set invalid property on the parameter_form_section
+        """
+        self._invalid = value
+        self.setProperty("invalid", "true" if value else "false")
+        self.style().unpolish(self)
+        self.style().polish(self)

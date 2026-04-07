@@ -79,7 +79,17 @@ Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be foun
 
 RAiSD-AI includes an optional graphical user interface (GUI).
 
-Run the provided `setup-gui.sh` script to install the dependencies of the GUI. To see all options, use the help option: `./setup-gui.sh -h`.
+Run the provided `setup-gui.sh` script to install the dependencies of the GUI:
+
+```bash
+./setup-gui.sh
+```
+
+To see all options, use the help option:
+
+```bash
+./setup-gui.sh -h
+```
 
 By default, the set-up script assumes RAiSD-AI-ZLIB has been compiled. To also install the dependencies of RAiSD-AI and compile RAiSD-AI-ZLIB, use the `-a` flag.
 
@@ -89,7 +99,20 @@ By default, the set-up script uses Conda as the package manager. To use micromam
 
 ### Running the GUI
 
-To use the GUI, run the `run-gui.sh` script. Again, Conda is the default package manager used. To use micromamba, use the `-m` flag.
+To use the GUI, first activate the `raisd-ai-gui` environment using your package manager:
+
+```bash
+conda activate raisd-ai-gui
+```
+
+> Note: if you use micromamba instead of conda, replace `conda` with `micromamba`.
+
+When the environment is activated, run the following command:
+
+```bash
+python -m gui.app
+```
+
 
 Quick Test Run
 --------

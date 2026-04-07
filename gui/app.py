@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QStyleFactory,
 )
 
-from gui.model.settings import app_settings, EnvironmentManager
+from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.window import MainWindow
 
