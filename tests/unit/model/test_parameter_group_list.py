@@ -138,6 +138,10 @@ class TestParameterGroupListFromYaml:
                   type: str
                   name: Run ID
                   description: The ID of the run.
+                common_directory_overwrite_parameter:
+                  type: bool
+                  name: Overwrite common output directory
+                  description: Are you sure you want to remove existing files?
                 modes:
                   - name: standard
                     operations:
