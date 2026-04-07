@@ -1,14 +1,16 @@
-from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
     QLabel,
-    QPushButton, QStyleOption, QStyle,
+    QPushButton,
 )
 
 from ..page import Page
 from gui.model.settings import app_settings
+from gui.widgets import (
+    HBoxLayout,
+    VBoxLayout,
+)
+from gui.style import constants
 
 
 class SettingsPage(Page):
@@ -23,22 +25,34 @@ class SettingsPage(Page):
         self._setup_ui()
 
     def _setup_ui(self):
-        self.setObjectName("settings_widget")
-        layout = QVBoxLayout(self)
-        settings_label = QLabel("Settings")
-        settings_label.setObjectName("settings_label")
-        layout.addWidget(settings_label)
+        layout = VBoxLayout(
+            self,
+            left=constants.GAP_MEDIUM,
+            top=constants.GAP_MEDIUM,
+            right=constants.GAP_MEDIUM,
+            bottom=constants.GAP_MEDIUM,
+            spacing=constants.GAP_MEDIUM,
+        )
+
+        title_label = QLabel("Settings")
+        title_label.setProperty("title", "true")
+        layout.addWidget(title_label)
 
         container_widget = QWidget()
         container_widget.setObjectName("container_widget")
-        container_layout = QVBoxLayout(container_widget)
+        container_layout = VBoxLayout(
+            container_widget,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_MEDIUM,
+            spacing=constants.GAP_SMALL,
+        )
 
         # Widget to hold the workspace label and workspace choice button
         workspace_widget = QWidget()
         workspace_widget.setObjectName("workspace_widget")
-        workspace_layout = QHBoxLayout(workspace_widget)
-        workspace_layout.setContentsMargins(0,0,0,0)
-        workspace_layout.setSpacing(0)
+        workspace_layout = HBoxLayout(workspace_widget)
 
         # Label to show the workspace folderpath
         self.workspace_label = QLabel()
@@ -52,41 +66,41 @@ class SettingsPage(Page):
         workspace_layout.addWidget(self.workspace_chooser)
 
         container_layout.addWidget(workspace_widget)
-        container_layout.addSpacing(10)
 
         # Label to show the executable file path
         self.executable_label = QLabel()
         self._set_executable_label()
         app_settings.executable_file_path_changed.connect(self._set_executable_label)
         container_layout.addWidget(self.executable_label)
-        container_layout.addSpacing(15)
 
         # Label to show the environment manager
         self.environment_manager_label = QLabel()
         self._set_environment_manager_label()
         app_settings.environment_manager_changed.connect(self._set_environment_manager_label)
         container_layout.addWidget(self.environment_manager_label)
-        container_layout.addSpacing(15)
 
         # Label to show the environment name
         self.environment_name_label = QLabel()
         self._set_environment_name_label()
         app_settings.environment_name_changed.connect(self._set_environment_name_label)
         container_layout.addWidget(self.environment_name_label)
-        container_layout.addSpacing(15)
 
-        layout.addSpacing(20)
         layout.addWidget(container_widget)
 
         info_label = QLabel("Developers")
-        info_label.setObjectName("settings_label")
+        info_label.setProperty("title", "true")
         layout.addWidget(info_label)
-
-        layout.addSpacing(20)
 
         info_container_widget = QWidget()
         info_container_widget.setObjectName("container_widget")
-        info_container_layout = QVBoxLayout(info_container_widget)
+        info_container_layout = VBoxLayout(
+            info_container_widget,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_MEDIUM,
+            spacing=constants.GAP_SMALL,
+        )
 
         raisd_ai_label = QLabel(
             """<a href='https://www.nature.com/articles/s42003-018-0085-8'>
@@ -112,8 +126,6 @@ class SettingsPage(Page):
 
         # TODO: add a link to the user manual
 
-        info_container_layout.addSpacing(15)
-
         layout.addWidget(info_container_widget)
 
         layout.addStretch()
@@ -133,13 +145,3 @@ class SettingsPage(Page):
     def _set_environment_name_label(self) -> None:
         """Set the environment name label with the environment name."""
         self.environment_name_label.setText(f"Current Environment Name: '{app_settings.environment_name}'")
-
-    def paintEvent(self, event) -> None:
-        """
-        Override paintEvent so that QSS styling (background, border,
-        etc.) is applied to this plain QWidget subclass.
-        """
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)

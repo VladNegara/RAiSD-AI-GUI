@@ -1,12 +1,19 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
+    QPushButton,
 )
+
+from gui.widgets import (
+    HBoxLayout,
+    StylableWidget,
+    VBoxLayout,
+)
+from gui.style import constants
 from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 
 
-class RunPageTab(QWidget):
+class RunPageTab(StylableWidget):
     """
     An abstract base class for tabs in the run page.
      
@@ -18,14 +25,16 @@ class RunPageTab(QWidget):
     """
     def __init__(self):
         super().__init__()
+        self.setObjectName("run_tab")
         widget = self._setup_widget()
         navigation = self._setup_navigation_buttons()
         self._setup_layout(widget, navigation)
 
     def _setup_layout(self, widget: QWidget, navigation: QWidget) -> None:
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout = VBoxLayout(
+            self,
+            spacing=constants.GAP_MEDIUM,
+        )
         layout.addWidget(widget, 1)
         layout.addWidget(navigation)
         pass

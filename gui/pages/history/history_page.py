@@ -1,8 +1,5 @@
-from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QWidget,
-    QHBoxLayout,
-    QVBoxLayout,
     QLabel,
     QSplitter,
     QStackedWidget,
@@ -14,12 +11,17 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Slot, Qt, Signal
 
 from ..page import Page
-from gui.components.history import HistoryListWidget
-from gui.components.results import ResultsWidget
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.model.history_record import HistoryRecord
 from gui.components.navigation_buttons_holder import NavigationButtonsHolder
+from gui.widgets import (
+    HBoxLayout,
+    VBoxLayout,
+)
+from gui.components.history import HistoryListWidget
+from gui.components.results import ResultsWidget
+from gui.style import constants
 
 class HistoryPage(Page):
     """
@@ -39,14 +41,21 @@ class HistoryPage(Page):
         self._run_record = RunRecord.from_yaml(app_settings.config_path)
         self._selected : HistoryRecord | None = None
         self._setup_ui()
-        self.setObjectName("history_widget")
         self._history_list.setObjectName("history_list")
 
     def _setup_ui(self):
         # Main layout with a splitter
-        results_layout = QHBoxLayout(self)
+        layout = HBoxLayout(
+            self,
+            left=constants.GAP_MEDIUM,
+            top=constants.GAP_MEDIUM,
+            right=constants.GAP_MEDIUM,
+            bottom=constants.GAP_MEDIUM,
+        )
+
         splitter = QSplitter(Qt.Orientation.Horizontal)
-        results_layout.addWidget(splitter)
+        splitter.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(splitter)
 
         self._history_list.run_selected.connect(self._on_run_selected)
 
@@ -58,11 +67,14 @@ class HistoryPage(Page):
         self._right_panel = QStackedWidget()
         splitter.addWidget(self._right_panel)
         self.results_panel = QWidget()
-        results_layout = QVBoxLayout(self.results_panel)
+        results_layout = VBoxLayout(
+            self.results_panel,
+            spacing=constants.GAP_SMALL,
+        )
 
-        run_results_label = QLabel("Run Results")
-        run_results_label.setObjectName("run_results_label")
-        results_layout.addWidget(run_results_label)
+        results_title_label = QLabel("Results")
+        results_title_label.setProperty("title", "true")
+        results_layout.addWidget(results_title_label)
 
         # Resultswidget of right panel
         self.results_widget = ResultsWidget(self._run_record)
@@ -149,9 +161,3 @@ class HistoryPage(Page):
             self.results_panel.show()
         else:
             self.results_panel.hide()
-
-    def paintEvent(self, event) -> None:
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)

@@ -1,10 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget,
-    QDialog, 
     QMessageBox,
-    QDialogButtonBox, 
-    QLabel, 
-    QVBoxLayout,
 )
 
 class ConfirmDialog(QMessageBox):
