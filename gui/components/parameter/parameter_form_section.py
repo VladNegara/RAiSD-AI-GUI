@@ -1,13 +1,17 @@
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QStyle, QStyleOption
-from PySide6.QtGui import QPainter
+from PySide6.QtWidgets import QWidget, QLabel
 from PySide6.QtCore import Signal, Slot
 
-from gui.model.parameter import ParameterGroup
 from .parameter_widget import ParameterWidget
+from gui.model.parameter import ParameterGroup
+from gui.widgets import (
+    StylableWidget,
+    VBoxLayout,
+)
 from gui.components.collapsible import Collapsible
+from gui.style import constants
 
 
-class ParameterFormSection(QWidget):
+class ParameterFormSection(StylableWidget):
     """
     A section of the parameter form.
 
@@ -36,24 +40,35 @@ class ParameterFormSection(QWidget):
         self._parameter_group = parameter_group
         self._parameter_group.enabled_changed.connect(self._parameter_group_enabled_changed)
         self._editable = editable
+        self._invalid = False
         self._parameter_widgets: list[ParameterWidget] = []
 
-        # Make widgets
+        # Make parameter widgets
         heading = QLabel(self._parameter_group.name)
-
-        form_body = QWidget()
-        form_layout = QVBoxLayout(form_body)
-        form_layout.setContentsMargins(0, 0, 0, 0)
-
-        for parameter in parameter_group:
-            widget = ParameterWidget.from_parameter(parameter, self._editable)
-            self._parameter_widgets.append(widget)
-            form_layout.addWidget(widget.build_form_row())
-
-        layout = QVBoxLayout(self)
         heading.setObjectName("heading")
-        widget = Collapsible(heading, form_body)
-        layout.addWidget(widget)
+
+        row_widget = QWidget()
+        row_layout = VBoxLayout(
+            row_widget,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_SMALL,
+            spacing=constants.GAP_SMALL,
+        )
+        for parameter in parameter_group:
+            widget = ParameterWidget.from_parameter(
+                parameter,
+                editable=self._editable,
+            )
+            self._parameter_widgets.append(widget)
+            row_layout.addWidget(widget.build_form_row())
+
+        layout = VBoxLayout(
+            self,
+        )
+        self._collapsible = Collapsible(heading, row_widget)
+        layout.addWidget(self._collapsible)
 
         self.setVisible(self._parameter_group.enabled)
 
@@ -83,12 +98,19 @@ class ParameterFormSection(QWidget):
         for widget in self._parameter_widgets:
             widget.touched = False
 
-    def paintEvent(self, event) -> None:
+    @property
+    def invalid(self) -> bool:
         """
-        Override paintEvent so that QSS styling (background, border,
-        etc.) is applied to this plain QWidget subclass.
+        Get invalid property on the parameter_form_section
         """
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
+        return self._invalid
+
+    @invalid.setter
+    def invalid(self, value: bool) -> None:
+        """
+        Set invalid property on the parameter_form_section
+        """
+        self._invalid = value
+        self.setProperty("invalid", "true" if value else "false")
+        self.style().unpolish(self)
+        self.style().polish(self)

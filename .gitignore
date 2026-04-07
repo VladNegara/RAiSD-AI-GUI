@@ -6,6 +6,7 @@ workspace/
 bin/
 Makefile
 RAiSD-AI
+RAiSD-AI-ZLIB
 
 #./test-all.sh
 RAiSD_Images.*/
@@ -15,8 +16,9 @@ RAiSD_Model.*/
 RAiSD_Report.*/
 RAiSD_Report.*
 
-#.History
-history.json
+
+#.Settings
+gui/settings.yaml
 
 # resource taken from https://github.com/github/gitignore/blob/main/Python.gitignore
 # Byte-compiled / optimized / DLL files

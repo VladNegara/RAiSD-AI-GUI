@@ -1,18 +1,18 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
-    QHBoxLayout,
-    QVBoxLayout,
     QPushButton,
-    QStyle,
-    QStyleOption,
-)
-from PySide6.QtGui import (
-    QPainter,
 )
 
+from gui.widgets import (
+    HBoxLayout,
+    StylableWidget,
+    VBoxLayout,
+)
+from gui.style import constants
 
-class NavigationButtonsHolder(QWidget):
+
+class NavigationButtonsHolder(StylableWidget):
     """
     A widget to hold the navigation buttons for a RunPageTab, and to allow
     for consistent styling and layout of these buttons across different tabs.
@@ -30,7 +30,7 @@ class NavigationButtonsHolder(QWidget):
 
         self.setObjectName("navigation_buttons_holder")
 
-        layout = QHBoxLayout(self)
+        layout = HBoxLayout(self)
         for button, alignment in ((self.left_button, Qt.AlignmentFlag.AlignLeft), 
                                   (self.middle_button, Qt.AlignmentFlag.AlignHCenter), 
                                   (self.right_button, Qt.AlignmentFlag.AlignRight)):
@@ -39,18 +39,8 @@ class NavigationButtonsHolder(QWidget):
             else:
                 layout.addWidget(QWidget(), 1)
 
-    def paintEvent(self, event) -> None:
-        """
-        Override paintEvent so that QSS styling (background, border,
-        etc.) is applied to this plain QWidget subclass.
-        """
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
-
-class RunPageTab(QWidget):
+class RunPageTab(StylableWidget):
     """
     An abstract base class for tabs in the run page.
      
@@ -62,14 +52,16 @@ class RunPageTab(QWidget):
     """
     def __init__(self):
         super().__init__()
+        self.setObjectName("run_tab")
         widget = self._setup_widget()
         navigation = self._setup_navigation_buttons()
         self._setup_layout(widget, navigation)
 
     def _setup_layout(self, widget: QWidget, navigation: QWidget) -> None:
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout = VBoxLayout(
+            self,
+            spacing=constants.GAP_MEDIUM,
+        )
         layout.addWidget(widget, 1)
         layout.addWidget(navigation)
         pass
@@ -99,5 +91,11 @@ class RunPageTab(QWidget):
     def refresh(self) -> None:
         """
         Refresh the UI elements of the tab when it is shown.
+        """
+        raise NotImplementedError()
+    
+    def reset(self) -> None:
+        """
+        Reset the UI elements of the tab when the run page is reset.
         """
         raise NotImplementedError()

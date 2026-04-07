@@ -14,15 +14,14 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import (
     QWidget,
     QLabel,
-    QVBoxLayout,
-    QHBoxLayout,
     QCheckBox,
     QLineEdit,
     QPushButton,
     QComboBox,
     QFileDialog,
     QListWidget,
-    QAbstractItemView
+    QAbstractItemView,
+    QSizePolicy,
 )
 from PySide6.QtGui import (
     QRegularExpressionValidator,
@@ -41,23 +40,16 @@ from gui.model.parameter import (
     FileParameter,
 )
 from gui.components.utils import set_bool_property
-from gui.components.collapsible import Collapsible
+from gui.widgets import (
+    HBoxLayout,
+    VBoxLayout,
+)
+from gui.style import constants
 
 
-class AbstractQWidgetMeta(type(ABC), type(QWidget)):
-    """
-    Metaclass for an abstract base QWidget class.
-    """
-
-    pass
-
-
-class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
+class ParameterWidget(QWidget):
     """
     A base class for input widgets to fill in parameters using the GUI.
-
-    The class inherits from `ABC` to make it abstract and from
-    `QWidget`.
 
     A `ParameterWidget` object holds a reference to a `Parameter`
     object, which it updates with values entered by the user.
@@ -105,12 +97,11 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         self._parameter = parameter
         self._editable = editable
         self._touched = False #variable for activating show_validity
-
-        self._layout = QVBoxLayout(self)
+        self._parameter.enabled_changed.connect(self._on_enabled_changed)
+        self._layout = VBoxLayout(self)
 
         hints_widget = QWidget()
-        self._hints_layout = QVBoxLayout(hints_widget)
-        self._hints_layout.setContentsMargins(0, 0, 0, 0)
+        self._hints_layout = VBoxLayout(hints_widget)
         self._hint_labels = []
         for hint in self._parameter.hints:
             hint_label = self.__class__.HintLabel(hint)
@@ -124,6 +115,11 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         self._parameter.constraints_valid_changed.connect(
             self._constraints_valid_changed,
         )
+
+    @Slot(bool)
+    def _on_enabled_changed(self, enabled: bool) -> None:
+        if enabled:
+            self.touched = False
 
     def show_validity(self) -> None:
         """
@@ -234,22 +230,36 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         :rtype: QWidget
         """
         row = QWidget()
+        row.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed,
+        )
         row.setVisible(self.parameter.enabled)
         self.parameter.enabled_changed.connect(
             lambda new_enabled: row.setVisible(new_enabled)
         )
-        layout = QHBoxLayout(row)
+        layout = HBoxLayout(
+            row,
+            spacing=constants.GAP_SMALL,
+        )
+
+        label_widget = QWidget()
+        label_layout = VBoxLayout(label_widget)
 
         label_header = QLabel(self.parameter.name)
         label_header.setAlignment(Qt.AlignmentFlag.AlignLeft)
         label_header.setObjectName("label_header")
+        label_layout.addWidget(label_header)
+
         label_body = QLabel(self.parameter.description)
+        label_body.setWordWrap(True)
         label_body.setObjectName("label_body")
-        label: QWidget = Collapsible(
-            label_header,
-            label_body,
-        )
-        layout.addWidget(label, stretch=1)
+        label_layout.addWidget(label_body)
+
+        label_layout.addStretch()
+
+        layout.addWidget(label_widget, stretch=3)
+        layout.addStretch(2)
 
         layout.addWidget(self)
 
@@ -304,11 +314,19 @@ class OptionalParameterWidget(ParameterWidget):
 
     def build_form_row(self) -> QWidget:
         row = QWidget()
-        layout = QVBoxLayout(row)
+        layout = VBoxLayout(
+            row,
+            spacing=constants.GAP_TINY,
+        )
 
         own_row = super().build_form_row()
         layout.addWidget(own_row)
 
+        child_row_widget = QWidget()
+        child_row_layout = VBoxLayout(
+            child_row_widget,
+            left=constants.GAP_SMALL,
+        )
         # `self.parameter`` should always be of type OptionalParameter,
         # even though the type checker doesn't agree.
         self._child_widget = ParameterWidget.from_parameter(
@@ -316,7 +334,8 @@ class OptionalParameterWidget(ParameterWidget):
             self._editable
         )
         child_row = self._child_widget.build_form_row()
-        layout.addWidget(child_row)
+        child_row_layout.addWidget(child_row)
+        layout.addWidget(child_row_widget)
 
         return row
 
@@ -339,6 +358,7 @@ class OptionalParameterWidget(ParameterWidget):
             self._child_widget.touched = self.touched
 
 
+
 class MultiParameterWidget(ParameterWidget):
     """
     A widget to edit a multi-value parameter.
@@ -359,18 +379,28 @@ class MultiParameterWidget(ParameterWidget):
 
     def build_form_row(self) -> QWidget:
         row = QWidget()
-        layout = QVBoxLayout(row)
+        layout = VBoxLayout(
+            row,
+            spacing=constants.GAP_TINY,
+        )
 
         own_row = super().build_form_row()
         layout.addWidget(own_row)
 
+        child_row_widget = QWidget()
+        child_row_layout = VBoxLayout(
+            child_row_widget,
+            left=constants.GAP_SMALL,
+            spacing=constants.GAP_TINY,
+        )
         # This should always work, since the constructor is given a
         # MultiParameter object.
         for child_parameter in self.parameter.parameters: # type: ignore
             child_widget = ParameterWidget.from_parameter(child_parameter, self._editable)
             self._child_widgets.append(child_widget)
             child_row = child_widget.build_form_row()
-            layout.addWidget(child_row)
+            child_row_layout.addWidget(child_row)
+        layout.addWidget(child_row_widget)
 
         return row
 
@@ -623,7 +653,7 @@ class StringPairListParameterWidget(ParameterWidget):
             super().__init__()
             self._editable = editable
 
-            layout = QHBoxLayout(self)
+            layout = HBoxLayout(self)
 
             self._left_line_edit = QLineEdit()
             self._left_line_edit.setText(values[0])
@@ -692,7 +722,7 @@ class StringPairListParameterWidget(ParameterWidget):
 
         self.rows: list[StringPairListParameterWidget.Row] = []
         row_widget = QWidget()
-        self.row_layout = QVBoxLayout(row_widget)
+        self.row_layout = VBoxLayout(row_widget)
         self._parameter: StringPairListParameter
         delete_button_visible = (
             len(self._parameter.value) > self._parameter.min_count
@@ -824,7 +854,6 @@ class FileParameterWidget(ParameterWidget):
         # If the widget is locked: create a list with the selected files
         if not self._editable:
             self.list_widget = QListWidget()
-            self.list_widget.collapsible = False
             self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
             self.list_widget.setSortingEnabled(True)
             if self.parameter.value:

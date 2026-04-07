@@ -5,8 +5,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
     QScrollArea,
     QRadioButton,
     QPushButton,
@@ -15,9 +13,14 @@ from PySide6.QtWidgets import (
 
 from .run_page_tab import RunPageTab, NavigationButtonsHolder
 from gui.model.run_record import RunRecord
+from gui.widgets import (
+    HBoxLayout,
+    ResizableStackedWidget,
+    VBoxLayout,
+)
 from gui.components.operation import OperationTreeWidget
-from gui.components.resizable_stacked_widget import ResizableStackedWidget
 from gui.components.parameter import ParameterWidget
+from gui.style import constants
 
 
 class OperationTab(RunPageTab):
@@ -34,11 +37,14 @@ class OperationTab(RunPageTab):
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
         widget.setObjectName("operation_selection_widget")
-        layout = QVBoxLayout(widget)
+        layout = VBoxLayout(
+            widget,
+            spacing=constants.GAP_MEDIUM,
+        )
 
-        operation_selection_label = QLabel("Operation Selection")
-        operation_selection_label.setObjectName("operation_selection_label")
-        layout.addWidget(operation_selection_label)
+        title_label = QLabel("Operation Selection")
+        title_label.setProperty("title", "true")
+        layout.addWidget(title_label)
 
         run_id_parameter_widget = ParameterWidget.from_parameter(
             self._run_record.run_id_parameter,
@@ -90,10 +96,15 @@ class OperationTab(RunPageTab):
 
             self._run_record = run_record
 
-            layout = QHBoxLayout(self)
+            layout = HBoxLayout(
+                self,
+                spacing=constants.GAP_TINY,
+            )
 
             button_widget = QWidget()
-            button_layout = QVBoxLayout(button_widget)
+            button_layout = VBoxLayout(button_widget)
+            button_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+            button_layout.setSpacing(constants.GAP_TINY)
 
             tree_scroll = QScrollArea()
             tree_scroll.setObjectName("tree_scroll")
@@ -107,26 +118,32 @@ class OperationTab(RunPageTab):
 
             self.tree_stacked_widget = ResizableStackedWidget()
             self.tree_stacked_widget.setObjectName("tree_stacked_widget")
-            
-            self.tree_selectors : list[tuple[QRadioButton, OperationTreeWidget]]= []
-            for i, tree in enumerate(
-                    self._run_record.operation_trees
-            ):
-                self.button = QRadioButton(tree.root.name)
-                self.button.setChecked(
-                    i
-                    == self._run_record.selected_operation_tree_index
-                )
-                button_layout.addWidget(self.button)
 
-                widget = OperationTreeWidget(tree)
-                self.tree_stacked_widget.addWidget(widget)
+            self.tree_selectors: list[tuple[QRadioButton, OperationTreeWidget]] = []
+            flat_index = 0
+            for mode_name, trees in self._run_record.categorized_operation_trees:
+                mode_label = QLabel(mode_name + " Operations")
+                mode_label.setObjectName("mode_label")
+                button_layout.addWidget(mode_label)
 
-                self.button.clicked.connect(lambda _, i=i: self._button_clicked(i))
-                self.tree_selectors.append((self.button, widget))
+                for tree in trees:
+                    self.button = QRadioButton(tree.root.name)
+                    self.button.setChecked(
+                        flat_index == self._run_record.selected_operation_tree_index
+                    )
+                    button_layout.addWidget(self.button)
+
+                    widget = OperationTreeWidget(tree)
+                    self.tree_stacked_widget.addWidget(widget)
+
+                    idx = flat_index
+                    self.button.clicked.connect(lambda _, i=idx: self._button_clicked(i))
+                    self.tree_selectors.append((self.button, widget))
+                    flat_index += 1
+
+                button_layout.addSpacing(constants.GAP_SMALL)
+
             tree_scroll.setWidget(self.tree_stacked_widget)
-
-            button_layout.addStretch()
 
             layout.addWidget(button_widget)
             layout.addWidget(tree_scroll)

@@ -1,15 +1,21 @@
 from PySide6.QtCore import (
+    QSize,
+    Qt,
     Signal,
     Slot,
 )
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import (
-    QWidget,
     QLabel,
-    QHBoxLayout,
-    QVBoxLayout,
+    QSizePolicy,
+    QWidget,
 )
+
+from gui.widgets import (
+    HBoxLayout,
+    VBoxLayout,
+)
+from gui.style import constants
 
 
 class Collapsible(QWidget):
@@ -56,8 +62,14 @@ class Collapsible(QWidget):
             self._arrows = arrows
             self._collapsed = collapsed
 
-            layout = QHBoxLayout(self)
-            layout.setContentsMargins(0, 0, 0, 0)
+            layout = HBoxLayout(
+                self,
+                left=constants.GAP_SMALL,
+                top=constants.GAP_TINY,
+                bottom=constants.GAP_TINY,
+                spacing=constants.GAP_TINY,
+            )
+            layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
             self._arrow = QLabel("")
             self._update_arrow()
@@ -78,7 +90,7 @@ class Collapsible(QWidget):
         def collapsed(self, value: bool) -> None:
             self._collapsed = value
             self._update_arrow()
-            
+
         def _update_arrow(self) -> None:
             new_arrow: str = self._arrows[0 if self._collapsed else 1]
             self._arrow.setText(new_arrow)
@@ -118,9 +130,7 @@ class Collapsible(QWidget):
         super().__init__()
         self._collapsed = collapsed
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        layout = VBoxLayout(self)
 
         self._header = Collapsible.Header(
             header,

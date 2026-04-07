@@ -75,14 +75,44 @@ The executable is placed in the path bin/release. A link to the executable is pl
 RAiSD versions 2.7-3.1 required the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) to calculate μ values based on interpolation in grid-based scans. This is no longer required, as RAiSD-AI contains a native grid-based implementation that is used with both the μ statistic and the CNN.  
 Information on how to compile and run legacy RAiSD code (e.g., v3.1) can be found [here](https://github.com/pephco/RAiSD?tab=readme-ov-file#download-and-compile).
 
-### GUI Installation
+### Installing the GUI
 
-The following commands can be used to install all necessary tools (including micromamba for package management), create the environments, and build RAiSD-AI.
+RAiSD-AI includes an optional graphical user interface (GUI).
+
+Run the provided `setup-gui.sh` script to install the dependencies of the GUI:
 
 ```bash
-./setup-step-1.sh
-./setup-step-2.sh
+./setup-gui.sh
 ```
+
+To see all options, use the help option:
+
+```bash
+./setup-gui.sh -h
+```
+
+By default, the set-up script assumes RAiSD-AI-ZLIB has been compiled. To also install the dependencies of RAiSD-AI and compile RAiSD-AI-ZLIB, use the `-a` flag.
+
+By default, the set-up script uses Conda as the package manager. To use micromamba instead, use the `-m` flag.
+
+> Note: the set-up script compiles the RAiSD-AI-ZLIB executable in order to allow for all functionality of the RAiSD-AI tool in the GUI. To force compiling just the RAiSD-AI executable, use the `-r` flag. This is not recommended since it can break some GUI functionality!
+
+### Running the GUI
+
+To use the GUI, first activate the `raisd-ai-gui` environment using your package manager:
+
+```bash
+conda activate raisd-ai-gui
+```
+
+> Note: if you use micromamba instead of conda, replace `conda` with `micromamba`.
+
+When the environment is activated, run the following command:
+
+```bash
+python -m gui.app
+```
+
 
 Quick Test Run
 --------
@@ -92,7 +122,6 @@ To verify that RAiSD-AI is installed correctly, a test run can be done with the 
     $ ./RAiSD-AI -n test_run -I datasets/test/msselection1_10sims.out -L 100000 -O
     
 Upon completion, the output files RAiSD_Info.test_run and RAiSD_Report.test_run are generated. 
-
 
 Extensive Test Run
 ---------
