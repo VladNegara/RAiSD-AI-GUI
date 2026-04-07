@@ -1,10 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
     QLabel,
 )
-
-from PySide6.QtCore import Slot
 
 from .parameter_form_section import ParameterFormSection
 from gui.model.run_record import RunRecord
