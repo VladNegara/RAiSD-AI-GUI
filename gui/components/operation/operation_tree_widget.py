@@ -357,19 +357,20 @@ class OperationNodeWidget(FileProducerNodeWidget):
         description.setWordWrap(True)
         layout.addWidget(description)
 
-        parameter_rows_widget = QWidget()
-        parameter_rows_layout = QVBoxLayout(parameter_rows_widget)
-
-        self.parameter_widgets : list[ParameterWidget] = []
-        for parameter in self._operation_node.parameters.values():
-            parameter_widget = ParameterWidget.from_parameter(
-                parameter=parameter,
-                editable=True,
-            )
-            self.parameter_widgets.append(parameter_widget)
-            parameter_row = parameter_widget.build_form_row()
-            parameter_rows_layout.addWidget(parameter_row)
-        layout.addWidget(parameter_rows_widget)
+        self.parameter_widgets: list[ParameterWidget] = []
+        if self._operation_node.parameters:
+            parameter_rows_widget = QWidget()
+            parameter_rows_layout = QVBoxLayout(parameter_rows_widget)
+            parameter_rows_layout.setContentsMargins(0, 0, 0, 0)
+            for parameter in self._operation_node.parameters.values():
+                parameter_widget = ParameterWidget.from_parameter(
+                    parameter=parameter,
+                    editable=True,
+                )
+                self.parameter_widgets.append(parameter_widget)
+                parameter_row = parameter_widget.build_form_row()
+                parameter_rows_layout.addWidget(parameter_row)
+            layout.addWidget(parameter_rows_widget)
 
         self._output_info_label = InfoLabel(
             self.output_label_text + self._operation_node.file
@@ -378,20 +379,21 @@ class OperationNodeWidget(FileProducerNodeWidget):
 
         layout.setContentsMargins(5,0,0,0)
 
-        input_files_widget = QWidget()
-        input_files_layout = QHBoxLayout(input_files_widget)
-
-        self.file_consumer_widgets : list[FileConsumerNodeWidget] = []
-        for file_consumer in operation_node.file_consumers:
-            file_consumer_widget = FileConsumerNodeWidget(file_consumer)
-            self.file_consumer_widgets.append(file_consumer_widget)
-            file_consumer_widget.setObjectName("file_consumer_widget")
-            input_files_layout.addWidget(
-                file_consumer_widget,
-                alignment=Qt.AlignmentFlag.AlignTop,
-                stretch=1,
-            )
-        layout.addWidget(input_files_widget)
+        self.file_consumer_widgets: list[FileConsumerNodeWidget] = []
+        if operation_node.file_consumers:
+            input_files_widget = QWidget()
+            input_files_layout = QHBoxLayout(input_files_widget)
+            input_files_layout.setContentsMargins(0, 0, 0, 0)
+            for file_consumer in operation_node.file_consumers:
+                file_consumer_widget = FileConsumerNodeWidget(file_consumer)
+                self.file_consumer_widgets.append(file_consumer_widget)
+                file_consumer_widget.setObjectName("file_consumer_widget")
+                input_files_layout.addWidget(
+                    file_consumer_widget,
+                    alignment=Qt.AlignmentFlag.AlignTop,
+                    stretch=1,
+                )
+            layout.addWidget(input_files_widget)
 
         self._operation_node.file_changed.connect(self._file_changed)
 

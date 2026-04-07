@@ -403,3 +403,25 @@ QWidget#history_record_widget{
 QWidget#history_record_widget:hover{
     background-color: $sidebar-button-hover;
 }
+
+QWidget#info_label[expanded="false"],
+QWidget#warning_label[expanded="false"],
+QWidget#error_label[expanded="false"] {
+    background: transparent;
+    border: 0px;
+}
+
+QWidget#info_label[expanded="true"] {
+    background-color: #d4eaf7;
+    border-radius: 8px;
+}
+
+QWidget#warning_label[expanded="true"] {
+    background-color: #fff3cd;
+    border-radius: 8px;
+}
+
+QWidget#error_label[expanded="true"] {
+    background-color: #f8d7da;
+    border-radius: 8px;
+}
