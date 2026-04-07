@@ -3,7 +3,10 @@ run_id_parameter:
   description: A name that identifies the run and is used to name the output files. Only letters, digits and underscores allowed
   cli: "-n "
   type: str
-  pattern: "[a-zA-Z0-9_]+"
+  constraints:
+    - type: regex
+      pattern: "\\w+"
+      hint: Letters, numbers and underscores allowed.
 modes:
   - name: Standard RAiSD
     operations:
@@ -67,8 +70,11 @@ modes:
             description: The output folder will use this name.
             cli: "-icl "
             type: str
-            pattern: ".+"
             default: class_label
+            constraints:
+              - type: regex
+                pattern: ".+"
+                hint: "Cannot be empty."
         path:
           - RAiSD_Images.
           - type: run id
@@ -280,8 +286,10 @@ parameter_groups:
         description: The region size (in basepairs).
         cli: "-L "
         type: int
-        min: 1
         default: 1
+        constraints:
+          - type: interval
+            min: 1
         conditions:
           - type: enum
             parameter: input-file-type
@@ -302,17 +310,21 @@ parameter_groups:
         name: maf # What?
         description: The threshold value for excluding SNPs with minor allele frequency.
         cli: "-m "
-        type: float
-        min: 0.0
-        max: 1.0
         default: 0.0
+        type: float
+        constraints:
+          - type: interval
+            min: 0.0
+            max: 1.0
       "-y":
         name: Ploidy
         description: The ploidy used to correctly represent missing data.
         cli: "-y "
         type: int
-        min: 1
         default: 2
+        constraints:
+          - type: interval
+            min: 1
       "-M":
         name: Missing data handling strategy
         description: How to handle missing data.
@@ -384,16 +396,21 @@ parameter_groups:
         name: Sweep scan window size
         description: The window size. The default value is empirically determined.
         cli: "-w "
-        type: int # Must be even!
-        min: 6
+        type: int
         default: 50
+        constraints:
+          - type: interval
+            min: 6
+          - type: even
       "-c":
         name: SFS slack
         description: The slack for the SFS edges to be used for the calculation of mu_SFS.
         cli: "-c "
         type: int
-        min: 1
         default: 1
+        constraints:
+          - type: interval
+            min: 1
       "-G":
         name: Report grid scores
         description: Report mu statistic scores at equidistant locations between the first and last SNPs.
@@ -404,32 +421,46 @@ parameter_groups:
           description: The total number of evaluation points across the data.
           cli: "-G "
           type: int
-          min: 3
-          default: -1 # ?!
+          default: 3
+          constraints:
+            - type: interval
+              min: 3
       "-VAREXP":
         name: mu-var exponent
         description: The exponent for the mu-var factor.
         cli: "-VAREXP "
         type: float
-        min: 0.0 # Exclusive!
-        max: 10.0 # Exclusive!
         default: 1.0
+        constraints:
+          - type: interval
+            min: 0.0
+            min_inclusive: false
+            max: 10.0
+            max_inclusive: false
       "-SFSEXP":
         name: mu-sfs exponent
         description: The exponent for the mu-sfs factor.
         cli: "-SFSEXP "
         type: float
-        min: 0.0 # Exclusive!
-        max: 10.0 # Exclusive!
         default: 1.0
+        constraints:
+          - type: interval
+            min: 0.0
+            min_inclusive: false
+            max: 10.0
+            max_inclusive: false
       "-LDEXP":
         name: mu-ld exponent
         description: The exponent for the mu-ld factor.
         cli: "-LDEXP "
         type: float
-        min: 0.0 # Exclusive!
-        max: 10.0 # Exclusive!
         default: 1.0
+        constraints:
+          - type: interval
+            min: 0.0
+            min_inclusive: false
+            max: 10.0
+            max_inclusive: false
   - name: Standard output and reports
     operations:
       - RSD-DEF
@@ -526,9 +557,13 @@ parameter_groups:
           description: Provide a probability value to be used for the quantile function in R.
           cli: "-A "
           type: float
-          min: 0.0
-          max: 1.0
           default: 0.9999
+          constraints:
+            - type: interval
+              min: 0.0
+              min_inclusive: false # ?
+              max: 1.0
+              max_inclusive: false # ?
   - name: Accuracy and sensitivity evaluation
     operations:
       - RSD-DEF
@@ -548,8 +583,10 @@ parameter_groups:
               description: The selection target (in basepairs).
               cli: "-T "
               type: int
-              min: 1
               default: 1 # Source: I made it up
+              constraints:
+                - type: interval
+                  min: 1
             - name: Set maximum distance
               description: Set the maximum distance from the selection target to calculate success rates, i.e., reported locations in the proximity of the target of selection (provided above).
               type: optional
@@ -559,8 +596,10 @@ parameter_groups:
                 description: The maximum distance from the selection target (in basepairs).
                 cli: "-d "
                 type: int
-                min: 1
                 default: 1 # Made up
+                constraints:
+                  - type: interval
+                    min: 1
       "-k": # May be wrong!
         name: Report score
         description: Report the corresponding reported score after sorting reported locations for all the datasets in the input file.
@@ -571,9 +610,11 @@ parameter_groups:
           description: The false positive rate to use.
           cli: "-k "
           type: float
-          min: 0.0
-          max: 1.0
           default: 0.05
+          constraints:
+            - type: interval
+              min: 0.0
+              max: 1.0
       "-l":
         name: Thresholds
         description: Fill in these thresholds using the values reported by a previous RAiSD-AI run with "Report score" activated.
@@ -590,9 +631,11 @@ parameter_groups:
               description: null
               cli: "var="
               type: float
-              min: 0.0
-              max: 1.0
               default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+                  max: 1.0
           - name: Provide sfs threshold
             description: null
             type: optional
@@ -602,9 +645,11 @@ parameter_groups:
               description: null
               cli: "sfs="
               type: float
-              min: 0.0
-              max: 1.0
               default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+                  max: 1.0
           - name: Provide ld threshold
             description: null
             type: optional
@@ -614,9 +659,11 @@ parameter_groups:
               description: null
               cli: "ld="
               type: float
-              min: 0.0
-              max: 1.0
               default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+                  max: 1.0
           - name: Provide mu threshold
             description: null
             type: optional
@@ -626,9 +673,11 @@ parameter_groups:
               description: null
               cli: "mu="
               type: float
-              min: 0.0
-              max: 1.0
               default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+                  max: 1.0
           - name: Provide pcl0 threshold
             description: null
             type: optional
@@ -638,9 +687,11 @@ parameter_groups:
               description: null
               cli: "pcl0="
               type: float
-              min: 0.0
-              max: 1.0
               default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+                  max: 1.0
           - name: Provide pcl1 threshold
             description: null
             type: optional
@@ -650,9 +701,11 @@ parameter_groups:
               description: null
               cli: "pcl1="
               type: float
-              min: 0.0
-              max: 1.0
               default: 0.0
+              constraints:
+                - type: interval
+                  min: 0.0
+                  max: 1.0
   - name: FASTA to VCF conversion
     operations:
       - FASTA-VCF
@@ -668,7 +721,10 @@ parameter_groups:
           cli: "-C "
           type: str
           default: ""
-          pattern: ".+"
+          constraints:
+            - type: regex
+              pattern: ".+"
+              hint: Cannot be empty.
       "-C2": # No clue if this should be allowed without C.
         name: Provide a second outgroup name
         description: Provide the second outgroup to be used for the ancestral states.
@@ -680,14 +736,20 @@ parameter_groups:
           cli: "-C2 "
           type: str
           default: ""
-          pattern: ".+"
+          constraints:
+            - type: regex
+              pattern: ".+"
+              hint: Cannot be empty.
       "-H":
         name: Chromosome name
         description: Provide the chromosome name.
         cli: "-H "
         type: str
         default: "chrom"
-        pattern: ".+"
+        constraints:
+          - type: regex
+            pattern: ".+"
+            hint: Cannot be empty.
   - name: VCF to ms conversion
     operations:
       - VCF-MS
@@ -702,8 +764,10 @@ parameter_groups:
           description: The memory size to be allocated for the conversion.
           cli: "-Q "
           type: int
-          min: 1
           default: 8
+          constraints:
+            - type: interval
+              min: 1
   - name: Common outlier analysis
     operations:
       - CO
@@ -715,13 +779,13 @@ parameter_groups:
           remove:
             - CO
         name: Perform common outlier analysis
-        description: Do stuff #
+        description: Perform common outlier analysis along with a standard or AI sweep scan.
         cli: "-CO "
         type: optional
         default: false
         parameter:
           name: Options
-          description: options for CO #
+          description: Common outlier analysis options
           type: multi
           parameters:
           - name: SweeD report
@@ -729,19 +793,25 @@ parameter_groups:
             type: file
           - name: SweeD position index # ?
             description: The column indices for positions.
-            default: 0 #Probably wrong
             type: int
+            default: 1 # Probably wrong
+            constraints:
+              - type: interval
+                min: 1
           - name: SweeD score index # ?
             description: The SweeD scores.
             type: int
-            default: 0 #Probably wrong
+            default: 1 # Probably wrong
+            constraints:
+              - type: interval
+                min: 1
       "-CO-already-run":
         operations:
           remove:
             - RSD-DEF
             - SWP-SCN
         name: Common outlier analysis options
-        description: options for CO
+        description: The options for performing common outlier analysis on the results of a previously performed sweep scan.
         cli: "-CO "
         type: multi
         parameters:
@@ -751,13 +821,17 @@ parameter_groups:
           - name: SweeD position index # ?
             description: The column indices for positions.
             type: int
-            min: 1
             default: 1
+            constraints:
+              - type: interval
+                min: 1
           - name: SweeD score index # ?
             description: The SweeD scores.
             type: int
-            min: 1
             default: 1
+            constraints:
+              - type: interval
+                min: 1
             #position index != score index
           - name: RAiSD report
             description: The RAiSD report to be used for common outlier analysis. The report must not contain a header.
@@ -766,18 +840,26 @@ parameter_groups:
             description: The position index for the RAiSD report. 
             type: int
             default: 1
+            constraints:
+              - type: interval
+                min: 1
           - name: RAiSD column index
             description: The index of the column you want to use, depending on the RAiSD report. To use the mu-statistic, set X=2 if RAiSD was invoked with the default parameters, or set X=7 if -R was explicitly provided or implicitly activated through some other command-line parameter.
             type: int
             default: 1
+            constraints:
+              - type: interval
+                min: 1
       "-COT":
         name: Cut-off threshold
         description: The cut-off threshold for identifying top outliers per report.
         cli: "-COT "
         type: float
-        min: 0.0
-        max: 1.0
         default: 0.05
+        constraints:
+          - type: interval
+            min: 0.0
+            max: 1.0
         conditions:
           - type: or
             conditions:
@@ -787,13 +869,16 @@ parameter_groups:
               - type: enabled
                 parameter: "-CO-already-run"
                 value: true
-      "-COD": # typically 100-400
+      "-COD":
         name: Maximum distance
         description: Provides the maximum distance (in number of sites) between outlier points in the provided reports to identify matching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD and RAiSD, typically between 100 and 400.
         cli: "-COD "
         type: int
-        min: 0
         default: 1
+        constraints:
+          - type: interval
+            min: 0
+          # soft constraint: typically 100-400
         conditions:
           - type: or
             conditions:
@@ -812,9 +897,11 @@ parameter_groups:
         description: The target site position for generating images, corresponding to the center of the first generated image. Should be smaller than region length.
         cli: "-its "
         type: int
-        min: 1
-        # max: < region_length
         default: 1
+        constraints:
+          - type: interval
+            min: 1
+          # max: < region_length
       "-poc": 
         name: Construct position-centered windows
         description: Changes the data-generation mode from using SNP-driven windows to constructing position-centered windows. When SNP-driven windows are used, the SNP located to the image target site position becomes the central SNP in the window and an equal number of SNPs are placed on both sides. When position-centered windows are used, the image target site position is (as close as possible to) the midpoint between the leftmost and rightmost SNPs per window.
@@ -826,15 +913,19 @@ parameter_groups:
         description: Provides the number of images to be created per simulation.
         cli: "-ips "
         type: int
-        min: 1
         default: 1
+        constraints:
+          - type: interval
+            min: 1
       "-iws":
         name: Image window step
         description: Provides the windo step for creating images.
         cli: "-iws "
         type: int
-        min: 1
         default: 1
+        constraints:
+          - type: interval
+            min: 1
       "-bin":
         name: Convert image data to .snp
         description: Converts image data to custom binary format (.snp). Only supported by the PyTorch implementation.
@@ -875,9 +966,12 @@ parameter_groups:
         name: Window size
         description: The window width provided is used to generate SNP windows as CNN input data.
         cli: "-w "
-        type: int 
-        min: 6 # must be even
+        type: int
         default: 400
+        constraints:
+          - type: interval
+            min: 6
+          - type: even
   - name: RAiSD-AI model training
     operations:
       - MDL-GEN
@@ -902,8 +996,10 @@ parameter_groups:
         description: Provides the number of epochs
         cli: "-e "
         type: int
-        min: 1
         default: 10
+        constraints:
+          - type: interval
+            min: 1
       "-cl4": 
         name: Pairings between class labels
         description: Provides 4 pairings between class labels and corresponding folder names.
@@ -935,7 +1031,10 @@ parameter_groups:
         parameter:
           name: Identifier
           type: str
-          pattern: "\\w+"
+          constraints:
+            - type: regex
+              pattern: "\\w+"
+              hint: Letters, numbers and underscores allowed.
         conditions:
           - type: enabled
             parameter: "-cl4"
@@ -947,7 +1046,10 @@ parameter_groups:
         parameter:
           name: Identifier
           type: str
-          pattern: "\\w+"
+          constraints:
+            - type: regex
+              pattern: "\\w+"
+              hint: Letters, numbers and underscores allowed.
         conditions:
           - type: enabled
             parameter: "-cl4"
@@ -960,7 +1062,9 @@ parameter_groups:
           name: Sequence groups
           type: int
           default: 1
-          min: 1
+          constraints:
+            - type: interval
+              min: 1
         conditions:
           - type: enum
             parameter: "-arc"
@@ -998,8 +1102,10 @@ parameter_groups:
         description: The class index can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MD-GEN run that generated the CNN model.
         type: int
         cli: "-pci 1 "
-        min: 0
         default: 0
+        constraints:
+          - type: interval
+            min: 0
         conditions:
           - type: enum
             parameter: "-pci-class-count"
@@ -1013,12 +1119,16 @@ parameter_groups:
         parameters:
           - name: First positive class index
             type: int
-            min: 0
             default: 0
+            constraints:
+              - type: interval
+                min: 0
           - name: Second positive class index
             type: int
-            min: 0
             default: 0
+            constraints:
+              - type: interval
+                min: 0
         conditions:
           - type: enum
             parameter: "-pci-class-count"

@@ -40,6 +40,7 @@ from gui.model.parameter import (
     StringPairListParameter,
     FileParameter,
 )
+from gui.components.utils import set_bool_property
 from gui.components.collapsible import Collapsible
 
 
@@ -64,6 +65,11 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
     `ParameterWidget` objects should not be created directly, but
     through the `from_parameter` factory method.
     """
+
+    class HintLabel(QLabel):
+        def __init__(self, text: str) -> None:
+            super().__init__(text=text)
+            self.setObjectName("parameter_hint")
 
     class ResetButton(QPushButton):
         """
@@ -100,40 +106,71 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
         self._editable = editable
         self._touched = False #variable for activating show_validity
 
-    def show_validity(self, widget: QWidget, valid: bool) -> None:
-        """
-        Validity is only shown after the user first interacts with it.
-        """
-        if not self._touched:
-            return
-        if valid and self._editable:
-            widget.setProperty("valid", "true")
-        elif self._editable:
-            widget.setProperty("valid", "false")
-        widget.style().unpolish(widget)
-        widget.style().polish(widget)
+        self._layout = QVBoxLayout(self)
 
-    def touch(self) -> None:
-        """
-        Helper function to call for setting touched as True
-        """
-        self._touched = True
-        for widget in self.validity_widgets():
-            self.show_validity(widget, self.parameter.valid)
+        hints_widget = QWidget()
+        self._hints_layout = QVBoxLayout(hints_widget)
+        self._hints_layout.setContentsMargins(0, 0, 0, 0)
+        self._hint_labels = []
+        for hint in self._parameter.hints:
+            hint_label = self.__class__.HintLabel(hint)
+            self._hints_layout.addWidget(hint_label)
+            self._hint_labels.append(hint_label)
+        self._layout.addWidget(hints_widget)
 
-    def untouch(self) -> None:
-        """
-        Helper function to call for setting touched as False
-        """
-        self._touched = False
-        for widget in self.validity_widgets():
-            widget.setProperty("valid", "")
-            widget.style().unpolish(widget)
-            widget.style().polish(widget)
+        # `show_validity` is not annotated as a Slot.
+        self._parameter.value_changed.connect(self.show_validity)
+        self._parameter.hint_added.connect(self._hint_added)
+        self._parameter.constraints_valid_changed.connect(
+            self._constraints_valid_changed,
+        )
 
+    def show_validity(self) -> None:
+        """
+        Set the validity property on the relevant widgets.
+
+        The validity is set on this widget's `validity_widgets` and on
+        each of its hint labels.
+
+        Validity is only shown if the widget is editable, and if the
+        user has interacted with it. Otherwise, it is hidden.
+        """
+        show: bool = self._editable and self.touched
+
+        parameter_valid = self._parameter.valid
+        for widget in self.validity_widgets:
+            if show:
+                set_bool_property(widget, "valid", parameter_valid)
+            else:
+                set_bool_property(widget, "valid", None)
+
+        constraints_valid = self._parameter.constraints_valid
+        for i, constraint_valid in enumerate(constraints_valid):
+            hint_label = self._hint_labels[i]
+            if show:
+                set_bool_property(hint_label, "valid", constraint_valid)
+            else:
+                set_bool_property(hint_label, "valid", None)
+
+    @property
+    def touched(self) -> bool:
+        """
+        Whether this widget has been interacted with by the user.
+
+        Setting this property will update the validity displayed on the
+        widget accordingly.
+        """
+        return self._touched
+
+    @touched.setter
+    def touched(self, new_touched: bool) -> None:
+        self._touched = new_touched
+        self.show_validity()
+
+    @property
     def validity_widgets(self) -> list[QWidget]:
         """
-        Returns list of widgets for validity to be displayed
+        The widgets that show the validity of this parameter widget.
         """
         return []
 
@@ -222,6 +259,18 @@ class ParameterWidget(ABC, QWidget, metaclass=AbstractQWidgetMeta):
 
         return row
 
+    @Slot(str)
+    def _hint_added(self, new_hint: str) -> None:
+        hint_label = self.__class__.HintLabel(new_hint)
+        self._hints_layout.addWidget(hint_label)
+        self._hint_labels.append(hint_label)
+
+    @Slot()
+    def _constraints_valid_changed(
+            self,
+    ) -> None:
+        self.show_validity()
+
 
 class OptionalParameterWidget(ParameterWidget):
     """
@@ -241,7 +290,6 @@ class OptionalParameterWidget(ParameterWidget):
         super().__init__(parameter, editable)
         self._child_widget: ParameterWidget | None = None
 
-        layout = QVBoxLayout(self)
         self._checkbox = QCheckBox()
         self._checkbox.setCheckState(
             Qt.CheckState.Checked
@@ -249,7 +297,7 @@ class OptionalParameterWidget(ParameterWidget):
             else Qt.CheckState.Unchecked
         )
         self._checkbox.setEnabled(self._editable)
-        layout.addWidget(self._checkbox)
+        self._layout.insertWidget(0, self._checkbox)
 
         self._checkbox.checkStateChanged.connect(self._check_state_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
@@ -272,10 +320,8 @@ class OptionalParameterWidget(ParameterWidget):
 
         return row
 
-
     @Slot(Qt.CheckState)
     def _check_state_changed(self, new_check_state: Qt.CheckState) -> None:
-        self._touched = True
         match new_check_state:
             case Qt.CheckState.Checked:
                 self.parameter.value = True
@@ -286,15 +332,12 @@ class OptionalParameterWidget(ParameterWidget):
     def _parameter_value_changed(self, new_value: bool, valid: bool) -> None:
         self._checkbox.setChecked(new_value)
 
-    def touch(self) -> None:
-        self._touched = True
-        if self._child_widget is not None and self.parameter.value:
-            self._child_widget.touch()
-
-    def untouch(self) -> None:
-        self._touched = False
+    @ParameterWidget.touched.setter
+    def touched(self, new_touched: bool) -> None:
+        ParameterWidget.touched.__set__(self, new_touched)
         if self._child_widget is not None:
-            self._child_widget.untouch()
+            self._child_widget.touched = self.touched
+
 
 
 class MultiParameterWidget(ParameterWidget):
@@ -332,15 +375,11 @@ class MultiParameterWidget(ParameterWidget):
 
         return row
 
-    def touch(self) -> None:
-        self._touched = True
+    @ParameterWidget.touched.setter
+    def touched(self, new_touched: bool) -> None:
+        ParameterWidget.touched.__set__(self, new_touched)
         for child in self._child_widgets:
-            child.touch()
-
-    def untouch(self) -> None:
-        self._touched = False
-        for child in self._child_widgets:
-            child.untouch()
+            child.touched = self.touched
 
 
 class BoolParameterWidget(ParameterWidget):
@@ -360,7 +399,6 @@ class BoolParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        layout = QVBoxLayout(self)
         self._checkbox = QCheckBox()
         self._checkbox.setCheckState(
             Qt.CheckState.Checked
@@ -368,14 +406,14 @@ class BoolParameterWidget(ParameterWidget):
             else Qt.CheckState.Unchecked
         )
         self._checkbox.setEnabled(self._editable)
-        layout.addWidget(self._checkbox)
+        self._layout.insertWidget(0, self._checkbox)
 
         self._checkbox.checkStateChanged.connect(self._check_state_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(Qt.CheckState)
     def _check_state_changed(self, new_check_state: Qt.CheckState) -> None:
-        self._touched = True
+        self.touched = True
         match new_check_state:
             case Qt.CheckState.Checked:
                 self.parameter.value = True
@@ -404,8 +442,6 @@ class IntParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        layout = QVBoxLayout(self)
-
         self._line_edit = QLineEdit()
         self._line_edit.setText(str(parameter.value))
         # Allow an arbitrary length integer.
@@ -413,26 +449,14 @@ class IntParameterWidget(ParameterWidget):
         validator = QRegularExpressionValidator(regex)
         self._line_edit.setValidator(validator)
         self._line_edit.setReadOnly(not self._editable)
-        layout.addWidget(self._line_edit)
-
-        match (parameter.lower_bound is None, parameter.upper_bound is None):
-            case (False, False):
-                label = QLabel(f'(between {parameter.lower_bound}'
-                               + f' and {parameter.upper_bound})')
-                layout.addWidget(label)
-            case (False, True):
-                label = QLabel(f'(minimum {parameter.lower_bound})')
-                layout.addWidget(label)
-            case (True, False):
-                label = QLabel(f'(maximum {parameter.upper_bound})')
-                layout.addWidget(label)
+        self._layout.insertWidget(0, self._line_edit)
 
         self._line_edit.textChanged.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(str)
     def _text_changed(self) -> None:
-        self._touched = True
+        self.touched = True
         try:
             self.parameter.value = int(self._line_edit.text())
         except:
@@ -440,7 +464,7 @@ class IntParameterWidget(ParameterWidget):
 
     @Slot(int, bool)
     def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
-        self._touched = True
+        self.touched = True
         try:
             current = int(self._line_edit.text())
             values_differ = current != new_value
@@ -448,8 +472,8 @@ class IntParameterWidget(ParameterWidget):
             values_differ = True
         if values_differ:
             self._line_edit.setText(str(new_value))
-        self.show_validity(self._line_edit, valid)
 
+    @property
     def validity_widgets(self) -> list[QWidget]:
         return [self._line_edit]
 
@@ -471,8 +495,6 @@ class FloatParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        layout = QVBoxLayout(self)
-
         self._line_edit = QLineEdit()
         self._line_edit.setText(str(parameter.value))
         # Allow an arbitrary length integer, optionally followed by a
@@ -483,26 +505,14 @@ class FloatParameterWidget(ParameterWidget):
         validator = QRegularExpressionValidator(regex)
         self._line_edit.setValidator(validator)
         self._line_edit.setReadOnly(not self._editable)
-        layout.addWidget(self._line_edit)
-
-        match (parameter.lower_bound is None, parameter.upper_bound is None):
-            case (False, False):
-                label = QLabel(f'(between {parameter.lower_bound}'
-                               + f' and {parameter.upper_bound})')
-                layout.addWidget(label)
-            case (False, True):
-                label = QLabel(f'(minimum {parameter.lower_bound})')
-                layout.addWidget(label)
-            case (True, False):
-                label = QLabel(f'(maximum {parameter.upper_bound})')
-                layout.addWidget(label)
+        self._layout.insertWidget(0, self._line_edit)
 
         self._line_edit.textChanged.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(str)
     def _text_changed(self) -> None:
-        self._touched = True
+        self.touched = True
         try:
             self.parameter.value = float(self._line_edit.text())
         except:
@@ -510,7 +520,6 @@ class FloatParameterWidget(ParameterWidget):
 
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
-        self._touched = True
         try:
             current = float(self._line_edit.text())
             values_differ = current != new_value
@@ -518,8 +527,8 @@ class FloatParameterWidget(ParameterWidget):
            values_differ = True
         if values_differ:
             self._line_edit.setText(str(new_value))
-        self.show_validity(self._line_edit, valid)
 
+    @property
     def validity_widgets(self) -> list[QWidget]:
         return [self._line_edit]
 
@@ -538,13 +547,11 @@ class EnumParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        layout = QVBoxLayout(self)
-
         self._combo_box = QComboBox()
         self._combo_box.addItems(parameter.options)
         self._combo_box.setCurrentIndex(parameter.value)
         self._combo_box.setEnabled(self._editable)
-        layout.addWidget(self._combo_box)
+        self._layout.insertWidget(0, self._combo_box)
 
         self._combo_box.currentIndexChanged.connect(
             self._combo_box_current_index_changed
@@ -553,7 +560,7 @@ class EnumParameterWidget(ParameterWidget):
 
     @Slot(int)
     def _combo_box_current_index_changed(self, new_index: int) -> None:
-        self._touched = True
+        self.touched = True
         self.parameter.value = new_index
 
     @Slot(int, bool)
@@ -581,32 +588,24 @@ class StringParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        layout = QVBoxLayout(self)
-
         self._line_edit = QLineEdit()
         self._line_edit.setText(parameter.value)
         self._line_edit.setReadOnly(not self._editable)
-        layout.addWidget(self._line_edit)
-
-        if parameter.max_length is not None:
-            self._line_edit.setMaxLength(parameter.max_length)
-            hint = QLabel(f"Max length: {parameter.max_length}")
-            layout.addWidget(hint)
+        self._layout.insertWidget(0, self._line_edit)
 
         self._line_edit.textChanged.connect(self._text_changed)
         parameter.value_changed.connect(self._parameter_value_changed)
 
     @Slot(str)
     def _text_changed(self) -> None:
-        self._touched = True
+        self.touched = True
         self.parameter.value = self._line_edit.text()
 
     @Slot(str, bool)
     def _parameter_value_changed(self, new_value: str, valid: bool) -> None:
-        self._touched = True
         self._line_edit.setText(new_value)
-        self.show_validity(self._line_edit, valid)
 
+    @property
     def validity_widgets(self) -> list[QWidget]:
         return [self._line_edit]
 
@@ -692,8 +691,6 @@ class StringPairListParameterWidget(ParameterWidget):
             editable=editable,
         )
 
-        layout = QVBoxLayout(self)
-
         self.rows: list[StringPairListParameterWidget.Row] = []
         row_widget = QWidget()
         self.row_layout = QVBoxLayout(row_widget)
@@ -712,12 +709,12 @@ class StringPairListParameterWidget(ParameterWidget):
             )
             self.rows.append(row)
             self.row_layout.addWidget(row)
-        layout.addWidget(row_widget)
+        self._layout.insertWidget(0, row_widget)
 
         if self._editable:
             add_pair_button = QPushButton("Add another row")
             add_pair_button.clicked.connect(self._add_clicked)
-            layout.addWidget(add_pair_button)
+            self._layout.insertWidget(1, add_pair_button)
 
         self._parameter.value_changed.connect(
             self._parameter_value_changed,
@@ -778,12 +775,14 @@ class StringPairListParameterWidget(ParameterWidget):
         new_left_valid: bool, 
         new_right_valid: bool,
     ) -> None:
-        self.show_validity(
+        set_bool_property(
             self.rows[index].left_line_edit,
+            "valid",
             new_left_valid,
         )
-        self.show_validity(
+        set_bool_property(
             self.rows[index].right_line_edit,
+            "valid",
             new_right_valid,
         )
 
@@ -821,7 +820,6 @@ class FileParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        layout = QVBoxLayout(self)
         parameter.value_changed.connect(self._parameter_value_changed)
 
         # If the widget is locked: create a list with the selected files
@@ -837,13 +835,18 @@ class FileParameterWidget(ParameterWidget):
             self.list_widget.setMinimumWidth(int(self.list_widget.sizeHintForColumn(0)*1.01))
             self.list_widget.setMaximumHeight(self.list_widget.sizeHintForRow(0)*self.list_widget.count())
             self.list_widget.doubleClicked.connect(self._on_double_click)
-            layout.addWidget(self.list_widget)
+            self._layout.insertWidget(0, self.list_widget)
             return
 
         # If the widget is not locked:
         self.setFixedWidth(300)
         self._path_label = QLabel("No file selected")
-        layout.addWidget(self._path_label)
+        self._layout.insertWidget(0, self._path_label)
+
+        self._file_browse = QPushButton('Browse')
+        self._file_browse.clicked.connect(self._open_file_dialog)
+
+        self._layout.insertWidget(1, self._file_browse)
 
         mode = "multiple files" if parameter.multiple else "one file"
 
@@ -851,7 +854,7 @@ class FileParameterWidget(ParameterWidget):
             allowed = ', '.join(parameter.accepted_formats)
             hint = QLabel(f"Select {mode} — Allowed types: {allowed}")
             hint.setWordWrap(True)
-            layout.addWidget(hint)
+            self._layout.insertWidget(1, hint)
         elif (not parameter.strict
               and parameter.accepted_formats is None
               and parameter.expected_formats is not None):
@@ -859,23 +862,18 @@ class FileParameterWidget(ParameterWidget):
             self._error_label.setProperty("valid", "false")
             self._error_label.style().unpolish(self)
             self._error_label.style().polish(self)
-            layout.addWidget(self._error_label)
+            self._layout.insertWidget(1, self._error_label)
             expected = ', '.join(parameter.expected_formats)
             hint = QLabel(f"Select {mode} — Expected file types: {expected}. "
                           + f"You can still upload a different file.")
             hint.setWordWrap(True)
-            layout.addWidget(hint)
+            self._layout.insertWidget(2, hint)
         elif (parameter.strict is False
               and parameter.accepted_formats is None
               and parameter.expected_formats is None):
             hint = QLabel(f"Select {mode} — Allowed types: any type.")
             hint.setWordWrap(True)
-            layout.addWidget(hint)
-
-        self._file_browse = QPushButton('Browse')
-        self._file_browse.clicked.connect(self._open_file_dialog)
-
-        layout.addWidget(self._file_browse)
+            self._layout.insertWidget(1, hint)
 
     @Slot(int)
     def _on_double_click(self, index) -> None:
@@ -933,9 +931,6 @@ class FileParameterWidget(ParameterWidget):
         else:
             pass
 
-        self._touched = True
-        self.show_validity(self._file_browse, valid)
-
     @Slot()
     def _open_file_dialog(self) -> None:
         """
@@ -944,7 +939,7 @@ class FileParameterWidget(ParameterWidget):
         file selection. Otherwise, it uses `getOpenFileName` to allow
         only a single file.
         """
-        self._touched = True
+        self.touched = True
         if self.parameter.multiple:
             filenames, _ = QFileDialog.getOpenFileNames(
                 self,
@@ -963,8 +958,6 @@ class FileParameterWidget(ParameterWidget):
 
         if filenames:
             self.parameter.value = [Path(f).as_posix() for f in filenames]
-        else:
-            self.show_validity(self._file_browse, self.parameter.valid)
 
     def _build_filter(self) -> str:
         """
@@ -978,7 +971,8 @@ class FileParameterWidget(ParameterWidget):
         )
         return f"Allowed files ({extensions})"
 
+    @property
     def validity_widgets(self) -> list[QWidget]:
-        if self._editable and hasattr(self, '_file_browse'):
+        if self._editable and self._file_browse is not None:
             return [self._file_browse]
         return []

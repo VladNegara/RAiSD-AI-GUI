@@ -116,6 +116,9 @@ class MainWindow(QMainWindow):
         self.history_page = HistoryPage()
         self.settings_page = SettingsPage()
 
+        app_settings.workspace_path_changed.connect(self.run_page.reset_page)
+        app_settings.workspace_path_changed.connect(self.history_page.reset_page)
+
         layout.addWidget(self.run_page)
         layout.addWidget(self.history_page)
         layout.addWidget(self.settings_page)
