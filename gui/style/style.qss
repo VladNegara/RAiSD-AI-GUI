@@ -369,7 +369,28 @@ QLabel#heading{
 }
 
 QRadioButton{
-    color: $primary-dark
+    color: $primary-dark;
+}
+
+QRadioButton:unchecked:pressed{
+    color: $button-pressed;
+}
+
+QRadioButton::indicator {
+    width: 15px;
+    height: 15px;
+}
+
+QRadioButton::indicator:checked {
+    background-image: url("gui/style/resources/radio_checked.svg");
+}
+
+QRadioButton::indicator:unchecked {
+    background-image: url("gui/style/resources/radio_unchecked.svg");
+}
+
+QRadioButton::indicator:unchecked:hover {
+    background-image: url("gui/style/resources/radio_unchecked_hover.svg");
 }
 
 QWidget#info_label {
@@ -390,6 +411,11 @@ QWidget#error_label {
     background-color: $invalid-background;
 }
 
+QLabel#mode_label{
+    font-size: $font-size + 1px;
+    font-weight: 600;
+}
+
 /* History */
 QWidget#history_record_widget{
     padding: 5px 15px;
@@ -400,4 +426,26 @@ QWidget#history_record_widget{
 
 QWidget#history_record_widget:hover{
     background-color: $sidebar-button-hover;
+}
+
+QWidget#info_label[expanded="false"],
+QWidget#warning_label[expanded="false"],
+QWidget#error_label[expanded="false"] {
+    background: transparent;
+    border: 0px;
+}
+
+QWidget#info_label[expanded="true"] {
+    background-color: #d4eaf7;
+    border-radius: 8px;
+}
+
+QWidget#warning_label[expanded="true"] {
+    background-color: #fff3cd;
+    border-radius: 8px;
+}
+
+QWidget#error_label[expanded="true"] {
+    background-color: #f8d7da;
+    border-radius: 8px;
 }
