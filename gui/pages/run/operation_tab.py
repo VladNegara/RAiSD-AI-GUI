@@ -149,7 +149,7 @@ class OperationTab(RunPageTab):
             self.tree_stacked_widget.current_index = index
             for i, (button, widget) in enumerate(self.tree_selectors):
                 button.setChecked(i == index) 
-                widget.reset()
+                # widget.reset()
 
     @Slot()
     def _run_id_valid_changed(self, new_valid) -> None:

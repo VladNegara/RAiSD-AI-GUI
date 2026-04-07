@@ -161,12 +161,12 @@ class FileConsumerNodeWidget(StylableWidget):
         self._file_consumer_node.selected_index = i
         self.file_producer_widget.current_index = i
 
-    def reset(self) -> None:
-        self.file_producer_widget.current_index = 0
-        for (i, (button, widget)) in enumerate(self.file_selectors):
+    @Slot(int)
+    def _selected_index_changed(self, index: int) -> None:
+        self.file_producer_widget.current_index = index
+        for (i, (button, _)) in enumerate(self.file_selectors):
             if button:
-                button.setChecked(i == self._file_consumer_node.selected_index)
-            widget.reset()
+                button.setChecked(i == index)
 
 
 class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
@@ -206,10 +206,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
             file_consumer_widget = FileConsumerNodeWidget(file_consumer)
             layout.addWidget(file_consumer_widget)
             self.widgets.append(file_consumer_widget)
-
-    def reset(self) -> None:
-        for widget in self.widgets:
-            widget.reset()
 
     @property
     def button_text(self) -> str:
@@ -405,12 +401,6 @@ class OperationNodeWidget(FileProducerNodeWidget):
 
         self._operation_node.file_changed.connect(self._file_changed)
 
-    def reset(self) -> None:
-        for widget in self.parameter_widgets:
-            widget.parameter.reset_value()
-        for file_consumer in self.file_consumer_widgets:
-            file_consumer.reset()
-
     @property
     def button_text(self) -> str:
         return (
@@ -455,6 +445,3 @@ class OperationTreeWidget(StylableWidget):
             self.body,
             alignment=Qt.AlignmentFlag.AlignTop,
         )
-
-    def reset(self) -> None:
-        self.body.reset()

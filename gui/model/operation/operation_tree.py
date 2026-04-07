@@ -877,6 +877,8 @@ class OperationNode(FileProducerNode):
     def reset(self) -> None:
         for consumer in self.file_consumers:
             consumer.reset()
+        for parameter in self.parameters.values():
+            parameter.reset_value()
 
     def to_cli(
             self,
