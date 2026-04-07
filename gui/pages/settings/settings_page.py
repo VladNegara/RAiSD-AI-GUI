@@ -82,6 +82,8 @@ class SettingsPage(Page):
         info_label.setObjectName("settings_label")
         layout.addWidget(info_label)
 
+        layout.addSpacing(20)
+
         info_container_widget = QWidget()
         info_container_widget.setObjectName("container_widget")
         info_container_layout = QVBoxLayout(info_container_widget)
@@ -109,6 +111,8 @@ class SettingsPage(Page):
         info_container_layout.addWidget(raisd_ai_gui_label)
 
         # TODO: add a link to the user manual
+
+        info_container_layout.addSpacing(15)
 
         layout.addWidget(info_container_widget)
 
