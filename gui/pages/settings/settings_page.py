@@ -95,6 +95,7 @@ class SettingsPage(Page):
             """
         )
         raisd_ai_label.setWordWrap(True)
+        raisd_ai_label.setOpenExternalLinks(True)
         info_container_layout.addWidget(raisd_ai_label)
 
         raisd_ai_gui_label = QLabel(
@@ -104,6 +105,7 @@ class SettingsPage(Page):
             Negară</b> and <b>Giulia Tălău</b>."""
         )
         raisd_ai_gui_label.setWordWrap(True)
+        raisd_ai_gui_label.setOpenExternalLinks(True)
         info_container_layout.addWidget(raisd_ai_gui_label)
 
         # TODO: add a link to the user manual
