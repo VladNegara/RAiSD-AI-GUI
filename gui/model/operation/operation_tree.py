@@ -10,7 +10,7 @@ The recommended way to construct operation trees is using the
 `OperationTree#build_trees` factory method.
 """
 
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from PySide6.QtCore import (
     QObject,
@@ -329,9 +329,12 @@ class CommonParentDirectoryNode(FileProducerNode):
     Implements `FileProducerNode`.
     """
 
+    overwrite_changed = Signal(bool)
+
     def __init__(
             self,
             produces: Directory,
+            overwrite_parameter_builder: Callable[[], Parameter[Any]],
             enabled: bool = False,
     ) -> None:
         """
@@ -359,6 +362,15 @@ class CommonParentDirectoryNode(FileProducerNode):
             )
             self._file_consumers.append(file_consumer)
             file_consumer.valid_changed.connect(self._consumer_valid_changed)
+
+        overwrite_parameter = overwrite_parameter_builder()
+        if not isinstance(overwrite_parameter, BoolParameter):
+            raise ValueError(
+                "Invalid overwrite parameter for common parent directory node:"
+                + f" {overwrite_parameter}. Expected a bool parameter."
+            )
+        self._overwrite_parameter = overwrite_parameter
+
         self._enabled = enabled
 
     @property
@@ -367,6 +379,13 @@ class CommonParentDirectoryNode(FileProducerNode):
         The file structure this node produces.
         """
         return self._produces
+
+    @property
+    def overwrite_parameter(self) -> BoolParameter:
+        """
+        The overwrite parameter of this node.
+        """
+        return self._overwrite_parameter
 
     @property
     def file_consumers(self) -> list[FileConsumerNode]:
@@ -392,17 +411,40 @@ class CommonParentDirectoryNode(FileProducerNode):
             return list(parent_directory_paths)[0]
         return None
 
+    @property
+    def overwrite(self) -> bool:
+        """
+        Whether the common parent directory of the output locations of
+        this node's children already exists, i.e. will be overwritten.
+        """
+        file = self.file
+        return file is not None and QFileInfo(file).exists()
+
     def _set_run_id(self, new_run_id: str) -> None:
+        old_file = self.file
+        old_overwrite = self.overwrite
+
         for file_consumer in self.file_consumers:
             file_consumer.run_id = new_run_id
-        self.file_changed.emit(self.file)
+
+        if self.file != old_file:
+            self.file_changed.emit(self.file)
+        if self.overwrite != old_overwrite:
+            self.overwrite_changed.emit(self.overwrite)
 
     run_id = property(fset=_set_run_id)
 
     def _set_base_directory_path(self, new_base_directory_path: str) -> None:
+        old_file = self.file
+        old_overwrite = self.overwrite
+
         for file_consumer in self.file_consumers:
             file_consumer.base_directory_path = new_base_directory_path
-        self.file_changed.emit(self.file)
+
+        if self.file != old_file:
+            self.file_changed.emit(self.file)
+        if self.overwrite != old_overwrite:
+            self.overwrite_changed.emit(self.overwrite)
 
     base_directory_path = property(fset=_set_base_directory_path)
 
@@ -433,7 +475,10 @@ class CommonParentDirectoryNode(FileProducerNode):
         if not all(consumer.valid for consumer in self.file_consumers):
             return False
 
-        return self.file is not None
+        if self.file is None:
+            return False
+
+        return self.overwrite_parameter.value or not self.overwrite
 
     def reset(self) -> None:
         for consumer in self.file_consumers:
@@ -454,8 +499,16 @@ class CommonParentDirectoryNode(FileProducerNode):
         :rtype: list[str]
         """
         commands = []
-        for consumer in self.file_consumers:
-            commands.extend(consumer.to_cli(run_id_parameter, parameters))
+        for i, consumer in enumerate(self.file_consumers):
+            child_commands = consumer.to_cli(run_id_parameter, parameters)
+
+            # If this is the first child, add the overwrite parameter
+            # to its command.
+            overwrite_parameter_cli = self.overwrite_parameter.to_cli()
+            if i == 0 and child_commands and overwrite_parameter_cli:
+                child_commands[0] += f" {overwrite_parameter_cli}"
+
+            commands.extend(child_commands)
         return commands
 
     def to_dict(self) -> dict:
@@ -1077,6 +1130,7 @@ class OperationTree(QObject):
     def build_trees(
             cls,
             operations: dict[str, Operation],
+            overwrite_parameter_builder: Callable[[], Parameter[Any]],
             run_id: str = "",
             base_directory_path: str = "",
     ) -> tuple[list["OperationTree"], Mapping[str, Dependency.Condition]]:
@@ -1101,8 +1155,16 @@ class OperationTree(QObject):
         :param operations: a dictionary from ID to operation
         :type operations: dict[str, Operation]
 
+        :param overwrite_parameter_builder: A function that produces the
+        overwrite parameter for common parent directory nodes.
+        :type overwrite_parameter_builder: Callable[[], Parameter[Any]]
+
         :param run_id: the initial run ID
         :type run_id: str
+
+        :param base_directory_path: the initial base file path for the
+        output locations of operation nodes
+        :type base_directory_path: str
 
         :return: the list of operation trees and the mapping from
         operation ID to condition
@@ -1158,6 +1220,7 @@ class OperationTree(QObject):
                         and len(file_consumer.requires.contents) > 1):
                         common_parent_dir = CommonParentDirectoryNode(
                             file_consumer.requires,
+                            overwrite_parameter_builder,
                         )
                         # There might not be a suitable operation for
                         # every file in the directory, so keep additions

@@ -4,6 +4,12 @@ run_id_parameter:
   cli: "-n "
   type: str
   pattern: "[a-zA-Z0-9_]+"
+common_directory_overwrite_parameter:
+  name: Overwrite common output directory
+  description: You are about to overwrite all data in the common output directory of the operations. Are you sure?
+  cli: "-frm"
+  type: bool
+  default: false
 modes:
   - name: Standard RAiSD
     operations:
@@ -26,8 +32,8 @@ modes:
           formats: 
             - .txt
         overwrite_parameter:
-          name: Overwrite existing RAiSD report?
-          description: You are about to overwrite existing data in the output folder. Are you sure?
+          name: Overwrite RAiSD report
+          description: You are about to overwrite an existing RAiSD report. Are you sure?
           cli: "-f"
           type: bool
           default: false
@@ -57,7 +63,7 @@ modes:
               formats:
                 - .png
         overwrite_parameter:
-          name: Overwrite existing image data?
+          name: Overwrite formatted data
           description: You are about to overwrite existing data in the output folder. Are you sure?
           cli: "-f"
           type: bool
@@ -103,7 +109,7 @@ modes:
               formats:
                 - .pt
         overwrite_parameter:
-          name: Overwrite existing model?
+          name: Overwrite model
           description: You are about to overwrite existing data in the output folder. Are you sure?
           cli: "-f"
           type: bool
@@ -144,7 +150,7 @@ modes:
           formats:
             - .txt
         overwrite_parameter:
-          name: Overwrite existing results?
+          name: Overwrite results
           description: You are about to overwrite existing data in the output folder. Are you sure?
           cli: "-f"
           type: bool
@@ -174,15 +180,15 @@ modes:
         output:
           type: single
           formats:
-            - .report
+            - .txt
         overwrite_parameter:
-          name: Overwrite existing results?
-          description: You are about to overwrite existing data in the output folder. Are you sure?
-          cli: "-f"
+          name: Overwrite report
+          description: You are about to overwrite an existing RAiSD report. Are you sure?
+          cli: "-f -frm"
           type: bool
           default: false
         path:
-          - RAiSD_Grid.
+          - RAiSD_Report.
           - type: run id
   - name: Common outlier analysis
     operations:

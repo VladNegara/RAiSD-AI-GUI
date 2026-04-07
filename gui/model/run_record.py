@@ -1038,11 +1038,34 @@ class RunRecord(QObject):
                 + "Expected string parameter."
             )
 
+        if "common_directory_overwrite_parameter" not in config_obj:
+            raise ValueError(
+                "Missing overwrite parameter definition for common parent "
+                + "directory nodes."
+            )
+        overwrite_parameter_obj = config_obj[
+            "common_directory_overwrite_parameter"
+        ]
+        if not isinstance(overwrite_parameter_obj, dict):
+            raise ValueError(
+                "Invalid value for common parent directory node overwrite "
+                + f"parameter: {overwrite_parameter_obj}. Expected object."
+            )
+        overwrite_parameter_builder = (
+            lambda: parse_parameter(
+                overwrite_parameter_obj,
+                operations=set(operations.keys()),
+            )
+        )
+
         parameter_groups = []
         for parameter_group_obj in config_obj["parameter_groups"]:
             parameter_groups.append(parse_parameter_group(parameter_group_obj))
 
-        operation_trees, operation_conditions = OperationTree.build_trees(operations)
+        operation_trees, operation_conditions = OperationTree.build_trees(
+            operations,
+            overwrite_parameter_builder,
+        )
 
         result = cls(run_id_parameter, operation_trees, parameter_groups)
 

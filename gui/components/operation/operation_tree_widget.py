@@ -186,7 +186,7 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         :type common_parent_directory: CommonParentDirectoryNode
         """
         super().__init__()
-        self._common_parent_directory = common_parent_directory
+        self._common_parent_directory_node = common_parent_directory
 
         layout = QVBoxLayout(self)
 
@@ -198,11 +198,32 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         layout.addWidget(heading)
         layout.setContentsMargins(0,0,0,0)
 
+        self._overwrite_warning_label = WarningLabel(
+            "You are about to overwrite existing data!"
+        )
+        self._overwrite_warning_label.setVisible(
+            self._common_parent_directory_node.overwrite,
+        )
+        layout.addWidget(self._overwrite_warning_label)
+
+        self._overwrite_parameter_row = ParameterWidget.from_parameter(
+            self._common_parent_directory_node.overwrite_parameter,
+            editable=True,
+        ).build_form_row()
+        self._overwrite_parameter_row.setVisible(
+            self._common_parent_directory_node.overwrite,
+        )
+        layout.addWidget(self._overwrite_parameter_row)
+
         self.widgets : list[FileConsumerNodeWidget]= []
-        for file_consumer in self._common_parent_directory.file_consumers:
+        for file_consumer in self._common_parent_directory_node.file_consumers:
             file_consumer_widget = FileConsumerNodeWidget(file_consumer)
             layout.addWidget(file_consumer_widget)
             self.widgets.append(file_consumer_widget)
+
+        self._common_parent_directory_node.overwrite_changed.connect(
+            self._overwrite_changed,
+        )
 
     def reset(self) -> None:
         for widget in self.widgets:
@@ -211,6 +232,11 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
     @property
     def button_text(self) -> str:
         return "Run multiple operations to generate the input files."
+
+    @Slot(bool)
+    def _overwrite_changed(self, new_overwrite: bool) -> None:
+        self._overwrite_warning_label.setVisible(new_overwrite)
+        self._overwrite_parameter_row.setVisible(new_overwrite)
 
 
 class FilePickerNodeWidget(FileProducerNodeWidget):
@@ -378,8 +404,7 @@ class OperationNodeWidget(FileProducerNodeWidget):
         layout.addWidget(self._output_info_label)
 
         self._overwrite_warning_label = WarningLabel(
-            "You are about to overwrite existing data! Confirm before "
-            + "proceeding."
+            "You are about to overwrite existing data!"
         )
         self._overwrite_warning_label.setVisible(
             self._operation_node.overwrite,
