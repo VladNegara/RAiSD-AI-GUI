@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from .run_page_tab import RunPageTab, NavigationButtonsHolder
+from .run_page_tab import RunPageTab
 from gui.model.run_record import RunRecord
 from gui.widgets import (
     HBoxLayout,
@@ -20,6 +20,7 @@ from gui.widgets import (
 )
 from gui.components.operation import OperationTreeWidget
 from gui.components.parameter import ParameterWidget
+from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 from gui.style import constants
 
 
@@ -56,6 +57,9 @@ class OperationTab(RunPageTab):
         self.operation_selector = self.__class__.OperationSelector(
             self._run_record
         )
+        self._run_record.selected_operation_tree_index_changed.connect(
+            self.operation_selector.operation_selection_changed
+        )
         layout.addWidget(self.operation_selector, stretch=1000)
 
         layout.addStretch(1)
@@ -87,9 +91,6 @@ class OperationTab(RunPageTab):
     def refresh(self) -> None:
         self.operation_selector.refresh()
         self._update_next_button_state()
-
-    def reset(self) -> None:
-        self.operation_selector.reset()
     
     class OperationSelector(QWidget):
         def __init__(self, run_record: RunRecord):
@@ -166,11 +167,10 @@ class OperationTab(RunPageTab):
             self._run_record.selected_operation_tree_index = i
             self.tree_stacked_widget.current_index = i
 
-        def reset(self) -> None:
-            self.tree_stacked_widget.current_index = 0
+        def operation_selection_changed(self, index: int) -> None:
+            self.tree_stacked_widget.current_index = index
             for i, (button, widget) in enumerate(self.tree_selectors):
-                button.setChecked(i == self._run_record.selected_operation_tree_index) 
-                widget.reset()
+                button.setChecked(i == index) 
 
     @Slot()
     def _run_id_valid_changed(self, new_valid) -> None:

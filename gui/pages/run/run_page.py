@@ -211,9 +211,11 @@ class RunPage(Page):
     @Slot()
     def _new_run(self) -> None:
         self._run_record.reset()
-        self.operation_tab.reset()
         self._switch_to_operation_tab()
 
+    def reuse_run(self) -> None:
+        self._set_active_tab(self.operation_tab)    
+        
     @Slot()
     def reset_page(self) -> None:
         self._run_record.reset()

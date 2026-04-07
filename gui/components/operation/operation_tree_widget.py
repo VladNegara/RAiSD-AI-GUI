@@ -108,6 +108,7 @@ class FileConsumerNodeWidget(StylableWidget):
         super().__init__()
         self.setObjectName("file_consumer_node")
         self._file_consumer_node = file_consumer_node
+        self._file_consumer_node.selected_index_changed.connect(self._selected_index_changed)
 
         layout = VBoxLayout(
             self,
@@ -176,13 +177,12 @@ class FileConsumerNodeWidget(StylableWidget):
         for file_consumer_widget in self._file_producer_widgets:
             file_consumer_widget.refresh()
 
-    def reset(self) -> None:
-        self.file_producer_stack.current_index = 0
-        for (i, (button, widget)) in enumerate(self.file_selectors):
+    @Slot(int)
+    def _selected_index_changed(self, index: int) -> None:
+        self.file_producer_stack.current_index = index
+        for (i, (button, _)) in enumerate(self.file_selectors):
             if button:
-                button.setChecked(i == self._file_consumer_node.selected_index)
-            widget.reset()
-
+                button.setChecked(i == index)
 
 class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
     """
@@ -254,10 +254,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
 
         for file_consumer_widget in self.file_consumer_widgets:
             file_consumer_widget.refresh()
-
-    def reset(self) -> None:
-        for widget in self.file_consumer_widgets:
-            widget.reset()
 
     @property
     def button_text(self) -> str:
@@ -476,6 +472,23 @@ class OperationNodeWidget(FileProducerNodeWidget):
         )
         layout.addWidget(self._overwrite_parameter_row)
 
+        self._overwrite_warning_label = WarningLabel(
+            "You are about to overwrite existing data!"
+        )
+        self._overwrite_warning_label.setVisible(
+            self._operation_node.overwrite,
+        )
+        layout.addWidget(self._overwrite_warning_label)
+
+        self._overwrite_parameter_row = ParameterWidget.from_parameter(
+            self._operation_node.overwrite_parameter,
+            editable=True,
+        ).build_form_row()
+        self._overwrite_parameter_row.setVisible(
+            self._operation_node.overwrite,
+        )
+        layout.addWidget(self._overwrite_parameter_row)
+
         self.file_consumer_widgets: list[FileConsumerNodeWidget] = []
         if operation_node.file_consumers:
             input_files_widget = QWidget()
@@ -510,12 +523,6 @@ class OperationNodeWidget(FileProducerNodeWidget):
 
         for file_consumer_widget in self.file_consumer_widgets:
             file_consumer_widget.refresh()
-
-    def reset(self) -> None:
-        for widget in self.parameter_widgets:
-            widget.parameter.reset_value()
-        for file_consumer in self.file_consumer_widgets:
-            file_consumer.reset()
 
     @property
     def button_text(self) -> str:
@@ -569,6 +576,3 @@ class OperationTreeWidget(StylableWidget):
 
     def refresh(self) -> None:
         self.body.refresh()
-
-    def reset(self) -> None:
-        self.body.reset()

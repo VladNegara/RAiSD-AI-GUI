@@ -16,13 +16,13 @@ from PySide6.QtGui import (
 
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
+from gui.model.history_record import HistoryRecord
 from gui.execution.command_executor import CommandExecutor
 from gui.widgets import (
     HBoxLayout,
     VBoxLayout,
 )
 from gui.pages import (
-    Page,
     RunPage,
     HistoryPage,
     SettingsPage
@@ -123,6 +123,7 @@ class MainWindow(QMainWindow):
     def _setup_main_widget(self, layout: QStackedLayout):
         self.run_page = RunPage(self.run_record, self.command_executor)
         self.history_page = HistoryPage()
+        self.history_page.reuse_run_clicked.connect(self._reuse_run)
         self.settings_page = SettingsPage()
 
         app_settings.workspace_path_changed.connect(self.run_page.reset_page)
@@ -131,6 +132,12 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.run_page)
         layout.addWidget(self.history_page)
         layout.addWidget(self.settings_page)
+
+    @Slot(HistoryRecord)
+    def _reuse_run(self, history_record: HistoryRecord) -> None:
+        self.run_record.populate(history_record)
+        self.run_page.reuse_run()
+        self._set_active_view(self.run_button)
 
     def _set_active_view(self, active_button: QPushButton) -> None:
         for i, (button, page) in enumerate(self.button_page_pairs.items()):

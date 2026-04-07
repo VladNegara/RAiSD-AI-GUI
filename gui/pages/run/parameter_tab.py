@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from .run_page_tab import RunPageTab, NavigationButtonsHolder
+from .run_page_tab import RunPageTab
 from gui.model.parameter import MultiParameter, OptionalParameter, Parameter
 from gui.model.run_record import RunRecord
 from gui.widgets import (
@@ -17,6 +17,7 @@ from gui.widgets import (
     HBoxLayout
 )
 from gui.components.parameter import ParameterForm
+from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 from gui.style import constants
 
 

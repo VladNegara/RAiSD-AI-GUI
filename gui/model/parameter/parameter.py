@@ -205,6 +205,11 @@ class Parameter(QObject, Generic[T]):
         if self.constraints_valid != old_constraints_valid:
             self.constraints_valid_changed.emit(self.constraints_valid)
 
+    def to_dict(self) -> str | dict:
+        return self.value
+
+    def populate(self, value: dict | str) -> None:
+        self.value = value
 
     @property
     def constraints_valid(self) -> list[bool]:
@@ -388,6 +393,26 @@ class OptionalParameter(Parameter[bool]):
         if not self.value:
             return True
         return self.parameter.valid
+    
+    def to_dict(self) -> str | dict:
+        value = {}
+        value["enabled"] = self.value
+        value[self.parameter.name] = self.parameter.to_dict()
+        return value
+    
+    def populate(self, value: dict | str) -> None:
+        if isinstance(value, dict) and 'enabled' not in value:
+            raise ValueError(
+                f"Incorrect format for {self.name}: {value}"
+                + "Optional parameter must have 'enabled' value."
+            )
+            
+        if isinstance(value, dict) and isinstance(value["enabled"], bool):
+            self.value = value["enabled"]
+            if self.parameter in value:
+                self.parameter.populate(
+                    value[self.parameter.name]
+                )
 
     def _to_cli(
             self,
@@ -443,6 +468,17 @@ class MultiParameter(Parameter[tuple[()]]):
         if not self.enabled:
             return True
         return all([parameter.valid for parameter in self.parameters])
+
+    def to_dict(self) -> str | dict:
+        parameters = {}
+        for param in self.parameters:
+            parameters[param.name] = param.to_dict()
+        return parameters
+
+    def populate(self, value: dict | str) -> None:
+        for param in self.parameters:
+            if isinstance(value, dict) and param.name in value and value[param.name] is not None:
+                param.populate(value[param.name])
 
     def _to_cli(
             self,

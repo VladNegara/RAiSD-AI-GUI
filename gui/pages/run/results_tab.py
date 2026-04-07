@@ -10,12 +10,13 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from .run_page_tab import RunPageTab, NavigationButtonsHolder
+from .run_page_tab import RunPageTab
 from gui.model.run_record import RunRecord
 from gui.widgets import (
     VBoxLayout,
 )
 from gui.components.results import ResultsWidget
+from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 from gui.style import constants
 
 
