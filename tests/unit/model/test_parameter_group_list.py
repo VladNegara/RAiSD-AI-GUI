@@ -83,7 +83,19 @@ class TestParameterGroupList:
                 ],
             ),
         }
-        self.operation_trees, _ = OperationTree.build_trees(self.operations)
+        self.overwrite_parameter_builder = (
+            lambda: BoolParameter(
+                name="Overwrite output directory",
+                description="Are you sure you want to overwrite?",
+                flag="-frm",
+                operations={"MDL-GEN"},
+                default_value=False,
+            )
+        )
+        self.operation_trees, _ = OperationTree.build_trees(
+            self.operations,
+            self.overwrite_parameter_builder,
+        )
         self.parameter_group_list = RunRecord(
             run_id_parameter=self.run_id_parameter,
             operation_trees=self.operation_trees,
