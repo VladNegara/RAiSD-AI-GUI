@@ -82,6 +82,10 @@ class ParameterTab(RunPageTab):
         self.reset_touched()
         self.update_next_button_state()
 
+    def reset(self) -> None:
+        self.reset_touched()
+        self.update_next_button_state()
+
     def _connect_parameter_to_update_next_button_state(self, parameter: Parameter) -> None:
         """
         Helper function to connect `value_changed` to `update_next_button_state` on all parameter types.

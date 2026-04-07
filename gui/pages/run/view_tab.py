@@ -103,6 +103,10 @@ class ViewTab(RunPageTab):
     def refresh(self) -> None:
         pass
 
+    def reset(self) -> None:
+        self.clear_outputs()
+        self.run_indicators = []
+
     def _stop_run_button_clicked(self) -> None:
         self._stop_execution()
 

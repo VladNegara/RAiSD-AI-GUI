@@ -93,3 +93,9 @@ class RunPageTab(StylableWidget):
         Refresh the UI elements of the tab when it is shown.
         """
         raise NotImplementedError()
+    
+    def reset(self) -> None:
+        """
+        Reset the UI elements of the tab when the run page is reset.
+        """
+        raise NotImplementedError()

@@ -107,6 +107,9 @@ class ConfirmationTab(RunPageTab):
     def refresh(self) -> None:
         self.update_commands()
 
+    def reset(self) -> None:
+        self.update_commands()
+
     def update_commands(self) -> None:
         """
         Updates the ParameterConfirmationWidget with the commands from

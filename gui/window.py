@@ -38,13 +38,8 @@ class MainWindow(QMainWindow):
         Initialize the main window.
         """
         super().__init__()
-        app_settings.settings_changed.connect(self._init_main_window)
-        self._init_main_window()
-
-    def _init_main_window(self) -> None:
-        run_record = RunRecord.from_yaml(app_settings.config_path)
-        self.run_record = run_record
-        self.command_executor = CommandExecutor(run_record)
+        self.run_record = RunRecord.from_yaml(app_settings.config_path)
+        self.command_executor = CommandExecutor(self.run_record)
         self._setup_ui()
         self.run_page.run_saved.connect(self.history_page.add_completed_run)
 
@@ -123,6 +118,9 @@ class MainWindow(QMainWindow):
         self.run_page = RunPage(self.run_record, self.command_executor)
         self.history_page = HistoryPage()
         self.settings_page = SettingsPage()
+
+        app_settings.workspace_path_changed.connect(self.run_page.reset_page)
+        app_settings.workspace_path_changed.connect(self.history_page.reset_page)
 
         layout.addWidget(self.run_page)
         layout.addWidget(self.history_page)

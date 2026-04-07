@@ -92,8 +92,8 @@ class ParameterFormSection(StylableWidget):
 
     def touch_all(self) -> None:
         for widget in self._parameter_widgets:
-            widget.touch()
+            widget.touched = True
 
     def untouch_all(self) -> None:
         for widget in self._parameter_widgets:
-            widget.untouch()
+            widget.touched = False

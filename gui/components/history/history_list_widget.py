@@ -56,6 +56,15 @@ class HistoryListWidget(StylableWidget):
             widget = self._add_record_widget(record)
             self._history_widgets.append(widget)
 
+    def clear(self) -> None:
+        """
+        Clears the history list.
+        """
+        for widget in self._history_widgets:
+            widget.setParent(None)
+        self._history_widgets.clear()
+        self._history_records.clear()
+
     def add_record(self, history_record: HistoryRecord) -> None:
         """
         Adds a history record to the HistoryList.
