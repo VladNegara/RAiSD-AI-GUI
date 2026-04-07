@@ -6,6 +6,7 @@ workspace/
 bin/
 Makefile
 RAiSD-AI
+RAiSD-AI-ZLIB
 
 #./test-all.sh
 RAiSD_Images.*/

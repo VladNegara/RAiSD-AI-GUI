@@ -4,6 +4,14 @@
     font-size: $font-size;
 }
 
+QFrame {
+    border: none;
+}
+
+QSplitter::handle:vertical {
+    height: 20px;
+}
+
 /* LEFT SIDEBAR */
 
 QWidget#left_sidebar,
@@ -50,12 +58,8 @@ QPushButton#settings_button:pressed {
 
 /* SHARED — VIEW BACKGROUNDS */
 
-QWidget#operation_selection_widget,
-QWidget#parameter_input_widget,
-QWidget#parameter_confirmation_widget,
-QWidget#run_view_widget,
-QWidget#run_results_widget,
-QWidget#settings_widget,
+QWidget#page,
+QWidget#run_tab,
 QScrollArea#history_results_scroll,
 QWidget#history_list_container{
     background-color: $purplish-background;
@@ -63,27 +67,13 @@ QWidget#history_list_container{
 
 /* SHARED — VIEW LABELS */
 
-QWidget#operation_selection_widget QLabel,
-QWidget#parameter_input_widget QLabel,
-QWidget#parameter_confirmation_widget QLabel,
-QWidget#run_view_widget QLabel,
-QWidget#run_results_widget QLabel,
-QWidget#settings_widget QLabel,
-QWidget#history_widget QLabel{
+QWidget#page QLabel{
     color: $primary-dark;
 }
 
-QLabel#operation_selection_label,
-QLabel#parameter_input_label,
-QLabel#parameter_confirmation_label,
-QLabel#run_view_label,
-QLabel#run_results_label,
-QLabel#settings_label,
-QLabel#history_list_widget_title{
+QLabel[title="true"]{
     font-size: 24px;
     font-weight: 800;
-    margin-left: 20px;
-    margin-top: 20px;
 }
 
 /* SHARED — SCROLL AREAS */
@@ -91,8 +81,8 @@ QLabel#history_list_widget_title{
 QScrollArea#parameter_form_scroll,
 QScrollArea#results_scroll,
 QWidget#results_widget,
-QWidget#operation_node_widget,
-QWidget#operation_tree_widget,
+QWidget#operation_node,
+QWidget#operation_tree,
 QWidget#tree_stacked_widget{
     background: transparent;
 }
@@ -152,6 +142,10 @@ QScrollArea#tree_scroll{
 
 /* STEP BUTTON BAR */
 
+QWidget#step_button_bar {
+    background-color: white;
+}
+
 QWidget#step_button_bar QPushButton {
     padding: 10px 20px;
     background-color: white;
@@ -179,10 +173,6 @@ QWidget#step_button_bar QPushButton[step_role="past_step"]:pressed {
 }
 
 /* NAVIGATION BUTTONS */
-
-QWidget#navigation_buttons_holder {
-    background-color: $purplish-background;
-}
 
 QWidget#navigation_buttons_holder QPushButton {
     padding: 10px 40px;
@@ -217,17 +207,32 @@ QWidget#parameter_form {
 QWidget#parameter_form_section {
     background-color: white;
     border-radius: 12px;
-    padding: 32px, 16px;
-    margin-bottom: 10px;
 }
 
 QWidget#heading{
+    font-size: $font-size + 3px;
+}
+
+QWidget#label_header {
     font-size: $font-size + 2px;
+    font-weight: 700;
 }
 
 QWidget#label_body{
     font-size: $font-size - 2px;
     font-weight: 300;
+}
+
+QLabel#parameter_hint {
+    font-size: $font-size - 3px;
+}
+
+QLabel#parameter_hint[valid="true"] {
+    color: $valid;
+}
+
+QLabel#parameter_hint[valid="false"] {
+    color: $invalid;
 }
 
 QCheckBox::indicator {
@@ -241,23 +246,23 @@ QWidget#parameter_form_section QLineEdit {
 }
 
 QWidget#parameter_form_section QLineEdit[valid="true"] {
-    border-color: green;
- }
+    border-color: $valid;
+}
 
 QWidget#parameter_form_section QPushButton[valid="true"] {
- border: 1px solid green;
- }
+    border: 1px solid $valid;
+}
 
 QWidget#parameter_form_section QLineEdit[valid="false"] {
-    border-color: red;
-    }
+    border-color: $invalid;
+}
 
 QWidget#parameter_form_section QPushButton[valid="false"] {
-    border: 1px solid red;
-    }
+    border: 1px solid $invalid;
+}
 
 QWidget#parameter_form_section QLabel[valid="false"] {
-    color: red;
+    color: $invalid;
 }
 
 QWidget#parameter_form_section QComboBox {
@@ -280,7 +285,7 @@ QWidget#parameter_form_section QComboBox::down-arrow {
 }
 
 QLabel#validity_label {
-    color: red;
+    color: $invalid;
 }
 
 /* PARAMETER CONFIRMATION VIEW */
@@ -346,7 +351,7 @@ QWidget#error_output{
     font-size: $font-size - 4px;
 }
 /* OP SELECTION */
-QWidget#file_consumer_widget{
+QWidget#file_consumer_node {
     border-left: 1px solid $border-gray;
     padding: 0px;
 }
@@ -381,10 +386,22 @@ QRadioButton::indicator:unchecked:hover {
     background-image: url("gui/style/resources/radio_unchecked_hover.svg");
 }
 
-QWidget#info_label{
-    border: 1px solid #46a2da;
+QWidget#info_label {
+    border: 1px solid $info;
     border-radius: 5px;
-    background-color: #b5e3ff;
+    background-color: $info-background;
+}
+
+QWidget#warning_label {
+    border: 1px solid $warning;
+    border-radius: 5px;
+    background-color: $warning-background;
+}
+
+QWidget#error_label {
+    border: 1px solid $invalid;
+    border-radius: 5px;
+    background-color: $invalid-background;
 }
 
 QLabel#mode_label{

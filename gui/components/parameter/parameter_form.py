@@ -1,13 +1,13 @@
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
-    QLabel,
 )
 
 from PySide6.QtCore import Slot
 
-from gui.model.run_record import RunRecord
 from .parameter_form_section import ParameterFormSection
+from gui.model.run_record import RunRecord
+from gui.widgets import VBoxLayout
+from gui.style import constants
 
 
 class ParameterForm(QWidget):
@@ -27,10 +27,10 @@ class ParameterForm(QWidget):
         self._editable = editable
         self._run_record = run_record
         self._parameter_form_sections = []
-        layout = QVBoxLayout(self)
-
-        heading = QLabel("RAiSD-AI parameters")
-        layout.addWidget(heading)
+        layout = VBoxLayout(
+            self,
+            spacing=constants.GAP_TINY,
+        )
 
         for parameter_group in self._run_record.parameter_groups:
             parameter_form_section = ParameterFormSection(parameter_group, editable=self._editable)

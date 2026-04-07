@@ -9,17 +9,12 @@ from PySide6.QtCore import (
     Qt,
     Slot,
 )
-from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
-    QHBoxLayout,
     QFileDialog,
     QLabel,
     QPushButton,
     QRadioButton,
-    QVBoxLayout,
     QWidget,
-    QStyleOption,
-    QStyle
 )
 
 from gui.model.settings import app_settings
@@ -36,13 +31,17 @@ from gui.model.operation import (
 from gui.components.label import (
     InfoLabel,
 )
-from gui.components.resizable_stacked_widget import (
+from gui.widgets import (
+    HBoxLayout,
     ResizableStackedWidget,
+    StylableWidget,
+    VBoxLayout,
 )
 from gui.components.parameter import ParameterWidget
+from gui.style import constants
 
 
-class FileProducerNodeWidget(QWidget):
+class FileProducerNodeWidget(StylableWidget):
     """
     An abstract widget class to display a `FileProducerNode`.
 
@@ -84,7 +83,7 @@ class FileProducerNodeWidget(QWidget):
         raise NotImplementedError()
 
 
-class FileConsumerNodeWidget(QWidget):
+class FileConsumerNodeWidget(StylableWidget):
     """
     A widget to display a `FileConsumerNode`.
 
@@ -103,14 +102,21 @@ class FileConsumerNodeWidget(QWidget):
         :type file_consumer_node: FileConsumerNode
         """
         super().__init__()
+        self.setObjectName("file_consumer_node")
         self._file_consumer_node = file_consumer_node
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(5,0,0,0)
+        layout = VBoxLayout(
+            self,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_TINY,
+            bottom=constants.GAP_TINY,
+            spacing=constants.GAP_TINY,
+        )
 
-        heading = QLabel(self._file_consumer_node.label)
-        layout.addWidget(heading)
-        heading.setObjectName("heading")
+        if self._file_consumer_node.label:
+            heading = QLabel(self._file_consumer_node.label)
+            layout.addWidget(heading)
+            heading.setObjectName("heading")
 
         self.file_producer_widget = ResizableStackedWidget()
         self.file_selectors : list[tuple[QRadioButton | None, FileProducerNodeWidget]] = []
@@ -127,7 +133,7 @@ class FileConsumerNodeWidget(QWidget):
             # There are multiple options for obtaining the file, so
             # present the user with a choice through radio buttons.
             button_widget = QWidget()
-            button_layout = QVBoxLayout(button_widget)
+            button_layout = VBoxLayout(button_widget)
 
             button_heading = QLabel(
                 "Select how you want to provide this input file or directory:"
@@ -161,12 +167,6 @@ class FileConsumerNodeWidget(QWidget):
                 button.setChecked(i == self._file_consumer_node.selected_index)
             widget.reset()
 
-    def paintEvent(self, event) -> None:
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
-
 
 class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
     """
@@ -185,9 +185,13 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         :type common_parent_directory: CommonParentDirectoryNode
         """
         super().__init__()
+        self.setObjectName("common_parent_directory_node")
         self._common_parent_directory = common_parent_directory
 
-        layout = QVBoxLayout(self)
+        layout = VBoxLayout(
+            self,
+            spacing=constants.GAP_SMALL,
+        )
 
         heading = QLabel(
             "You can run the operations below "
@@ -195,7 +199,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         )
         heading.setWordWrap(True)
         layout.addWidget(heading)
-        layout.setContentsMargins(0,0,0,0)
 
         self.widgets : list[FileConsumerNodeWidget]= []
         for file_consumer in self._common_parent_directory.file_consumers:
@@ -230,8 +233,10 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
         super().__init__()
         self._file_picker = file_picker
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(5,0,0,0)
+        layout = VBoxLayout(
+            self,
+            spacing=constants.GAP_TINY,
+        )
 
         self._is_directory = isinstance(self._file_picker.produces, Directory)
         # TODO: make this code cleaner and more reusable.
@@ -344,9 +349,12 @@ class OperationNodeWidget(FileProducerNodeWidget):
         """
         super().__init__()
         self._operation_node = operation_node
-        self.setObjectName("operation_node_widget")
+        self.setObjectName("operation_node")
 
-        layout = QVBoxLayout(self)
+        layout = VBoxLayout(
+            self,
+            spacing=constants.GAP_TINY,
+        )
 
         name = QLabel(operation_node.name)
         name.setObjectName("heading")
@@ -360,8 +368,8 @@ class OperationNodeWidget(FileProducerNodeWidget):
         self.parameter_widgets: list[ParameterWidget] = []
         if self._operation_node.parameters:
             parameter_rows_widget = QWidget()
-            parameter_rows_layout = QVBoxLayout(parameter_rows_widget)
-            parameter_rows_layout.setContentsMargins(0, 0, 0, 0)
+            parameter_rows_layout = VBoxLayout(parameter_rows_widget)
+
             for parameter in self._operation_node.parameters.values():
                 parameter_widget = ParameterWidget.from_parameter(
                     parameter=parameter,
@@ -377,17 +385,16 @@ class OperationNodeWidget(FileProducerNodeWidget):
         )
         layout.addWidget(self._output_info_label)
 
-        layout.setContentsMargins(5,0,0,0)
-
         self.file_consumer_widgets: list[FileConsumerNodeWidget] = []
         if operation_node.file_consumers:
             input_files_widget = QWidget()
-            input_files_layout = QHBoxLayout(input_files_widget)
-            input_files_layout.setContentsMargins(0, 0, 0, 0)
+            input_files_layout = HBoxLayout(
+                input_files_widget,
+                spacing=constants.GAP_MEDIUM,
+            )
             for file_consumer in operation_node.file_consumers:
                 file_consumer_widget = FileConsumerNodeWidget(file_consumer)
                 self.file_consumer_widgets.append(file_consumer_widget)
-                file_consumer_widget.setObjectName("file_consumer_widget")
                 input_files_layout.addWidget(
                     file_consumer_widget,
                     alignment=Qt.AlignmentFlag.AlignTop,
@@ -414,14 +421,8 @@ class OperationNodeWidget(FileProducerNodeWidget):
     def _file_changed(self, new_file: str) -> None:
         self._output_info_label.text = self.output_label_text + new_file
 
-    def paintEvent(self, event) -> None:
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
-
-class OperationTreeWidget(QWidget):
+class OperationTreeWidget(StylableWidget):
     """
     A widget to display an `OperationTree`.
 
@@ -437,10 +438,16 @@ class OperationTreeWidget(QWidget):
         :type operation_tree: OperationTree
         """
         super().__init__()
-        self.setObjectName("operation_tree_widget")
+        self.setObjectName("operation_tree")
         self._operation_tree = operation_tree
 
-        layout = QHBoxLayout(self)
+        layout = HBoxLayout(
+            self,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_SMALL,
+        )
 
         self.body = OperationNodeWidget(self._operation_tree.root)
         layout.addWidget(
@@ -450,9 +457,3 @@ class OperationTreeWidget(QWidget):
 
     def reset(self) -> None:
         self.body.reset()
-
-    def paintEvent(self, event) -> None:
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)

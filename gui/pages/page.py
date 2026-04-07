@@ -1,8 +1,8 @@
-from PySide6.QtWidgets import (
-    QWidget,
+from gui.widgets import (
+    StylableWidget,
 )
 
-class Page(QWidget):
+class Page(StylableWidget):
     """
     An abstract base class for the main pages of the application.
     Each page should inherit from this class and 
@@ -13,6 +13,7 @@ class Page(QWidget):
         Initialize the page.
         """
         super().__init__()
+        self.setObjectName("page")
 
     def _setup_ui(self) -> None:
         """

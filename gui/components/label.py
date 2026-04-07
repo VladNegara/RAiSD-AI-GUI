@@ -4,21 +4,19 @@ Utility classes for displaying text with an icon, e.g. as a warning.
 Clicking the icon toggles the text and background visibility.
 """
 
-from PySide6.QtGui import (
-    QPainter,
-    QMouseEvent,
-)
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QHBoxLayout,
+from PySide6.QtWidgets import(
     QLabel,
     QStyle,
-    QWidget,
-    QStyleOption,
 )
 
+from gui.widgets import (
+    HBoxLayout,
+    StylableWidget,
+)
+from gui.style import constants
 
-class IconLabel(QWidget):
+
+class IconLabel(StylableWidget):
     """
     Base class for icon labels.
 
@@ -47,7 +45,14 @@ class IconLabel(QWidget):
         super().__init__()
         self._expanded = expanded
 
-        layout = QHBoxLayout(self)
+        layout = HBoxLayout(
+            self,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_TINY,
+            right=constants.GAP_TINY,
+            bottom=constants.GAP_TINY,
+            spacing=constants.GAP_SMALL,
+        )
 
         self._icon_label = QLabel()
         self._icon_label.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -91,12 +96,6 @@ class IconLabel(QWidget):
             self.expanded = not self.expanded
         else:
             super().mousePressEvent(event)
-
-    def paintEvent(self, event) -> None:
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
 
 class InfoLabel(IconLabel):
