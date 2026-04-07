@@ -85,8 +85,7 @@ class SettingsPage(Page):
         container_layout.addWidget(environment_name_widget)
 
         # Config file
-        config_widget = SettingsItemWidget("Config file", app_settings.config_path.absoluteFilePath())
-        config_widget.button_clicked.connect(app_settings.set_config_path)
+        config_widget = SettingsItemWidget("Config file", app_settings.config_path.absoluteFilePath(), button=False)
         container_layout.addWidget(config_widget)
 
         layout.addWidget(container_widget)
@@ -143,7 +142,7 @@ class SettingsItemWidget(StylableWidget):
 
     button_clicked = Signal()
 
-    def __init__(self, name: str, value: str):
+    def __init__(self, name: str, value: str, button: bool = True):
         """
         Initialize the widget for a single setting.
         """
@@ -161,9 +160,10 @@ class SettingsItemWidget(StylableWidget):
         layout.addWidget(self.label, 1)
 
         # Button to select a new workspace
-        self.chooser = QPushButton(f"Set {self._name}")
-        self.chooser.clicked.connect(self.button_clicked)
-        layout.addWidget(self.chooser)
+        if button:
+            self.chooser = QPushButton(f"Set {self._name}")
+            self.chooser.clicked.connect(self.button_clicked)
+            layout.addWidget(self.chooser)
 
         layout.addSpacing(10)   
         
