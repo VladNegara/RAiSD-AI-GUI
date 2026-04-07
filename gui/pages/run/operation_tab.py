@@ -90,6 +90,7 @@ class OperationTab(RunPageTab):
 
     def refresh(self) -> None:
         self.operation_selector.refresh()
+        self._update_next_button_state()
     
     class OperationSelector(QWidget):
         def __init__(self, run_record: RunRecord):

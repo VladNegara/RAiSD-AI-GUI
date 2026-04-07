@@ -1078,6 +1078,7 @@ class OperationNode(FileProducerNode):
     def _parameter_value_changed(self) -> None:
         self.file_changed.emit(self.file)
         self.valid_changed.emit(self.valid)
+        self.overwrite_changed.emit(self.overwrite)
 
 
 class OperationTree(QObject):

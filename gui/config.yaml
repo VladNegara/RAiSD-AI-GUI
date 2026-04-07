@@ -181,8 +181,11 @@ modes:
             cli: "-I "
             file:
               type: single
-              formats: 
+              formats:
                 - .ms
+                - .mbs
+                - .vcf
+                - .fasta
         output:
           type: single
           formats:
@@ -194,7 +197,7 @@ modes:
           type: bool
           default: false
         path:
-          - RAiSD_Report.
+          - RAiSD_Info.
           - type: run id
   - name: Common outlier analysis
     operations:
@@ -271,6 +274,7 @@ parameter_groups:
     operations:
       - RSD-DEF
       - IMG-GEN
+      - SWP-SCN
     parameters:
       input-file-type:
         name: Input file format
@@ -436,11 +440,29 @@ parameter_groups:
       - SWP-SCN
     parameters:
       "-w":
+        operations:
+          remove:
+            - SWP-SCN
         name: Sweep scan window size
         description: The window size. The default value is empirically determined.
         cli: "-w "
         type: int
         default: 50
+        constraints:
+          - type: interval
+            min: 6
+          - type: even
+      "-w-ai":
+        operations:
+          add:
+            - IMG-GEN
+          remove:
+            - RSD-DEF
+        name: Window size
+        description: The window width used to generate SNP windows as CNN input data. If using a previously trained model, the value must match the one used in training.
+        cli: "-w "
+        type: int
+        default: 400
         constraints:
           - type: interval
             min: 6
@@ -455,19 +477,14 @@ parameter_groups:
           - type: interval
             min: 1
       "-G":
-        name: Report grid scores
-        description: Report mu statistic scores at equidistant locations between the first and last SNPs.
-        type: optional
-        default: false
-        parameter:
-          name: Grid size
-          description: The total number of evaluation points across the data.
-          cli: "-G "
-          type: int
-          default: 10
-          constraints:
-            - type: interval
-              min: 3
+        name: Grid size
+        description: The total number of evaluation points across the data. The mu statistic scores will be reported at this many equidistant locations between the first and last SNPs.
+        cli: "-G "
+        type: int
+        default: 10
+        constraints:
+          - type: interval
+            min: 3
       "-VAREXP":
         name: mu-var exponent
         description: The exponent for the mu-var factor.
@@ -1002,16 +1019,6 @@ parameter_groups:
           - type: bool
             parameter: "-bin"
             value: true
-      "-w-img-gen":
-        name: Window size
-        description: The window width provided is used to generate SNP windows as CNN input data.
-        cli: "-w "
-        type: int
-        default: 400
-        constraints:
-          - type: interval
-            min: 6
-          - type: even
   - name: RAiSD-AI model training
     operations:
       - MDL-GEN
@@ -1178,24 +1185,6 @@ parameter_groups:
   - name: Additional parameters
     operations: []
     parameters:
-      "-frm-img-gen":
-        name: Remove existing IMG-GEN directory
-        description: Remove the directory RAiSD_Images.runID if it already exists.
-        operations:
-          add:
-            - IMG-GEN
-        cli: "-frm"
-        type: bool
-        default: false
-      "-frm-swp-scn":
-        name: Remove existing SWP-SCN directory
-        description: Remove the directory RAiSD_Report.runID if it already exists.
-        operations:
-          add:
-            - SWP-SCN
-        cli: "-frm"
-        type: bool
-        default: false
       "-gpu":
         name: Use GPU
         description: Change the target hardware platform to be used for training, inference for model testing, and sweep scans from CPU to GPU. CUDA must be enabled to use this option.
