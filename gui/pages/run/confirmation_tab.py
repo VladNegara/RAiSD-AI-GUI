@@ -67,7 +67,7 @@ class ConfirmationTab(RunPageTab):
         commands_header = QWidget()
         commands_header_layout = HBoxLayout(commands_header)
 
-        commands_label = QLabel("Commands generated from the input:")
+        commands_label = QLabel("Parameters generated from the input:")
         commands_header_layout.addWidget(commands_label, 1)
 
         copy_button = QPushButton("Copy")
@@ -117,7 +117,7 @@ class ConfirmationTab(RunPageTab):
         """
         self.commands_view.clear()
         if self._run_record.to_cli():
-            self.commands_view.addItems([app_settings.executable_file_path.absoluteFilePath() + " " + command for command in self._run_record.to_cli()])
+            self.commands_view.addItems([command for command in self._run_record.to_cli()])
             self.commands_view.setMaximumHeight(self.commands_view.sizeHintForRow(0)*(self.commands_view.count()+1))
 
     @Slot(int)
