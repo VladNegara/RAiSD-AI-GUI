@@ -52,8 +52,7 @@ class ParameterForm(QWidget):
         Update each section's border based on whether it contains any invalid enabled parameters.
         """
         for section in self._parameter_form_sections:
-            section_invalid = self._section_with_invalid_parameters(section)
-            section.set_invalid(section_invalid)
+            section.invalid = self._section_with_invalid_parameters(section)
 
     def update_active_hints(self) -> None:
         """
@@ -61,18 +60,15 @@ class ParameterForm(QWidget):
         when the respective invalid parameters are changed to valid
         """
         for section in self._parameter_form_sections:
-            has_invalid_property = section.property("invalid") == "true"
-            if has_invalid_property:
-                section_invalid = self._section_with_invalid_parameters(section)
-                if not section_invalid:
-                    section.set_invalid(False)
+            if section.invalid and not self._section_with_invalid_parameters(section):
+                section.invalid = False
 
     def clear_validity_hints(self) -> None:
         """
         Clear red border from all sections when navigating
         """
         for section in self._parameter_form_sections:
-            section.set_invalid(False)
+            section.invalid = False
 
     def _section_with_invalid_parameters(self, section) -> bool:
         """
