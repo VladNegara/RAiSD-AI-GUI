@@ -5,6 +5,7 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QScrollArea,
     QPushButton,
     QLabel,
@@ -32,9 +33,24 @@ class ParameterTab(RunPageTab):
         widget = QWidget()
         widget.setObjectName("parameter_input_widget")
         layout = QVBoxLayout(widget)
+
+        header_widget = QWidget()
+        header_layout = QHBoxLayout(header_widget)
+        header_layout.setContentsMargins(0, 0, 0, 0)
+
         parameter_input_label = QLabel("Parameter Input")
         parameter_input_label.setObjectName("parameter_input_label")
-        layout.addWidget(parameter_input_label)
+        header_layout.addWidget(parameter_input_label)
+
+        header_layout.addStretch(1)
+
+        self._all_expanded = False
+        self._toggle_all_button = QPushButton("Expand All")
+        self._toggle_all_button.setObjectName("toggle_all_button")
+        self._toggle_all_button.clicked.connect(self._toggle_all_sections)
+        header_layout.addWidget(self._toggle_all_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+        layout.addWidget(header_widget)
 
         self._parameter_form = ParameterForm(self._run_record, editable=True)
         self._parameter_form.setObjectName("parameter_form")
@@ -125,3 +141,12 @@ class ParameterTab(RunPageTab):
         Helper function to make touched false for all parameters
         """
         self._parameter_form.untouch_all()
+
+    def _toggle_all_sections(self) -> None:
+        self._all_expanded = not self._all_expanded
+        for section in self._parameter_form._parameter_form_sections:
+            section._collapsible.collapsed = not self._all_expanded
+        if self._all_expanded:
+            self._toggle_all_button.setText("Collapse All")
+        else:
+            self._toggle_all_button.setText("Expand All")

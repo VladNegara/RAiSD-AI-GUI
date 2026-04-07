@@ -52,8 +52,8 @@ class ParameterFormSection(QWidget):
 
         layout = QVBoxLayout(self)
         heading.setObjectName("heading")
-        widget = Collapsible(heading, form_body)
-        layout.addWidget(widget)
+        self._collapsible = Collapsible(heading, form_body)
+        layout.addWidget(self._collapsible)
 
         self.setVisible(self._parameter_group.enabled)
 

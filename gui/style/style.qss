@@ -112,7 +112,8 @@ QWidget#parameter_confirmation_widget QPushButton,
 QWidget#settings_widget QPushButton,
 QPushButton#reset_button,
 QPushButton#file_button,
-QPushButton#file_selector_button {
+QPushButton#file_selector_button,
+QPushButton#toggle_all_button{
     padding: 5px 15px;
     background-color: $primary-purple;
     color: $primary-dark;
@@ -124,7 +125,8 @@ QWidget#parameter_confirmation_widget QPushButton:hover,
 QWidget#settings_widget QPushButton:hover,
 QPushButton#reset_button:hover,
 QPushButton#file_button:hover,
-QPushButton#file_selector_button:hover {
+QPushButton#file_selector_button:hover,
+QPushButton#toggle_all_button:hover{
     background-color: $button-hover;
 }
 
@@ -132,7 +134,8 @@ QWidget#parameter_confirmation_widget QPushButton:pressed,
 QWidget#settings_widget QPushButton:pressed,
 QPushButton#reset_button:pressed,
 QPushButton#file_button:pressed,
-QPushButton#file_selector_button:pressed{
+QPushButton#file_selector_button:pressed,
+QPushButton#toggle_all_button:pressed{
     background-color: $button-pressed;
 }
 
@@ -212,6 +215,10 @@ QWidget#navigation_buttons_holder QPushButton[highlight="false"] {
 QWidget#parameter_form {
     background: transparent;
     padding: 16px;
+}
+
+QPushButton#toggle_all_button{
+margin-top: 20px;
 }
 
 QWidget#parameter_form_section {
