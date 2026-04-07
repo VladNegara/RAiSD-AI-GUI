@@ -15,11 +15,12 @@ from PySide6.QtWidgets import (
     QSplitter
 )
 
-from .run_page_tab import RunPageTab, NavigationButtonsHolder
+from .run_page_tab import RunPageTab
 from gui.model.run_record import RunRecord
 from gui.execution.command_executor import CommandExecutor
 from gui.components.dialog import ConfirmDialog, ErrorDialog
 from gui.components.run import ProcessIndicator, IndicatorState
+from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 
 
 class ViewTab(RunPageTab):

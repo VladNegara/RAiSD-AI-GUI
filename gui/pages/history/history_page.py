@@ -19,7 +19,7 @@ from gui.components.results import ResultsWidget
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.model.history_record import HistoryRecord
-from gui.pages.run.run_page_tab import NavigationButtonsHolder
+from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 
 class HistoryPage(Page):
     """

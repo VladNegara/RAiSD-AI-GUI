@@ -17,11 +17,12 @@ from PySide6.QtGui import (
     QGuiApplication,
 )
 
-from .run_page_tab import RunPageTab, NavigationButtonsHolder
+from .run_page_tab import RunPageTab
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.components.parameter import  ParameterForm
 from gui.components.dialog import  ErrorDialog
+from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 
 
 class ConfirmationTab(RunPageTab):
