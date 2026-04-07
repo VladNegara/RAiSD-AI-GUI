@@ -230,6 +230,18 @@ QWidget#label_body{
     font-weight: 300;
 }
 
+QLabel#parameter_hint {
+    font-size: $font-size - 3px;
+}
+
+QLabel#parameter_hint[valid="true"] {
+    color: $valid;
+}
+
+QLabel#parameter_hint[valid="false"] {
+    color: $invalid;
+}
+
 QCheckBox::indicator {
     width: 20px;
     height: 20px;
@@ -241,23 +253,23 @@ QWidget#parameter_form_section QLineEdit {
 }
 
 QWidget#parameter_form_section QLineEdit[valid="true"] {
-    border-color: green;
- }
+    border-color: $valid;
+}
 
 QWidget#parameter_form_section QPushButton[valid="true"] {
- border: 1px solid green;
- }
+    border: 1px solid $valid;
+}
 
 QWidget#parameter_form_section QLineEdit[valid="false"] {
-    border-color: red;
-    }
+    border-color: $invalid;
+}
 
 QWidget#parameter_form_section QPushButton[valid="false"] {
-    border: 1px solid red;
-    }
+    border: 1px solid $invalid;
+}
 
 QWidget#parameter_form_section QLabel[valid="false"] {
-    color: red;
+    color: $invalid;
 }
 
 QWidget#parameter_form_section QComboBox {
@@ -280,7 +292,7 @@ QWidget#parameter_form_section QComboBox::down-arrow {
 }
 
 QLabel#validity_label {
-    color: red;
+    color: $invalid;
 }
 
 /* PARAMETER CONFIRMATION VIEW */
@@ -360,10 +372,22 @@ QRadioButton{
     color: $primary-dark
 }
 
-QWidget#info_label{
-    border: 1px solid #46a2da;
+QWidget#info_label {
+    border: 1px solid $info;
     border-radius: 5px;
-    background-color: #b5e3ff;
+    background-color: $info-background;
+}
+
+QWidget#warning_label {
+    border: 1px solid $warning;
+    border-radius: 5px;
+    background-color: $warning-background;
+}
+
+QWidget#error_label {
+    border: 1px solid $invalid;
+    border-radius: 5px;
+    background-color: $invalid-background;
 }
 
 /* History */
