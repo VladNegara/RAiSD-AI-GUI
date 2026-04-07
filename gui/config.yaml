@@ -440,11 +440,29 @@ parameter_groups:
       - SWP-SCN
     parameters:
       "-w":
+        operations:
+          remove:
+            - SWP-SCN
         name: Sweep scan window size
         description: The window size. The default value is empirically determined.
         cli: "-w "
         type: int
         default: 50
+        constraints:
+          - type: interval
+            min: 6
+          - type: even
+      "-w-ai":
+        operations:
+          add:
+            - IMG-GEN
+          remove:
+            - RSD-DEF
+        name: Window size
+        description: The window width used to generate SNP windows as CNN input data. If using a previously trained model, the value must match the one used in training.
+        cli: "-w "
+        type: int
+        default: 400
         constraints:
           - type: interval
             min: 6
@@ -1001,16 +1019,6 @@ parameter_groups:
           - type: bool
             parameter: "-bin"
             value: true
-      "-w-img-gen":
-        name: Window size
-        description: The window width provided is used to generate SNP windows as CNN input data.
-        cli: "-w "
-        type: int
-        default: 400
-        constraints:
-          - type: interval
-            min: 6
-          - type: even
   - name: RAiSD-AI model training
     operations:
       - MDL-GEN
