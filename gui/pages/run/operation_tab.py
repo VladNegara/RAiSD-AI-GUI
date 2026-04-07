@@ -85,7 +85,7 @@ class OperationTab(RunPageTab):
         return NavigationButtonsHolder(right_button=self.next_button)
 
     def refresh(self) -> None:
-        pass
+        self.operation_selector.refresh()
 
     def reset(self) -> None:
         self.operation_selector.reset()
@@ -116,6 +116,7 @@ class OperationTab(RunPageTab):
             )
             tree_scroll.setWidgetResizable(True)
 
+            self.operation_tree_widgets: list[OperationTreeWidget] = []
             self.tree_stacked_widget = ResizableStackedWidget()
             self.tree_stacked_widget.setObjectName("tree_stacked_widget")
 
@@ -134,6 +135,7 @@ class OperationTab(RunPageTab):
                     button_layout.addWidget(self.button)
 
                     widget = OperationTreeWidget(tree)
+                    self.operation_tree_widgets.append(widget)
                     self.tree_stacked_widget.addWidget(widget)
 
                     idx = flat_index
@@ -147,6 +149,17 @@ class OperationTab(RunPageTab):
 
             layout.addWidget(button_widget)
             layout.addWidget(tree_scroll)
+
+        def refresh(self) -> None:
+            for tree_widget in self.operation_tree_widgets:
+                for i, (button, _) in enumerate(self.tree_selectors):
+                    button.setChecked(
+                        i == self._run_record.selected_operation_tree_index
+                    )
+                self.tree_stacked_widget.current_index = (
+                    self._run_record.selected_operation_tree_index
+                )
+                tree_widget.refresh()
 
         def _button_clicked(self, i: int) -> None:
             self._run_record.selected_operation_tree_index = i

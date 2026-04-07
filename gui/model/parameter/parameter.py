@@ -10,14 +10,13 @@ from PySide6.QtCore import (
     Slot,
 )
 
-from gui.model.meta import AbstractQObjectMeta
 from gui.model.dependency import Dependency
 from .constraint import Constraint, IntervalConstraint
 
 T = TypeVar("T")
 
 
-class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
+class Parameter(QObject, Generic[T]):
     """
     A base class for parameters to be filled in using the GUI.
 
@@ -110,7 +109,7 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
         :param default_value: the default value of the parameter
         :type default_value: T
         """
-        super().__init__(self)
+        super().__init__()
         self.name = name
         self.description = description
         self.flag = flag
@@ -253,16 +252,58 @@ class Parameter(ABC, QObject, Generic[T], metaclass=AbstractQObjectMeta):
         """
         return operation in self.operations and self.enabled
 
-    @abstractmethod
-    def to_cli(self, operation: str) -> str:
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: T | None = None,
+        ) -> str:
         """
-        Represent the parameter for the command line, taking into
-        account its current value.
+        Helper method to represent the parameter for the command line,
+        taking into account its current value but not the operation or
+        whether the parameter is enabled.
+
+        The operation is nonetheless passed as an argument, in case it
+        needs to be passed down recursively.
+
+        :param operation: the ID of the operation
+        :type operation: str | None
+
+        :param value: the value to use in place of this parameter's
+        value
+        :type value: T | None
 
         :return: the command-line representation
         :rtype: str
         """
-        pass
+        raise NotImplementedError()
+
+    def to_cli(
+            self,
+            operation: str | None = None,
+            value: T | None = None
+        ) -> str:
+        """
+        Represent the parameter for the command line, taking into
+        account its current value, whether it is enabled and which
+        operation the representation is for.
+
+        If no operation is given, only the enabled status is considered.
+
+        :param operation: the ID of the operation to represent the
+        parameter for
+        :type operation: str | None
+
+        :return: the command-line representation
+        :rtype: str
+        """
+        if not self.enabled:
+            return ""
+        if operation is not None and operation not in self.operations:
+            return ""
+        return self._to_cli(
+            operation=operation,
+            value=value,
+        )
 
 
 class OptionalParameter(Parameter[bool]):
@@ -348,8 +389,14 @@ class OptionalParameter(Parameter[bool]):
             return True
         return self.parameter.valid
 
-    def to_cli(self, operation: str) -> str:
-        if self.value:
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: bool | None = None,
+    ) -> str:
+        if value is None:
+            value = self.value
+        if value:
             return self.parameter.to_cli(operation)
         return ""
 
@@ -397,9 +444,11 @@ class MultiParameter(Parameter[tuple[()]]):
             return True
         return all([parameter.valid for parameter in self.parameters])
 
-    def to_cli(self, operation: str) -> str:
-        if not self.in_cli(operation):
-            return ""
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: tuple[()] | None = None,
+    ) -> str:
         cli_params = [p.to_cli(operation) for p in self.parameters]
         nonempty_params = [p for p in cli_params if p]
         return f"{self.flag}{" ".join(nonempty_params)}"
@@ -416,9 +465,11 @@ class CountedMultiParameter(MultiParameter):
     command-line representation.
     """
 
-    def to_cli(self, operation: str) -> str:
-        if not self.in_cli(operation):
-            return ""
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: tuple[()] | None = None,
+        ) -> str:
         inner_parameters = [p.to_cli(operation) for p in self.parameters]
         nonempty_inner_parameters = [p for p in inner_parameters if p]
         if not nonempty_inner_parameters:
@@ -480,13 +531,16 @@ class BoolParameter(Parameter[bool]):
 
     value_changed = Signal(bool, bool)
 
-    def to_cli(self, operation: str) -> str:
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: bool | None = None,
+    ) -> str:
+        if value is None:
+            value = self.value
         # A boolean parameter is represented in the command line by the
         # presence or absence of its flag.
-        if self.in_cli(operation) and self.value:
-            return self.flag
-        else:
-            return ""
+        return self.flag if value else ""
     
     def __str__(self) -> str:
         return (
@@ -509,13 +563,16 @@ class NumberParameter(Parameter[X]):
     lower bound and lower than or equal to the upper bound, when provided.
     """
 
-    def to_cli(self, operation: str) -> str:
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: X | None = None,
+    ) -> str:
+        if value is None:
+            value = self.value
         # A numeric parameter is represented in the command line by
         # its flag and its value.
-        if self.in_cli(operation):
-            return f"{self.flag}{self.value}"
-        else:
-            return ""
+        return f"{self.flag}{self.value}"
 
 
 class IntParameter(NumberParameter[int]):
@@ -666,10 +723,14 @@ class EnumParameter(Parameter[int]):
         except IndexError:
             return None
 
-    def to_cli(self, operation: str) -> str:
-        if self.in_cli(operation):
-            return f"{self.flag}{self._options[self.value][1]}"
-        else: return ""
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: int | None = None,
+    ) -> str:
+        if value is not None:
+            value = self.value
+        return f"{self.flag}{self._options[self.value][1]}"
 
     def __str__(self) -> str:
         return (
@@ -697,7 +758,11 @@ class StringParameter(Parameter[str]):
 
     value_changed = Signal(str, bool)
 
-    def to_cli(self, operation: str, value: str | None = None) -> str:
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: str | None = None,
+    ) -> str:
         """
         Represent the parameter for the command line.
 
@@ -709,9 +774,7 @@ class StringParameter(Parameter[str]):
         """
         if value is None:
             value = self.value
-        if self.in_cli(operation):
-            return f"{self.flag}{value}"
-        else: return ""
+        return f"{self.flag}{value}"
 
     def __str__(self) -> str:
         return (
@@ -799,11 +862,15 @@ class StringPairListParameter(Parameter[list[tuple[str, str]]]):
             [self.pair_valid(i) for i in range(len(self.value))]
         )
 
-    def to_cli(self, operation: str) -> str:
-        if not self.in_cli(operation):
-            return ""
-        result = f"{self.flag}{len(self.value)}"
-        for left, right in self.value:
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: list[tuple[str, str]] | None = None,
+    ) -> str:
+        if value is None:
+            value = self.value
+        result = f"{self.flag}{len(value)}"
+        for left, right in value:
             result += f" {left}{self._separator}{right}"
         return result
 
@@ -923,7 +990,11 @@ class FileParameter(Parameter[list[str]]):
             f'valid: {self.valid})'
         )
 
-    def to_cli(self, operation: str) -> str:
-        if self.in_cli(operation):
-            return " ".join(f"{self.flag}{f}" for f in self.value)
-        return ""
+    def _to_cli(
+            self,
+            operation: str | None = None,
+            value: list[str] | None = None,
+    ) -> str:
+        if value is None:
+            value = self.value
+        return " ".join(f"{self.flag}{f}" for f in value)

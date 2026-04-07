@@ -7,6 +7,12 @@ run_id_parameter:
     - type: regex
       pattern: "\\w+"
       hint: Letters, numbers and underscores allowed.
+common_directory_overwrite_parameter:
+  name: Overwrite common output directory
+  description: You are about to overwrite all data in the common output directory of the operations. Are you sure?
+  cli: "-frm"
+  type: bool
+  default: false
 modes:
   - name: Standard RAiSD
     operations:
@@ -25,16 +31,17 @@ modes:
                 - .vcf
                 - .fasta
         output:
-          type: directory
-          contents: []
+          type: file
+          formats: 
+            - .txt
         overwrite_parameter:
-          name: Overwrite existing RAiSD report?
-          description: You are about to overwrite existing data in the output folder. Are you sure?
+          name: Overwrite RAiSD report
+          description: You are about to overwrite an existing RAiSD report. Are you sure?
           cli: "-f"
           type: bool
           default: false
         path:
-          - RAiSD_Grid.
+          - RAiSD_Report.
           - type: run id
   - name: RAiSD-AI
     operations:
@@ -59,7 +66,7 @@ modes:
               formats:
                 - .png
         overwrite_parameter:
-          name: Overwrite existing image data?
+          name: Overwrite formatted data
           description: You are about to overwrite existing data in the output folder. Are you sure?
           cli: "-f"
           type: bool
@@ -108,7 +115,7 @@ modes:
               formats:
                 - .pt
         overwrite_parameter:
-          name: Overwrite existing model?
+          name: Overwrite model
           description: You are about to overwrite existing data in the output folder. Are you sure?
           cli: "-f"
           type: bool
@@ -147,15 +154,15 @@ modes:
         output: 
           type: single
           formats:
-            - .report
+            - .txt
         overwrite_parameter:
-          name: Overwrite existing results?
+          name: Overwrite results
           description: You are about to overwrite existing data in the output folder. Are you sure?
           cli: "-f"
           type: bool
           default: false
         path:
-          - RAiSD_Inference. # probably wrong
+          - RAiSD_Info.
           - type: run id
       SWP-SCN:
         name: Model sweep scan
@@ -179,15 +186,15 @@ modes:
         output:
           type: single
           formats:
-            - .report
+            - .txt
         overwrite_parameter:
-          name: Overwrite existing results?
-          description: You are about to overwrite existing data in the output folder. Are you sure?
-          cli: "-f"
+          name: Overwrite report
+          description: You are about to overwrite an existing RAiSD report. Are you sure?
+          cli: "-f -frm"
           type: bool
           default: false
         path:
-          - RAiSD_Grid.
+          - RAiSD_Report.
           - type: run id
   - name: Common outlier analysis
     operations:
@@ -505,16 +512,6 @@ parameter_groups:
       - MDL-TST
       - SWP-SCN
     parameters:
-      "-f":
-        name: Overwrite output
-        description: Overwrite existing run files under the same run ID.
-        cli: "-f"
-        type: bool
-        default: false
-        operations:
-          add:
-            - FASTA-VCF
-            - VCF-MS
       "-s":
         name: Split output
         description: Generate a separate report file per set.

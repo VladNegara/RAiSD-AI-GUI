@@ -83,10 +83,25 @@ class TestParameterGroupList:
                 ],
             ),
         }
-        self.operation_trees, _ = OperationTree.build_trees(self.operations)
+        self.overwrite_parameter_builder = (
+            lambda: BoolParameter(
+                name="Overwrite output directory",
+                description="Are you sure you want to overwrite?",
+                flag="-frm",
+                operations={"MDL-GEN"},
+                default_value=False,
+            )
+        )
+        self.operation_trees, _ = OperationTree.build_trees(
+            self.operations,
+            self.overwrite_parameter_builder,
+        )
+        self.categorized_operation_trees = [
+            ('Operations', self.operation_trees),
+        ]
         self.parameter_group_list = RunRecord(
             run_id_parameter=self.run_id_parameter,
-            operation_trees=self.operation_trees,
+            categorized_operation_trees=self.categorized_operation_trees,
             parameter_groups=self.parameter_groups,
             dependencies=None,
         )
@@ -99,6 +114,7 @@ class TestParameterGroupList:
 
         # assert
         assert list.run_id_parameter == run_id_parameter
+        assert list.categorized_operation_trees == self.categorized_operation_trees
         assert list.operation_trees == self.operation_trees
         assert list.parameter_groups == groups
         assert list._dependencies == []
@@ -138,6 +154,10 @@ class TestParameterGroupListFromYaml:
                   type: str
                   name: Run ID
                   description: The ID of the run.
+                common_directory_overwrite_parameter:
+                  type: bool
+                  name: Overwrite common output directory
+                  description: Are you sure you want to remove existing files?
                 modes:
                   - name: standard
                     operations:
