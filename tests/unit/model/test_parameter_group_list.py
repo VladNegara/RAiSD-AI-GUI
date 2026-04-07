@@ -92,13 +92,14 @@ class TestParameterGroupList:
                 default_value=False,
             )
         )
-        self.operation_trees, _ = OperationTree.build_trees(
+        operation_trees, _ = OperationTree.build_trees(
             self.operations,
             self.overwrite_parameter_builder,
         )
+        self.categorized_operation_trees = [('Operations', operation_trees)]
         self.parameter_group_list = RunRecord(
             run_id_parameter=self.run_id_parameter,
-            operation_trees=self.operation_trees,
+            categorized_operation_trees=self.categorized_operation_trees,
             parameter_groups=self.parameter_groups,
             dependencies=None,
         )
@@ -111,7 +112,7 @@ class TestParameterGroupList:
 
         # assert
         assert list.run_id_parameter == run_id_parameter
-        assert list.operation_trees == self.operation_trees
+        assert list.operation_trees == self.categorized_operation_trees
         assert list.parameter_groups == groups
         assert list._dependencies == []
 
