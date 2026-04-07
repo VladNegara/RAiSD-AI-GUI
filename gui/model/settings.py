@@ -1,6 +1,4 @@
-from enum import Enum
 from yaml import load, Loader, dump
-from typing import Literal
 
 from PySide6.QtCore import (
     QObject, 

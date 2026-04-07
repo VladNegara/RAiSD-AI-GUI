@@ -5,8 +5,6 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
-    QHBoxLayout,
-    QVBoxLayout,
     QStackedLayout,
     QScrollArea,
     QPushButton,
@@ -19,12 +17,17 @@ from PySide6.QtGui import (
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.execution.command_executor import CommandExecutor
+from gui.widgets import (
+    HBoxLayout,
+    VBoxLayout,
+)
 from gui.pages import (
     Page,
     RunPage,
     HistoryPage,
     SettingsPage
 )
+from gui.style import constants
 
 class MainWindow(QMainWindow):
     """
@@ -52,13 +55,21 @@ class MainWindow(QMainWindow):
 
         central_widget = QWidget()
         central_widget.setObjectName("central_widget")
-        central_layout = QHBoxLayout(central_widget)
+        central_layout = HBoxLayout(central_widget)
         self.setCentralWidget(central_widget)
 
         # Left sidebar
         left_sidebar = QWidget()
         left_sidebar.setObjectName("left_sidebar")
-        left_sidebar_layout = QVBoxLayout(left_sidebar)
+        left_sidebar_layout = VBoxLayout(
+            left_sidebar,
+            left=constants.GAP_TINY,
+            top=constants.GAP_MEDIUM,
+            right=constants.GAP_TINY,
+            bottom=constants.GAP_MEDIUM,
+            spacing=constants.GAP_TINY,
+        )
+
         central_layout.addWidget(left_sidebar)
         self._setup_left_sidebar(left_sidebar_layout)
 
@@ -80,9 +91,7 @@ class MainWindow(QMainWindow):
 
         self._set_active_view(self.run_button)
 
-    def _setup_left_sidebar(self, layout: QVBoxLayout):
-        layout.setContentsMargins(0,20,0,0)
-
+    def _setup_left_sidebar(self, layout: VBoxLayout):
         logo_widget = QWidget()
         logo_widget.setFixedSize(40, 40)
         logo_widget.setObjectName("logo_widget")

@@ -3,17 +3,19 @@ from PySide6.QtCore import (
     QDir,
     Signal
 )
-from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
     QLabel,
-    QPushButton, QStyleOption, QStyle,
+    QPushButton,
 )
 
 from ..page import Page
 from gui.model.settings import app_settings
+from gui.widgets import (
+    HBoxLayout,
+    VBoxLayout,
+)
+from gui.style import constants
 
 
 class SettingsPage(Page):
@@ -28,15 +30,29 @@ class SettingsPage(Page):
         self._setup_ui()
 
     def _setup_ui(self):
-        self.setObjectName("settings_widget")
-        layout = QVBoxLayout(self)
-        settings_label = QLabel("Settings")
-        settings_label.setObjectName("settings_label")
-        layout.addWidget(settings_label)
+        layout = VBoxLayout(
+            self,
+            left=constants.GAP_MEDIUM,
+            top=constants.GAP_MEDIUM,
+            right=constants.GAP_MEDIUM,
+            bottom=constants.GAP_MEDIUM,
+            spacing=constants.GAP_MEDIUM,
+        )
+
+        title_label = QLabel("Settings")
+        title_label.setProperty("title", "true")
+        layout.addWidget(title_label)
 
         container_widget = QWidget()
         container_widget.setObjectName("container_widget")
-        container_layout = QVBoxLayout(container_widget)
+        container_layout = VBoxLayout(
+            container_widget,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_MEDIUM,
+            spacing=constants.GAP_SMALL,
+        )
 
         # Workspace
         workspace_widget = SettingsItemWidget("Workspace", app_settings.workspace_path.absolutePath())
@@ -76,14 +92,19 @@ class SettingsPage(Page):
         layout.addWidget(container_widget)
 
         info_label = QLabel("Developers")
-        info_label.setObjectName("settings_label")
+        info_label.setProperty("title", "true")
         layout.addWidget(info_label)
-
-        layout.addSpacing(20)
 
         info_container_widget = QWidget()
         info_container_widget.setObjectName("container_widget")
-        info_container_layout = QVBoxLayout(info_container_widget)
+        info_container_layout = VBoxLayout(
+            info_container_widget,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_MEDIUM,
+            spacing=constants.GAP_SMALL,
+        )
 
         raisd_ai_label = QLabel(
             """<a href='https://www.nature.com/articles/s42003-018-0085-8'>
@@ -109,21 +130,10 @@ class SettingsPage(Page):
 
         # TODO: add a link to the user manual
 
-        info_container_layout.addSpacing(15)
-
         layout.addWidget(info_container_widget)
 
         layout.addStretch()
 
-    def paintEvent(self, event) -> None:
-        """
-        Override paintEvent so that QSS styling (background, border,
-        etc.) is applied to this plain QWidget subclass.
-        """
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
 class SettingsItemWidget(QWidget):
     """
@@ -141,7 +151,7 @@ class SettingsItemWidget(QWidget):
         self._name = name
         self._value = value
         self.setObjectName("workspace_widget")
-        layout = QHBoxLayout(self)
+        layout = HBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(0)
 

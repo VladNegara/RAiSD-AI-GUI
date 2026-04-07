@@ -5,8 +5,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
     QScrollArea,
     QRadioButton,
     QPushButton,
@@ -15,9 +13,14 @@ from PySide6.QtWidgets import (
 
 from .run_page_tab import RunPageTab, NavigationButtonsHolder
 from gui.model.run_record import RunRecord
+from gui.widgets import (
+    HBoxLayout,
+    ResizableStackedWidget,
+    VBoxLayout,
+)
 from gui.components.operation import OperationTreeWidget
-from gui.components.resizable_stacked_widget import ResizableStackedWidget
 from gui.components.parameter import ParameterWidget
+from gui.style import constants
 
 
 class OperationTab(RunPageTab):
@@ -34,11 +37,14 @@ class OperationTab(RunPageTab):
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
         widget.setObjectName("operation_selection_widget")
-        layout = QVBoxLayout(widget)
+        layout = VBoxLayout(
+            widget,
+            spacing=constants.GAP_MEDIUM,
+        )
 
-        operation_selection_label = QLabel("Operation Selection")
-        operation_selection_label.setObjectName("operation_selection_label")
-        layout.addWidget(operation_selection_label)
+        title_label = QLabel("Operation Selection")
+        title_label.setProperty("title", "true")
+        layout.addWidget(title_label)
 
         run_id_parameter_widget = ParameterWidget.from_parameter(
             self._run_record.run_id_parameter,
@@ -90,10 +96,13 @@ class OperationTab(RunPageTab):
 
             self._run_record = run_record
 
-            layout = QHBoxLayout(self)
+            layout = HBoxLayout(
+                self,
+                spacing=constants.GAP_TINY,
+            )
 
             button_widget = QWidget()
-            button_layout = QVBoxLayout(button_widget)
+            button_layout = VBoxLayout(button_widget)
 
             tree_scroll = QScrollArea()
             tree_scroll.setObjectName("tree_scroll")

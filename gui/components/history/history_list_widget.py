@@ -1,19 +1,20 @@
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
     QScrollArea,
     QLabel,
-    QStyleOption,
-    QStyle,
 )
 
 from .history_record_widget import HistoryRecordWidget
 from gui.model.history_record import HistoryRecord
+from gui.widgets import (
+    StylableWidget,
+    VBoxLayout,
+)
+from gui.style import constants
 
 
-class HistoryListWidget(QWidget):
+class HistoryListWidget(StylableWidget):
     """
     The widget that holds the all operation records to display in history_widget
     """
@@ -28,10 +29,11 @@ class HistoryListWidget(QWidget):
         self._history_widgets: list[HistoryRecordWidget] = []
         self.setObjectName('history_list_widget')
 
-        layout = QVBoxLayout(self)
+        layout = VBoxLayout(self)
+        layout.setSpacing(constants.GAP_SMALL)
 
         title = QLabel("History")
-        title.setObjectName("history_list_widget_title")
+        title.setProperty("title", "true")
         layout.addWidget(title)
 
         # The list of history widgets
@@ -44,8 +46,8 @@ class HistoryListWidget(QWidget):
 
         self._list_container = QWidget()
         self._list_container.setObjectName("history_list_container")
-        self._list_layout = QVBoxLayout(self._list_container)
-        self._list_layout.setSpacing(4)
+        self._list_layout = VBoxLayout(self._list_container)
+        self._list_layout.setSpacing(constants.GAP_TINY)
         self._list_layout.addStretch()
         scroll_area.setWidget(self._list_container)
 
@@ -92,9 +94,3 @@ class HistoryListWidget(QWidget):
         """
         for widget in self._history_widgets:
             widget.update_time()
-
-    def paintEvent(self, event) -> None:
-        opt = QStyleOption()
-        opt.initFrom(self)
-        painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
