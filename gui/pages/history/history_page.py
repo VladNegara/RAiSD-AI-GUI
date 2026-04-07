@@ -32,7 +32,7 @@ class HistoryPage(Page):
         """
         super().__init__()
         self._history_list: HistoryListWidget = HistoryListWidget()
-        self._run_record = RunRecord.from_yaml(app_settings.config_path)
+        self._run_record = RunRecord.from_yaml(app_settings.config_path.absoluteFilePath())
         self._selected : HistoryRecord | None = None
         self._setup_ui()
         self._history_list.setObjectName("history_list")

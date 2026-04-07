@@ -353,6 +353,7 @@ class OptionalParameterWidget(ParameterWidget):
             self._child_widget.touched = self.touched
 
 
+
 class MultiParameterWidget(ParameterWidget):
     """
     A widget to edit a multi-value parameter.

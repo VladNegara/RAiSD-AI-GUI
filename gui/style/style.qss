@@ -99,7 +99,7 @@ QScrollArea#history_results_scroll QScrollBar{
 /* SHARED — PURPLE BUTTONS */
 
 QWidget#parameter_confirmation_widget QPushButton,
-QWidget#settings_widget QPushButton,
+QWidget#settings_item_widget QPushButton,
 QPushButton#reset_button,
 QPushButton#file_button,
 QPushButton#file_selector_button {
@@ -111,7 +111,7 @@ QPushButton#file_selector_button {
 }
 
 QWidget#parameter_confirmation_widget QPushButton:hover,
-QWidget#settings_widget QPushButton:hover,
+QWidget#settings_item_widget QPushButton:hover,
 QPushButton#reset_button:hover,
 QPushButton#file_button:hover,
 QPushButton#file_selector_button:hover {
@@ -119,7 +119,7 @@ QPushButton#file_selector_button:hover {
 }
 
 QWidget#parameter_confirmation_widget QPushButton:pressed,
-QWidget#settings_widget QPushButton:pressed,
+QWidget#settings_item_widget QPushButton:pressed,
 QPushButton#reset_button:pressed,
 QPushButton#file_button:pressed,
 QPushButton#file_selector_button:pressed{
