@@ -1000,7 +1000,9 @@ class RunRecord(QObject):
         for mode_obj in mode_list:
             if not isinstance(mode_obj, dict):
                 raise ValueError(f"Invalid mode: {mode_obj}. Expected object.")
-            mode_name = mode_obj.get("name", "Other")
+            if "name" not in mode_obj:
+                raise ValueError("Mode has no name.")
+            mode_name = mode_obj.get("name")
             if not isinstance(mode_name, str):
                 raise ValueError(
                     f"Invalid mode name: {mode_name}. Expected string."
