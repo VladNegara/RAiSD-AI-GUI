@@ -4,7 +4,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
     QScrollArea,
     QPushButton,
     QLabel,
@@ -13,7 +12,11 @@ from PySide6.QtWidgets import (
 from .run_page_tab import RunPageTab, NavigationButtonsHolder
 from gui.model.parameter import MultiParameter, OptionalParameter, Parameter
 from gui.model.run_record import RunRecord
+from gui.widgets import (
+    VBoxLayout,
+)
 from gui.components.parameter import ParameterForm
+from gui.style import constants
 
 
 class ParameterTab(RunPageTab):
@@ -32,10 +35,14 @@ class ParameterTab(RunPageTab):
     def _setup_widget(self) -> QWidget:
         widget = QWidget()
         widget.setObjectName("parameter_input_widget")
-        layout = QVBoxLayout(widget)
-        parameter_input_label = QLabel("Parameter Input")
-        parameter_input_label.setObjectName("parameter_input_label")
-        layout.addWidget(parameter_input_label)
+        layout = VBoxLayout(
+            widget,
+            spacing=constants.GAP_MEDIUM,
+        )
+
+        title_label = QLabel("Parameter Input")
+        title_label.setProperty("title", "true")
+        layout.addWidget(title_label)
 
         self._parameter_form = ParameterForm(self._run_record, editable=True)
         self._parameter_form.setObjectName("parameter_form")
@@ -74,6 +81,10 @@ class ParameterTab(RunPageTab):
 
     def refresh(self) -> None:
         self.reset_touched_section_validity()
+        self.update_next_button_state()
+
+    def reset(self) -> None:
+        self.reset_touched()
         self.update_next_button_state()
 
     def _connect_parameter_to_update_next_button_state(self, parameter: Parameter) -> None:

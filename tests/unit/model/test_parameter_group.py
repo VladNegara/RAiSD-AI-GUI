@@ -1,8 +1,13 @@
 from pytest import fixture, raises
 import re
 
-from gui.model.parameter import ParameterGroup
-from gui.model.parameter import StringParameter, BoolParameter
+from gui.model.parameter import (
+    MaxLengthConstraint,
+    RegexConstraint,
+    ParameterGroup,
+    StringParameter,
+    BoolParameter,
+)
 
 class TestParameterGroup:
     """Tests for ParameterGroup class."""
@@ -15,8 +20,13 @@ class TestParameterGroup:
             flag="-flag_string ",
             operations={'MDL-GEN'},
             default_value="default",
-            max_length=10,
-            pattern=re.compile(r"\b[a-z]+\b"),
+            constraints=[
+                MaxLengthConstraint(10),
+                RegexConstraint(
+                    pattern=re.compile(r"\b[a-z]+\b"),
+                    hint="Only lowercase letters."
+                ),
+            ],
         )
         self.bool_param = BoolParameter(
             name="bool_param",
