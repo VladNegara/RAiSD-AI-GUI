@@ -54,7 +54,7 @@ class RunRecord(QObject):
     def __init__(
             self,
             run_id_parameter: StringParameter,
-            operation_trees: list[OperationTree],
+            categorized_operation_trees: list[tuple[str, list[OperationTree]]],
             parameter_groups: list[ParameterGroup] | None = None,
             dependencies: list[Dependency] | None = None,
     ) -> None:
@@ -70,8 +70,8 @@ class RunRecord(QObject):
         self._run_id_parameter.value_changed.connect(
             self._run_id_parameter_value_changed
         )
-        self._operation_trees = operation_trees
-        for tree in self._operation_trees:
+        self._categorized_operation_trees = categorized_operation_trees
+        for tree in self.operation_trees:
             tree.valid_changed.connect(self._operation_tree_valid_changed)
         self._selected_operation_tree_index = 0
         self._parameter_groups = parameter_groups or []
@@ -189,7 +189,6 @@ class RunRecord(QObject):
         def parse_operation(
                 obj: dict,
                 id: str,
-                mode_name: str
         ) -> Operation:
             name = obj.get("name", "") or ""
             if not isinstance(name, str):
@@ -297,7 +296,6 @@ class RunRecord(QObject):
             return Operation(
                 id=id,
                 name=name,
-                mode_name=mode_name,
                 description=description,
                 cli=cli,
                 requires=requires,
@@ -991,6 +989,7 @@ class RunRecord(QObject):
         config_obj = load(config_text, Loader=Loader)
 
         operations = {}
+        mode_operation_ids: list[tuple[str, list[str]]] = []
         if "modes" not in config_obj:
             raise ValueError("Configuration file contains no list of modes.")
         mode_list = config_obj["modes"]
@@ -1001,6 +1000,11 @@ class RunRecord(QObject):
         for mode_obj in mode_list:
             if not isinstance(mode_obj, dict):
                 raise ValueError(f"Invalid mode: {mode_obj}. Expected object.")
+            mode_name = mode_obj.get("name", "Other")
+            if not isinstance(mode_name, str):
+                raise ValueError(
+                    f"Invalid mode name: {mode_name}. Expected string."
+                )
             if "operations" not in mode_obj:
                 raise ValueError(f"Mode has no operation list.")
             operations_obj = mode_obj["operations"]
@@ -1009,6 +1013,7 @@ class RunRecord(QObject):
                     f"Invalid operations dictionary: {operations_obj}. "
                     + "Expected an object."
                 )
+            current_mode_op_ids = []
             for operation_id in operations_obj:
                 operation_obj = operations_obj[operation_id]
                 if not isinstance(operation_obj, dict):
@@ -1016,8 +1021,9 @@ class RunRecord(QObject):
                         f"Invalid operation: {operation_obj}"
                         + "Expected an object."
                     )
-                operations[operation_id] = parse_operation(operation_obj, operation_id, mode_obj["name"])
-
+                operations[operation_id] = parse_operation(operation_obj, operation_id)
+                current_mode_op_ids.append(operation_id)
+            mode_operation_ids.append((mode_name, current_mode_op_ids))
         if "run_id_parameter" not in config_obj:
             raise ValueError(
                 "Run ID parameter missing from configuration file!"
@@ -1046,7 +1052,18 @@ class RunRecord(QObject):
 
         operation_trees, operation_conditions = OperationTree.build_trees(operations)
 
-        result = cls(run_id_parameter, operation_trees, parameter_groups)
+        # Build a mapping from operation ID to its tree
+        op_id_to_tree = {}
+        for tree in operation_trees:
+            op_id_to_tree[tree.root.id] = tree
+
+        # Group trees by mode
+        categorized_operation_trees: list[tuple[str, list[OperationTree]]] = []
+        for mode_name, op_ids in mode_operation_ids:
+            mode_trees = [op_id_to_tree[op_id] for op_id in op_ids]
+            categorized_operation_trees.append((mode_name, mode_trees))
+
+        result = cls(run_id_parameter, categorized_operation_trees, parameter_groups)
 
         parameter_conditions: dict[Parameter[Any], list[Dependency.Condition]] = {}
 
@@ -1181,8 +1198,18 @@ class RunRecord(QObject):
         return app_settings.workspace_path.absoluteFilePath(self.run_id)
 
     @property
+    def categorized_operation_trees(self) -> list[tuple[str, list[OperationTree]]]:
+        """Operation trees grouped by mode name."""
+        return self._categorized_operation_trees
+
+    @property
     def operation_trees(self) -> list[OperationTree]:
-        return self._operation_trees
+        """Flat list of all operation trees."""
+        return [
+            tree
+            for _, trees in self._categorized_operation_trees
+            for tree in trees
+        ]
 
     @property
     def selected_operation_tree(self) -> OperationTree:
