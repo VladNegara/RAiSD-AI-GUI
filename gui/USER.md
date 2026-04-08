@@ -47,6 +47,20 @@ The parameters that the gui generated and will use for the execution of the oper
 
 The command that is each line of parameters will be run with is also shown.
 
+#### Run Tab
+
+![Screenshot of the Run Page Run Tab](/screenshots/run-page.run.run1.running.png)
+
+The run tab allows you to monitor the progress of the execution. It shows the status of each command, the output, and any errors that may occur. You can also stop the execution if needed.
+
+Each command is symbolized with a circle. The color of the circle indicates the status of the command:
+- Empty: Not started
+- Yellow: Running
+- Blue: Completed successfully
+- Red: Completed with error
+
+To see the output of the RAiSD-AI tool use the "Toggle Console" button. This will show the standard output on the left and error output on the right. You can toggle the console at any time during the execution to check the output.
+
 ### History Page
 blabla
 
