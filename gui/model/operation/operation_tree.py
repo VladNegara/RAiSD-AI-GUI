@@ -132,7 +132,7 @@ class FileConsumerNode(QObject):
             requires: FileStructure,
             label: str,
             cli: str,
-            enabled: bool = False
+            enabled: bool = False,
     ) -> None:
         """
         Initialize a `FileConsumerNode` object.
