@@ -299,7 +299,7 @@ class RunRecord(QObject):
                         operations={id},
                     )
                 )
-            
+
             return Operation(
                 id=id,
                 name=name,
