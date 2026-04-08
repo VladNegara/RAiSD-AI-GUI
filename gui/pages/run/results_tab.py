@@ -63,12 +63,6 @@ class ResultsTab(RunPageTab):
 
         return NavigationButtonsHolder(left_button=self.new_run_button, right_button=self.edit_run_button)
 
-    def refresh(self) -> None:
-        pass
-
-    def reset(self) -> None:
-        pass
-
     @Slot(bool)
     def run_ended(self, run_successful: bool) -> None:
         if (run_successful):
