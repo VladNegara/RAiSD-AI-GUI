@@ -37,7 +37,7 @@ from gui.model.parameter import (
     StringPairListParameter,
     FileParameter,
 )
-from gui.model.condition import (
+from gui.model.parameter.condition import (
     AndCondition,
     Condition,
     OrCondition,

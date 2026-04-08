@@ -10,7 +10,7 @@ from PySide6.QtCore import (
     Slot,
 )
 
-from gui.model.condition import (
+from gui.model.parameter.condition import (
     AndCondition,
     Condition,
 )

@@ -32,7 +32,7 @@ from gui.model.parameter import (
     BoolParameter,
     StringParameter,
 )
-from gui.model.condition import (
+from gui.model.parameter.condition import (
     Condition,
     OrCondition,
 )
