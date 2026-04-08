@@ -17,7 +17,17 @@ The Run Page is the main page of the GUI. It is used to execute RAiSD-AI operati
 
 ![Screenshot of the Run Page Operation Selection with Run ID](/screenshots/run-page.operation-selection.run1.png)
 
-...
+The operation selection tab has three main input sections:
+
+1. **Run ID**: This is a unique identifier for each run. It helps you keep track of different runs and their results. The results of the run will be stored in a folder named after the run id.
+
+2. **Operation Selection**: Here you can choose the type of operation you want to perform.
+
+3. **Input Data**: This section allows you to input the data required for the selected operation. This can include files, folders, and parameters.
+
+TODO: write something about how one operation will itself run the required ones before, maybe add a screenshot with an operation like sweep scan for that.
+
+> Note: If the choice of run id or other input parameters will cause data to be overwritten, the GUI will show a warning and ask for confirmation before proceeding.
 
 #### tab two
 this one is cool two
