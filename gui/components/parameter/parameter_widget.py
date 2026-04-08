@@ -42,9 +42,14 @@ from gui.model.parameter import (
 from gui.components.utils import set_bool_property
 from gui.widgets import (
     HBoxLayout,
+    StylableWidget,
     VBoxLayout,
 )
 from gui.style import constants
+
+
+class ParameterRow(StylableWidget):
+    pass
 
 
 class ParameterWidget(QWidget):
