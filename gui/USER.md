@@ -84,7 +84,10 @@ You can use the *"Reuse"* button to reuse the selected operations and parameters
 ![Screenshot of the History Page](/screenshots/history-page.run1.png)
 
 ### Settings Page
-blabla
+
+The settings page allows you to configure the GUI settings. Here you can change the workspace, which is the folder where your runs and their results are stored. You can also change the path to the RAiSD-AI tool, the environment manager, or the environment name if needed.
+
+![Screenshot of the Settings Page](/screenshots/settings-page.png)
 
 ## Walktrough
 
