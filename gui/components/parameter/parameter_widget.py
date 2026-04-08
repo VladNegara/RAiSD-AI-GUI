@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QLabel,
     QCheckBox,
-    QLineEdit,
     QPushButton,
     QComboBox,
     QFileDialog,
@@ -41,7 +40,9 @@ from gui.model.parameter import (
 )
 from gui.components.utils import set_bool_property
 from gui.widgets import (
+    GridLayout,
     HBoxLayout,
+    LineEdit,
     StylableWidget,
     VBoxLayout,
 )
@@ -103,16 +104,39 @@ class ParameterWidget(QWidget):
         self._editable = editable
         self._touched = False #variable for activating show_validity
         self._parameter.enabled_changed.connect(self._on_enabled_changed)
-        self._layout = VBoxLayout(self)
+        grid_layout = GridLayout(
+            self,
+            horizontal_spacing=constants.GAP_SMALL,
+            vertical_spacing=constants.GAP_TINY,
+        )
+
+        main_widget = QWidget()
+        # The layout where the parameter-specific widgets will be added
+        self._layout = VBoxLayout(main_widget)
+        self._layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(
+            main_widget, 0, 0,
+            alignment=Qt.AlignmentFlag.AlignVCenter,
+        )
+
+        if self._editable:
+            reset_button = self.__class__.ResetButton(self._parameter)
+            grid_layout.addWidget(
+                reset_button, 0, 1,
+                alignment=Qt.AlignmentFlag.AlignVCenter,
+            )
 
         hints_widget = QWidget()
         self._hints_layout = VBoxLayout(hints_widget)
         self._hint_labels = []
         for hint in self._parameter.hints:
             hint_label = self.__class__.HintLabel(hint)
-            self._hints_layout.addWidget(hint_label)
+            self._hints_layout.addWidget(
+                hint_label,
+                alignment=Qt.AlignmentFlag.AlignRight,
+            )
             self._hint_labels.append(hint_label)
-        self._layout.addWidget(hints_widget)
+        grid_layout.addWidget(hints_widget, 1, 0)
 
         # `show_validity` is not annotated as a Slot.
         self._parameter.value_changed.connect(self.show_validity)
@@ -267,10 +291,6 @@ class ParameterWidget(QWidget):
         layout.addStretch(2)
 
         layout.addWidget(self)
-
-        if self._editable:
-            reset_button = ParameterWidget.ResetButton(self.parameter)
-            layout.addWidget(reset_button)
 
         return row
 
@@ -476,7 +496,7 @@ class IntParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        self._line_edit = QLineEdit()
+        self._line_edit = LineEdit(self)
         self._line_edit.setText(str(parameter.value))
         # Allow an arbitrary length integer.
         regex = QRegularExpression(R"^(-)?[0-9]*$")
@@ -529,7 +549,7 @@ class FloatParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        self._line_edit = QLineEdit()
+        self._line_edit = LineEdit(self)
         self._line_edit.setText(str(parameter.value))
         # Allow an arbitrary length integer, optionally followed by a
         # decimal point and an arbitrary length fractional part.
@@ -622,7 +642,7 @@ class StringParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        self._line_edit = QLineEdit()
+        self._line_edit = LineEdit(self)
         self._line_edit.setText(parameter.value)
         self._line_edit.setReadOnly(not self._editable)
         self._layout.insertWidget(0, self._line_edit)
@@ -660,7 +680,7 @@ class StringPairListParameterWidget(ParameterWidget):
 
             layout = HBoxLayout(self)
 
-            self._left_line_edit = QLineEdit()
+            self._left_line_edit = LineEdit(self)
             self._left_line_edit.setText(values[0])
             self._left_line_edit.setReadOnly(not self._editable)
             self._left_line_edit.editingFinished.connect(
@@ -668,7 +688,7 @@ class StringPairListParameterWidget(ParameterWidget):
             )
             layout.addWidget(self._left_line_edit)
 
-            self._right_line_edit = QLineEdit()
+            self._right_line_edit = LineEdit(self)
             self._right_line_edit.setText(values[1])
             self._right_line_edit.setReadOnly(not self._editable)
             self._right_line_edit.editingFinished.connect(
@@ -684,11 +704,11 @@ class StringPairListParameterWidget(ParameterWidget):
             layout.addWidget(self._delete_button)
 
         @property
-        def left_line_edit(self) -> QLineEdit:
+        def left_line_edit(self) -> LineEdit:
             return self._left_line_edit
 
         @property
-        def right_line_edit(self) -> QLineEdit:
+        def right_line_edit(self) -> LineEdit:
             return self._right_line_edit
 
         @property
