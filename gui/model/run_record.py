@@ -2,7 +2,6 @@ from re import compile
 from typing import Any, Iterator
 from yaml import load, Loader
 from datetime import datetime
-import json
 
 from PySide6.QtCore import (
     QObject,
