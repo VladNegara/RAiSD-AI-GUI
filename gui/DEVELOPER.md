@@ -27,11 +27,11 @@ All the files related to the GUI is organized within the `gui/` folder. This inc
 > The only exception is the environment-raisd-ai-gui.yml file, which is located in the root of the project. 
 
 The gui code is divided into 5 main packages:
-- [**components**](./components/): Contains all the reusable components that are used throughout the GUI.
-- [**execution**](./execution/): Contains the code responsible for executing commands with the RAiSD-AI tool.
-- [**model**](./model/): Contains the data models used in the GUI.
-- [**pages**](./pages/): Contains the different pages of the GUI. These are the main page, history page, and settings page.
-- [**style**](./style/): Contains the stylesheets and images used to style the GUI.
+- [**components**](/gui/components/): Contains all the reusable components that are used throughout the GUI.
+- [**execution**](/gui/execution/): Contains the code responsible for executing commands with the RAiSD-AI tool.
+- [**model**](/gui/model/): Contains the data models used in the GUI.
+- [**pages**](/gui/pages/): Contains the different pages of the GUI. These are the main page, history page, and settings page.
+- [**style**](/gui/style/): Contains the stylesheets and images used to style the GUI.
 
 ### components
 
@@ -55,7 +55,7 @@ This package contains the stylesheets and images used to style the GUI. The styl
 
 ## Testing
 
-Pytest is used for testing the GUI. The tests are located in the `gui/tests/` folder. To run the tests, make sure to activate the `raisd-ai-gui` environment and then run the following command in the terminal:
+Pytest is used for testing the GUI. The tests are located in the [gui/tests/](/gui/tests/) folder. To run the tests, make sure to activate the `raisd-ai-gui` environment and then run the following command in the terminal:
 
 ```bash
 pytest
