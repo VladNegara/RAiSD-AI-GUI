@@ -11,10 +11,13 @@ The RAiSD-AI-GUI consists of several pages and tabs that allow you to navigate t
 
 ### Run Page
 
-overview of all tabs
+The Run Page is the main page of the GUI. It is used to execute RAiSD-AI operations. It allows you to select the operation you want to perform, configure the parameters, start the execution, monitor the progress, and view the results.
 
-#### tab one
-this is one awesome tab
+#### Operation Selection Tab
+
+![Screenshot of the Run Page Operation Selection with Run ID](/screenshots/run-page.operation-selection.run1.png)
+
+...
 
 #### tab two
 this one is cool two
