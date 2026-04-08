@@ -150,6 +150,7 @@ class RunPage(Page):
 
         # Results tab
         self.results_tab = ResultsTab(run_record=self._run_record)
+        self.results_tab.navigate_back.connect(self._switch_to_view_tab)
         self.results_tab.new_run_button.clicked.connect(self._new_run)
         self.results_tab.edit_run_button.clicked.connect(self._switch_to_operation_tab)
         self.run_ended.connect(self.results_tab.run_ended)
@@ -205,7 +206,7 @@ class RunPage(Page):
             history_record = self._run_record.to_history_record() 
             history_record.save_to_history()     
             self.run_saved.emit(history_record)
-            self._switch_to_results_tab()
+        self._switch_to_results_tab()
 
     @Slot()
     def _new_run(self) -> None:
