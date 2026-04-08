@@ -1,21 +1,15 @@
 import sys
 import sass
+from PySide6.QtCore import Qt
 
-from PySide6.QtCore import (
-    QDir,
-    QFileInfo,
-)
 from PySide6.QtWidgets import (
     QApplication,
     QSplashScreen,
-    QStyleFactory,
 )
 from PySide6.QtGui import (
     QPixmap,
 )
 
-from gui.model.settings import app_settings
-from gui.model.run_record import RunRecord
 from gui.window import MainWindow
 
 
@@ -34,10 +28,9 @@ def main():
 
     app.setStyleSheet(final_stylesheet)
 
-    splash_screen_pixmap = QPixmap(480, 270)
-    splash_screen_pixmap.fill()
+    splash_screen_pixmap = QPixmap("gui/style/resources/Raisd_ai_splash_screen.png")
     splash_screen = QSplashScreen(splash_screen_pixmap)
-    splash_screen.showMessage("Loading...")
+    splash_screen.setWindowFlags(splash_screen.windowFlags() & ~Qt.WindowType.WindowStaysOnTopHint)
     splash_screen.show()
     app.processEvents()
 
