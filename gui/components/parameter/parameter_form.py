@@ -30,8 +30,6 @@ class ParameterForm(QWidget):
             self,
             spacing=constants.GAP_TINY,
         )
-        heading = QLabel("RAiSD-AI parameters")
-        layout.addWidget(heading)
 
         for parameter_group in self._run_record.parameter_groups:
             parameter_form_section = ParameterFormSection(parameter_group, editable=self._editable)

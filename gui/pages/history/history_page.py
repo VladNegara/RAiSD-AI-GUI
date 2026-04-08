@@ -95,7 +95,7 @@ class HistoryPage(Page):
         splitter.setSizes([200, 400])
 
     def _setup_navigation_buttons(self) -> NavigationButtonsHolder:
-        self.edit_button = QPushButton("Edit")
+        self.edit_button = QPushButton("Reuse")
         self.edit_button.clicked.connect(lambda : self.reuse_run_clicked.emit(self._selected))
         return NavigationButtonsHolder(right_button=self.edit_button)
 
