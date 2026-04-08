@@ -41,8 +41,8 @@
 #endif
 
 #define MAJOR_VERSION 4
-#define MINOR_VERSION 3
-#define RELEASE_MONTH "March"
+#define MINOR_VERSION 4
+#define RELEASE_MONTH "April"
 #define RELEASE_YEAR 2026
 
 /*Testing*/
@@ -424,7 +424,9 @@ typedef struct
 	
 	// Experimental
 	int		fullFrame;
-	int		gridPointReductionMax;	 	
+	int		gridPointReductionMax;
+	
+	int		dev; // prints Python cmds	 	
 #endif
 
 } RSDCommandLine_t;

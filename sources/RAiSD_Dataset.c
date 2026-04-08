@@ -488,8 +488,6 @@ void RSDDataset_print (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandL
 {
 	assert(RSDDataset!=NULL);
 	
-	int newline_y = 1;
-
 	if(fpOut!=NULL)
 	{
 
@@ -498,24 +496,20 @@ void RSDDataset_print (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandL
 		{
 			case OP_DEF:
 				fprintf(fpOut, " Sample size         :\t%d", RSDDataset->numberOfSamples);
-				newline_y = 1;
 				break;
 				
 			case OP_CREATE_IMAGES:
 				fprintf(fpOut, " Sample size         :\t%d (image height)", RSDDataset->numberOfSamples);
-				newline_y = 1;
 				break;
 				
-			case OP_TRAIN_CNN:
-				newline_y = 1;				
+			case OP_TRAIN_CNN:			
 				break;
 				
-			case OP_TEST_CNN:
-				newline_y = 1;				
+			case OP_TEST_CNN:			
 				break;
 				
 			case OP_USE_CNN:
-				newline_y = 0;				
+				fprintf(fpOut, " Sample size         :\t%d", RSDDataset->numberOfSamples);
 				break;
 				
 			default:
@@ -532,8 +526,7 @@ void RSDDataset_print (RSDDataset_t * RSDDataset, RSDCommandLine_t * RSDCommandL
 
 		}
 
-		if(newline_y)
-			fprintf(fpOut, "\n");
+		fprintf(fpOut, "\n");
 
 		if(!strcmp(RSDDataset->inputFileFormat, "ms"))
 			fprintf(fpOut, " Region length       :\t%lu bp\n", RSDCommandLine->regionLength);

@@ -297,6 +297,7 @@ void RSDVersions(FILE * fp)
 	fprintf(fp, " %*d. RAiSD v%d.%d (Nov 21, 2024): Added FASTER-NN, FASTER-NN-G, and -g parameter for SFS grouped pooling in FASTER-NN-G\n", strlen, releaseIndex++, majorIndex, minorIndex++);
 	fprintf(fp, " %*d. RAiSD v%d.%d (Jan 30, 2026): Code clean-up, added test datasets and example scripts for FASTER-NN and FASTER-NN-G\n", strlen, releaseIndex++, majorIndex, minorIndex++);
 	fprintf(fp, " %*d. RAiSD v%d.%d (Mar 24, 2026): Further code clean-up, fixed exit codes for errors\n", strlen, releaseIndex++, majorIndex, minorIndex++);
+	fprintf(fp, " %*d. RAiSD v%d.%d (Apr 8, 2026): Fixed sample size mismatch error messages for VCF and added cuda environment\n", strlen, releaseIndex++, majorIndex, minorIndex++);
 
 }
 
@@ -449,7 +450,9 @@ void RSDCommandLine_init(RSDCommandLine_t * RSDCommandLine)
 	
 	//Experimental
 	RSDCommandLine->fullFrame = 0;
-	RSDCommandLine->gridPointReductionMax = 0;	
+	RSDCommandLine->gridPointReductionMax = 0;
+	
+	RSDCommandLine->dev = 0;	
 #endif
 }
 
@@ -1903,6 +1906,12 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 
 			continue;
 		}*/
+		
+		if(!strcmp(argv[i], "-dev")) // Prints Python cmds
+		{ 
+			RSDCommandLine->dev = 1;
+			continue;
+		}
 
 		fprintf(stderr, "\nERROR: Unrecognized input parameter %s\n\n",argv[i]);
 		exit(1);

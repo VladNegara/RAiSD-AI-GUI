@@ -996,7 +996,11 @@ void RSDNeuralNetwork_createRunCommand (RSDNeuralNetwork_t * RSDNeuralNetwork, R
 
 	strcat(runCommand, " 2>/dev/null");
 	
-	//printf("\nruncommand %s\n", runCommand);	
+	if(RSDCommandLine->dev)
+	{
+		printf("\nruncommand %s\n", runCommand);
+		fflush(stdout);	
+	}	
 }
 
 void RSDNeutralNetwork_run (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, void * RSDGrid, FILE * fpOut)
