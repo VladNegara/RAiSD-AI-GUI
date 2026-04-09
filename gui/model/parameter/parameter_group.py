@@ -48,6 +48,11 @@ class ParameterGroup(QObject):
         """
         self._parameters.append(parameter)
         parameter.enabled_changed.connect(self._parameter_enabled_changed)
+
+        new_enabled = any(parameter.enabled for parameter in self._parameters)
+        if self.enabled != new_enabled:
+            self.enabled_changed.emit(new_enabled)
+            self._enabled = new_enabled
     
     @property
     def valid(self) -> bool:

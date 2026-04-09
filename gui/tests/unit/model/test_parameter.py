@@ -2,6 +2,7 @@ from pytest import fixture
 import re
 
 from gui.model.parameter import (
+    Condition,
     IntervalConstraint,
     MaxLengthConstraint,
     RegexConstraint,
@@ -28,6 +29,12 @@ class TestBoolParameter:
             default_value=False
         )
 
+        # Add a condition to control the parameter's enabled status.
+        self.condition = Condition(
+            value=True,
+        )
+        self.bool_param.add_condition(self.condition)
+
     def test_init_values(self):
         """Test BoolParameter initialization with default value."""
         param = self.bool_param
@@ -37,6 +44,7 @@ class TestBoolParameter:
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value is False
         assert param.default_value is False
+        assert param.enabled
 
     def test_set_value(self):
         """Test setting BoolParameter value."""
@@ -51,6 +59,70 @@ class TestBoolParameter:
         param.reset_value()
         assert param.value is False
 
+    def test_enabled(self):
+        """Test `BoolParameter`'s `enabled` property."""
+        # Arrange
+        param = self.bool_param
+        condition = self.condition
+
+        # Act
+        condition.value = False
+        # Assert
+        assert not param.enabled
+
+        # Act
+        condition.value = True
+        # Assert
+        assert param.enabled
+
+    def test_enabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `BoolParameter` is
+        emitted when its condition becomes `True`.
+        """
+        param = self.bool_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = False
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = True
+
+        # Assert
+        assert self.signal_emitted
+
+    def test_disabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `BoolParameter` is
+        emitted when its condition becomes `False`.
+        """
+        param = self.bool_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = True
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert not new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = False
+
+        # Assert
+        assert self.signal_emitted
+
     def test_valid(self):
         """Test BoolParameter validity."""
         param = self.bool_param
@@ -59,12 +131,13 @@ class TestBoolParameter:
     def test_to_cli(self):
         """Test BoolParameter command-line representation."""
         param = self.bool_param
+        condition = self.condition
         assert param.to_cli('IMG-GEN') == ""
         param.value = True
         assert param.to_cli('SWP-SCN') == ""
         assert param.to_cli('IMG-GEN') == param.flag
         assert param.to_cli('MDL-GEN') == param.flag
-        param.enabled = False
+        condition.value = False
         assert param.to_cli('IMG-GEN') == ""
 
     def test_value_changed_signal_emitted(self):
@@ -109,6 +182,12 @@ class TestIntParameter:
                 ),
             ],
         )
+
+        # Add a condition to control the parameter's enabled status.
+        self.condition = Condition(
+            value=True,
+        )
+        self.int_param.add_condition(self.condition)
     
     def test_init_values(self):
         """Test IntParameter initialization with default value."""
@@ -120,6 +199,7 @@ class TestIntParameter:
         assert param.value == 0
         assert param.default_value == 0
         assert len(param.hints) == 1
+        assert param.enabled
 
     def test_set_value(self):
         """Test setting IntParameter value."""
@@ -133,6 +213,70 @@ class TestIntParameter:
         param.value = 5
         param.reset_value()
         assert param.value == 0
+
+    def test_enabled(self):
+        """Test `IntParameter`'s `enabled` property."""
+        # Arrange
+        param = self.int_param
+        condition = self.condition
+
+        # Act
+        condition.value = False
+        # Assert
+        assert not param.enabled
+
+        # Act
+        condition.value = True
+        # Assert
+        assert param.enabled
+
+    def test_enabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `IntParameter` is
+        emitted when its condition becomes `True`.
+        """
+        param = self.int_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = False
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = True
+
+        # Assert
+        assert self.signal_emitted
+
+    def test_disabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `IntParameter` is
+        emitted when its condition becomes `False`.
+        """
+        param = self.int_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = True
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert not new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = False
+
+        # Assert
+        assert self.signal_emitted
 
     def test_valid(self):
         """Test IntParameter validity."""
@@ -148,11 +292,12 @@ class TestIntParameter:
     def test_to_cli(self):
         """Test IntParameter command-line representation."""
         param = self.int_param
+        condition = self.condition
         assert param.to_cli('IMG-GEN') == f"{param.flag}{param.value}"
         param.value = new_value = 5
         assert param.to_cli('MDL-GEN') == f"{param.flag}{new_value}"
         assert param.to_cli('SWP_SCN') == ""
-        param.enabled = False
+        condition.value = False
         assert param.to_cli('IMG-GEN') == ""
 
     def test_value_changed_signal_emitted(self):
@@ -220,6 +365,12 @@ class TestFloatParameter:
                 ),
             ],
         )
+
+        # Add a condition to control the parameter's enabled status.
+        self.condition = Condition(
+            value=True,
+        )
+        self.float_param.add_condition(self.condition)
     
     def test_init_values(self):
         """Test FloatParameter initialization with default value."""
@@ -245,6 +396,70 @@ class TestFloatParameter:
         param.reset_value()
         assert param.value == 0.0
 
+    def test_enabled(self):
+        """Test `FloatParameter`'s `enabled` property."""
+        # Arrange
+        param = self.float_param
+        condition = self.condition
+
+        # Act
+        condition.value = False
+        # Assert
+        assert not param.enabled
+
+        # Act
+        condition.value = True
+        # Assert
+        assert param.enabled
+
+    def test_enabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `FloatParameter` is
+        emitted when its condition becomes `True`.
+        """
+        param = self.float_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = False
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = True
+
+        # Assert
+        assert self.signal_emitted
+
+    def test_disabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `FloatParameter` is
+        emitted when its condition becomes `False`.
+        """
+        param = self.float_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = True
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert not new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = False
+
+        # Assert
+        assert self.signal_emitted
+
     def test_valid(self):
         """Test FloatParameter validity."""
         param = self.float_param
@@ -259,11 +474,12 @@ class TestFloatParameter:
     def test_to_cli(self):
         """Test FloatParameter command-line representation."""
         param = self.float_param
+        condition = self.condition
         assert param.to_cli('IMG-GEN') == f"{param.flag}{param.value}"
         param.value = new_value = 5.0
         assert param.to_cli('MDL-GEN') == f"{param.flag}{new_value}"
         assert param.to_cli('SWP-SCN') == ""
-        param.enabled = False
+        condition.value = False
         assert param.to_cli('IMG-GEN') == ""
 
     def test_value_changed_signal_emitted(self):
@@ -334,6 +550,12 @@ class TestStringParameter:
             ],
         )
 
+        # Add a condition to control the parameter's enabled status.
+        self.condition = Condition(
+            value=True,
+        )
+        self.string_param.add_condition(self.condition)
+
     def test_init_values(self):
         """Test StringParameter initialization with default value."""
         param = self.string_param
@@ -358,6 +580,70 @@ class TestStringParameter:
         param.reset_value()
         assert param.value == "default"
 
+    def test_enabled(self):
+        """Test `StringParameter`'s `enabled` property."""
+        # Arrange
+        param = self.string_param
+        condition = self.condition
+
+        # Act
+        condition.value = False
+        # Assert
+        assert not param.enabled
+
+        # Act
+        condition.value = True
+        # Assert
+        assert param.enabled
+
+    def test_enabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `StringParameter` is
+        emitted when its condition becomes `True`.
+        """
+        param = self.string_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = False
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = True
+
+        # Assert
+        assert self.signal_emitted
+
+    def test_disabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `StringParameter` is
+        emitted when its condition becomes `False`.
+        """
+        param = self.string_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = True
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert not new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = False
+
+        # Assert
+        assert self.signal_emitted
+
     def test_valid_length(self):
         """Test StringParameter length validity."""
         param = self.string_param
@@ -379,11 +665,12 @@ class TestStringParameter:
     def test_to_cli(self):
         """Test StringParameter command-line representation."""
         param = self.string_param
+        condition = self.condition
         assert param.to_cli('IMG-GEN') == f"{param.flag}{param.value}"
         param.value = new_value = "new_value"
         assert param.to_cli('MDL-GEN') == f"{param.flag}{new_value}"
         assert param.to_cli('SWP-SCN') == ""
-        param.enabled = False
+        condition.value = False
         assert param.to_cli('IMG-GEN') == ""
 
     def test_value_changed_signal_emitted(self):
@@ -448,6 +735,12 @@ class TestEnumParameter:
             default_value= 0,
         )
 
+        # Add a condition to control the parameter's enabled status.
+        self.condition = Condition(
+            value=True,
+        )
+        self.enum_param.add_condition(self.condition)
+
     def test_init_values(self):
         """Test EnumParameter initialization with default value"""
         param = self.enum_param
@@ -470,15 +763,80 @@ class TestEnumParameter:
         param.value = 1
         param.reset_value()
         assert param.value == 0
+
+    def test_enabled(self):
+        """Test `EnumParameter`'s `enabled` property."""
+        # Arrange
+        param = self.enum_param
+        condition = self.condition
+
+        # Act
+        condition.value = False
+        # Assert
+        assert not param.enabled
+
+        # Act
+        condition.value = True
+        # Assert
+        assert param.enabled
+
+    def test_enabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `EnumParameter` is
+        emitted when its condition becomes `True`.
+        """
+        param = self.enum_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = False
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = True
+
+        # Assert
+        assert self.signal_emitted
+
+    def test_disabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `EnumParameter` is
+        emitted when its condition becomes `False`.
+        """
+        param = self.enum_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = True
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert not new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = False
+
+        # Assert
+        assert self.signal_emitted
     
     def test_to_cli(self):
         """Test EnumParameter command-line representation."""
         param = self.enum_param
+        condition = self.condition
         assert param.to_cli('IMG-GEN') == "--testenum D"
         param.value = new_value = 3
         assert param.to_cli('MDL-GEN') == "--testenum A"
         assert param.to_cli('SWP-SCN') == ""
-        param.enabled = False
+        condition.value = False
         assert param.to_cli('IMG-GEN') == ""
 
     def test_value_changed_signal_emitted(self):
@@ -553,6 +911,12 @@ class TestFileParameter:
             default_value=[str(self.valid_file)]
         )
 
+        # Add a condition to control the parameter's enabled status.
+        self.condition = Condition(
+            value=True,
+        )
+        self.file_param.add_condition(self.condition)
+
     def test_init_values(self):
         """Test FileParameter initialization with default value."""
         param = self.file_param
@@ -576,6 +940,70 @@ class TestFileParameter:
         param.value = ["newfile.txt"]
         param.reset_value()
         assert param.value == [str(self.valid_file)]
+
+    def test_enabled(self):
+        """Test `StringParameter`'s `enabled` property."""
+        # Arrange
+        param = self.file_param
+        condition = self.condition
+
+        # Act
+        condition.value = False
+        # Assert
+        assert not param.enabled
+
+        # Act
+        condition.value = True
+        # Assert
+        assert param.enabled
+
+    def test_enabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `StringParameter` is
+        emitted when its condition becomes `True`.
+        """
+        param = self.file_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = False
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = True
+
+        # Assert
+        assert self.signal_emitted
+
+    def test_disabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `StringParameter` is
+        emitted when its condition becomes `False`.
+        """
+        param = self.file_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = True
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert not new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = False
+
+        # Assert
+        assert self.signal_emitted
 
     def test_valid_format(self):
         """Test FileParameter format validity."""
@@ -619,7 +1047,6 @@ class TestFileParameter:
             == f"--testfile {self.valid_file}"
         )
 
-
     def test_value_changed_emitted(self):
         """Test that value_changed signal is emitted when FileParameter value changes."""
         # For now, no way to test for valid value. Maybe we make a temp file?
@@ -645,6 +1072,7 @@ class TestFileParameter:
         assert self.value == self.new_value
         assert self.valid
 
+
 class TestOptionalParameter:
     """Tests for OptionalParameter class."""
 
@@ -663,6 +1091,7 @@ class TestOptionalParameter:
                 ),
             ],
         )
+
         self.optional_param = OptionalParameter(
             name="testoptional",
             description="Test optional parameter",
@@ -670,6 +1099,12 @@ class TestOptionalParameter:
             default_value = True,
             parameter=self.int_param,
         )
+
+        # Add a condition to control the parameter's enabled status.
+        self.condition = Condition(
+            value=True,
+        )
+        self.optional_param.add_condition(self.condition)
 
     def test_init_values(self):
         """Test OptionalParameter initialization with default value."""
@@ -680,6 +1115,7 @@ class TestOptionalParameter:
         assert param.default_value
         assert param.parameter == self.int_param
         assert self.int_param.enabled
+        assert param.enabled
 
     def test_set_value(self):
         """Test setting OptionalParameter value."""
@@ -693,6 +1129,72 @@ class TestOptionalParameter:
         param.value = False
         param.reset_value()
         assert self.int_param.enabled
+
+    def test_enabled(self):
+        """Test `OptionalParameter`'s `enabled` property."""
+        # Arrange
+        param = self.optional_param
+        condition = self.condition
+
+        # Act
+        condition.value = False
+        # Assert
+        assert not param.enabled
+        assert not param.parameter.enabled
+
+        # Act
+        condition.value = True
+        # Assert
+        assert param.enabled
+        assert param.parameter.enabled
+
+    def test_enabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `OptionalParameter` is
+        emitted when its condition becomes `True`.
+        """
+        param = self.optional_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = False
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = True
+
+        # Assert
+        assert self.signal_emitted
+
+    def test_disabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `OptionalParameter` is
+        emitted when its condition becomes `False`.
+        """
+        param = self.optional_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = True
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert not new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = False
+
+        # Assert
+        assert self.signal_emitted
 
     def test_valid(self):
         """Test OptionalParameter validity."""
@@ -739,6 +1241,7 @@ class TestOptionalParameter:
         assert self.value == self.new_value
         assert self.valid
 
+
 class TestMultiParameter:
     """Tests for MultiParameter class."""
 
@@ -772,6 +1275,12 @@ class TestMultiParameter:
             parameters=[self.int_param, self.bool_param]
         )
 
+        # Add a condition to control the parameter's enabled status.
+        self.condition = Condition(
+            value=True,
+        )
+        self.multi_param.add_condition(self.condition)
+
     def test_init_values(self):
         """Test MultiParameter initial values"""
         param = self.multi_param
@@ -780,6 +1289,9 @@ class TestMultiParameter:
         assert param.flag == "--testmulti"
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == ()
+        assert param.enabled
+        assert param.parameters == [self.int_param, self.bool_param]
+        assert all(inner.enabled for inner in param.parameters)
 
     def test_reset_value(self):
         """Test resetting MultiParameter's inner parameters to default."""
@@ -789,6 +1301,72 @@ class TestMultiParameter:
         param.reset_value()
         assert self.int_param.value == 0
         assert self.bool_param.value == False
+
+    def test_enabled(self):
+        """Test `MultiParameter`'s `enabled` property."""
+        # Arrange
+        param = self.multi_param
+        condition = self.condition
+
+        # Act
+        condition.value = False
+        # Assert
+        assert not param.enabled
+        assert all(not inner.enabled for inner in param.parameters)
+
+        # Act
+        condition.value = True
+        # Assert
+        assert param.enabled
+        assert all(inner.enabled for inner in param.parameters)
+
+    def test_enabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `MultiParameter` is
+        emitted when its condition becomes `True`.
+        """
+        param = self.multi_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = False
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = True
+
+        # Assert
+        assert self.signal_emitted
+
+    def test_disabled_signal(self):
+        """
+        Test that the `enabled_changed` signal of `MultiParameter` is
+        emitted when its condition becomes `False`.
+        """
+        param = self.multi_param
+        condition = self.condition
+
+        # Arrange
+        condition.value = True
+        self.signal_emitted = False
+
+        def on_enabled_changed(new_enabled):
+            self.signal_emitted = True
+            assert not new_enabled
+
+        param.enabled_changed.connect(on_enabled_changed)
+
+        # Act
+        condition.value = False
+
+        # Assert
+        assert self.signal_emitted
 
     def test_valid(self):
         """Test MultiParameter validity."""
