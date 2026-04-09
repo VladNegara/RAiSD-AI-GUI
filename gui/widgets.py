@@ -19,6 +19,8 @@ from PySide6.QtGui import (
     QColor,
 )
 
+from gui.style import constants
+
 
 class StylableWidget(QWidget):
     """
@@ -179,13 +181,34 @@ class SplashScreen(QSplashScreen):
     support for showing messages in the bottom-left corner.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, text_color: QColor = QColor(10,13,79), alignment : int =  Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom) -> None:
         """
         Initialize a `SplashScreen` object.
         """
+        self._message = ""
+        self._text_color = text_color
+        self._alignment = alignment
+
         pixmap = QPixmap("gui/style/resources/Raisd_ai_splash_screen.png")
         super().__init__(pixmap)
         self.setWindowFlag(self.windowFlags() & ~Qt.WindowType.WindowStaysOnTopHint)
+
+    def drawContents(self, painter: QPainter) -> None:
+        """
+        Override drawContents to render the message with a margin.
+        """
+        painter.setPen(self._text_color)
+        rect = self.rect().adjusted(
+            constants.GAP_TINY,   # left
+            constants.GAP_TINY,   # top
+            0,  # right
+            0,  # bottom
+        )
+        painter.drawText(
+            rect,
+            self._alignment,
+            self._message,
+        )
 
     def showMessage(self, message: str, /, alignment: int = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom, color: QColor = QColor(10,13,79)) -> None:
         """
@@ -200,8 +223,6 @@ class SplashScreen(QSplashScreen):
         :param color: the text color
         :type color: QColor
         """
-        super().showMessage(
-            message,
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom,
-            color,
-        )
+        self._message = message
+        self._text_color = color
+        self.repaint()
