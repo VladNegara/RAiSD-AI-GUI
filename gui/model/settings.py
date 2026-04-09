@@ -123,7 +123,15 @@ class Settings(QObject):
         """
         self.from_yaml(self.settings_file_path)
         if not self._workspace_path:
-            self.workspace_path = QDir("./")
+            dialog = self.SetupDialog()
+            dialog.exec()
+            
+            if self._workspace_path:
+                print(f"Workspace path set to: {self._workspace_path.absolutePath()}")
+            else:
+                self.workspace_path = QDir("./")
+                if self._workspace_path:
+                    print(f"No workspace path selected. Using default workspace path: {self._workspace_path.absolutePath()}")
 
 
     def from_yaml(self, file_path: str) -> None:
