@@ -7,8 +7,11 @@ from PySide6.QtWidgets import (
 
 
 from gui.model.settings import app_settings
-from gui.widgets import SplashScreen
-from gui.window import MainWindow
+from gui.window import (
+    MainWindow,
+    SplashScreen,
+    SettingsSetup,
+)
 
 
 def main():
@@ -33,7 +36,7 @@ def main():
     splash_screen.showMessage("Select Workspace...")
     app.processEvents()
 
-    app_settings.initialize()
+    SettingsSetup.initialize_settings()
 
     splash_screen.showMessage("Loading GUI...")
     app.processEvents()
