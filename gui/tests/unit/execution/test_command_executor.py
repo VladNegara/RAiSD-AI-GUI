@@ -52,8 +52,6 @@ class TestCommandExecutor:
         self.process_failed = []
         self.process_stopped = []
 
-        self.command_img_gen = ""
-
         yield   # everything after this will be run after the test methods.
 
         print("teardown")
