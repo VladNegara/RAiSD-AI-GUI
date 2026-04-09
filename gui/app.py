@@ -1,15 +1,12 @@
 import sys
 import sass
-from PySide6.QtCore import Qt
 
 from PySide6.QtWidgets import (
     QApplication,
-    QSplashScreen,
-)
-from PySide6.QtGui import (
-    QPixmap,
 )
 
+
+from gui.model.settings import app_settings
 from gui.widgets import SplashScreen
 from gui.window import MainWindow
 
@@ -31,6 +28,14 @@ def main():
 
     splash_screen = SplashScreen()
     splash_screen.show()
+    app.processEvents()
+
+    splash_screen.showMessage("Select Workspace...")
+    app.processEvents()
+
+    app_settings.initialize()
+
+    splash_screen.showMessage("Loading GUI...")
     app.processEvents()
 
     # Set main window

@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
     QStackedLayout,
-    QScrollArea,
     QPushButton,
+    QApplication,
 )
 
 from PySide6.QtGui import (
@@ -38,7 +38,6 @@ class MainWindow(QMainWindow):
         Initialize the main window.
         """
         super().__init__()
-        app_settings.initialize()
         app_settings.config_path_changed.connect(self._init_main_window)
         self._init_main_window()
 
@@ -46,6 +45,7 @@ class MainWindow(QMainWindow):
         run_record = RunRecord.from_yaml(app_settings.config_path.absoluteFilePath())
         self.run_record = run_record
         self.command_executor = CommandExecutor(run_record)
+        QApplication.processEvents() # Necessary for the splash screen to load
         self._setup_ui()
         self.run_page.run_saved.connect(self.history_page.add_completed_run)
 
