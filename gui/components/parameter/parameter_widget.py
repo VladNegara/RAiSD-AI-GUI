@@ -506,14 +506,22 @@ class IntParameterWidget(ParameterWidget):
     @Slot(str)
     def _text_changed(self) -> None:
         self.touched = True
+        text = self._line_edit.text()
+        if not text or text == "-":
+            self.touched = False  # no border while field is empty/mid-edit
+            self.parameter.value = None  # model is now invalid → blocks Next
+            return
         try:
-            self.parameter.value = int(self._line_edit.text())
-        except:
+            self.parameter.value = int(text)
+        except ValueError:
             pass
 
     @Slot(int, bool)
     def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
-        self.touched = True
+        if new_value is None:
+            if self._line_edit.text() not in ("", "-"):
+                self._line_edit.setText("")
+            return
         try:
             current = int(self._line_edit.text())
             values_differ = current != new_value
@@ -562,18 +570,27 @@ class FloatParameterWidget(ParameterWidget):
     @Slot(str)
     def _text_changed(self) -> None:
         self.touched = True
+        text = self._line_edit.text()
+        if not text or text in ("-", ".", "-."):
+            self.touched = False
+            self.parameter.value = None
+            return
         try:
-            self.parameter.value = float(self._line_edit.text())
-        except:
+            self.parameter.value = float(text)
+        except ValueError:
             pass
 
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
+        if new_value is None:
+            if self._line_edit.text() not in ("", "-", ".", "-."):
+                self._line_edit.setText("")
+            return
         try:
             current = float(self._line_edit.text())
             values_differ = current != new_value
         except ValueError:
-           values_differ = True
+            values_differ = True
         if values_differ:
             self._line_edit.setText(str(new_value))
 
