@@ -41,7 +41,7 @@ modes:
           type: bool
           default: false
         path:
-          - RAiSD_Report.
+          - RAiSD_Info.
           - type: run id
   - name: RAiSD-AI
     operations:
@@ -93,9 +93,9 @@ modes:
                 min: 1
               # max: < region_length
         path:
-          - RAiSD_Images.
+          - RAiSD_Info.
           - type: run id
-          - type: slash
+          - .
           - type: parameter
             id: -icl
       MDL-GEN:
@@ -131,7 +131,7 @@ modes:
           type: bool
           default: false
         path:
-          - RAiSD_Model.
+          - RAiSD_Info.
           - type: run id
       MDL-TST:
         name: Model testing
