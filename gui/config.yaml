@@ -1226,9 +1226,9 @@ parameter_groups:
       "-a":
         name: Provide RNG seed
         description: Provide a seed to initialize the random number generator. If not provided, the current time of day is used for initialization.
-        cli: "-a "
         type: optional
         parameter:
           name: Seed
+          cli: "-a "
           type: int
           default: 0
