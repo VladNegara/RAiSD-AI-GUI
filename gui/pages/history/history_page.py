@@ -180,7 +180,7 @@ class HistoryPage(Page):
                 self.results_widget.show_results()
                 self.results_panel.show()
             except Exception as e:
-                self._run_record = RunRecord.from_yaml(app_settings.config_path.absoluteFilePath())
+                self._run_record.reset()
                 self.error_panel.show()
                 self.results_panel.hide()
                 print(f"Error occurred while populating run record: {e}")
