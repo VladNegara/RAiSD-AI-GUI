@@ -24,6 +24,7 @@ from gui.widgets import (
 )
 from gui.components.parameter import ParameterForm
 from gui.components.dialog import ErrorDialog
+from gui.components.label import InfoLabel
 from gui.execution.command_executor import default_command_builder
 from gui.style import constants
 from gui.components.navigation_buttons_holder import NavigationButtonsHolder
@@ -51,7 +52,7 @@ class ConfirmationTab(RunPageTab):
         widget.setObjectName("parameter_confirmation_widget")
         layout = VBoxLayout(
             widget,
-            spacing=constants.GAP_MEDIUM,
+            spacing=constants.GAP_TINY,
         )
 
         # Header
@@ -67,10 +68,17 @@ class ConfirmationTab(RunPageTab):
         )
 
         parameters_header = QWidget()
-        parameters_header_layout = HBoxLayout(parameters_header)
+        parameters_header_layout = HBoxLayout(
+            parent=parameters_header,
+            spacing=constants.GAP_TINY,
+        )
 
-        parameters_label = QLabel("Parameters generated from the input:")
-        parameters_header_layout.addWidget(parameters_label, 1)
+        parameters_label = QLabel("Command parameters generated from the input:")
+        parameters_header_layout.addWidget(parameters_label)
+
+        self.commands_label = InfoLabel("")
+        self.commands_label.setContentsMargins
+        parameters_header_layout.addWidget(self.commands_label, 1)
 
         copy_button = QPushButton("Copy")
         copy_button.clicked.connect(self._copy_all)
@@ -83,9 +91,6 @@ class ConfirmationTab(RunPageTab):
         self.parameters_view.clicked.connect(self._copy_parameters)
         commands_layout.addWidget(self.parameters_view)
 
-        self.commands_label = QLabel()
-        self.commands_label.setWordWrap(True)
-        commands_layout.addWidget(self.commands_label)
 
         layout.addWidget(commands_widget)
 
@@ -151,15 +156,22 @@ class ConfirmationTab(RunPageTab):
         """
         self.parameters_view.clear()
         if self._run_record.to_cli():
-            self.parameters_view.addItems([command for command in self._run_record.to_cli()])
-            self.parameters_view.setMaximumHeight(self.parameters_view.sizeHintForRow(0)*(self.parameters_view.count()+1))
+            self.parameters_view.addItems(
+                [command for command in self._run_record.to_cli()]
+            )
+            self.parameters_view.setMaximumHeight(
+                self.parameters_view.sizeHintForRow(0) * 
+                (self.parameters_view.count()+1)
+            )
 
     def update_command(self) -> None:
         """
-        Updates the command in the ConfirmationTab.
+        Updates the command info label in the ConfirmationTab.
         """
         
-        self.commands_label.setText(f"Each line of parameters will be run with the following command: {default_command_builder("<parameters>")}")
+        self.commands_label.text = "Each line of parameters " \
+            "will be run with the following command: " \
+            f"'{default_command_builder("<parameters>")}'"
 
     @Slot(int)
     def _copy_parameters(self, index) -> None:
