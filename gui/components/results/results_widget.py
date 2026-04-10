@@ -70,9 +70,6 @@ class ResultsWidget(StylableWidget):
             parameter_form = ParameterForm(self._run_record, editable=False)
             parameters_collapsible = Collapsible(parameters_header, parameter_form)
             layout.addWidget(parameters_collapsible)
-        except Exception as e:
-            layout.addWidget(QLabel("Error occurred while creating parameter form"))
-            print(f"Error occurred while creating parameter widget: {e}")
 
     def show_results(self) -> None:
         """
