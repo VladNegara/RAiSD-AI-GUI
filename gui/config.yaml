@@ -82,6 +82,16 @@ modes:
               - type: regex
                 pattern: ".+"
                 hint: "Cannot be empty."
+          "-its":
+            name: Image target site
+            description: The target site position for generating images, corresponding to the center of the first generated image. Must be smaller than region length.
+            cli: "-its "
+            type: int
+            default: 1
+            constraints:
+              - type: interval
+                min: 1
+              # max: < region_length
         path:
           - RAiSD_Images.
           - type: run id
@@ -949,16 +959,6 @@ parameter_groups:
     operations:
       - IMG-GEN
     parameters:
-      "-its":
-        name: Image target site
-        description: The target site position for generating images, corresponding to the center of the first generated image. Should be smaller than region length.
-        cli: "-its "
-        type: int
-        default: 1
-        constraints:
-          - type: interval
-            min: 1
-          # max: < region_length
       "-poc": 
         name: Construct position-centered windows
         description: Changes the data-generation mode from using SNP-driven windows to constructing position-centered windows. When SNP-driven windows are used, the SNP located to the image target site position becomes the central SNP in the window and an equal number of SNPs are placed on both sides. When position-centered windows are used, the image target site position is (as close as possible to) the midpoint between the leftmost and rightmost SNPs per window.
