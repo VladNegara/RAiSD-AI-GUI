@@ -486,9 +486,29 @@ parameter_groups:
         constraints:
           - type: interval
             min: 1
-      "-G":
+      "-G-rsd-def":
+        operations:
+          remove:
+            - SWP-SCN
+        name: Report grid scores
+        description: Report μ statistic scores at equidistant locations between the first and last SNPs.
+        type: optional
+        default: false
+        parameter:
+          name: Grid size
+          description: The total number of evaluation points across the data.
+          cli: "-G "
+          type: int
+          default: 10
+          constraints:
+            - type: interval
+              min: 3
+      "-G-swp-scn":
+        operations:
+          remove:
+            - RSD-DEF
         name: Grid size
-        description: The total number of evaluation points across the data. The mu statistic scores will be reported at this many equidistant locations between the first and last SNPs.
+        description: The total number of evaluation points across the data. The μ statistic scores will be reported at this many equidistant locations between the first and last SNPs.
         cli: "-G "
         type: int
         default: 10
