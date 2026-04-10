@@ -379,7 +379,7 @@ parameter_groups:
         cli: "-M "
         type: enum
         options:
-          - name: Discard SNP
+          - name: Discard SNPs
             cli: "0"
           - name: Impute N per SNP
             cli: "1"
