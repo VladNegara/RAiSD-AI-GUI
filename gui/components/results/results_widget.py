@@ -84,7 +84,7 @@ class ResultsWidget(StylableWidget):
             self.files_widget.hide()
             self.no_files_label.show()
         else:
-            self.files_label.setText(f"Files in the generated directory '{app_settings.workspace_path.dirName()}/{self._run_record.run_id}':")
+            self.files_label.setText(f"Files in the output directory '{app_settings.workspace_path.dirName()}/{self._run_record.run_id}':")
             self.folder_structure.setRootPath(path)
             self.folder_widget.setModel(self.folder_structure)
             self.folder_widget.setRootIndex(self.folder_structure.index(path))
