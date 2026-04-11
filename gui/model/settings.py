@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (
 )
 
 from gui.style import constants
-from gui.widgets import VBoxLayout
+from gui.widgets import VBoxLayout, StylableWidget
+from gui.components.settings.settings_item_widget import SettingsItemWidget
 
 
 class Settings(QObject):
