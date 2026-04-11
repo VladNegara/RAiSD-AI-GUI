@@ -2,6 +2,7 @@ from PySide6.QtCore import (
     Qt,
     Signal,
     Slot,
+    QTimer,
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -19,6 +20,7 @@ from gui.widgets import (
 )
 from gui.components.results import ResultsWidget
 from gui.components.navigation_buttons_holder import NavigationButtonsHolder
+from gui.components.utils import set_bool_property
 from gui.style import constants
 
 
@@ -75,6 +77,10 @@ class ResultsTab(RunPageTab):
         self.new_run_button.clicked.connect(self.new_run.emit)
         self.edit_run_button = QPushButton("Edit Run")
         self.edit_run_button.clicked.connect(self.edit_run.emit)
+        self.buttons = [self.navigate_back_button, 
+                   self.new_run_button,
+                   self.edit_run_button]
+        self.enable_buttons(False)
 
         return NavigationButtonsHolder(
             left_button=self.navigate_back_button, 
@@ -83,7 +89,8 @@ class ResultsTab(RunPageTab):
         )
 
     def refresh(self) -> None:
-        pass
+        self.enable_buttons(False)
+        QTimer.singleShot(1000, lambda: self.enable_buttons(True))
 
     def reset(self) -> None:
         pass
@@ -95,3 +102,9 @@ class ResultsTab(RunPageTab):
         else:  
             self.run_failed_label.show()
         self.results_widget.show_results()
+
+    @Slot(bool)
+    def enable_buttons(self, enable) -> None:
+        for button in self.buttons:
+            button.setEnabled(enable)
+            set_bool_property(button, "highlight", enable)
