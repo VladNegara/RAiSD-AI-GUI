@@ -48,8 +48,9 @@ class ResultsTab(RunPageTab):
         layout.addWidget(self.title_label)
 
         self.run_failed_label = ErrorLabel(
-            "Running RAiSD-AI failed. The files shown below may be incomplete. " \
-            "Go back to the 'Run' tab to see the error output. " \
+            "Running RAiSD-AI failed or stopped. " \
+            "The files shown below may be incomplete. " \
+            "Go back to the 'Run' tab to see the (error) output. " \
             "The results won't be listed in the 'History' page. "
         )
         
