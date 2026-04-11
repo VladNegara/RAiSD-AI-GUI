@@ -228,6 +228,10 @@ class ViewTab(RunPageTab):
         reset current ones and add more or hide when needed.
         """
         number_of_indicators = len(self.run_indicators)
+        size = 120 if self.output_widget.isHidden() else 60
+        for indicator in self.run_indicators:
+            indicator.set_indicator_size(size)
+            indicator.state = IndicatorState.PENDING
         for idx in range(max([number_of_indicators, number_of_processes])):
             if idx < number_of_processes and idx < number_of_indicators:
                 self.run_indicators[idx].setVisible(True)
