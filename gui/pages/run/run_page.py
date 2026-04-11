@@ -25,6 +25,7 @@ from gui.widgets import (
     HBoxLayout,
     VBoxLayout,
 )
+from gui.components.run import RunEndStatus
 from gui.style import constants
 
 
@@ -34,7 +35,7 @@ class RunPage(Page):
     """
     start_run = Signal()
     run_started = Signal(int)  # number of processes
-    run_ended = Signal(bool)  # if run was successful
+    run_ended = Signal(RunEndStatus)
     run_saved = Signal(HistoryRecord)
 
     def __init__(self, run_record: RunRecord, command_executor: CommandExecutor):
@@ -200,9 +201,9 @@ class RunPage(Page):
     def _handle_run_start(self) -> None:
         self._switch_to_view_tab()
 
-    @Slot()
-    def _handle_run_end(self, run_successful: bool) -> None:
-        if run_successful:
+    @Slot(RunEndStatus)
+    def _handle_run_end(self, run_end_status: RunEndStatus) -> None:
+        if run_end_status == RunEndStatus.SUCCESS:
             history_record = self._run_record.to_history_record() 
             history_record.save_to_history()     
             self.run_saved.emit(history_record)

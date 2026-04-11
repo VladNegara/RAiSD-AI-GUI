@@ -21,7 +21,7 @@ from gui.widgets import (
     VBoxLayout,
 )
 from gui.components.dialog import ConfirmDialog, ErrorDialog
-from gui.components.run import ProcessIndicator, IndicatorState
+from gui.components.run import ProcessIndicator, IndicatorState, RunEndStatus
 from gui.style import constants
 from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 
@@ -29,7 +29,7 @@ from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 class ViewTab(RunPageTab):
     navigate_next = Signal()
     run_started = Signal(int)  # Number of processes
-    run_ended = Signal(bool)  # Run successful
+    run_ended = Signal(RunEndStatus)
 
     def __init__(self, run_record: RunRecord, command_executor: CommandExecutor):
         self._run_record = run_record
@@ -147,8 +147,8 @@ class ViewTab(RunPageTab):
         self.stop_run_button.style().unpolish(self.stop_run_button)
         self.stop_run_button.style().polish(self.stop_run_button)
 
-    @Slot(bool)
-    def _run_ended(self, run_successful: bool) -> None:
+    @Slot()
+    def _run_ended(self) -> None:
         """
         Update the execution buttons and close an open confirm dialog.
         """
@@ -257,7 +257,7 @@ class ViewTab(RunPageTab):
         Handle CommandExecutor.execution_finshed.
         """
         print("Execution finished")
-        self.run_ended.emit(True)
+        self.run_ended.emit(RunEndStatus.SUCCESS)
 
     @Slot(int, QProcess.ProcessError)
     def _execution_failed(self, exit_code: int, process_error: QProcess.ProcessError) -> None:
@@ -266,7 +266,7 @@ class ViewTab(RunPageTab):
         """
         print(f"Execution failed with exit code '{exit_code}'")
 
-        self.run_ended.emit(False)        
+        self.run_ended.emit(RunEndStatus.FAILED)        
 
         if process_error is None: # otherwise _process_failed will show an error dialog:
             self.execution_output.append(f"Execution failed with exit code '{exit_code}'")
@@ -279,7 +279,7 @@ class ViewTab(RunPageTab):
         Handle CommandExecutor.execution_stopped.
         """
         print("Execution stopped.")
-        self.run_ended.emit(False)
+        self.run_ended.emit(RunEndStatus.STOPPED)
 
     @Slot(int)
     def _process_started(self, process_index: int) -> None:

@@ -11,15 +11,15 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from gui.components.label import ErrorLabel
-
 from .run_page_tab import RunPageTab
 from gui.model.run_record import RunRecord
 from gui.widgets import (
     VBoxLayout,
 )
+from gui.components.label import ErrorLabel, WarningLabel
 from gui.components.results import ResultsWidget
 from gui.components.navigation_buttons_holder import NavigationButtonsHolder
+from gui.components.run import RunEndStatus
 from gui.components.utils import set_bool_property
 from gui.style import constants
 
@@ -50,14 +50,24 @@ class ResultsTab(RunPageTab):
         layout.addWidget(self.title_label)
 
         self.run_failed_label = ErrorLabel(
-            "Running RAiSD-AI failed or stopped. " \
+            "Running RAiSD-AI failed. " \
             "The files shown below may be incomplete. " \
-            "Go back to the 'Run' tab to see the (error) output. " \
+            "Go back to the 'Run' tab to see the error output. " \
             "The results won't be listed in the 'History' page. "
         )
         
         self.run_failed_label.hide()
         layout.addWidget(self.run_failed_label)
+
+        self.run_stopped_label = WarningLabel(
+            "RAiSD-AI was manually stopped. " \
+            "The files shown below may be incomplete. " \
+            "Go back to the 'Run' tab to see the output. " \
+            "The results won't be listed in the 'History' page. "
+        )
+        
+        self.run_stopped_label.hide()
+        layout.addWidget(self.run_stopped_label)
 
         self.results_widget = ResultsWidget(self._run_record)
 
@@ -95,12 +105,18 @@ class ResultsTab(RunPageTab):
     def reset(self) -> None:
         pass
 
-    @Slot(bool)
-    def run_ended(self, run_successful: bool) -> None:
-        if (run_successful):
-            self.run_failed_label.hide()
-        else:  
-            self.run_failed_label.show()
+    @Slot(RunEndStatus)
+    def run_ended(self, run_end_status: RunEndStatus) -> None:
+        match run_end_status:
+            case RunEndStatus.SUCCESS:
+                self.run_failed_label.hide()
+                self.run_stopped_label.hide()
+            case RunEndStatus.FAILED:
+                self.run_failed_label.show()
+                self.run_stopped_label.hide()
+            case RunEndStatus.STOPPED:
+                self.run_failed_label.hide()
+                self.run_stopped_label.show()
         self.results_widget.show_results()
 
     @Slot(bool)
