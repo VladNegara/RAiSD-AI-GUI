@@ -136,20 +136,22 @@ class ViewTab(RunPageTab):
         self._stop_execution()
 
     def _toggle_console_button_clicked(self) -> None:
-        previous_visibility = self.output_widget.isVisible()
-        self.output_widget.setVisible(not previous_visibility)
-
-        layout = self.output_widget.parent().layout()
-        step_widget_index = 1
-
-        if previous_visibility:
-            layout.setStretch(step_widget_index, 1)
-            for indicator in self.run_indicators:
-                indicator.set_indicator_size(120)
+        console_visible = not self.output_widget.isHidden()
+        if console_visible:
+            self.output_widget.hide()
+            new_size = 120
+            new_stretch = 1
         else:
-            layout.setStretch(step_widget_index, 0)
-            for indicator in self.run_indicators:
-                indicator.set_indicator_size(90)
+            self.output_widget.show()
+            new_size = 60
+            new_stretch = 0
+
+        layout = self.output_widget.parent().layout() # type: ignore
+        step_widget_index = 1
+        layout.setStretch(step_widget_index, new_stretch)
+
+        for indicator in self.run_indicators:
+            indicator.set_indicator_size(new_size)
 
     # methods
     @Slot()
@@ -245,7 +247,8 @@ class ViewTab(RunPageTab):
         """
         Add an indicator widget to self.step_layout.
         """
-        indicator = ProcessIndicator(number=index + 1, size=120)
+        size = 120 if self.output_widget.isHidden() else 60
+        indicator = ProcessIndicator(number=index + 1, size=size)
         self._command_executor.process_started.connect(lambda idx=index: self._process_started(idx))
         self._command_executor.process_finished.connect(lambda idx=index: self._process_finished(idx))
         self.step_layout.addWidget(indicator)

@@ -18,7 +18,7 @@ class ProcessIndicator(QWidget):
     A circular indicator widget that displays a step number.
     """
 
-    def __init__(self, number: int, size: int = 60):
+    def __init__(self, number: int, size: int = 120):
         super().__init__()
         self._number = number
         self._indicator_size = size
