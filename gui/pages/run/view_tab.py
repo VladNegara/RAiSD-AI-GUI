@@ -152,12 +152,10 @@ class ViewTab(RunPageTab):
         """
         Update the execution buttons and close an open confirm dialog.
         """
-        if run_successful:
-            self.results_button.setText("Results")
-            self.results_button.setEnabled(True)
-            self.results_button.setProperty("highlight", "true")
-            self.results_button.style().unpolish(self.results_button)
-            self.results_button.style().polish(self.results_button)
+        self.results_button.setEnabled(True)
+        self.results_button.setProperty("highlight", "true")
+        self.results_button.style().unpolish(self.results_button)
+        self.results_button.style().polish(self.results_button)
         self.stop_run_button.setEnabled(False)
         self.stop_run_button.setProperty("highlight", "false")
         self.stop_run_button.style().unpolish(self.stop_run_button)

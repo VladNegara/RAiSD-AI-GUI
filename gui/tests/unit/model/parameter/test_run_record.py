@@ -23,6 +23,7 @@ from gui.model.parameter import (
 )
 
 # TODO: make the tests more comprehensive and use mocking
+# TODO: CHANGE FROM PARAMETERGROUPLIST TO RUN RECORD
 
 class TestParameterGroupList:
     """Tests for ParameterGroupList class."""
