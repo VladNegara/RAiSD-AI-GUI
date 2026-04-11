@@ -77,7 +77,6 @@ class ConfirmationTab(RunPageTab):
         parameters_header_layout.addWidget(parameters_label)
 
         self.commands_label = InfoLabel("")
-        self.commands_label.setContentsMargins
         parameters_header_layout.addWidget(self.commands_label, 1)
 
         copy_button = QPushButton("Copy")
