@@ -101,7 +101,7 @@ class ConfirmationTab(RunPageTab):
             spacing=constants.GAP_TINY,
         )
 
-        parameters_label = QLabel("Command parameters generated from the input:")
+        parameters_label = QLabel("Command-line parameters generated from the input:")
         parameters_header_layout.addWidget(parameters_label, 1)
 
         copy_button = QPushButton("Copy")
