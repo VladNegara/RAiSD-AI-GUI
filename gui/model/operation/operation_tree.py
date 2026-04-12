@@ -91,6 +91,9 @@ class FileProducerNode(QObject):
 
     def reset(self) -> None:
         raise NotImplementedError()
+    
+    def get_operation_ids(self) -> list[str]:
+        raise NotImplementedError()
 
     def to_cli(
             self,
@@ -264,6 +267,9 @@ class FileConsumerNode(QObject):
         self.selected_index = 0
         for producer in self.producers:
             producer.reset()
+
+    def get_operation_ids(self) -> list[str]:
+        return self.selected_producer.get_operation_ids()
 
     def to_cli(
             self,
@@ -486,6 +492,14 @@ class CommonParentDirectoryNode(FileProducerNode):
         for consumer in self.file_consumers:
             consumer.reset()
 
+    def get_operation_ids(self) -> list[str]:
+        operation_ids = []
+
+        for file_consumer in self.file_consumers:
+            operation_ids.extend(file_consumer.get_operation_ids())
+
+        return operation_ids
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
@@ -624,6 +638,9 @@ class FilePickerNode(FileProducerNode):
 
     def reset(self) -> None:
         self.file = None
+
+    def get_operation_ids(self) -> list[str]:
+        return []
 
     def to_cli(
             self,
@@ -980,6 +997,16 @@ class OperationNode(FileProducerNode):
         for parameter in self.parameters.values():
             parameter.reset_value()
 
+    def get_operation_ids(self) -> list[str]:
+        print(self.name)
+        operation_ids = []
+
+        for file_consumer in self.file_consumers:
+            operation_ids.extend(file_consumer.get_operation_ids())
+
+        operation_ids.append(self.name)
+        return operation_ids
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
@@ -1298,6 +1325,12 @@ class OperationTree(QObject):
 
     def reset(self) -> None:
         self.root.reset()
+
+    def get_operation_ids(self) -> list[str]:
+        """
+        Get the operation ids corresponding to the commands of `to_cli`.
+        """
+        return self.root.get_operation_ids()
 
     def to_cli(
             self,
