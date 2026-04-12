@@ -327,6 +327,7 @@ QWidget#process_indicator{
 QWidget#process_indicator[indicator_state="pending"] {
     qproperty-fillColor: $purplish-background;
     qproperty-borderColor: $primary-purple;
+    qproperty-textColor: $primary-purple;
 }
 
 QWidget#process_indicator[indicator_state="running"] {
