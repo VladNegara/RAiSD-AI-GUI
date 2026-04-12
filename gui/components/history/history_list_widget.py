@@ -39,8 +39,8 @@ class HistoryListWidget(StylableWidget):
         # The list of history widgets
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(
-            scroll_area.horizontalScrollBarPolicy().ScrollBarAlwaysOff
+        scroll_area.setVerticalScrollBarPolicy(
+            scroll_area.verticalScrollBarPolicy().ScrollBarAlwaysOff
         )
         layout.addWidget(scroll_area)
 

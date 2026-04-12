@@ -60,8 +60,6 @@ class ResultsTab(RunPageTab):
 
         results_scroll = QScrollArea()
         results_scroll.setObjectName("results_scroll")
-        results_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        results_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         results_scroll.setWidgetResizable(True)
         results_scroll.setWidget(self.results_widget)
         layout.addWidget(results_scroll, 1)

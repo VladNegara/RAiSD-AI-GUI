@@ -90,7 +90,7 @@ QWidget#tree_stacked_widget{
 QScrollArea#parameter_form_scroll QScrollBar,
 QScrollArea#results_scroll,
 QWidget#commands_view QScrollBar,
-QScrollArea#history_results_scroll QScrollBar{
+QScrollArea#history_results_scroll{
     width: 0px;
     height: 0px;
 }
