@@ -718,6 +718,13 @@ class StringTableParameterWidget(ParameterWidget):
         )
         parameter.row_count_changed.connect(self._row_count_changed)
 
+    @ParameterWidget.touched.setter
+    def touched(self, new_touched: bool) -> None:
+        ParameterWidget.touched.__set__(self, new_touched)
+        for widget_row in self._parameter_widgets:
+            for parameter_widget in widget_row:
+                parameter_widget.touched = self.touched
+
     @Slot(int)
     def _combo_box_index_changed(self, new_index: int) -> None:
         self._parameter.row_count_index = new_index
