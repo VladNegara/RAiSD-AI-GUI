@@ -374,7 +374,7 @@ QRadioButton{
     color: $primary-dark;
 }
 
-QRadioButton:unchecked:pressed{
+QRadioButton:unchecked:hover{
     color: $button-pressed;
 }
 
@@ -389,10 +389,6 @@ QRadioButton::indicator:checked {
 
 QRadioButton::indicator:unchecked {
     background-image: url("gui/style/resources/radio_unchecked.svg");
-}
-
-QRadioButton::indicator:unchecked:hover {
-    background-image: url("gui/style/resources/radio_unchecked_hover.svg");
 }
 
 QWidget#info_label {
