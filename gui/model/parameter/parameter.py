@@ -877,6 +877,12 @@ class StringTableParameter(Parameter[tuple[()]]):
 
         self._separator = separator
 
+    def reset_value(self) -> None:
+        super().reset_value()
+        for row in self.parameters:
+            for parameter in row:
+                parameter.reset_value()
+
     @property
     def allowed_row_counts(self) -> list[int]:
         return self._allowed_row_counts
