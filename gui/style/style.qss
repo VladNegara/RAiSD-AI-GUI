@@ -226,15 +226,15 @@ QWidget#label_body{
     font-weight: 300;
 }
 
-QLabel#parameter_hint {
+QLabel#constraint {
     font-size: $font-size - 3px;
 }
 
-QLabel#parameter_hint[valid="true"] {
+QLabel#constraint[valid="true"] {
     color: $valid;
 }
 
-QLabel#parameter_hint[valid="false"] {
+QLabel#constraint[valid="false"] {
     color: $invalid;
 }
 

@@ -1,18 +1,17 @@
 import sys
 import sass
 
-from PySide6.QtCore import (
-    QDir,
-    QFileInfo,
-)
 from PySide6.QtWidgets import (
     QApplication,
-    QStyleFactory,
 )
 
+
 from gui.model.settings import app_settings
-from gui.model.run_record import RunRecord
-from gui.window import MainWindow
+from gui.window import (
+    MainWindow,
+    SplashScreen,
+    SettingsSetup,
+)
 
 
 def main():
@@ -29,12 +28,27 @@ def main():
     final_stylesheet = sass.compile(string=final_stylesheet)
 
     app.setStyleSheet(final_stylesheet)
-    
+
+    splash_screen = SplashScreen()
+    splash_screen.show()
+    app.processEvents()
+
+    splash_screen.showMessage("Select Workspace...")
+    app.processEvents()
+
+    SettingsSetup.initialize_settings()
+
+    splash_screen.showMessage("Loading GUI...")
+    app.processEvents()
+
     # Set main window
     window = MainWindow()
 
     window.resize(1200,800)
     window.show()
+
+    splash_screen.finish(window)
+
     app.exec()
     print("App closed")
 

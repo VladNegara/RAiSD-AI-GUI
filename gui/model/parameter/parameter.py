@@ -76,8 +76,7 @@ class Parameter(QObject, Generic[T]):
 
     value_changed: Signal
     valid_changed = Signal(bool)
-    constraints_valid_changed = Signal(list)
-    hint_added = Signal(str)
+    constraint_added = Signal(Constraint)
     enabled_changed = Signal(bool)
 
     def __init__(
@@ -111,8 +110,10 @@ class Parameter(QObject, Generic[T]):
         self.operations = operations
         self.default_value = default_value
         self._value = default_value
-        self._constraints = constraints or []
-        self._hidden_constraints = []
+        self._constraints: list[Constraint] = []
+        for constraint in constraints or []:
+            self.add_constraint(constraint)
+        self._hidden_constraints: list[Constraint] = []
         self._condition = AndCondition()
         self._condition.changed.connect(self.enabled_changed)
 
@@ -130,16 +131,17 @@ class Parameter(QObject, Generic[T]):
     def value(self, new_value: T) -> None:
         old_value = self._value
         old_valid = self.valid
-        old_constraints_valid = self.constraints_valid
 
         self._value = new_value
+        for constraint in self._constraints:
+            constraint.value = self.value
+        for constraint in self._hidden_constraints:
+            constraint.value = self.value
 
         if self.value != old_value:
             self.value_changed.emit(self.value, self.valid)
         if self.valid != old_valid:
             self.valid_changed.emit(self.valid)
-        if self.constraints_valid != old_constraints_valid:
-            self.constraints_valid_changed.emit(self.constraints_valid)
 
     def add_condition(
             self,
@@ -182,8 +184,8 @@ class Parameter(QObject, Generic[T]):
         Add a new constraint to the parameter.
 
         If `hidden` is `True`, the constraint will not be exposed
-        through the `constraints_valid` and `hints` properties, but
-        will nonetheless be checked for validity.
+        through the `constraint` property, but will nonetheless be
+        checked for validity.
 
         The `valid_changed` signal is emitted if the newly added
         constraint makes the parameter's value invalid.
@@ -197,38 +199,25 @@ class Parameter(QObject, Generic[T]):
         :type hidden: bool
         """
         old_valid = self.valid
-        old_constraints_valid = self.constraints_valid
 
         if not hidden:
             self._constraints.append(constraint)
-            self.hint_added.emit(constraint.hint)
+            self.constraint_added.emit(constraint)
         else:
             self._hidden_constraints.append(constraint)
+        constraint.value = self.value
+
+        constraint.valid_changed.connect(self._emit_valid_changed)
+        constraint.enabled_changed.connect(self._emit_valid_changed)
 
         if self.valid != old_valid:
             self.valid_changed.emit(self.valid)
-        if self.constraints_valid != old_constraints_valid:
-            self.constraints_valid_changed.emit(self.constraints_valid)
 
     def to_dict(self) -> str | dict:
         return self.value
 
     def populate(self, value: dict | str) -> None:
         self.value = value
-
-    @property
-    def constraints_valid(self) -> list[bool]:
-        """
-        Whether each (non-hidden) constraint of the parameter is
-        satisfied by the current value.
-
-        :return: Description
-        :rtype: list[bool]
-        """
-        return [
-            constraint.valid(self.value)
-            for constraint in self._constraints
-        ]
 
     @property
     def valid(self) -> bool:
@@ -238,22 +227,25 @@ class Parameter(QObject, Generic[T]):
         if not self.enabled:
             return True
         return (
-            all(self.constraints_valid)
+            all(
+                constraint.valid or not constraint.enabled
+                for constraint in self._constraints
+            )
             and all(
-                constraint.valid(self.value)
+                constraint.valid or not constraint.enabled
                 for constraint in self._hidden_constraints
             )
         )
 
     @property
-    def hints(self) -> list[str]:
+    def constraints(self) -> list[Constraint]:
         """
-        The hint for each of this parameter's (non-hidden) constraints.
+        This parameter's (non-hidden) constraints.
 
-        :return: the list of hints
+        :return: the constraints
         :rtype: list[str]
         """
-        return [constraint.hint for constraint in self._constraints]
+        return self._constraints
 
     def in_cli(self, operation: str) -> bool:
         """
@@ -314,6 +306,10 @@ class Parameter(QObject, Generic[T]):
             operation=operation,
             value=value,
         )
+
+    @Slot()
+    def _emit_valid_changed(self) -> None:
+        self.valid_changed.emit(self.valid)
 
 
 class OptionalParameter(Parameter[bool]):

@@ -81,12 +81,6 @@ class ResultsTab(RunPageTab):
             middle_button=self.edit_run_button
         )
 
-    def refresh(self) -> None:
-        pass
-
-    def reset(self) -> None:
-        pass
-
     @Slot(bool)
     def run_ended(self, run_successful: bool) -> None:
         if (run_successful):

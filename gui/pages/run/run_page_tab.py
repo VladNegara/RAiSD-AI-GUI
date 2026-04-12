@@ -1,11 +1,8 @@
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
-    QPushButton,
 )
 
 from gui.widgets import (
-    HBoxLayout,
     StylableWidget,
     VBoxLayout,
 )
@@ -65,10 +62,10 @@ class RunPageTab(StylableWidget):
         """
         Refresh the UI elements of the tab when it is shown.
         """
-        raise NotImplementedError()
+        pass
     
     def reset(self) -> None:
         """
         Reset the UI elements of the tab when the run page is reset.
         """
-        raise NotImplementedError()
+        pass
