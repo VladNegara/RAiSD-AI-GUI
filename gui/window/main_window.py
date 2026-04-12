@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
             left=constants.GAP_TINY,
             top=constants.GAP_MEDIUM,
             right=constants.GAP_TINY,
-            bottom=constants.GAP_MEDIUM,
+            bottom=constants.GAP_TINY,
             spacing=constants.GAP_TINY,
         )
 
@@ -111,6 +111,8 @@ class MainWindow(QMainWindow):
         self.history_button.setFixedSize(40, 40)
         layout.addWidget(self.history_button)
 
+        layout.addStretch()
+
         # Settings Button
         self.settings_button = QPushButton()
         self.settings_button.clicked.connect(lambda: self._set_active_view(self.settings_button))
@@ -118,7 +120,6 @@ class MainWindow(QMainWindow):
         self.settings_button.setFixedSize(40, 40)
         layout.addWidget(self.settings_button)
 
-        layout.addStretch()
 
     def _setup_main_widget(self, layout: QStackedLayout):
         self.run_page = RunPage(self.run_record, self.command_executor)
