@@ -70,6 +70,7 @@ class ResultsWidget(StylableWidget):
         self.folder_widget.setObjectName("folder_widget")
         self.folder_widget.doubleClicked.connect(self._on_double_click)
 
+        self.folder_widget.setMinimumHeight(int(self.height() * 0.9))
         self.folder_widget.setMaximumHeight(int(self.height()))
         layout.addWidget(self.folder_widget, 1)
 
