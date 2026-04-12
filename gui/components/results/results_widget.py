@@ -1,6 +1,7 @@
 from PySide6.QtCore import (
+    Qt,
     Slot,
-    QUrl
+    QUrl,
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -9,6 +10,7 @@ from PySide6.QtWidgets import (
     QTreeView,
     QHeaderView,
     QPushButton,
+    QSizePolicy,
 )
 from PySide6.QtGui import QDesktopServices
 
@@ -43,13 +45,6 @@ class ResultsWidget(StylableWidget):
             spacing=constants.GAP_TINY,
         )
 
-        # Folder widget
-        files_widget = QWidget()
-        files_layout = VBoxLayout(
-            files_widget,
-            spacing=constants.GAP_TINY,
-        )
-
         header_widget = QWidget()
         header_layout = HBoxLayout(
             header_widget,
@@ -64,15 +59,19 @@ class ResultsWidget(StylableWidget):
         self.file_browser_button.clicked.connect(self._file_browser_button_clicked)
         header_layout.addWidget(self.file_browser_button)
 
-        files_layout.addWidget(header_widget)
+        layout.addWidget(header_widget)
 
         self.folder_structure = QFileSystemModel()
         self.folder_widget = QTreeView()
+
+        self.folder_widget.horizontalScrollBar().setEnabled(True)
+        self.folder_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.folder_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.folder_widget.setObjectName("folder_widget")
         self.folder_widget.doubleClicked.connect(self._on_double_click)
-        files_layout.addWidget(self.folder_widget)
 
-        layout.addWidget(files_widget, 1)
+        self.folder_widget.setMaximumHeight(int(self.height()))
+        layout.addWidget(self.folder_widget, 1)
 
         # Parameter widget
         parameters_header = QLabel("Parameters used")
