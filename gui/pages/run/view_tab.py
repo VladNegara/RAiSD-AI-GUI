@@ -57,7 +57,7 @@ class ViewTab(RunPageTab):
         step_widget = QWidget()
         step_widget.setObjectName("step_widget")
         self.step_layout = HBoxLayout(step_widget)
-        self.run_indicators = []
+        self.run_indicators: list[ProcessIndicator] = []
         layout.addWidget(step_widget,1)
 
         self.output_widget = QSplitter()
@@ -139,11 +139,11 @@ class ViewTab(RunPageTab):
         console_visible = not self.output_widget.isHidden()
         if console_visible:
             self.output_widget.hide()
-            new_size = 120
+            new_size = 160
             new_stretch = 1
         else:
             self.output_widget.show()
-            new_size = 60
+            new_size = 80
             new_stretch = 0
 
         layout = self.output_widget.parent().layout() # type: ignore
@@ -229,26 +229,29 @@ class ViewTab(RunPageTab):
 
         reset current ones and add more or hide when needed.
         """
+        operation_ids = self._run_record.selected_operation_tree.get_operation_ids()
         number_of_indicators = len(self.run_indicators)
-        size = 120 if self.output_widget.isHidden() else 60
-        for indicator in self.run_indicators:
-            indicator.set_indicator_size(size)
+        size = 160 if self.output_widget.isHidden() else 80
+        for i, indicator in enumerate(self.run_indicators):
+            indicator.text = operation_ids[i]
             indicator.state = IndicatorState.PENDING
+            indicator.set_indicator_size(size)
+
         for idx in range(max([number_of_indicators, number_of_processes])):
             if idx < number_of_processes and idx < number_of_indicators:
                 self.run_indicators[idx].setVisible(True)
             elif idx < number_of_processes and idx >= number_of_indicators:
-                self.add_indicator_widget(idx)
+                self.add_indicator_widget(idx, operation_ids[idx])
                 continue
             elif idx >= number_of_processes and idx < number_of_indicators:
                 self.run_indicators[idx].setVisible(False)
 
-    def add_indicator_widget(self, index: int) -> None:
+    def add_indicator_widget(self, index: int, text: str) -> None:
         """
         Add an indicator widget to self.step_layout.
         """
-        size = 120 if self.output_widget.isHidden() else 60
-        indicator = ProcessIndicator(number=index + 1, size=size)
+        size = 160 if self.output_widget.isHidden() else 80
+        indicator = ProcessIndicator(text=text, size=size)
         self._command_executor.process_started.connect(lambda idx=index: self._process_started(idx))
         self._command_executor.process_finished.connect(lambda idx=index: self._process_finished(idx))
         self.step_layout.addWidget(indicator)

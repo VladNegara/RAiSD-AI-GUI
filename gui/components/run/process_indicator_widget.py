@@ -1,8 +1,20 @@
 from enum import Enum
 
-from PySide6.QtCore import Qt, Property
-from PySide6.QtGui import QPainter, QColor, QFont, QPen
-from PySide6.QtWidgets import QWidget, QSizePolicy
+from PySide6.QtCore import (
+    Qt, 
+    Property, 
+    QMargins,
+)
+from PySide6.QtGui import (
+    QPainter, 
+    QColor, 
+    QFont, 
+    QPen,
+)
+from PySide6.QtWidgets import (
+    QWidget, 
+    QSizePolicy,
+)
 
 
 class IndicatorState(Enum):
@@ -15,12 +27,12 @@ class IndicatorState(Enum):
 
 class ProcessIndicator(QWidget):
     """
-    A circular indicator widget that displays a step number.
+    A rectangular indicator widget that displays text.
     """
 
-    def __init__(self, number: int, size: int = 120):
+    def __init__(self, text: str, size: int = 200):
         super().__init__()
-        self._number = number
+        self._text = text
         self._indicator_size = size
         self._fill_color = QColor()
         self._border_color = QColor()
@@ -31,6 +43,14 @@ class ProcessIndicator(QWidget):
         self.setObjectName("process_indicator")
         self.setProperty("indicator_state", self._state.value)
         self._apply_size()
+
+    @property
+    def text(self) -> str:
+        return self._text
+    
+    @text.setter
+    def text(self, value: str) -> None:
+        self._text = value
 
     # Size
 
@@ -91,25 +111,31 @@ class ProcessIndicator(QWidget):
 
         size = self._indicator_size
         margin = 3
-        diameter = size - 2 * margin
+        rect_size = size - 2 * margin
 
         # Fill
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self._fill_color)
-        painter.drawEllipse(margin, margin, diameter, diameter)
+        # Calculate vertical offset to center the rectangle
+        rect_height = int(rect_size * 0.7)
+        vertical_offset = (rect_size - rect_height) // 2
+        
+        painter.drawRect(margin, margin + vertical_offset, rect_size, rect_height)
 
         # Border
         pen = QPen(self._border_color, 3)
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawEllipse(margin, margin, diameter, diameter)
+        painter.drawRect(margin, margin + vertical_offset, rect_size, rect_height)
 
-        # Number
+        # Text
         font = QFont()
-        font.setPixelSize(int(size * 0.4))
+        font.setPixelSize(int(size * 0.15))
         font.setBold(True)
         painter.setFont(font)
         painter.setPen(self._text_color)
-        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, str(self._number))
+        rect = self.rect()
+        rect.marginsRemoved(QMargins(10,10,10,10))
+        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, str(self._text))
 
         painter.end()
