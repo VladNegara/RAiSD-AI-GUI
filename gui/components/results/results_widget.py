@@ -1,9 +1,12 @@
 from PySide6.QtCore import (
+    Qt,
+    QDir,
     Slot,
     QUrl
 )
 from PySide6.QtWidgets import (
     QWidget,
+    QStackedWidget,
     QLabel,
     QFileSystemModel,
     QTreeView,
@@ -41,20 +44,32 @@ class ResultsWidget(StylableWidget):
             spacing=constants.GAP_TINY,
         )
 
+        self.files_widget_stack = QStackedWidget()
+
         # Folder widget
-        files_widget = QWidget()
+        self.files_widget = QWidget()
         files_layout = VBoxLayout(
-            files_widget,
+            self.files_widget,
             spacing=constants.GAP_TINY,
         )
-        files_label = QLabel("Files in the generated directory")
-        files_layout.addWidget(files_label)
+        self.files_label = QLabel("Files in the output directory")
+        files_layout.addWidget(self.files_label)
+
         self.folder_structure = QFileSystemModel()
         self.folder_widget = QTreeView()
         self.folder_widget.setObjectName("folder_widget")
         self.folder_widget.doubleClicked.connect(self._on_double_click)
         files_layout.addWidget(self.folder_widget)
-        layout.addWidget(files_widget, 1)
+
+        self.files_widget_stack.addWidget(self.files_widget)
+
+        self.no_files_label = QLabel(
+            "The output directory does not exist anymore.", 
+            alignment=Qt.AlignmentFlag.AlignCenter
+        )
+        self.files_widget_stack.addWidget(self.no_files_label)
+
+        layout.addWidget(self.files_widget_stack, 1)
 
         # Parameter widget
         parameters_header = QLabel("Parameters used")
@@ -68,10 +83,15 @@ class ResultsWidget(StylableWidget):
         """
         # Set folder widget to right folder
         path = app_settings.workspace_path.filePath(self._run_record.run_id)
-        self.folder_structure.setRootPath(path)
-        self.folder_widget.setModel(self.folder_structure)
-        self.folder_widget.setRootIndex(self.folder_structure.index(path))
-        self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        if not QDir(path).exists():
+            self.files_widget_stack.setCurrentWidget(self.no_files_label)
+        else:
+            self.files_label.setText(f"Files in the output directory '{app_settings.workspace_path.dirName()}/{self._run_record.run_id}':")
+            self.folder_structure.setRootPath(path)
+            self.folder_widget.setModel(self.folder_structure)
+            self.folder_widget.setRootIndex(self.folder_structure.index(path))
+            self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            self.files_widget_stack.setCurrentWidget(self.files_widget)
 
     @Slot(int)
     def _on_double_click(self, index) -> None:
