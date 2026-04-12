@@ -135,7 +135,7 @@ class ProcessIndicator(QWidget):
         painter.setFont(font)
         painter.setPen(self._text_color)
         rect = self.rect()
-        rect = rect.marginsRemoved(QMargins(10,10,10,10))
+        rect = rect.marginsRemoved(QMargins(2, 2, 2, 2))
         painter.drawText(rect, Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, str(self._text))
 
         painter.end()
