@@ -2,6 +2,7 @@ from pytest import fixture, raises
 import re
 
 from gui.model.parameter import (
+    Condition,
     MaxLengthConstraint,
     RegexConstraint,
     ParameterGroup,
@@ -28,14 +29,21 @@ class TestParameterGroup:
                 ),
             ],
         )
+
+        self.string_param_condition = Condition(True)
+        self.string_param.add_condition(self.string_param_condition)
+
         self.bool_param = BoolParameter(
             name="bool_param",
             description="bool_param description",
             flag="-flag_bool",
             operations={'MDL-GEN'},
             default_value=True,
-            enabled=True,
         )
+
+        self.bool_param_condition = Condition(True)
+        self.bool_param.add_condition(self.bool_param_condition)
+
         self.parameters = [self.string_param, self.bool_param]
         self.parameter_group = ParameterGroup(
             name="test_group",
@@ -47,38 +55,31 @@ class TestParameterGroup:
         group = self.parameter_group
         assert group.name == "test_group"
         assert group.parameters == self.parameters
-        assert group._enabled is True
+        assert group.enabled
 
     def test_init_empty_parameters(self):
         """Test ParameterGroup initialization when the parameters list is empty."""
         group = ParameterGroup(name="empty_group")
         assert group.name == "empty_group"
         assert group.parameters == []
-        assert group._enabled is False
+        assert not group.enabled
 
-    def test_init_all_disabled(self):
-        """Test ParameterGroup initialization as disabled when the parameters are disabled."""
-        param_list = [
-            BoolParameter(
-                name="disabled_param_1",
-                description="desc",
-                flag="-a",
-                operations={'IMG-GEN'},
-                default_value=False,
-                enabled=False,
-            ),
-            BoolParameter(
-                name="disabled_param_2",
-                description="desc",
-                flag="-b",
-                operations={'IMG-GEN'},
-                default_value=True,
-                enabled=False,
-            ),
-        ]
+    def test_all_disabled(self):
+        """
+        Test `ParameterGroup`'s `enabled` property when all parameters
+        are disabled.
+        """
+        # Arrange
+        group = self.parameter_group
+        string_param_condition = self.string_param_condition
+        bool_param_condition = self.bool_param_condition
 
-        group = ParameterGroup(name="disabled_group", parameters=param_list)
-        assert group._enabled is False
+        # Act
+        string_param_condition.value = False
+        bool_param_condition.value = False
+
+        # Assert
+        assert not group.enabled
 
     def test_add_parameter(self):
         """Test adding parameter to an existing ParameterGroup."""
@@ -99,15 +100,22 @@ class TestParameterGroup:
 
     def test_add_parameter_connects_enabled_changed(self):
         """Test that add_parameter correctly connects the enabled_changed signal."""
-        group = ParameterGroup(name="empty_group")
+        group = self.parameter_group
+        string_param_condition = self.string_param_condition
+        bool_param_condition = self.bool_param_condition
+
+        string_param_condition.value = False
+        bool_param_condition.value = False
+
         new_param = BoolParameter(
             name="new_param",
             description="desc",
             flag="-new",
             operations={'IMG-GEN'},
             default_value=False,
-            enabled=False,
         )
+        new_param_condition = Condition(False)
+        new_param.add_condition(new_param_condition)
         group.add_parameter(new_param)
 
         self.signal_emitted_counter = 0
@@ -116,10 +124,10 @@ class TestParameterGroup:
             self.signal_emitted_counter += 1
 
         group.enabled_changed.connect(on_enabled_changed)
-        new_param.enabled = True
-        new_param.enabled = False
-        new_param.enabled = True
-        new_param.enabled = False
+        new_param_condition.value = True
+        new_param_condition.value = False
+        new_param_condition.value = True
+        new_param_condition.value = False
         assert self.signal_emitted_counter == 4
 
     def test_valid_all_valid(self):
@@ -147,8 +155,8 @@ class TestParameterGroup:
         group.enabled_changed.connect(on_enabled_changed)
 
         # Disable all parameters — group should become disabled
-        self.string_param.enabled = False
-        self.bool_param.enabled = False
+        self.string_param_condition.value = False
+        self.bool_param_condition.value = False
 
         assert self.signal_emitted_counter == 1
         assert self.emitted_value is False
@@ -162,8 +170,9 @@ class TestParameterGroup:
             flag="-p1",
             operations={'IMG-GEN'},
             default_value=False,
-            enabled=False,
         )
+        disabled_param_condition = Condition(False)
+        disabled_param.add_condition(disabled_param_condition)
         group = ParameterGroup(name="disabled_group", parameters=[disabled_param])
         assert group._enabled is False
 
@@ -176,7 +185,7 @@ class TestParameterGroup:
 
         group.enabled_changed.connect(on_enabled_changed)
 
-        disabled_param.enabled = True
+        disabled_param_condition.value = True
 
         assert self.signal_emitted_counter == 1
         assert self.emitted_value is True
@@ -191,7 +200,7 @@ class TestParameterGroup:
             self.signal_emitted_counter += 1
 
         group.enabled_changed.connect(on_enabled_changed)
-        self.string_param.enabled = False
+        self.string_param_condition.value = False
 
         assert self.signal_emitted_counter == 0
 
@@ -232,7 +241,7 @@ class TestParameterGroup:
     def test_to_cli_disabled_parameter(self):
         """Test that disabled parameters are excluded from CLI output."""
         group = self.parameter_group
-        self.bool_param.enabled = False
+        self.bool_param_condition.value = False
         result = group.to_cli('MDL-GEN')
         assert result == "-flag_string default"
 

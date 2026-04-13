@@ -87,8 +87,9 @@ class HistoryPage(Page):
         self.results_widget = ResultsWidget(self._run_record)
         results_scroll = QScrollArea()
         results_scroll.setObjectName("history_results_scroll")
-        results_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        results_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        results_scroll.setVerticalScrollBarPolicy(
+            results_scroll.verticalScrollBarPolicy().ScrollBarAlwaysOff
+        )
         results_scroll.setWidgetResizable(True)
         results_scroll.setWidget(self.results_widget)
         results_layout.addWidget(results_scroll, 1)

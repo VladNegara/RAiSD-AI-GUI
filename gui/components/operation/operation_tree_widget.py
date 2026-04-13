@@ -228,9 +228,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
             self._common_parent_directory_node.overwrite_parameter,
             editable=True,
         ).build_form_row()
-        self._overwrite_parameter_row.setVisible(
-            self._common_parent_directory_node.overwrite,
-        )
         layout.addWidget(self._overwrite_parameter_row)
 
         self.file_consumer_widgets : list[FileConsumerNodeWidget]= []
@@ -247,9 +244,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         self._overwrite_warning_label.setVisible(
             self._common_parent_directory_node.overwrite,
         )
-        self._overwrite_parameter_row.setVisible(
-            self._common_parent_directory_node.overwrite,
-        )
         self._common_parent_directory_node.overwrite_parameter.value = False
 
         for file_consumer_widget in self.file_consumer_widgets:
@@ -262,7 +256,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
     @Slot(bool)
     def _overwrite_changed(self, new_overwrite: bool) -> None:
         self._overwrite_warning_label.setVisible(new_overwrite)
-        self._overwrite_parameter_row.setVisible(new_overwrite)
 
 
 class FilePickerNodeWidget(FileProducerNodeWidget):
@@ -452,43 +445,6 @@ class OperationNodeWidget(FileProducerNodeWidget):
             self._operation_node.overwrite_parameter,
             editable=True,
         ).build_form_row()
-        self._overwrite_parameter_row.setVisible(
-            self._operation_node.overwrite,
-        )
-        layout.addWidget(self._overwrite_parameter_row)
-
-        self._overwrite_warning_label = WarningLabel(
-            "You are about to overwrite existing data!"
-        )
-        self._overwrite_warning_label.setVisible(
-            self._operation_node.overwrite,
-        )
-        layout.addWidget(self._overwrite_warning_label)
-
-        self._overwrite_parameter_row = ParameterWidget.from_parameter(
-            self._operation_node.overwrite_parameter,
-            editable=True,
-        ).build_form_row()
-        self._overwrite_parameter_row.setVisible(
-            self._operation_node.overwrite,
-        )
-        layout.addWidget(self._overwrite_parameter_row)
-
-        self._overwrite_warning_label = WarningLabel(
-            "You are about to overwrite existing data!"
-        )
-        self._overwrite_warning_label.setVisible(
-            self._operation_node.overwrite,
-        )
-        layout.addWidget(self._overwrite_warning_label)
-
-        self._overwrite_parameter_row = ParameterWidget.from_parameter(
-            self._operation_node.overwrite_parameter,
-            editable=True,
-        ).build_form_row()
-        self._overwrite_parameter_row.setVisible(
-            self._operation_node.overwrite,
-        )
         layout.addWidget(self._overwrite_parameter_row)
 
         self.file_consumer_widgets: list[FileConsumerNodeWidget] = []
@@ -515,9 +471,6 @@ class OperationNodeWidget(FileProducerNodeWidget):
     def refresh(self) -> None:
         self._refresh_info_label()
         self._overwrite_warning_label.setVisible(
-            self._operation_node.overwrite,
-        )
-        self._overwrite_parameter_row.setVisible(
             self._operation_node.overwrite,
         )
         self._operation_node.overwrite_parameter.value = False
@@ -547,7 +500,6 @@ class OperationNodeWidget(FileProducerNodeWidget):
     @Slot(bool)
     def _overwrite_changed(self, new_overwrite: bool) -> None:
         self._overwrite_warning_label.setVisible(new_overwrite)
-        self._overwrite_parameter_row.setVisible(new_overwrite)
 
 
 class OperationTreeWidget(StylableWidget):

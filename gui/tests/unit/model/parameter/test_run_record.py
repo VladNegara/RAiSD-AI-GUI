@@ -104,7 +104,6 @@ class TestParameterGroupList:
             run_id_parameter=self.run_id_parameter,
             categorized_operation_trees=self.categorized_operation_trees,
             parameter_groups=self.parameter_groups,
-            dependencies=None,
         )
     
     def test_init_values(self):
@@ -118,7 +117,6 @@ class TestParameterGroupList:
         assert list.categorized_operation_trees == self.categorized_operation_trees
         assert list.operation_trees == self.operation_trees
         assert list.parameter_groups == groups
-        assert list._dependencies == []
 
     def test_valid(self):
         list = self.parameter_group_list
