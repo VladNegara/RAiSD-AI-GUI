@@ -2,7 +2,6 @@ from re import compile
 from typing import Any, Iterator
 from yaml import load, Loader
 from datetime import datetime
-import json
 
 from PySide6.QtCore import (
     QObject,
@@ -38,9 +37,9 @@ from gui.model.parameter import (
     StringTableParameter,
     FileParameter,
 )
-from gui.model.dependency import (
-    Dependency,
+from gui.model.parameter.condition import (
     AndCondition,
+    Condition,
     OrCondition,
 )
 
@@ -62,7 +61,6 @@ class RunRecord(QObject):
             run_id_parameter: StringParameter,
             categorized_operation_trees: list[tuple[str, list[OperationTree]]],
             parameter_groups: list[ParameterGroup] | None = None,
-            dependencies: list[Dependency] | None = None,
     ) -> None:
         """
         Initialize a `RunRecord` object.
@@ -81,7 +79,6 @@ class RunRecord(QObject):
             tree.valid_changed.connect(self._operation_tree_valid_changed)
         self._selected_operation_tree_index = 0
         self._parameter_groups = parameter_groups or []
-        self._dependencies = dependencies or []
         # Set using setter
         self.selected_operation_tree_index = 0
 
@@ -102,7 +99,7 @@ class RunRecord(QObject):
         """
 
         id_to_parameter: dict[str, Parameter[Any]] = {}
-        parameters = []
+        parameters: list[Parameter[Any]] = []
         parameter_to_constraint_objs: dict[Parameter[Any], list[dict]] = {}
         parameter_to_condition_objs: dict[Parameter[Any], list[dict]] = {}
 
@@ -300,7 +297,7 @@ class RunRecord(QObject):
                         operations={id},
                     )
                 )
-            
+
             return Operation(
                 id=id,
                 name=name,
@@ -910,7 +907,7 @@ class RunRecord(QObject):
                 id_to_parameter[parameter_id] = parameter
             return ParameterGroup(name, parameters)
 
-        def parse_condition(obj: dict) -> Dependency.Condition:
+        def parse_condition(obj: dict) -> Condition:
             if "type" not in obj:
                 raise ValueError("Parameter condition has no type.")
             
@@ -930,7 +927,7 @@ class RunRecord(QObject):
                             + f"{conditions_list}. Expected a list."
                         )
 
-                    conditions: list[Dependency.Condition] = []
+                    conditions: list[Condition] = []
                     for condition_obj in conditions_list:
                         conditions.append(
                             parse_condition(condition_obj)
@@ -1180,27 +1177,16 @@ class RunRecord(QObject):
                     parse_constraint(constraint_obj),
                 )
 
-        for param in id_to_parameter.values():
-            conditions: list[Dependency.Condition] = []
-            for condition_obj in parameter_to_condition_objs[param]:
-                conditions.append(
-                    parse_condition(condition_obj)
-                )
+        for parameter in parameters:
+            for condition_obj in parameter_to_condition_objs[parameter]:
+                parameter.add_condition(parse_condition(condition_obj))
 
-            single_operation_conditions = []
-            for operation_id in param.operations:
-                single_operation_conditions.append(
+            operation_condition = OrCondition()
+            for operation_id in parameter.operations:
+                operation_condition.add_condition(
                     operation_conditions[operation_id]
                 )
-            conditions.append(
-                OrCondition(single_operation_conditions)
-            )
-
-            Dependency(
-                AndCondition(conditions),
-                Parameter.EnabledEffect(param),
-                result,
-            )
+            parameter.add_condition(operation_condition)
 
         return result
     

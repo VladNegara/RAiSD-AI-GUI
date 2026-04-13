@@ -2,7 +2,7 @@ from PySide6.QtCore import (
     Qt,
     QDir,
     Slot,
-    QUrl
+    QUrl,
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QFileSystemModel,
     QTreeView,
     QHeaderView,
+    QPushButton,
+    QSizePolicy,
 )
 from PySide6.QtGui import QDesktopServices
 
@@ -19,6 +21,7 @@ from gui.model.run_record import RunRecord
 from gui.widgets import (
     StylableWidget,
     VBoxLayout,
+    HBoxLayout,
 )
 from gui.components.parameter import ParameterForm
 from gui.components.collapsible import Collapsible
@@ -45,6 +48,7 @@ class ResultsWidget(StylableWidget):
         )
 
         self.files_widget_stack = QStackedWidget()
+        self.files_widget_stack.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
         # Folder widget
         self.files_widget = QWidget()
@@ -52,14 +56,36 @@ class ResultsWidget(StylableWidget):
             self.files_widget,
             spacing=constants.GAP_TINY,
         )
-        self.files_label = QLabel("Files in the output directory")
-        files_layout.addWidget(self.files_label)
+
+        header_widget = QWidget()
+        header_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        header_layout = HBoxLayout(
+            header_widget,
+        )
+
+        self.files_label = QLabel("Files in the generated directory")
+        header_layout.addWidget(self.files_label, 1)
+
+        self.path = ""
+        self.file_browser_button = QPushButton("Open Directory")
+        self.file_browser_button.setObjectName("file_browser_button")
+        self.file_browser_button.clicked.connect(self._file_browser_button_clicked)
+        header_layout.addWidget(self.file_browser_button)
+
+        files_layout.addWidget(header_widget)
 
         self.folder_structure = QFileSystemModel()
         self.folder_widget = QTreeView()
+
+        self.folder_widget.horizontalScrollBar().setEnabled(True)
+        self.folder_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.folder_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.folder_widget.setObjectName("folder_widget")
         self.folder_widget.doubleClicked.connect(self._on_double_click)
-        files_layout.addWidget(self.folder_widget)
+        self.folder_widget.setMinimumHeight(int(self.height()))
+        self.folder_widget.setMaximumHeight(int(self.height()))
+        files_layout.addWidget(self.folder_widget, 1)
+
 
         self.files_widget_stack.addWidget(self.files_widget)
 
@@ -82,14 +108,14 @@ class ResultsWidget(StylableWidget):
         Updates the ResultWidget with results in the RunRecord.
         """
         # Set folder widget to right folder
-        path = app_settings.workspace_path.filePath(self._run_record.run_id)
-        if not QDir(path).exists():
+        self.path = app_settings.workspace_path.filePath(self._run_record.run_id)
+        if not QDir(self.path).exists():
             self.files_widget_stack.setCurrentWidget(self.no_files_label)
         else:
             self.files_label.setText(f"Files in the output directory '{app_settings.workspace_path.dirName()}/{self._run_record.run_id}':")
-            self.folder_structure.setRootPath(path)
+            self.folder_structure.setRootPath(self.path)
             self.folder_widget.setModel(self.folder_structure)
-            self.folder_widget.setRootIndex(self.folder_structure.index(path))
+            self.folder_widget.setRootIndex(self.folder_structure.index(self.path))
             self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
             self.files_widget_stack.setCurrentWidget(self.files_widget)
 
@@ -98,3 +124,7 @@ class ResultsWidget(StylableWidget):
         if not self.folder_structure.isDir(index):
             path = self.folder_structure.filePath(index)
             QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
+    @Slot()
+    def _file_browser_button_clicked(self) -> None:
+        QDesktopServices.openUrl(QUrl.fromLocalFile(self.path))

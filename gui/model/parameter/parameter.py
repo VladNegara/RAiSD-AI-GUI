@@ -10,7 +10,10 @@ from PySide6.QtCore import (
     Slot,
 )
 
-from gui.model.dependency import Dependency
+from gui.model.parameter.condition import (
+    AndCondition,
+    Condition,
+)
 from .constraint import Constraint, IntervalConstraint
 
 T = TypeVar("T")
@@ -20,12 +23,17 @@ class Parameter(QObject, Generic[T]):
     """
     A base class for parameters to be filled in using the GUI.
 
-    The class inherits from `ABC` to make it abstract, from `QObject`
-    to use the signal mechanism and from `Generic` to add type hints
-    based on the type of value that the parameter stores.
+    The class inherits from `QObject` to use the signal mechanism and
+    from `Generic` to add type hints based on the type of value that
+    the parameter stores.
+
+    By default, a parameter is always enabled. Use the `add_condition`
+    method to add a condition that governs the parameter's enabled
+    state. If multiple conditions are added, the parameter is only
+    enabled when all of the conditions are true.
     """
 
-    class EnabledCondition(Dependency.Condition):
+    class EnabledCondition(Condition):
         """
         A condition that tracks whether a parameter is enabled.
         """
@@ -66,18 +74,6 @@ class Parameter(QObject, Generic[T]):
         ) -> None:
             self.value = new_enabled == self._target_value
 
-    class EnabledEffect(Dependency.Effect):
-        def __init__(
-                self,
-                parameter: "Parameter[Any]",
-                parent: QObject | None = None,
-        ) -> None:
-            super().__init__(parent=parent)
-            self._parameter = parameter
-
-        def condition_changed(self, new_value: bool) -> None:
-            self._parameter.enabled = new_value
-
     value_changed: Signal
     valid_changed = Signal(bool)
     constraint_added = Signal(Constraint)
@@ -91,7 +87,6 @@ class Parameter(QObject, Generic[T]):
             operations: set[str],
             default_value: T,
             constraints: list[Constraint[T]] | None = None,
-            enabled: bool = True,
     ) -> None:
         """
         Initialize a `Parameter` object.
@@ -119,7 +114,8 @@ class Parameter(QObject, Generic[T]):
         for constraint in constraints or []:
             self.add_constraint(constraint)
         self._hidden_constraints: list[Constraint] = []
-        self._enabled = enabled
+        self._condition = AndCondition()
+        self._condition.changed.connect(self.enabled_changed)
 
     @property
     def value(self) -> T:
@@ -147,19 +143,28 @@ class Parameter(QObject, Generic[T]):
         if self.valid != old_valid:
             self.valid_changed.emit(self.valid)
 
+    def add_condition(
+            self,
+            condition: Condition,
+    ) -> None:
+        """
+        Add a condition that determines this parameter's enabled state.
+
+        :param condition: the condition to add
+        :type condition: Condition
+        """
+        self._condition.add_condition(condition)
+
     @property
     def enabled(self) -> bool:
         """
         Whether the parameter is enabled.
 
-        Setting this property emits the `enabled_changed` signal.
+        The value of this property is determined solely by the
+        conditions which have been added to the parameter using the
+        `add_condition` method.
         """
-        return self._enabled
-
-    @enabled.setter
-    def enabled(self, new_enabled: bool) -> None:
-        self._enabled = new_enabled
-        self.enabled_changed.emit(self._enabled)
+        return self._condition.value
 
     def reset_value(self) -> None:
         """
@@ -318,7 +323,7 @@ class OptionalParameter(Parameter[bool]):
     parameter.
     """
 
-    class Condition(Dependency.Condition):
+    class Condition(Condition):
         """
         A condition that tracks whether an optional parameter is used.
         """
@@ -376,9 +381,24 @@ class OptionalParameter(Parameter[bool]):
         )
         self._parameter = parameter
 
-        self._parameter.enabled = self.value
-
-        self.value_changed.connect(self._value_changed)
+        # The inner parameter can only be enabled if the optional
+        # parameter is enabled and its value is set.
+        condition = AndCondition(
+            conditions=[
+                Parameter.EnabledCondition(
+                    parameter=self,
+                    target_value=True,
+                    parent=self,
+                ),
+                self.__class__.Condition(
+                    parameter=self,
+                    target_value=True,
+                    parent=self,
+                ),
+            ],
+            parent=self,
+        )
+        self._parameter.add_condition(condition)
 
     @property
     def parameter(self) -> Parameter[Any]:
@@ -421,10 +441,6 @@ class OptionalParameter(Parameter[bool]):
             return self.parameter.to_cli(operation)
         return ""
 
-    @Slot(bool, bool)
-    def _value_changed(self, new_value, _):
-        self.parameter.enabled = new_value
-
 
 class MultiParameter(Parameter[tuple[()]]):
     """
@@ -435,7 +451,9 @@ class MultiParameter(Parameter[tuple[()]]):
 
     def __init__(
             self,
-            name: str, description: str, flag: str,
+            name: str,
+            description: str,
+            flag: str,
             operations: set[str],
             parameters: list[Parameter[Any]],
     ) -> None:
@@ -444,12 +462,19 @@ class MultiParameter(Parameter[tuple[()]]):
             description,
             flag,
             operations,
-            ()
+            (),
         )
-
         self._parameters = parameters
 
-        self.enabled_changed.connect(self._enabled_changed)
+        # The inner parameters can only be enabled if the multi-value
+        # parameter is enabled.
+        condition = Parameter.EnabledCondition(
+            parameter=self,
+            target_value=True,
+            parent=self,
+        )
+        for parameter in self._parameters:
+            parameter.add_condition(condition)
 
     @property
     def parameters(self) -> list[Parameter[Any]]:
@@ -485,11 +510,6 @@ class MultiParameter(Parameter[tuple[()]]):
         nonempty_params = [p for p in cli_params if p]
         return f"{self.flag}{" ".join(nonempty_params)}"
 
-    @Slot(bool)
-    def _enabled_changed(self, new_enabled: bool) -> None:
-        for parameter in self.parameters:
-            parameter.enabled = new_enabled
-
 
 class CountedMultiParameter(MultiParameter):
     """
@@ -520,7 +540,7 @@ class BoolParameter(Parameter[bool]):
     The value of a boolean parameter is always valid.
     """
 
-    class Condition(Dependency.Condition):
+    class Condition(Condition):
         """
         A condition that tracks whether a bool parameter has a given
         value.
@@ -646,7 +666,7 @@ class EnumParameter(Parameter[int]):
     A parameter with enumerated values in the GUI.
     """
 
-    class Condition(Dependency.Condition):
+    class Condition(Condition):
         """
         A condition that tracks whether an enum parameter's value is in
         a given set of values.
@@ -698,7 +718,6 @@ class EnumParameter(Parameter[int]):
             options: list[tuple[str, str]],
             default_value: int,
             constraints: list[Constraint[int]] | None = None,
-            enabled: bool = True,
     ) -> None:
         """
         Initialize an `EnumParameter` object.
@@ -730,7 +749,6 @@ class EnumParameter(Parameter[int]):
             operations=operations,
             default_value=default_value,
             constraints=constraints,
-            enabled=enabled,
         )
         self._options = options
 
@@ -836,7 +854,6 @@ class StringTableParameter(Parameter[tuple[()]]):
             columns: list[tuple[str, str, list[Constraint[str]]]],
             allowed_row_counts: list[int],
             separator: str,
-            enabled: bool = True,
     ) -> None:
         super().__init__(
             name=name,
@@ -844,7 +861,6 @@ class StringTableParameter(Parameter[tuple[()]]):
             flag=flag,
             operations=operations,
             default_value=(),
-            enabled=enabled,
         )
 
         if not columns:

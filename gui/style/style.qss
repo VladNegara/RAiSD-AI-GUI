@@ -58,6 +58,7 @@ QPushButton#settings_button:pressed {
 
 /* SHARED — VIEW BACKGROUNDS */
 
+QDialog#settings_dialog,
 QWidget#page,
 QWidget#run_tab,
 QScrollArea#history_results_scroll,
@@ -88,9 +89,9 @@ QWidget#tree_stacked_widget{
 }
 
 QScrollArea#parameter_form_scroll QScrollBar,
-QScrollArea#results_scroll QScrollBar,
+QScrollArea#results_scroll,
 QWidget#commands_view QScrollBar,
-QScrollArea#history_results_scroll QScrollBar{
+QScrollArea#history_results_scroll{
     width: 0px;
     height: 0px;
 }
@@ -103,7 +104,8 @@ QWidget#settings_item_widget QPushButton,
 QPushButton#reset_button,
 QPushButton#file_button,
 QPushButton#file_selector_button,
-QPushButton#toggle_all_button{
+QPushButton#toggle_all_button,
+QPushButton#file_browser_button{
     padding: 5px 15px;
     background-color: $primary-purple;
     color: $primary-dark;
@@ -116,7 +118,8 @@ QWidget#settings_item_widget QPushButton:hover,
 QPushButton#reset_button:hover,
 QPushButton#file_button:hover,
 QPushButton#file_selector_button:hover,
-QPushButton#toggle_all_button:hover{
+QPushButton#toggle_all_button:hover,
+QPushButton#file_browser_button:hover{
     background-color: $button-hover;
 }
 
@@ -125,7 +128,8 @@ QWidget#settings_item_widget QPushButton:pressed,
 QPushButton#reset_button:pressed,
 QPushButton#file_button:pressed,
 QPushButton#file_selector_button:pressed,
-QPushButton#toggle_all_button:pressed{
+QPushButton#toggle_all_button:pressed,
+QPushButton#file_browser_button:pressed{
     background-color: $button-pressed;
 }
 
@@ -327,6 +331,7 @@ QWidget#process_indicator{
 QWidget#process_indicator[indicator_state="pending"] {
     qproperty-fillColor: $purplish-background;
     qproperty-borderColor: $primary-purple;
+    qproperty-textColor: $primary-purple;
 }
 
 QWidget#process_indicator[indicator_state="running"] {
@@ -352,6 +357,7 @@ QWidget#process_indicator[indicator_state="stopped"] {
 QWidget#execution_output,
 QWidget#error_output{
     font-size: $font-size - 4px;
+    font-family: monospace;
 }
 /* OP SELECTION */
 QWidget#file_consumer_node {
