@@ -97,6 +97,8 @@ class MainWindow(QMainWindow):
         logo_widget.setObjectName("logo_widget")
         layout.addWidget(logo_widget)
 
+        layout.addSpacing(constants.GAP_TINY)
+
         # Run Button
         self.run_button = QPushButton()
         self.run_button.clicked.connect(lambda: self._set_active_view(self.run_button))
