@@ -22,7 +22,7 @@ The Run Page is the main page of the GUI. It is used to execute RAiSD-AI operati
 
 #### Operation Selection Tab
 
-![Screenshot of the Run Page Operation Selection with Run ID](/screenshots/run-page.operation-selection.run1.png)
+![Screenshot of the Run Page Operation Selection with Run ID](/screenshots/run-page.operation-selection.run1.multiple-operations.png)
 
 The operation selection tab is the first step when running RAiSD-AI operations. It has three main input sections:
 
@@ -32,9 +32,14 @@ The operation selection tab is the first step when running RAiSD-AI operations. 
 
 3. **Input Data**: This section allows you to input the data required for the selected operation. This can include files, folders, and parameters.
 
-TODO: write something about how one operation will itself run the required ones before, maybe add a screenshot with an operation like sweep scan for that.
+> [!TIP]
+> The operation selection guides you through the possible combinations of operations and input types in a simple step by step manner. When choosing an operation to run, this section will ask you how you want to provide input data. That can often be either as files, or by running another operation to generate the necessary files. 
 
-> Note: If the choice of run id or other input parameters will cause data to be overwritten, the GUI will show a warning and ask for confirmation before proceeding.
+For example, the model training operation needs a directory with two subdirectories containing formatted data. However, instead of having to run data formatting twice, and then running model training using the directory generated. You can choose to run these operations together with running model training. (See the screenshot above where running multiple operations is selected.)
+
+This works for any operation which is dependent on the output of another operation. However, You don't have to run all operations every time. Instead, when you have already formatted your data once for example, you can re-use this in future operations.
+
+> If the choice of run id or other input parameters will cause data to be overwritten, the GUI will show a warning and ask for confirmation before proceeding.
 
 #### Parameter Input Tab
 
