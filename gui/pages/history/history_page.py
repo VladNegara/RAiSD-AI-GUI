@@ -4,9 +4,15 @@ from PySide6.QtWidgets import (
     QSplitter,
     QStackedWidget,
     QScrollArea,
-    QPushButton
+    QPushButton,
+    QSizePolicy,
 )
-from PySide6.QtCore import Slot, Qt, Signal
+from PySide6.QtCore import (
+    Slot, 
+    Qt, 
+    Signal,
+    QTimer,
+)
 
 from ..page import Page
 from gui.model.settings import app_settings
@@ -40,6 +46,9 @@ class HistoryPage(Page):
         self._selected : HistoryRecord | None = None
         self._setup_ui()
         self._history_list.setObjectName("history_list")
+        timer = QTimer(self)
+        timer.timeout.connect(self.update_history_time)
+        timer.start(60000)
 
     def _setup_ui(self):
         # Main layout with a splitter
@@ -92,6 +101,27 @@ class HistoryPage(Page):
         self._right_panel.addWidget(self.results_panel)
         self.results_panel.hide()
 
+        self.error_panel = QWidget()
+        self.error_panel_layout = VBoxLayout(
+            self.error_panel,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_SMALL,
+            spacing=constants.GAP_SMALL,
+        )
+
+        self.error_label = QLabel(
+            "An error occurred while loading the run from history. " \
+            "The old run may be corrupted or " \
+            "incompatible with the current version of the application.")
+        self.error_label.setWordWrap(True)
+        self.error_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.error_panel_layout.addWidget(self.error_label)
+
+        self._right_panel.addWidget(self.error_panel)
+        self.error_panel.hide()
+
         # Give the list 1/3 and the detail panel 2/3 of the width
         splitter.setSizes([200, 400])
 
@@ -139,6 +169,7 @@ class HistoryPage(Page):
         else:
             self.selected = history_record
 
+    @Slot()
     def update_history_time(self) -> None:
         """
         Update the time labels of the history record widgets
@@ -153,8 +184,15 @@ class HistoryPage(Page):
     def selected(self, value : HistoryRecord | None) -> None:
         self._selected = value
         if value:
-            self._run_record.populate(value)
-            self.results_widget.show_results()
-            self.results_panel.show()
+            try:
+                self._run_record.populate(value)
+                self.error_panel.hide()
+                self.results_widget.show_results()
+                self.results_panel.show()
+            except Exception as e:
+                self._run_record.reset()
+                self.error_panel.show()
+                self.results_panel.hide()
+                print(f"Error occurred while populating run record: {e}")
         else:
             self.results_panel.hide()

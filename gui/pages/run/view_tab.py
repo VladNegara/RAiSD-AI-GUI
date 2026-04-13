@@ -21,7 +21,7 @@ from gui.widgets import (
     VBoxLayout,
 )
 from gui.components.dialog import ConfirmDialog, ErrorDialog
-from gui.components.run import ProcessIndicator, IndicatorState
+from gui.components.run import ProcessIndicator, IndicatorState, RunEndStatus
 from gui.style import constants
 from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 
@@ -29,7 +29,7 @@ from gui.components.navigation_buttons_holder import NavigationButtonsHolder
 class ViewTab(RunPageTab):
     navigate_next = Signal()
     run_started = Signal(int)  # Number of processes
-    run_ended = Signal(bool)  # Run successful
+    run_ended = Signal(RunEndStatus)
 
     def __init__(self, run_record: RunRecord, command_executor: CommandExecutor):
         self._run_record = run_record
@@ -57,20 +57,44 @@ class ViewTab(RunPageTab):
         step_widget = QWidget()
         step_widget.setObjectName("step_widget")
         self.step_layout = HBoxLayout(step_widget)
-        self.run_indicators = []
+        self.run_indicators: list[ProcessIndicator] = []
         layout.addWidget(step_widget,1)
 
         self.output_widget = QSplitter()
-        layout.addWidget(self.output_widget,1)
 
-        self.execution_output = QTextEdit(readOnly=True)
-        self.execution_output.setObjectName("execution_output")
-        self.output_widget.addWidget(self.execution_output)
+        self.standard_output_widget = QWidget()
+        self.standard_output_widget_layout = VBoxLayout(
+            self.standard_output_widget,
+            spacing=constants.GAP_TINY
+        )
+
+        self.standard_output_label = QLabel("Standard Output:")
+        self.standard_output_widget_layout.addWidget(self.standard_output_label)
+
+        self.standard_output = QTextEdit(readOnly=True)
+        self.standard_output.setObjectName("execution_output")
+        self.standard_output_widget_layout.addWidget(self.standard_output, 1)
+
+        self.output_widget.addWidget(self.standard_output_widget)
+
+        self.error_output_widget = QWidget()
+        self.error_output_widget_layout = VBoxLayout(
+            self.error_output_widget,
+            spacing=constants.GAP_TINY,
+        )
+
+        self.error_output_label = QLabel("Error Output:")
+        self.error_output_widget_layout.addWidget(self.error_output_label)
 
         self.error_output = QTextEdit(readOnly=True)
         self.error_output.setObjectName("error_output")
-        self.output_widget.addWidget(self.error_output)
+        self.error_output_widget_layout.addWidget(self.error_output, 1)
+
+        self.output_widget.addWidget(self.error_output_widget)
+
         self.output_widget.setVisible(False)
+
+        layout.addWidget(self.output_widget,1)
 
         self._command_executor.output.connect(self._command_executor_output)
         self._command_executor.err_output.connect(self._command_executor_err_output)
@@ -112,20 +136,22 @@ class ViewTab(RunPageTab):
         self._stop_execution()
 
     def _toggle_console_button_clicked(self) -> None:
-        previous_visibility = self.output_widget.isVisible()
-        self.output_widget.setVisible(not previous_visibility)
-
-        layout = self.output_widget.parent().layout()
-        step_widget_index = 1
-
-        if previous_visibility:
-            layout.setStretch(step_widget_index, 1)
-            for indicator in self.run_indicators:
-                indicator.set_indicator_size(120)
+        console_visible = not self.output_widget.isHidden()
+        if console_visible:
+            self.output_widget.hide()
+            new_size = 160
+            new_stretch = 1
         else:
-            layout.setStretch(step_widget_index, 0)
-            for indicator in self.run_indicators:
-                indicator.set_indicator_size(90)
+            self.output_widget.show()
+            new_size = 80
+            new_stretch = 0
+
+        layout = self.output_widget.parent().layout() # type: ignore
+        step_widget_index = 1
+        layout.setStretch(step_widget_index, new_stretch)
+
+        for indicator in self.run_indicators:
+            indicator.set_indicator_size(new_size)
 
     # methods
     @Slot()
@@ -147,8 +173,8 @@ class ViewTab(RunPageTab):
         self.stop_run_button.style().unpolish(self.stop_run_button)
         self.stop_run_button.style().polish(self.stop_run_button)
 
-    @Slot(bool)
-    def _run_ended(self, run_successful: bool) -> None:
+    @Slot()
+    def _run_ended(self) -> None:
         """
         Update the execution buttons and close an open confirm dialog.
         """
@@ -188,7 +214,7 @@ class ViewTab(RunPageTab):
         """
         Append the output from the command_executor to execution_output.
         """
-        self.execution_output.append(output)
+        self.standard_output.append(output)
 
     @Slot(str)
     def _command_executor_err_output(self, output: str) -> None:
@@ -203,21 +229,29 @@ class ViewTab(RunPageTab):
 
         reset current ones and add more or hide when needed.
         """
+        operation_ids = self._run_record.selected_operation_tree.get_operation_ids()
         number_of_indicators = len(self.run_indicators)
+        size = 160 if self.output_widget.isHidden() else 80
+        for i, indicator in enumerate(self.run_indicators):
+            indicator.text = operation_ids[i]
+            indicator.state = IndicatorState.PENDING
+            indicator.set_indicator_size(size)
+
         for idx in range(max([number_of_indicators, number_of_processes])):
             if idx < number_of_processes and idx < number_of_indicators:
                 self.run_indicators[idx].setVisible(True)
             elif idx < number_of_processes and idx >= number_of_indicators:
-                self.add_indicator_widget(idx)
+                self.add_indicator_widget(idx, operation_ids[idx])
                 continue
             elif idx >= number_of_processes and idx < number_of_indicators:
                 self.run_indicators[idx].setVisible(False)
 
-    def add_indicator_widget(self, index: int) -> None:
+    def add_indicator_widget(self, index: int, text: str) -> None:
         """
         Add an indicator widget to self.step_layout.
         """
-        indicator = ProcessIndicator(number=index + 1, size=120)
+        size = 160 if self.output_widget.isHidden() else 80
+        indicator = ProcessIndicator(text=text, size=size)
         self._command_executor.process_started.connect(lambda idx=index: self._process_started(idx))
         self._command_executor.process_finished.connect(lambda idx=index: self._process_finished(idx))
         self.step_layout.addWidget(indicator)
@@ -239,7 +273,7 @@ class ViewTab(RunPageTab):
         """
         Clear the output fields.
         """
-        self.execution_output.clear()
+        self.standard_output.clear()
         self.error_output.clear()
 
     # SLOTS
@@ -257,7 +291,7 @@ class ViewTab(RunPageTab):
         Handle CommandExecutor.execution_finshed.
         """
         print("Execution finished")
-        self.run_ended.emit(True)
+        self.run_ended.emit(RunEndStatus.SUCCESS)
 
     @Slot(int, QProcess.ProcessError)
     def _execution_failed(self, exit_code: int, process_error: QProcess.ProcessError) -> None:
@@ -266,10 +300,10 @@ class ViewTab(RunPageTab):
         """
         print(f"Execution failed with exit code '{exit_code}'")
 
-        self.run_ended.emit(False)        
+        self.run_ended.emit(RunEndStatus.FAILED)        
 
         if process_error is None: # otherwise _process_failed will show an error dialog:
-            self.execution_output.append(f"Execution failed with exit code '{exit_code}'")
+            self.standard_output.append(f"Execution failed with exit code '{exit_code}'")
             self.execution_error_dialog = ErrorDialog(self, f"Execution Failed ({exit_code})", f"Execution failed with exit code '{exit_code}'")
             self.execution_error_dialog.exec()
     
@@ -279,7 +313,7 @@ class ViewTab(RunPageTab):
         Handle CommandExecutor.execution_stopped.
         """
         print("Execution stopped.")
-        self.run_ended.emit(False)
+        self.run_ended.emit(RunEndStatus.STOPPED)
 
     @Slot(int)
     def _process_started(self, process_index: int) -> None:
@@ -303,7 +337,7 @@ class ViewTab(RunPageTab):
 
         if process_error is not None:
             print(f"Process '{process_index}' failed with process error '{process_error}'")
-            self.execution_output.append(f"Process '{process_index}' failed with process error '{process_error}'")
+            self.standard_output.append(f"Process '{process_index}' failed with process error '{process_error}'")
             process_error_dialog = ErrorDialog(self, f"Process Failed ({process_error})", f"Process '{process_index}' failed with process error '{process_error}'")
             process_error_dialog.exec()
 

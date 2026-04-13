@@ -1,10 +1,12 @@
 from PySide6.QtCore import (
     Qt,
+    QDir,
     Slot,
     QUrl,
 )
 from PySide6.QtWidgets import (
     QWidget,
+    QStackedWidget,
     QLabel,
     QFileSystemModel,
     QTreeView,
@@ -45,13 +47,24 @@ class ResultsWidget(StylableWidget):
             spacing=constants.GAP_TINY,
         )
 
+        self.files_widget_stack = QStackedWidget()
+        self.files_widget_stack.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+
+        # Folder widget
+        self.files_widget = QWidget()
+        files_layout = VBoxLayout(
+            self.files_widget,
+            spacing=constants.GAP_TINY,
+        )
+
         header_widget = QWidget()
+        header_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         header_layout = HBoxLayout(
             header_widget,
         )
 
-        files_label = QLabel("Files in the generated directory")
-        header_layout.addWidget(files_label, 1)
+        self.files_label = QLabel("Files in the generated directory")
+        header_layout.addWidget(self.files_label, 1)
 
         self.path = ""
         self.file_browser_button = QPushButton("Open Directory")
@@ -59,7 +72,7 @@ class ResultsWidget(StylableWidget):
         self.file_browser_button.clicked.connect(self._file_browser_button_clicked)
         header_layout.addWidget(self.file_browser_button)
 
-        layout.addWidget(header_widget)
+        files_layout.addWidget(header_widget)
 
         self.folder_structure = QFileSystemModel()
         self.folder_widget = QTreeView()
@@ -69,10 +82,20 @@ class ResultsWidget(StylableWidget):
         self.folder_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.folder_widget.setObjectName("folder_widget")
         self.folder_widget.doubleClicked.connect(self._on_double_click)
-
-        self.folder_widget.setMinimumHeight(int(self.height() * 0.9))
+        self.folder_widget.setMinimumHeight(int(self.height()))
         self.folder_widget.setMaximumHeight(int(self.height()))
-        layout.addWidget(self.folder_widget, 1)
+        files_layout.addWidget(self.folder_widget, 1)
+
+
+        self.files_widget_stack.addWidget(self.files_widget)
+
+        self.no_files_label = QLabel(
+            "The output directory does not exist anymore.", 
+            alignment=Qt.AlignmentFlag.AlignCenter
+        )
+        self.files_widget_stack.addWidget(self.no_files_label)
+
+        layout.addWidget(self.files_widget_stack, 1)
 
         # Parameter widget
         parameters_header = QLabel("Parameters used")
@@ -86,11 +109,15 @@ class ResultsWidget(StylableWidget):
         """
         # Set folder widget to right folder
         self.path = app_settings.workspace_path.filePath(self._run_record.run_id)
-
-        self.folder_structure.setRootPath(self.path)
-        self.folder_widget.setModel(self.folder_structure)
-        self.folder_widget.setRootIndex(self.folder_structure.index(self.path))
-        self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        if not QDir(self.path).exists():
+            self.files_widget_stack.setCurrentWidget(self.no_files_label)
+        else:
+            self.files_label.setText(f"Files in the output directory '{app_settings.workspace_path.dirName()}/{self._run_record.run_id}':")
+            self.folder_structure.setRootPath(self.path)
+            self.folder_widget.setModel(self.folder_structure)
+            self.folder_widget.setRootIndex(self.folder_structure.index(self.path))
+            self.folder_widget.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            self.files_widget_stack.setCurrentWidget(self.files_widget)
 
     @Slot(int)
     def _on_double_click(self, index) -> None:

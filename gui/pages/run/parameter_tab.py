@@ -98,7 +98,7 @@ class ParameterTab(RunPageTab):
         self.update_next_button_state()
 
     def reset(self) -> None:
-        self.reset_touched()
+        self.reset_touched_section_validity()
         self.update_next_button_state()
 
     def _connect_parameter_to_update_next_button_state(self, parameter: Parameter) -> None:

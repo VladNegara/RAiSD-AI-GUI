@@ -36,20 +36,23 @@ class HistoryRecord():
         """
         history_records = []
         try: 
-            with open(app_settings.workspace_path.absoluteFilePath("history.json"), "r") as f:
+            with open(app_settings.workspace_path.absoluteFilePath(".history.json"), "r") as f:
                 data = json.load(f)
                 if not isinstance(data, dict):
                     raise ValueError(
-                        f"Incorrect format in history.json: {data}"
+                        f"Incorrect format in .history.json: {data}"
                         + "Expected dict."
                     )
                 for key in data.keys():
                     if not isinstance(data[key], dict):
                         raise ValueError(
-                            f"Incorrect format in history.json for {key}: {data[key]}"
+                            f"Incorrect format in .history.json for {key}: {data[key]}"
                             + "Expected dict."
                         )
-                    history_records.append(cls.from_dict(data[key]))
+                    try:
+                        history_records.append(cls.from_dict(data[key]))
+                    except ValueError:
+                        print(f"Error parsing {key}")
                 return history_records
         except FileNotFoundError:
             print("No history file found in this workspace")
@@ -137,21 +140,24 @@ class HistoryRecord():
         """
         Saves current run result to the history file of the workspace.
         """
-        if not app_settings.workspace_path.exists("history.json"):
+        if not app_settings.workspace_path.exists(".history.json"):
             # If no history file exists
-            with open(app_settings.workspace_path.absoluteFilePath("history.json"), "w") as f:
+            with open(app_settings.workspace_path.absoluteFilePath(".history.json"), "w") as f:
                 history = {}
                 history[f"{self.time_completed}-{self.name}"] = self.to_dict()
                 json.dump(history, f, indent=4, default=str)
         else:    
             # If a file exists
-            with open(app_settings.workspace_path.absoluteFilePath("history.json"), "r+") as f:
+            with open(app_settings.workspace_path.absoluteFilePath(".history.json"), "r+") as f:
                 history = {}
                 try:
                     history = json.load(f)
                 except:
                     # File could not be parsed
-                    print("Problem reading file: might be empty or incorrect format")
+                    print("Problem reading history file: might be empty or incorrect format.")
+                    print("Corrupted history file will be overwritten")
+                    history = {}
+                    f.truncate(0)
                 history[f"{self.time_completed}-{self.name}"] = self.to_dict()
                 f.seek(0)
                 json.dump(history, f, indent=4, default=str)

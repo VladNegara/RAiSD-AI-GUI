@@ -37,8 +37,10 @@ from gui.model.parameter import (
     StringParameter,
     StringPairListParameter,
     FileParameter,
+    Constraint,
 )
 from gui.components.utils import set_bool_property
+from gui.components.parameter import ConstraintWidget
 from gui.widgets import (
     GridLayout,
     HBoxLayout,
@@ -58,11 +60,6 @@ class ParameterWidget(QWidget):
     `ParameterWidget` objects should not be created directly, but
     through the `from_parameter` factory method.
     """
-
-    class HintLabel(QLabel):
-        def __init__(self, text: str) -> None:
-            super().__init__(text=text)
-            self.setObjectName("parameter_hint")
 
     class ResetButton(QPushButton):
         """
@@ -121,24 +118,16 @@ class ParameterWidget(QWidget):
                 alignment=Qt.AlignmentFlag.AlignVCenter,
             )
 
-        hints_widget = QWidget()
-        self._hints_layout = VBoxLayout(hints_widget)
-        self._hint_labels = []
-        for hint in self._parameter.hints:
-            hint_label = self.__class__.HintLabel(hint)
-            self._hints_layout.addWidget(
-                hint_label,
-                alignment=Qt.AlignmentFlag.AlignRight,
-            )
-            self._hint_labels.append(hint_label)
-        grid_layout.addWidget(hints_widget, 1, 0)
+        constraints_widget = QWidget()
+        self._constraints_layout = VBoxLayout(constraints_widget)
+        self._constraint_widgets: list[ConstraintWidget] = []
+        for constraint in self._parameter.constraints:
+            self.add_constraint_widget(constraint)
+        grid_layout.addWidget(constraints_widget, 1, 0)
 
         # `show_validity` is not annotated as a Slot.
         self._parameter.value_changed.connect(self.show_validity)
-        self._parameter.hint_added.connect(self._hint_added)
-        self._parameter.constraints_valid_changed.connect(
-            self._constraints_valid_changed,
-        )
+        self._parameter.constraint_added.connect(self.add_constraint_widget)
 
     @Slot(bool)
     def _on_enabled_changed(self, enabled: bool) -> None:
@@ -164,14 +153,6 @@ class ParameterWidget(QWidget):
             else:
                 set_bool_property(widget, "valid", None)
 
-        constraints_valid = self._parameter.constraints_valid
-        for i, constraint_valid in enumerate(constraints_valid):
-            hint_label = self._hint_labels[i]
-            if show:
-                set_bool_property(hint_label, "valid", constraint_valid)
-            else:
-                set_bool_property(hint_label, "valid", None)
-
     @property
     def touched(self) -> bool:
         """
@@ -185,6 +166,8 @@ class ParameterWidget(QWidget):
     @touched.setter
     def touched(self, new_touched: bool) -> None:
         self._touched = new_touched
+        for constraint_widget in self._constraint_widgets:
+            constraint_widget.touched = self.touched
         self.show_validity()
 
     @property
@@ -289,17 +272,14 @@ class ParameterWidget(QWidget):
 
         return row
 
-    @Slot(str)
-    def _hint_added(self, new_hint: str) -> None:
-        hint_label = self.__class__.HintLabel(new_hint)
-        self._hints_layout.addWidget(hint_label)
-        self._hint_labels.append(hint_label)
-
-    @Slot()
-    def _constraints_valid_changed(
-            self,
-    ) -> None:
-        self.show_validity()
+    @Slot(Constraint)
+    def add_constraint_widget(self, new_constraint: Constraint) -> None:
+        new_constraint_widget = ConstraintWidget(new_constraint)
+        self._constraints_layout.addWidget(
+            new_constraint_widget,
+            alignment=Qt.AlignmentFlag.AlignRight,
+        )
+        self._constraint_widgets.append(new_constraint_widget)
 
 
 class OptionalParameterWidget(ParameterWidget):
