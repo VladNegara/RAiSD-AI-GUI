@@ -385,6 +385,10 @@ QRadioButton::indicator:unchecked {
     background-image: url("gui/style/resources/radio_unchecked.svg");
 }
 
+QRadioButton::indicator:unchecked:hover {
+    background-image: url("gui/style/resources/radio_unchecked_hover.svg");
+}
+
 QWidget#info_label {
     border: 1px solid $info;
     border-radius: 5px;
