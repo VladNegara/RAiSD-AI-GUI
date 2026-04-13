@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (
 )
 
 from gui.style import constants
-from gui.widgets import VBoxLayout
+from gui.widgets import VBoxLayout, StylableWidget
+from gui.components.settings.settings_item_widget import SettingsItemWidget
 
 
 class Settings(QObject):
@@ -98,7 +99,7 @@ class Settings(QObject):
                 )
             self._executable_file_path = executable_file
         if not self._executable_file_path:
-            self._executable_file_path = QFileInfo("RAiSD-AI")
+            self._executable_file_path = QFileInfo("RAiSD-AI-ZLIB")
 
         # Environment manager
         if "environment_manager" in settings_obj:

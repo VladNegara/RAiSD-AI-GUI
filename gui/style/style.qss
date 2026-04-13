@@ -58,6 +58,7 @@ QPushButton#settings_button:pressed {
 
 /* SHARED — VIEW BACKGROUNDS */
 
+QDialog#settings_dialog,
 QWidget#page,
 QWidget#run_tab,
 QScrollArea#history_results_scroll,
