@@ -4,6 +4,21 @@
 
 The RAiSD-AI-GUI relies on the RAiSD-AI tool to perform its computations. For more information about RAiSD-AI, please refer to the general [README.md](../README.md). It contains detailed information about the tool, its capabilities, and how it works.
 
+## The RAiSD-AI GUI
+
+The RAiSD-AI GUI provides a visual interface for running RAiSD-AI operations. On top of that it adds several useful features:
+
+1. **Sequential Operations**: The GUI allows you to [chain together multiple operations](#operation-selection-tab) in a single run, automatically passing the output of one operation as input to the next. This eliminates the need to manually run each operation or manage intermediate files.
+
+2. **Parameter Validation**: Only valid parameters can be used. The GUI highlights invalid or missing parameters, ensuring you can only proceed when all inputs are correct.
+
+3. **History Page**: All previous runs are stored and can be reviewed. You can reuse parameters from past runs to quickly set up new ones.
+
+4. **Workspace Management**: All runs and their results are stored in a workspace folder, which can be changed at any time.
+
+The GUI is especially useful for users who want to avoid manual command-line input, reduce errors, and keep track of their runs in an organized way.
+
+
 ## Install and Run
 
 For information about installing and running the GUI see the appropriate chapters [Installing the GUI](/README.md#installing-the-gui) and [Running the GUI](/README.md#running-the-gui) in the project [README.md](../README.md)
