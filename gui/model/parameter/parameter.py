@@ -863,7 +863,6 @@ class StringTableParameter(Parameter[tuple[()]]):
             row = []
             for _, default_value, constraints in columns:
                 parameter = StringParameter(
-                    # TODO: make these None when the rest supports it
                     name="",
                     description="",
                     flag="",
