@@ -45,9 +45,14 @@ from gui.widgets import (
     GridLayout,
     HBoxLayout,
     LineEdit,
+    StylableWidget,
     VBoxLayout,
 )
 from gui.style import constants
+
+
+class ParameterRow(StylableWidget):
+    pass
 
 
 class ParameterWidget(QWidget):

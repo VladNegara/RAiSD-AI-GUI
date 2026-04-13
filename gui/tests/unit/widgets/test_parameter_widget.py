@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from gui.model.parameter import (
+    Condition,
     IntervalConstraint,
     MaxLengthConstraint,
     RegexConstraint,
@@ -314,11 +315,13 @@ class TestParameterWidgetFromParameter:
     def test_enabled_changed_hides_row(self, app):
         """Setting enabled=False should hide the row widget."""
         param = BoolParameter("b", "b", "--b", {"TEST"}, False)
+        condition = Condition(True)
+        param.add_condition(condition)
         row = ParameterWidget.from_parameter(param, editable=True).build_form_row()
         row.show()
-        param.enabled = False
+        condition.value = False
         assert not row.isVisible()
-        param.enabled = True
+        condition.value = True
         assert row.isVisible()
 
 class TestIntParameterWidgetTextChanged:
