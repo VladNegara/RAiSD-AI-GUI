@@ -97,7 +97,7 @@ By default, the set-up script uses Conda as the package manager. To use micromam
 
 > Note: the set-up script compiles the RAiSD-AI-ZLIB executable in order to allow for all functionality of the RAiSD-AI tool in the GUI. To force compiling just the RAiSD-AI executable, use the `-r` flag. This is not recommended since it can break some GUI functionality!
 
-### Running the GUI
+### Using the GUI
 
 To use the GUI, first activate the `raisd-ai-gui` environment using your package manager:
 
@@ -113,10 +113,11 @@ When the environment is activated, run the following command:
 python -m gui.app
 ```
 
-### Using the GUI
+TODO: mention and link to manual here.
 
-TODO: mention and link to manuals here.
+### Developing the GUI
 
+TODO: mention and link to the developer reference here.
 
 Quick Test Run
 --------
