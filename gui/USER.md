@@ -12,9 +12,19 @@ For information about installing and running the GUI see the appropriate chapter
 
 The RAiSD-AI-GUI consists of several pages that allow you to navigate through the different features and functionalities of the tool. Below is an overview of all pages.
 
-### Workspace Selection
+### Complete Setup Window
 
-The workspace selection page is the first page you see when you open the GUI for the first time. It allows you to select a workspace where all your runs and their results will be stored. You can choose an existing folder or create a new one. This workspace can be changed later in the [settings page](#settings-page) if needed.
+![Screenshot of Setup Window](/screenshots/setup-dialog.filled-in.png)
+
+The 'Complete Setup' window is the window you will see first when you use the GUI for the first time. 
+
+It asks you to select a workspace where all your runs and their results will be stored. You can choose an existing folder or create a new one. Next to that it allows you to change the default settings. 
+
+> [!WARNING]
+> Make sure to choose the same executable and environmentmanager as you chose when installing the gui. 
+
+The workspace and selected settings can be changed later in the [settings page](#settings-page).
+
 
 ### Run Page
 
