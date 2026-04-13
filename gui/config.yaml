@@ -14,11 +14,11 @@ common_directory_overwrite_parameter:
   type: bool
   default: false
 modes:
-  - name: Standard RAiSD
+  - name: RAiSD with μ statistic
     operations:
       RSD-DEF:
-        name: Standard sweep scan
-        description: Do a sweep scan with standard RAiSD.
+        name: Sweep scan with μ statistic
+        description: Do a sweep scan with μ statistic.
         cli: ""
         input:
           - name: Input data
