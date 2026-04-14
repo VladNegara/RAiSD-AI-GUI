@@ -188,7 +188,6 @@ class TestIntParameter:
             value=True,
         )
         self.int_param.add_condition(self.condition)
-        print("hello")
     
     def test_init_values(self):
         """Test IntParameter initialization with default value."""
