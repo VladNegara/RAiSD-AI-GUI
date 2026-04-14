@@ -10,16 +10,13 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import (
     QFileDialog,
     QDialog,
-    QLabel,
-    QPushButton,
     QDialogButtonBox,
     QComboBox,
     QLineEdit
 )
 
 from gui.style import constants
-from gui.widgets import VBoxLayout, StylableWidget
-from gui.components.settings.settings_item_widget import SettingsItemWidget
+from gui.widgets import VBoxLayout
 
 
 class Settings(QObject):
