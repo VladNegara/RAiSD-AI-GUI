@@ -1334,48 +1334,48 @@ parameter_groups:
     operations:
       - SWP-SCN
     parameters:
-      "-pci-class-count":
+      "-pcs-class-count":
         name: Number of positive classes
         description: The number of positive classes. Choose 2 only if the model was generated with FASTER-NN-G and four class labels.
         type: enum
         options:
           - name: "1"
           - name: "2"
-      "-pci-1":
-        name: Positive class index
-        description: The class index can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MD-GEN run that generated the CNN model.
-        type: int
-        cli: "-pci 1 "
-        default: 0
+      "-pcs-1":
+        name: Positive class label
+        description: Enter the label of the positive class. The label must match one used in Model training.
+        type: str
+        cli: "-pcs 1 "
         constraints:
-          - type: interval
-            min: 0
+          - type: regex
+            pattern: "\\w+"
+            hint: Letters, numbers and underscores allowed.
         conditions:
           - type: enum
-            parameter: "-pci-class-count"
+            parameter: "-pcs-class-count"
             values:
               - 0
-      "-pci-2":
+      "-pcs-2":
         name: Positive class indices
-        description: The class indices can be found in parentheses after the class label in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MDL-GEN run that generated the CNN model.
+        description: Enter the labels of the two positive classes. The labels must match ones used in the Model training that trained the FASTER-NN-G model.
         type: multi
-        cli: "-pci 2 "
+        cli: "-pcs 2 "
         parameters:
-          - name: First positive class index
-            type: int
-            default: 0
+          - name: First positive class label
+            type: str
             constraints:
-              - type: interval
-                min: 0
-          - name: Second positive class index
-            type: int
-            default: 0
+              - type: regex
+                pattern: "\\w+"
+                hint: Letters, numbers and underscores allowed.
+          - name: Second positive class label
+            type: str
             constraints:
-              - type: interval
-                min: 0
+              - type: regex
+                pattern: "\\w+"
+                hint: Letters, numbers and underscores allowed.
         conditions:
           - type: enum
-            parameter: "-pci-class-count"
+            parameter: "-pcs-class-count"
             values:
               - 1
   - name: Additional parameters
