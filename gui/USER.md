@@ -6,7 +6,7 @@ The RAiSD-AI GUI relies on the RAiSD-AI tool to perform its computations. For mo
 
 ## The RAiSD-AI GUI
 
-The RAiSD-AI GUI provides a visual interface for running RAiSD-AI operations. On top of that it adds several useful features:
+The RAiSD-AI GUI provides a visual interface for running RAiSD-AI operations. On top of that, it adds several useful features:
 
 1. **Sequential Operations**: The GUI allows you to [chain together multiple operations](#operation-selection-tab) in a single run, automatically passing the output of one operation as input to the next. This eliminates the need to manually run each operation or manage intermediate files.
 
