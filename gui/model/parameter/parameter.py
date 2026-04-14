@@ -111,12 +111,12 @@ class Parameter(QObject, Generic[T]):
         self.operations = operations
         self.default_value = default_value
         self._value = default_value
-        self._constraints: list[Constraint] = []
-        for constraint in constraints or []:
-            self.add_constraint(constraint)
-        self._hidden_constraints: list[Constraint] = []
         self._condition = AndCondition()
         self._condition.changed.connect(self.enabled_changed)
+        self._constraints: list[Constraint] = []
+        self._hidden_constraints: list[Constraint] = []
+        for constraint in constraints or []:
+            self.add_constraint(constraint)
 
     @property
     def value(self) -> T:

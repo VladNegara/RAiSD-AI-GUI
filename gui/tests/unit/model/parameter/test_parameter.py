@@ -198,7 +198,7 @@ class TestIntParameter:
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == 0
         assert param.default_value == 0
-        assert len(param.hints) == 1
+        assert len(param.constraints) == 1
         assert param.enabled
 
     def test_set_value(self):
@@ -381,7 +381,7 @@ class TestFloatParameter:
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == 0.0
         assert param.default_value == 0.0
-        assert len(param.hints) == 1
+        assert len(param.constraints) == 1
 
     def test_set_value(self):
         """Test setting FloatParameter value."""
@@ -565,7 +565,7 @@ class TestStringParameter:
         assert param.operations == {'IMG-GEN', 'MDL-GEN'}
         assert param.value == "default"
         assert param.default_value == "default"
-        assert len(param.hints) == 2
+        assert len(param.constraints) == 2
 
     def test_set_value(self):
         """Test setting StringParameter value."""
