@@ -36,11 +36,13 @@ class SettingsPage(Page):
         )
 
         scroll_area = QScrollArea()
+        scroll_area.setObjectName("settings_scroll")
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         inner_widget = QWidget()
+        inner_widget.setObjectName("settings_inner")
         layout = VBoxLayout(
             inner_widget,
             left=constants.GAP_MEDIUM,
