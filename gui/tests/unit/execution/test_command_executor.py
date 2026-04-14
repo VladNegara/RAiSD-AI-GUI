@@ -6,11 +6,51 @@ import re
 from PySide6.QtCore import (
     Slot, 
     QProcess, 
-    QDir
+    QDir,
+    QFileInfo
 )
 
 from gui.model.settings import app_settings
-from gui.execution.command_executor import CommandExecutor
+from gui.execution.command_executor import CommandExecutor, default_command_builder
+
+
+def test_default_command_builder(mocker):
+    # Arrange
+    # Set values
+    environment_manager_name = "raise"
+    environment_name = "utwente"
+    executable_file_path = "/home/raisd/raisdai"
+
+    parameters = "-a -m 10 -f 1 1"
+    goal_command = (f"{environment_manager_name} run -n {environment_name} "
+                    f"{executable_file_path} {parameters}")
+
+    # Set mock
+    environment_manager_name_mock = mocker.PropertyMock(
+        return_value=environment_manager_name
+    )
+    environment_name_mock = mocker.PropertyMock(
+        return_value=environment_name
+    )
+    executable_file_path_mock = mocker.PropertyMock(
+        return_value=QFileInfo(executable_file_path)
+    )
+
+    # Apply mock
+    mocker.patch.object(
+        type(app_settings), 
+        'environment_manager_name', 
+        environment_manager_name_mock
+    )
+    type(app_settings).environment_name = environment_name_mock
+    type(app_settings).executable_file_path = executable_file_path_mock
+
+    # Act
+    command = default_command_builder(parameters=parameters)
+
+    # Assert
+    assert command
+    assert command == goal_command
 
 class TestCommandExecutor:
     """Tests for CommandExecutor class."""
