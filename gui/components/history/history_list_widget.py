@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 
 from .history_record_widget import HistoryRecordWidget
 from gui.model.history_record import HistoryRecord
-from gui.widgets import (
+from gui.components import (
     StylableWidget,
     VBoxLayout,
 )

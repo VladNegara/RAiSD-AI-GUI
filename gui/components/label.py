@@ -10,7 +10,7 @@ from PySide6.QtWidgets import(
     QStyle,
 )
 
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     StylableWidget,
 )

@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     StylableWidget
 )

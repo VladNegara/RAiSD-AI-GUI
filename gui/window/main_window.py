@@ -18,7 +18,7 @@ from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.model.history_record import HistoryRecord
 from gui.execution.command_executor import CommandExecutor
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     VBoxLayout,
 )

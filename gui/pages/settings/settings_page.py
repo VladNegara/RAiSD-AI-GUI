@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 from ..page import Page
 from gui.model.settings import app_settings
 from gui.components.settings.settings_item_widget import SettingsItemWidget
-from gui.widgets import (
+from gui.components import (
     VBoxLayout,
 )
 from gui.style import constants
