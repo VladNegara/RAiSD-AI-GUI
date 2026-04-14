@@ -8,17 +8,27 @@ class TestHistoryRecord:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        pass
+        self.name = "name"
+        self.commands = ["command1", "command2"]
+        self.operations = {}
+        self.parameters = {}
+        self.time_completed = datetime.now()
+
+        self.history_record = HistoryRecord(
+            name=self.name,
+            commands=self.commands,
+            operations=self.operations,
+            parameters=self.parameters,
+            time_completed=self.time_completed
+        )
 
     def test_init_values(self):
-        """Test HistoryRecord."""
-        # TODO: Implement this testing class
-        # Arrange
-
-        # Act
-
-        # Assert
-        pytest.skip()
+        """Test HistoryRecord values are set correcly through init."""
+        assert self.history_record.name == self.name
+        assert self.history_record.commands == self.commands
+        assert self.history_record.operations == self.operations
+        assert self.history_record.parameters == self.parameters
+        assert self.history_record.time_completed == self.time_completed
     
     def test_from_history_file(self):
         pytest.skip()
