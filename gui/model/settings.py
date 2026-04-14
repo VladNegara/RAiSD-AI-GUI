@@ -117,8 +117,8 @@ class Settings(QObject):
             
             if environment_manager not in self.environment_managers:
                 raise ValueError(
-                    f"Incorrect environment manager: '{environment_manager}'."
-                    "Must be one of: {", ".join([str(x) for x in self.environment_managers])}"
+                    f"Incorrect environment manager: '{environment_manager}'. "
+                    f"Must be one of: {', '.join([str(x) for x in self.environment_managers])}."
                 )
             self._environment_manager = self.environment_managers.index(environment_manager)
         if self._environment_manager is None:

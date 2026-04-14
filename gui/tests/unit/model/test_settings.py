@@ -191,3 +191,29 @@ class TestSettings:
         with pytest.raises(ValueError) as e:
             settings.from_yaml("file path")
         assert str(e.value) == "Incorrect filepath for executable: '', This file does not exist."   
+
+    def test_yaml_nonexistant_environment_manger(self, mocker, correct_settings_obj):
+        """Test from yaml with non existant environment_manger value."""
+        # Arrange
+        correct_settings_obj["environment_manager"] = "incorrect"
+        mocked_empty_file = mocker.mock_open(read_data=f"{correct_settings_obj}")
+        mocker.patch("builtins.open", mocked_empty_file)
+        settings = Settings()
+
+        # Act, Assert 
+        with pytest.raises(ValueError) as e:
+            settings.from_yaml("file path")
+        assert str(e.value) == "Incorrect environment manager: 'incorrect'. Must be one of: conda, micromamba."   
+
+    def test_yaml_nonexistant_config_file(self, mocker, correct_settings_obj):
+        """Test from yaml with non existant config_file value."""
+        # Arrange
+        correct_settings_obj["config_file"] = ""
+        mocked_empty_file = mocker.mock_open(read_data=f"{correct_settings_obj}")
+        mocker.patch("builtins.open", mocked_empty_file)
+        settings = Settings()
+
+        # Act, Assert 
+        with pytest.raises(ValueError) as e:
+            settings.from_yaml("file path")
+        assert str(e.value) == "Incorrect filepath for config file: '', This file does not exist."   
