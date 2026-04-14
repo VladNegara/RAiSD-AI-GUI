@@ -160,7 +160,7 @@ class SettingsPage(Page):
         raisd_ai_gui_description_label = QLabel(
             """<b>What is RAiSD-AI-GUI?</b> RAiSD-AI-GUI is an intuitive graphical user interface that allows 
             biologists without a programming background to use the μ statistic for selective sweep detection using RAiSD and 
-            train, evaluate and run a selective sweep detection model using RAiSD-AI"""
+            train, evaluate and run a selective sweep detection model using RAiSD-AI."""
         )
         raisd_ai_gui_description_label.setWordWrap(True)
         info_container_layout.addWidget(raisd_ai_gui_description_label)
@@ -187,8 +187,9 @@ class SettingsPage(Page):
         contact_text_label = QLabel(
             "You can request support or report a bug by opening an issue "
             "on Github via <a href='https://github.com/VladNegara/RAiSD-AI-GUI/issues/new'>this link</a> or by "
-            "contacting RAiSD-AI developers <a href='mailto:n.alachiotis@gmail.com'>Nikolaos Alachiotis </a>"
-            "and <a href='mailto:pavlidisp@gmail.com'>Pavlos Pavlidis</a>."
+            "contacting RAiSD-AI developers Nikolaos Alachiotis ("
+            "<a href='mailto:n.alachiotis@gmail.com'>n.alachiotis@gmail.com</a>) "
+            "and Pavlos Pavlidis (<a href='mailto:pavlidisp@gmail.com'>(pavlidisp@gmail.com</a>)."
         )
         contact_text_label.setWordWrap(True)
         contact_text_label.setOpenExternalLinks(True)
