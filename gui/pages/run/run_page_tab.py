@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.widgets import (
+from gui.components import (
     StylableWidget,
     VBoxLayout,
 )

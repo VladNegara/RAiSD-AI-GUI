@@ -107,7 +107,7 @@ QPushButton#file_selector_button,
 QPushButton#toggle_all_button,
 QPushButton#file_browser_button{
     padding: 5px 15px;
-    background-color: $primary-purple;
+    background-color: $button-purple;
     color: $primary-dark;
     border-radius: 5px;
     font-weight: 500;
@@ -175,7 +175,7 @@ QWidget#tab_label[step_role="past_step"] {
 
 QWidget#navigation_buttons_holder QPushButton {
     padding: 10px 40px;
-    background-color: $primary-purple;
+    background-color: $button-purple;
     color: $primary-dark;
     border: 1px solid $border-gray;
     border-radius: 5px;
@@ -374,7 +374,7 @@ QRadioButton{
     color: $primary-dark;
 }
 
-QRadioButton:unchecked:pressed{
+QRadioButton:unchecked:hover{
     color: $button-pressed;
 }
 

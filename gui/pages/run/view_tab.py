@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 from .run_page_tab import RunPageTab
 from gui.model.run_record import RunRecord
 from gui.execution.command_executor import CommandExecutor
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     VBoxLayout,
 )

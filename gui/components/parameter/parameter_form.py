@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
 
 from .parameter_form_section import ParameterFormSection
 from gui.model.run_record import RunRecord
-from gui.widgets import VBoxLayout
+from gui.components import VBoxLayout
 from gui.style import constants
 
 

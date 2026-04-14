@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 from .run_page_tab import RunPageTab
 from gui.model.parameter import MultiParameter, OptionalParameter, Parameter
 from gui.model.run_record import RunRecord
-from gui.widgets import (
+from gui.components import (
     VBoxLayout,
     HBoxLayout
 )

@@ -18,7 +18,7 @@ from PySide6.QtGui import (
 from .run_page_tab import RunPageTab
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     VBoxLayout,
 )

@@ -32,7 +32,7 @@ from gui.components.label import (
     InfoLabel,
     WarningLabel,
 )
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     ResizableStackedWidget,
     StylableWidget,

@@ -18,7 +18,7 @@ from PySide6.QtGui import QDesktopServices
 
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
-from gui.widgets import (
+from gui.components import (
     StylableWidget,
     VBoxLayout,
     HBoxLayout,

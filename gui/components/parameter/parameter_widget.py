@@ -41,7 +41,7 @@ from gui.model.parameter import (
 )
 from gui.components.utils import set_bool_property
 from gui.components.parameter import ConstraintWidget
-from gui.widgets import (
+from gui.components import (
     GridLayout,
     HBoxLayout,
     LineEdit,

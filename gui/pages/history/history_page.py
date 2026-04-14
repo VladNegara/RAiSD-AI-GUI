@@ -19,7 +19,7 @@ from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.model.history_record import HistoryRecord
 from gui.components.navigation_buttons_holder import NavigationButtonsHolder
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     VBoxLayout,
 )
