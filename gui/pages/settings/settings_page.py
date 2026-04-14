@@ -189,7 +189,7 @@ class SettingsPage(Page):
             "on Github via <a href='https://github.com/VladNegara/RAiSD-AI-GUI/issues/new'>this link</a> or by "
             "contacting RAiSD-AI developers Nikolaos Alachiotis ("
             "<a href='mailto:n.alachiotis@gmail.com'>n.alachiotis@gmail.com</a>) "
-            "and Pavlos Pavlidis (<a href='mailto:pavlidisp@gmail.com'>(pavlidisp@gmail.com</a>)."
+            "and Pavlos Pavlidis (<a href='mailto:pavlidisp@gmail.com'>pavlidisp@gmail.com</a>)."
         )
         contact_text_label.setWordWrap(True)
         contact_text_label.setOpenExternalLinks(True)
