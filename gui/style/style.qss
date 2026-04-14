@@ -145,9 +145,6 @@ QWidget#container_widget{
 
 QWidget#settings_inner{
     background-color: $purplish-background;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 10px;
 }
 
 QScrollArea#tree_scroll{
