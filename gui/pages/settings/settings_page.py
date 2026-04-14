@@ -1,6 +1,7 @@
+from PySide6.QtGui import Qt
 from PySide6.QtWidgets import (
     QWidget,
-    QLabel,
+    QLabel, QScrollArea,
 )
 
 from ..page import Page
@@ -24,14 +25,33 @@ class SettingsPage(Page):
         self._setup_ui()
 
     def _setup_ui(self):
-        layout = VBoxLayout(
+
+        outer_layout = VBoxLayout(
             self,
+            left=constants.GAP_TINY,
+            top=constants.GAP_TINY,
+            right=constants.GAP_TINY,
+            bottom=constants.GAP_TINY,
+            spacing=constants.GAP_TINY,
+        )
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+        inner_widget = QWidget()
+        layout = VBoxLayout(
+            inner_widget,
             left=constants.GAP_MEDIUM,
             top=constants.GAP_MEDIUM,
             right=constants.GAP_MEDIUM,
             bottom=constants.GAP_MEDIUM,
             spacing=constants.GAP_MEDIUM,
         )
+
+        scroll_area.setWidget(inner_widget)
+        outer_layout.addWidget(scroll_area)
 
         title_label = QLabel("Settings")
         title_label.setProperty("title", "true")
@@ -77,13 +97,9 @@ class SettingsPage(Page):
         environment_name_widget.button_clicked.connect(app_settings.set_environment_name)
         container_layout.addWidget(environment_name_widget)
 
-        # Config file
-        config_widget = SettingsItemWidget("Config file", app_settings.config_path.absoluteFilePath(), button=False)
-        container_layout.addWidget(config_widget)
-
         layout.addWidget(container_widget)
 
-        info_label = QLabel("Developers")
+        info_label = QLabel("General Information")
         info_label.setProperty("title", "true")
         layout.addWidget(info_label)
 
@@ -120,8 +136,88 @@ class SettingsPage(Page):
         raisd_ai_gui_label.setOpenExternalLinks(True)
         info_container_layout.addWidget(raisd_ai_gui_label)
 
+        raisd_description_label = QLabel(
+            """<b>What is RAiSD?:</b> RAiSD (Raised Accuracy in Sweep Detection) is a stand-alone software implementation 
+            of the μ statistic for selective sweep detection. Unlike existing implementations, including our previously 
+            released tools(SweeD and OmegaPlus), RAiSD scans whole-genome SNP data based on a composite evaluation 
+            scheme that captures multiple sweep signatures at once."""
+        )
+        raisd_description_label.setWordWrap(True)
+        info_container_layout.addWidget(raisd_description_label)
+
+        raisd_ai_description_label = QLabel(
+            """<b>What is RAiSD-AI?:</b> RAiSD-AI (RAiSD using AI) includes all the features of the latest RAiSD version 
+            and introduces support for the practical deployment of Convolutional Neural Networks (CNN) in population 
+            genetics research. In addition to using the μ statistic for selective sweep detection, RAiSD-AI can also 
+            a) extract training data from standard file formats like FASTA and VCF, b) use TensorFlow or Pytorch to 
+            train a network and generate a CNN model, c) test the CNN model and report various classification metrics, 
+            and d) deploy the CNN model to scan standard file formats (and optionally report detection metrics). 
+            RAiSD-AI is primarily designed and optimized for selective sweep detection, but can also be used to identify 
+            other regions of interest (e.g., recombination hotspots, negative selection), provided that the CNN 
+            is appropriately trained."""
+        )
+        raisd_ai_description_label.setWordWrap(True)
+        info_container_layout.addWidget(raisd_ai_description_label)
+
+        raisd_ai_gui_description_label = QLabel(
+            """<b>What is RAiSD-AI-GUI?:</b> RAiSD-AI-GUI is an intuitive graphical user interface that allows 
+            biologists without a programming background to use μ statistic for selective sweep detection using RAiSD and 
+            train, evaluate and run a selective sweep detection model using RAiSD-AI"""
+        )
+        raisd_ai_gui_description_label.setWordWrap(True)
+        info_container_layout.addWidget(raisd_ai_gui_description_label)
+
         # TODO: add a link to the user manual
 
         layout.addWidget(info_container_widget)
+
+        contact_label = QLabel("Contact information")
+        contact_label.setProperty("title", "true")
+        layout.addWidget(contact_label)
+
+        contact_container_widget = QWidget()
+        contact_container_widget.setObjectName("container_widget")
+        contact_container_layout = VBoxLayout(
+            contact_container_widget,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_MEDIUM,
+            spacing=constants.GAP_SMALL,
+        )
+
+        contact_text_label = QLabel(
+            "You can contact the RAiSD-AI-GUI developer team to request support or report a bug by opening an issue "
+            "on Github via this <a href='https://github.com/VladNegara/RAiSD-AI-GUI/issues/new'>link</a>."
+        )
+        contact_text_label.setWordWrap(True)
+        contact_text_label.setOpenExternalLinks(True)
+        contact_container_layout.addWidget(contact_text_label)
+
+        layout.addWidget(contact_container_widget)
+
+        license_label = QLabel("Licensing")
+        license_label.setProperty("title", "true")
+        layout.addWidget(license_label)
+
+        license_container_widget = QWidget()
+        license_container_widget.setObjectName("container_widget")
+        license_container_layout = VBoxLayout(
+            license_container_widget,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_MEDIUM,
+            spacing=constants.GAP_SMALL,
+        )
+
+        license_text_label = QLabel(
+            """Placeholder"""
+        )
+        license_text_label.setWordWrap(True)
+        license_text_label.setOpenExternalLinks(True)
+        license_container_layout.addWidget(license_text_label)
+
+        layout.addWidget(license_container_widget)
 
         layout.addStretch()
