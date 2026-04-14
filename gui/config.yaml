@@ -1356,7 +1356,7 @@ parameter_groups:
             values:
               - 0
       "-pcs-2":
-        name: Positive class indices
+        name: Positive class labels
         description: Enter the labels of the two positive classes. The labels must match ones used in the Model training that trained the FASTER-NN-G model.
         type: multi
         cli: "-pcs 2 "
