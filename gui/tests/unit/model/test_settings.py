@@ -71,3 +71,21 @@ class TestSettings:
         assert settings.environment_manager_name == environment_manger_name
         assert settings.environment_name == environment_name
         assert settings.config_path == config_path
+
+    def test_yaml_file_not_found(self, monkeypatch):
+        """Test from yaml with nonexistent file."""
+        # Arrange
+        monkeypatch.setattr(yaml, "load", lambda: FileNotFoundError)
+        settings = Settings()
+
+        # Act
+        settings.from_yaml("")
+
+        # Assert
+        with pytest.raises(RuntimeError) as e:
+            x = settings.workspace_path == None
+        assert settings.executable_file_path == Settings.default_executable_file_path
+        assert settings.environment_manager == Settings.default_environment_manager
+        assert settings.environment_name== Settings.default_environment_name
+        assert settings.config_path == Settings.default_config_path
+    
