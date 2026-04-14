@@ -24,15 +24,16 @@ Refer to the TODO: schema file for details on the structure and content of the c
 
 All the files related to the GUI is organized within the `gui/` folder. This includes all the code, the configuration file, stylesheets and images, the saved settings, tests, and the main app file. 
 
-> The only exception is the environment-raisd-ai-gui.yml file, which is located in the root of the project. 
+> [!NOTE]
+> The only exception is the `environment-raisd-ai-gui.yml` file, which is located in the root of the project. 
 
-The gui code is divided into 5 main packages:
-- [**components**](/gui/components/): Contains all the reusable components that are used throughout the GUI.
-- [**execution**](/gui/execution/): Contains the code responsible for executing commands with the RAiSD-AI tool.
-- [**model**](/gui/model/): Contains the data models used in the GUI.
-- [**pages**](/gui/pages/): Contains the different pages of the GUI. These are the main page, history page, and settings page.
-- [**style**](/gui/style/): Contains the stylesheets and images used to style the GUI.
-- [**window**](gui/window/): Contains the set-up window, splashscreen, and the main window of the GUI.
+The GUI code is divided into 5 main packages:
+- [`components`](/gui/components/): Contains all the reusable components that are used throughout the GUI.
+- [`execution`](/gui/execution/): Contains the code responsible for executing commands with the RAiSD-AI tool.
+- [`model`](/gui/model/): Contains the data models used in the GUI.
+- [`pages`](/gui/pages/): Contains the different pages of the GUI. These are the Run page, History page, and Settings page.
+- [`style`](/gui/style/): Contains the stylesheets and images used to style the GUI.
+- [`window`](/gui/window/): Contains the set-up window, splash screen, and the main window of the GUI.
 
 ### components
 
@@ -56,7 +57,7 @@ This package contains the stylesheets and images used to style the GUI. The styl
 
 ### window
 
-This package contains the window parts of the GUI. This includes the set-up window which allows the user to change the default settings, and set their initial workspace folder. It also includes the splashscreen which is shown while the app is loading. Lastly, it includes the main window which sets up the different pages of the GUI and handles how these pages are connected.
+This package contains the window parts of the GUI. This includes the set-up window which allows the user to change the default settings, and set their initial workspace folder. It also includes the splash screen, which is shown while the app is loading. Lastly, it includes the main window which sets up the different pages of the GUI and handles how these pages are connected.
 
 ## Testing
 
