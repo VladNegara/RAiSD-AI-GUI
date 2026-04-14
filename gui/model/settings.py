@@ -38,7 +38,7 @@ class Settings(QObject):
     settings_changed = Signal()
 
     settings_file_path = "gui/settings.yaml"
-    environment_managers = ["micromamba", "conda"]
+    environment_managers = ["conda", "micromamba"]
 
     def __init__(
             self,
