@@ -77,8 +77,9 @@ class Settings(QObject):
             workspace_path = settings_obj["workspace"]
             if not isinstance(workspace_path, str):
                 raise ValueError(
-                    f"Incorrect type for workspace: {workspace_path} "
-                    + "Expected string."
+                    f"Incorrect type for workspace: {workspace_path}, "
+                    f"type: {type(workspace_path)}, "
+                    "Expected string."
                 )
             workspace = QDir(workspace_path)
             if workspace.exists():
@@ -90,14 +91,15 @@ class Settings(QObject):
             executable_file_path = settings_obj["executable"]
             if not isinstance(executable_file_path, str):
                 raise ValueError(
-                    f"Incorrect type for executable path: {executable_file_path} "
-                    + "Expected string."
+                    f"Incorrect type for executable path: {executable_file_path}, "
+                    f"type: {type(executable_file_path)}, "
+                    "Expected string."
                 )
             executable_file = QFileInfo(executable_file_path)
             if not executable_file.exists():
                 raise ValueError(
                     f"Incorrect filepath for executable: {executable_file_path} "
-                    + "This file does not exist."
+                    "This file does not exist."
                 )
             self._executable_file_path = executable_file
         if not self._executable_file_path:
@@ -108,14 +110,15 @@ class Settings(QObject):
             environment_manager = settings_obj["environment_manager"]
             if not isinstance(environment_manager, str):
                 raise ValueError(
-                    f"Incorrect type for environment manager: {environment_manager} "
-                    + "Expected string."
+                    f"Incorrect type for environment manager: {environment_manager}, "
+                    f"type: {type(environment_manager)}, "
+                    "Expected string."
                 )
             
             if environment_manager not in self.environment_managers:
                 raise ValueError(
                     f"Incorrect environment manager: {environment_manager}."
-                    + f"Must be one of: {", ".join([str(x) for x in self.environment_managers])}"
+                    "Must be one of: {", ".join([str(x) for x in self.environment_managers])}"
                 )
             self._environment_manager = self.environment_managers.index(environment_manager)
         if self._environment_manager is None:
@@ -126,8 +129,9 @@ class Settings(QObject):
             environment_name = settings_obj["environment_name"]
             if not isinstance(environment_name, str):
                 raise ValueError(
-                    f"Incorrect environment name: {environment_name}"
-                    + "Expected string."
+                    f"Incorrect type for environment name: {environment_name}, "
+                    f"type: {type(environment_name)}, "
+                    "Expected string."
                 )
             self._environment_name = environment_name
         if not self._environment_name:
@@ -138,14 +142,15 @@ class Settings(QObject):
             config = settings_obj["config_file"]
             if not isinstance(config, str):
                 raise ValueError(
-                    f"Incorrect type for executable path: {config} "
-                    + "Expected string."
+                    f"Incorrect type for config file: {config}, "
+                    f"type: {type(config)}, "
+                    "Expected string."
                 )
             config_file = QFileInfo(config)
             if not config_file.exists():
                 raise ValueError(
-                    f"Incorrect filepath for executable: {config} "
-                    + "This file does not exist."
+                    f"Incorrect filepath for config file: {config} "
+                    "This file does not exist."
                 )
             self._config_path = config_file
         if not self._config_path:

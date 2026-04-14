@@ -127,3 +127,16 @@ class TestSettings:
             settings.from_yaml("file path")
         assert str(e.value) == "Incorrect type for workspace: 0, type: <class 'int'>, Expected string."
 
+    def test_yaml_incorrect_executable_value(self, mocker, correct_settings_obj):
+        """Test from yaml with invalid executable value."""
+        # Arrange
+        correct_settings_obj["executable"] = 0
+        mocked_empty_file = mocker.mock_open(read_data=f"{correct_settings_obj}")
+        mocker.patch("builtins.open", mocked_empty_file)
+        settings = Settings()
+
+        # Act, Assert 
+        with pytest.raises(ValueError) as e:
+            settings.from_yaml("file path")
+        assert str(e.value) == "Incorrect type for executable path: 0, type: <class 'int'>, Expected string."   
+        
