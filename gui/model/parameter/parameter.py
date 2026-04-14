@@ -889,10 +889,15 @@ class StringTableParameter(Parameter[tuple[()]]):
                 )
                 for constraint in constraints:
                     parameter.add_constraint(constraint.copy())
+                parameter.value_changed.connect(self._inner_value_changed)
                 row.append(parameter)
             self._parameters.append(row)
 
         self._separator = separator
+
+    @Slot()
+    def _inner_value_changed(self) -> None:
+        self.value_changed.emit(self.value, self.valid)
 
     def reset_value(self) -> None:
         super().reset_value()
@@ -954,6 +959,8 @@ class StringTableParameter(Parameter[tuple[()]]):
 
     @property
     def valid(self) -> bool:
+        if not self.enabled:
+            return True
         return all(
             parameter.valid
             for row in self.parameters[:self.row_count]
