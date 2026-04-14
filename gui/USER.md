@@ -25,7 +25,7 @@ For information about installing and running the GUI, see the appropriate chapte
 
 ## The Interface
 
-The RAiSD-AI-GUI consists of several pages that allow you to navigate through the different features and functionalities of the tool. Below is an overview of all pages.
+The RAiSD-AI GUI consists of several pages that allow you to navigate through the different features and functionalities of the tool. Below is an overview of all pages.
 
 ### Complete Setup Window
 
