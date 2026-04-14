@@ -158,7 +158,7 @@ class SettingsPage(Page):
         info_container_layout.addWidget(raisd_ai_description_label)
 
         raisd_ai_gui_description_label = QLabel(
-            """<b>What is RAiSD-AI GUI?</b> RAiSD-AI-GUI is an intuitive graphical user interface that allows 
+            """<b>What is RAiSD-AI GUI?</b> RAiSD-AI GUI is an intuitive graphical user interface that allows 
             biologists without a programming background to use the μ statistic for selective sweep detection using RAiSD and 
             train, evaluate and run a selective sweep detection model using RAiSD-AI."""
         )
