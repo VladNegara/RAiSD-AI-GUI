@@ -196,14 +196,50 @@ class TestHistoryRecord:
         assert history_record.commands == self.history_record.commands
         assert history_record.operations == self.history_record.operations
         assert history_record.parameters == self.history_record.parameters
-        assert history_record.time_completed == self.history_record.time_completed
-        
+        assert history_record.time_completed == self.history_record.time_completed    
 
     def test_save_to_history(self):
         pytest.skip()
 
     def test_to_dict(self):
-        pytest.skip()
+        # Act
+        dictionary = self.history_record.to_dict()
+
+
+        # Assert
+        assert isinstance(dictionary, dict)
+
+        assert "name" in dictionary
+        assert isinstance(dictionary["name"], str)
+        assert dictionary["name"] == self.history_record.name
+
+        assert "commands" in dictionary
+        assert isinstance(dictionary["commands"], list)
+        for command in dictionary["commands"]:
+            assert isinstance(command, str)
+        assert dictionary["commands"] == self.history_record.commands
+
+        assert "operations" in dictionary
+        assert isinstance(dictionary["operations"], dict)
+        assert "index" in dictionary["operations"]
+        assert isinstance(dictionary["operations"]["index"], int)
+        assert "trees" in dictionary["operations"]
+        assert isinstance(dictionary["operations"]["trees"], list)
+        assert dictionary["operations"] == self.history_record.operations
+        
+        assert "time_completed" in dictionary
+        assert isinstance(dictionary["time_completed"], str)
+        assert dictionary["time_completed"] == str(self.time_completed)
+
 
     def test_to_and_from_dict(self):
-        pytest.skip()
+        # Act
+        dictionary = self.history_record.to_dict()
+        history_record = HistoryRecord.from_dict(dictionary)
+
+        # Assert
+        assert history_record.name == self.history_record.name
+        assert history_record.commands == self.history_record.commands
+        assert history_record.operations == self.history_record.operations
+        assert history_record.parameters == self.history_record.parameters
+        assert history_record.time_completed == self.history_record.time_completed    

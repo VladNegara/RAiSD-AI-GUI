@@ -191,7 +191,7 @@ class HistoryRecord():
             "commands": self.commands,
             "operations": self.operations,
             "parameters": self.parameters,
-            "time_completed": self.time_completed
+            "time_completed": str(self.time_completed)
         }
 
     @property
