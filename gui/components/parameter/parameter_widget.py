@@ -491,15 +491,24 @@ class IntParameterWidget(ParameterWidget):
         self._layout.insertWidget(0, self._line_edit)
 
         self._line_edit.textChanged.connect(self._text_changed)
+        self._line_edit.editingFinished.connect(self._editing_finished)
         parameter.value_changed.connect(self._parameter_value_changed)
+        parameter.value_reset.connect(self._parameter_value_reset)
 
-    @Slot(str)
+    @Slot()
     def _text_changed(self) -> None:
-        self.touched = True
+        try:
+            self.parameter.value = int(self._line_edit.text())
+            self.touched = True
+        except:
+            self.touched = False
+
+    @Slot()
+    def _editing_finished(self) -> None:
         try:
             self.parameter.value = int(self._line_edit.text())
         except:
-            pass
+            self.parameter.reset_value()
 
     @Slot(int, bool)
     def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
@@ -511,6 +520,10 @@ class IntParameterWidget(ParameterWidget):
             values_differ = True
         if values_differ:
             self._line_edit.setText(str(new_value))
+
+    @Slot()
+    def _parameter_value_reset(self) -> None:
+        self._line_edit.setText(str(self._parameter.value))
 
     @property
     def validity_widgets(self) -> list[QWidget]:
@@ -547,15 +560,24 @@ class FloatParameterWidget(ParameterWidget):
         self._layout.insertWidget(0, self._line_edit)
 
         self._line_edit.textChanged.connect(self._text_changed)
+        self._line_edit.editingFinished.connect(self._editing_finished)
         parameter.value_changed.connect(self._parameter_value_changed)
+        parameter.value_reset.connect(self._parameter_value_reset)
 
-    @Slot(str)
+    @Slot()
     def _text_changed(self) -> None:
-        self.touched = True
+        try:
+            self.parameter.value = float(self._line_edit.text())
+            self.touched = True
+        except:
+            self.touched = False
+
+    @Slot()
+    def _editing_finished(self) -> None:
         try:
             self.parameter.value = float(self._line_edit.text())
         except:
-            pass
+            self.parameter.reset_value()
 
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
@@ -566,6 +588,10 @@ class FloatParameterWidget(ParameterWidget):
            values_differ = True
         if values_differ:
             self._line_edit.setText(str(new_value))
+
+    @Slot()
+    def _parameter_value_reset(self) -> None:
+        self._line_edit.setText(str(self._parameter.value))
 
     @property
     def validity_widgets(self) -> list[QWidget]:

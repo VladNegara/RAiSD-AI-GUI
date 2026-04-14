@@ -75,6 +75,7 @@ class Parameter(QObject, Generic[T]):
             self.value = new_enabled == self._target_value
 
     value_changed: Signal
+    value_reset = Signal()
     valid_changed = Signal(bool)
     constraint_added = Signal(Constraint)
     enabled_changed = Signal(bool)
@@ -174,6 +175,7 @@ class Parameter(QObject, Generic[T]):
         applicable.
         """
         self.value = self.default_value
+        self.value_reset.emit()
 
     def add_constraint(
             self,
