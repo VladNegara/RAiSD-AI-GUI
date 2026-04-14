@@ -70,6 +70,11 @@ class HistoryRecord():
         :param dictionary: the dictionary that contains the record data
         :type dictionary: dict
         """
+        if "name" not in dictionary:
+            raise ValueError(
+                f"Missing run name. Expected string."
+            )
+        
         name = dictionary.get("name")
         if not isinstance(name, str):
             raise ValueError(
@@ -77,6 +82,10 @@ class HistoryRecord():
                 + "Expected string."
             )
 
+        if "commands" not in dictionary:
+            raise ValueError(
+                f"Missing commands. Expected list."
+            )
         commands = dictionary.get("commands")
         if not isinstance(commands, list):
             raise ValueError(
@@ -87,49 +96,58 @@ class HistoryRecord():
         for command in commands:
             if not isinstance(command, str):
                 raise ValueError(
-                    f"Invalid command type: {command}"
+                    f"Invalid command type: {command}. "
                     + "Expected string."
                 )
+        
+        if "operations" not in dictionary:
+            raise ValueError("Missing operations. Expected dict.")
         
         operations = dictionary.get("operations")
         if not isinstance(operations, dict):
             raise ValueError(
-                f"Invalid operations type: {operations}"
+                f"Invalid operations type: {operations}. "
                 + "Expected dictionary."
             )
         
+        if "index" not in operations:
+            raise ValueError("Missing index in operations dictionary. Expected integer.")
         tree_index = operations.get("index")
         if not isinstance(tree_index, int):
             raise ValueError(
-                f"Invalid tree index: {tree_index}"
+                f"Invalid tree index: {tree_index}. "
                 + "Expected integer."
             )
 
+        if "trees" not in operations:
+            raise ValueError("Missing trees in operations dictionary. Expected list.")
         operations_list = operations.get("trees")
         if not isinstance(operations_list, list):
             raise ValueError(
-                f"Invalid operations type: {operations_list}"
+                f"Invalid operations type: {operations_list}. "
                 + "Expected list."
             )
         
         for operation in operations_list:
             if not isinstance(operation, dict):
                 raise ValueError(
-                    f"Invalid operation type: {operation}"
-                    + "Expected string."
+                    f"Invalid operation type: {operation}. "
+                    + "Expected dictionary."
                 )
-
+            
         parameters = dictionary.get("parameters")
         if not isinstance(parameters, dict):
             raise ValueError(
-                f"Invalid parameter object: {parameters}."
+                f"Invalid parameter object: {parameters}. "
                 + "Expected dictionary."
             )
 
+        if "time_completed" not in dictionary:
+            raise ValueError("Missing time_completed. Expected string.")
         time_completed = dictionary.get("time_completed")
         if not isinstance(time_completed, str):
             raise ValueError(
-                f"Invalid time_completed type: {time_completed}"
+                f"Invalid time_completed type: {time_completed}. "
                 + "Expected string."
             )
         time_completed = datetime.strptime(time_completed, "%Y-%m-%d %H:%M:%S.%f")
