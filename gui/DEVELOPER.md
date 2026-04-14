@@ -32,6 +32,7 @@ The gui code is divided into 5 main packages:
 - [**model**](/gui/model/): Contains the data models used in the GUI.
 - [**pages**](/gui/pages/): Contains the different pages of the GUI. These are the main page, history page, and settings page.
 - [**style**](/gui/style/): Contains the stylesheets and images used to style the GUI.
+- [**window**](gui/window/): Contains the set-up window, splashscreen, and the main window of the GUI.
 
 ### components
 
@@ -52,6 +53,10 @@ This package contains the different pages of the GUI. These are the main page, h
 ### style
 
 This package contains the stylesheets and images used to style the GUI. The stylesheets define the visual appearance of the GUI, including colors, fonts, and layout. This separation of style from functionality allows for easier maintenance and updates to the GUI's appearance.
+
+### window
+
+This package contains the window parts of the GUI. This includes the set-up window which allows the user to change the default settings, and set their initial workspace folder. It also includes the splashscreen which is shown while the app is loading. Lastly, it includes the main window which sets up the different pages of the GUI and handles how these pages are connected.
 
 ## Testing
 
