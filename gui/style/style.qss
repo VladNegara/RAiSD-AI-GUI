@@ -65,6 +65,9 @@ QScrollArea#history_results_scroll,
 QWidget#history_list_container{
     background-color: $purplish-background;
 }
+QWidget#settings_inner{
+    background-color: $purplish-background;
+}
 
 /* SHARED — VIEW LABELS */
 
@@ -141,10 +144,6 @@ QWidget#container_widget{
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 10px;
-}
-
-QWidget#settings_inner{
-    background-color: $purplish-background;
 }
 
 QScrollArea#tree_scroll{
