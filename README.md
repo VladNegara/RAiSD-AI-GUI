@@ -113,11 +113,11 @@ When the environment is activated, run the following command:
 python -m gui.app
 ```
 
-TODO: mention and link to manual here.
+This command will open the GUI. For more information about using the gui, see the [User manual](/gui/USER.md)
 
 ### Developing the GUI
 
-TODO: mention and link to the developer reference here.
+For more information on the GUI codebase and how you can work on it yourself, see the [Developer reference](/gui/DEVELOPER.md)
 
 Quick Test Run
 --------
