@@ -1,4 +1,6 @@
 
+<img width="1114" height="235" alt="Full name - Copy" src="https://github.com/user-attachments/assets/3aadbd69-0222-46c3-aa89-5e96e4efccdc" />
+
 RAiSD-AI: software to train, test, and use Convolutional Neural Networks for selective sweep detection
 ===============================================
 
@@ -8,7 +10,7 @@ Authors: Nikolaos Alachiotis (n.alachiotis@gmail.com) and Pavlos Pavlidis (pavli
 
 RAiSD first release: 9/6/2017 | RAiSD-AI first release: 8/7/2024 
 
-Current version: 4.2 | Released: 30/1/2026
+Current version: 4.5 | Released: 11/4/2026
 
 RAiSD-AI code contributions by Sjoerd van den Belt and Hanqing Zhao
 
@@ -97,7 +99,7 @@ By default, the set-up script uses Conda as the package manager. To use micromam
 
 > Note: the set-up script compiles the RAiSD-AI-ZLIB executable in order to allow for all functionality of the RAiSD-AI tool in the GUI. To force compiling just the RAiSD-AI executable, use the `-r` flag. This is not recommended since it can break some GUI functionality!
 
-### Running the GUI
+### Using the GUI
 
 To use the GUI, first activate the `raisd-ai-gui` environment using your package manager:
 
@@ -113,6 +115,11 @@ When the environment is activated, run the following command:
 python -m gui.app
 ```
 
+This command will open the GUI. For more information about using the GUI, see the [User manual](/gui/USER.md)
+
+### Developing the GUI
+
+For more information on the GUI codebase and how you can contribute, see the [Developer reference](/gui/DEVELOPER.md)
 
 Quick Test Run
 --------

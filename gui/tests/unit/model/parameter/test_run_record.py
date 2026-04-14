@@ -23,6 +23,7 @@ from gui.model.parameter import (
 )
 
 # TODO: make the tests more comprehensive and use mocking
+# TODO: CHANGE FROM PARAMETERGROUPLIST TO RUN RECORD
 
 class TestParameterGroupList:
     """Tests for ParameterGroupList class."""
@@ -65,7 +66,14 @@ class TestParameterGroupList:
                 name="Model training",
                 description="Perform a model training.",
                 cli="-mdl",
-                requires=[("Input file", "-I", SingleFile([".ms", ".txt"]))],
+                requires=[
+                    Operation.Input(
+                        name="Input file",
+                        description="The input file.",
+                        cli="-I",
+                        file=SingleFile([".ms", ".txt"]),
+                    ),
+                ],
                 produces=SingleFile([".txt"]),
                 overwrite_parameter_builder=(
                     lambda: BoolParameter(
@@ -103,7 +111,6 @@ class TestParameterGroupList:
             run_id_parameter=self.run_id_parameter,
             categorized_operation_trees=self.categorized_operation_trees,
             parameter_groups=self.parameter_groups,
-            dependencies=None,
         )
     
     def test_init_values(self):
@@ -117,7 +124,6 @@ class TestParameterGroupList:
         assert list.categorized_operation_trees == self.categorized_operation_trees
         assert list.operation_trees == self.operation_trees
         assert list.parameter_groups == groups
-        assert list._dependencies == []
 
     def test_valid(self):
         list = self.parameter_group_list
@@ -699,7 +705,7 @@ class TestParameterGroupListFromYaml:
         )
         assert true_bool.flag == "--true-bool"
         assert true_bool.default_value == True
-        assert len(true_bool.hints) == 0
+        assert len(true_bool.constraints) == 0
 
         false_bool = bool_group.parameters[1]
         assert isinstance(false_bool, BoolParameter)
@@ -710,7 +716,7 @@ class TestParameterGroupListFromYaml:
         )
         assert false_bool.flag == "--false-bool"
         assert false_bool.default_value == False
-        assert len(false_bool.hints) == 0
+        assert len(false_bool.constraints) == 0
 
         # Int
         int_group = parameter_list.parameter_groups[1]
@@ -726,7 +732,7 @@ class TestParameterGroupListFromYaml:
         )
         assert any_int_1.flag == "--unbounded-int"
         assert any_int_1.default_value == 0
-        assert len(any_int_1.hints) == 0
+        assert len(any_int_1.constraints) == 0
 
         any_int_2 = int_group.parameters[1]
         assert isinstance(any_int_2, IntParameter)
@@ -737,7 +743,7 @@ class TestParameterGroupListFromYaml:
         )
         assert any_int_2.flag == "--int-unrestricted"
         assert any_int_2.default_value == 100
-        assert len(any_int_2.hints) == 0
+        assert len(any_int_2.constraints) == 0
 
         min_int_1 = int_group.parameters[2]
         assert isinstance(min_int_1, IntParameter)
@@ -748,7 +754,7 @@ class TestParameterGroupListFromYaml:
         )
         assert min_int_1.flag == "-i50"
         assert min_int_1.default_value == 75
-        assert len(min_int_1.hints) == 1
+        assert len(min_int_1.constraints) == 1
         # TODO: is there a better way to check this than accessing the
         # private field of the parameter?
         min_int_1_constraint = min_int_1._constraints[0]
@@ -766,7 +772,7 @@ class TestParameterGroupListFromYaml:
         )
         assert min_int_2.flag == "-i30"
         assert min_int_2.default_value == 1300
-        assert len(min_int_2.hints) == 1
+        assert len(min_int_2.constraints) == 1
         min_int_2_constraint = min_int_2._constraints[0]
         assert isinstance(min_int_2_constraint, IntervalConstraint)
         assert min_int_2_constraint._lower_bound == 30
@@ -782,7 +788,7 @@ class TestParameterGroupListFromYaml:
         )
         assert max_int_1.flag == "-i10"
         assert max_int_1.default_value == -19
-        assert len(max_int_1.hints) == 1
+        assert len(max_int_1.constraints) == 1
         max_int_1_constraint = max_int_1._constraints[0]
         assert isinstance(max_int_1_constraint, IntervalConstraint)
         assert max_int_1_constraint._lower_bound is None
@@ -798,7 +804,7 @@ class TestParameterGroupListFromYaml:
         )
         assert max_int_2.flag == "-i15"
         assert max_int_2.default_value == 15
-        assert len(max_int_2.hints) == 1
+        assert len(max_int_2.constraints) == 1
         max_int_2_constraint = max_int_2._constraints[0]
         assert isinstance(max_int_2_constraint, IntervalConstraint)
         assert max_int_2_constraint._lower_bound is None
@@ -814,7 +820,7 @@ class TestParameterGroupListFromYaml:
         )
         assert bounded_int.flag == "-i1-10"
         assert bounded_int.default_value == 7
-        assert len(bounded_int.hints) == 1
+        assert len(bounded_int.constraints) == 1
         bounded_int_constraint = bounded_int._constraints[0]
         assert isinstance(bounded_int_constraint, IntervalConstraint)
         assert bounded_int_constraint._lower_bound == 1
@@ -836,7 +842,7 @@ class TestParameterGroupListFromYaml:
         )
         assert any_float_1.flag == "--unbounded-float"
         assert any_float_1.default_value == approx(-3.14159)
-        assert len(any_float_1.hints) == 0
+        assert len(any_float_1.constraints) == 0
 
         any_float_2 = float_group.parameters[1]
         assert isinstance(any_float_2, FloatParameter)
@@ -847,7 +853,7 @@ class TestParameterGroupListFromYaml:
         )
         assert any_float_2.flag == "--float-unrestricted"
         assert any_float_2.default_value == approx(123.456)
-        assert len(any_float_2.hints) == 0
+        assert len(any_float_2.constraints) == 0
 
         min_float_1 = float_group.parameters[2]
         assert isinstance(min_float_1, FloatParameter)
@@ -858,7 +864,7 @@ class TestParameterGroupListFromYaml:
         )
         assert min_float_1.flag == "-f1.5"
         assert min_float_1.default_value == approx(1.9)
-        assert len(min_float_1.hints) == 1
+        assert len(min_float_1.constraints) == 1
         min_float_1_constraint = min_float_1._constraints[0]
         assert isinstance(min_float_1_constraint, IntervalConstraint)
         assert min_float_1_constraint._lower_bound == approx(1.5)
@@ -873,7 +879,7 @@ class TestParameterGroupListFromYaml:
         )
         assert min_float_2.flag == "-f3.1"
         assert min_float_2.default_value == approx(1300)
-        assert len(min_float_2.hints) == 1
+        assert len(min_float_2.constraints) == 1
         min_float_2_constraint = min_float_2._constraints[0]
         assert isinstance(min_float_2_constraint, IntervalConstraint)
         assert min_float_2_constraint._lower_bound == approx(3.1)
@@ -889,7 +895,7 @@ class TestParameterGroupListFromYaml:
         )
         assert max_float_1.flag == "-f-190.45"
         assert max_float_1.default_value == approx(-199)
-        assert len(max_float_1.hints) == 1
+        assert len(max_float_1.constraints) == 1
         max_float_1_constraint = max_float_1._constraints[0]
         assert isinstance(max_float_1_constraint, IntervalConstraint)
         assert max_float_1_constraint._lower_bound is None
@@ -905,7 +911,7 @@ class TestParameterGroupListFromYaml:
         )
         assert max_float_2.flag == "-f13.13"
         assert max_float_2.default_value == approx(-23094)
-        assert len(max_float_2.hints) == 1
+        assert len(max_float_2.constraints) == 1
         max_float_2_constraint = max_float_2._constraints[0]
         assert isinstance(max_float_2_constraint, IntervalConstraint)
         assert max_float_2_constraint._lower_bound is None
@@ -921,7 +927,7 @@ class TestParameterGroupListFromYaml:
         )
         assert bounded_float.flag == "-f0-1"
         assert bounded_float.default_value == approx(0)
-        assert len(bounded_float.hints) == 1
+        assert len(bounded_float.constraints) == 1
         bounded_float_constraint = bounded_float._constraints[0]
         assert isinstance(bounded_float_constraint, IntervalConstraint)
         assert bounded_float_constraint._lower_bound == approx(0)
@@ -949,7 +955,7 @@ class TestParameterGroupListFromYaml:
             "Third option",
             "Fourth option",
         ]
-        assert len(cli_enum.hints) == 0
+        assert len(cli_enum.constraints) == 0
 
         no_cli_enum = enum_group.parameters[1]
         assert isinstance(no_cli_enum, EnumParameter)
@@ -965,7 +971,7 @@ class TestParameterGroupListFromYaml:
             "...or this!",
             "Or even this.",
         ]
-        assert len(no_cli_enum.hints) == 0
+        assert len(no_cli_enum.constraints) == 0
 
         # String
         string_group = parameter_list.parameter_groups[4]
@@ -981,7 +987,7 @@ class TestParameterGroupListFromYaml:
         )
         assert any_str.flag == "-s"
         assert any_str.default_value == ""
-        assert len(any_str.hints) == 0
+        assert len(any_str.constraints) == 0
 
         max_len_str = string_group.parameters[1]
         assert isinstance(max_len_str, StringParameter)
@@ -992,7 +998,7 @@ class TestParameterGroupListFromYaml:
         )
         assert max_len_str.flag == "--s-max4"
         assert max_len_str.default_value == ""
-        assert len(max_len_str.hints) == 1
+        assert len(max_len_str.constraints) == 1
         max_len_str_constraint = max_len_str._constraints[0]
         assert isinstance(max_len_str_constraint, MaxLengthConstraint)
         assert max_len_str_constraint._max_length == 4
@@ -1006,10 +1012,11 @@ class TestParameterGroupListFromYaml:
         )
         assert pattern_str.flag == "--sAB"
         assert pattern_str.default_value == ""
-        assert len(pattern_str.hints) == 1
+        assert len(pattern_str.constraints) == 1
         pattern_str_constraint = pattern_str._constraints[0]
         assert isinstance(pattern_str_constraint, RegexConstraint)
-        assert not pattern_str_constraint.valid("C")
+        pattern_str_constraint._set_value("C")
+        assert not pattern_str_constraint.valid
         assert pattern_str_constraint.hint == "Any number of A or B."
 
         max_len_pattern_str = string_group.parameters[3]
@@ -1021,13 +1028,14 @@ class TestParameterGroupListFromYaml:
         )
         assert max_len_pattern_str.flag == "--phone-number"
         assert max_len_pattern_str.default_value == ""
-        assert len(max_len_pattern_str.hints) == 2
+        assert len(max_len_pattern_str.constraints) == 2
         max_len_constraint = max_len_pattern_str._constraints[0]
         assert isinstance(max_len_constraint, MaxLengthConstraint)
         assert max_len_constraint._max_length == 10
         pattern_constraint = max_len_pattern_str._constraints[1]
         assert isinstance(pattern_constraint, RegexConstraint)
-        assert not pattern_constraint.valid("invalid")
+        pattern_constraint.value = "invalid"
+        assert not pattern_constraint.valid
         assert pattern_constraint.hint == "Only digits."
 
         default_str = string_group.parameters[4]
@@ -1039,7 +1047,7 @@ class TestParameterGroupListFromYaml:
         )
         assert default_str.flag == "--default-str"
         assert default_str.default_value == "Hello"
-        assert len(default_str.hints) == 1
+        assert len(default_str.constraints) == 1
         default_str_constraint = default_str._constraints[0]
         assert isinstance(default_str_constraint, MaxLengthConstraint)
         assert default_str_constraint._max_length == 20
@@ -1062,7 +1070,7 @@ class TestParameterGroupListFromYaml:
         assert any_file.accepted_formats is None
         assert any_file.expected_formats is None
         assert not any_file.multiple
-        assert len(any_file.hints) == 0
+        assert len(any_file.constraints) == 0
 
         any_files = file_group.parameters[1]
         assert isinstance(any_files, FileParameter)
@@ -1077,7 +1085,7 @@ class TestParameterGroupListFromYaml:
         assert any_files.accepted_formats is None
         assert any_files.expected_formats is None
         assert any_files.multiple
-        assert len(any_files.hints) == 0
+        assert len(any_files.constraints) == 0
 
         not_strict_file = file_group.parameters[2]
         assert isinstance(not_strict_file, FileParameter)
@@ -1098,7 +1106,7 @@ class TestParameterGroupListFromYaml:
             ".webp",
         ]
         assert not not_strict_file.multiple
-        assert len(not_strict_file.hints) == 0
+        assert len(not_strict_file.constraints) == 0
 
         not_strict_multiple_files = file_group.parameters[3]
         assert isinstance(not_strict_multiple_files, FileParameter)
@@ -1116,7 +1124,7 @@ class TestParameterGroupListFromYaml:
             ".webm",
         ]
         assert not_strict_multiple_files.multiple
-        assert len(not_strict_multiple_files.hints) == 0
+        assert len(not_strict_multiple_files.constraints) == 0
 
         strict_file = file_group.parameters[4]
         assert isinstance(strict_file, FileParameter)
@@ -1134,7 +1142,7 @@ class TestParameterGroupListFromYaml:
         ]
         assert strict_file.expected_formats is None
         assert not strict_file.multiple
-        assert len(strict_file.hints) == 0
+        assert len(strict_file.constraints) == 0
 
         strict_multiple_files = file_group.parameters[5]
         assert isinstance(strict_multiple_files, FileParameter)
@@ -1154,7 +1162,7 @@ class TestParameterGroupListFromYaml:
         ]
         assert strict_multiple_files.expected_formats is None
         assert strict_multiple_files.multiple
-        assert len(strict_multiple_files.hints) == 0
+        assert len(strict_multiple_files.constraints) == 0
 
         # Optional
         optional_group = parameter_list.parameter_groups[6]
@@ -1166,14 +1174,14 @@ class TestParameterGroupListFromYaml:
         assert opt_bool.name == "Optional bool"
         assert opt_bool.description == "An optional bool parameter."
         assert not opt_bool.default_value
-        assert len(opt_bool.hints) == 0
+        assert len(opt_bool.constraints) == 0
         inner_bool = opt_bool.parameter
         assert isinstance(inner_bool, BoolParameter)
         assert inner_bool.name == "Inner bool"
         assert inner_bool.description == "The inner parameter."
         assert inner_bool.flag == "--opt-bool"
         assert not inner_bool.default_value
-        assert len(inner_bool.hints) == 0
+        assert len(inner_bool.constraints) == 0
 
         opt_int = optional_group.parameters[1]
         assert isinstance(opt_int, OptionalParameter)
@@ -1183,14 +1191,14 @@ class TestParameterGroupListFromYaml:
             == "An optional int parameter, default true."
         )
         assert opt_int.default_value
-        assert len(opt_int.hints) == 0
+        assert len(opt_int.constraints) == 0
         inner_int = opt_int.parameter
         assert isinstance(inner_int, IntParameter)
         assert inner_int.name == "Inner int parameter"
         assert inner_int.description == ""
         assert inner_int.flag == "--opt-int"
         assert inner_int.default_value == 1
-        assert len(inner_int.hints) == 1
+        assert len(inner_int.constraints) == 1
         inner_int_constraint = inner_int._constraints[0]
         assert isinstance(inner_int_constraint, IntervalConstraint)
         assert inner_int_constraint._lower_bound == 1
@@ -1202,20 +1210,20 @@ class TestParameterGroupListFromYaml:
         assert opt_float.name == "Optional float"
         assert opt_float.description == "An optional float parameter."
         assert not opt_float.default_value
-        assert len(opt_float.hints) == 0
+        assert len(opt_float.constraints) == 0
         inner_float = opt_float.parameter
         assert isinstance(inner_float, FloatParameter)
         assert inner_float.name == "Inner float parameter"
         assert inner_float.description == ""
         assert inner_float.default_value == approx(-1.1)
-        assert len(inner_float.hints) == 0
+        assert len(inner_float.constraints) == 0
 
         opt_enum = optional_group.parameters[3]
         assert isinstance(opt_enum, OptionalParameter)
         assert opt_enum.name == "Optional enum"
         assert opt_enum.description == "An optional enum parameter."
         assert not opt_enum.default_value
-        assert len(opt_enum.hints) == 0
+        assert len(opt_enum.constraints) == 0
         inner_enum = opt_enum.parameter
         assert isinstance(inner_enum, EnumParameter)
         assert inner_enum.name == ""
@@ -1226,21 +1234,21 @@ class TestParameterGroupListFromYaml:
         assert inner_enum.flag == "--opt-enum"
         assert inner_enum.default_value == 1
         assert inner_enum.options == ["A", "B", "C"]
-        assert len(inner_enum.hints) == 0
+        assert len(inner_enum.constraints) == 0
 
         opt_str = optional_group.parameters[4]
         assert isinstance(opt_str, OptionalParameter)
         assert opt_str.name == "Optional string"
         assert opt_str.description == "An optional string parameter."
         assert not opt_str.default_value
-        assert len(opt_str.hints) == 0
+        assert len(opt_str.constraints) == 0
         inner_str = opt_str.parameter
         assert isinstance(inner_str, StringParameter)
         assert inner_str.name == ""
         assert inner_str.description == "The string."
         assert inner_str.flag == "--opt-str"
         assert inner_str.default_value == "example"
-        assert len(inner_str.hints) == 1
+        assert len(inner_str.constraints) == 1
         inner_str_constraint = inner_str._constraints[0]
         assert isinstance(inner_str_constraint, MaxLengthConstraint)
         assert inner_str_constraint._max_length == 20
@@ -1250,7 +1258,7 @@ class TestParameterGroupListFromYaml:
         assert opt_file.name == "Optional files"
         assert opt_file.description == "An optional multi-file parameter."
         assert not opt_str.default_value
-        assert len(opt_str.hints) == 0
+        assert len(opt_str.constraints) == 0
         inner_file = opt_file.parameter
         assert isinstance(inner_file, FileParameter)
         assert inner_file.name == ""
@@ -1259,7 +1267,7 @@ class TestParameterGroupListFromYaml:
         assert inner_file.default_value == []
         assert not inner_file.strict
         assert inner_file.multiple
-        assert len(inner_file.hints) == 0
+        assert len(inner_file.constraints) == 0
 
         # Multi-value
         multi_group = parameter_list.parameter_groups[7]
@@ -1274,20 +1282,20 @@ class TestParameterGroupListFromYaml:
             == "A parameter with three integer values."
         )
         assert int_int_int.flag == "-3i"
-        assert len(int_int_int.hints) == 0
+        assert len(int_int_int.constraints) == 0
         assert len(int_int_int.parameters) == 3
         first_int = int_int_int.parameters[0]
         assert isinstance(first_int, IntParameter)
         assert first_int.name == "First integer"
         assert first_int.description == ""
         assert first_int.default_value == 0
-        assert len(first_int.hints) == 0
+        assert len(first_int.constraints) == 0
         second_int = int_int_int.parameters[1]
         assert isinstance(second_int, IntParameter)
         assert second_int.name == "Second integer"
         assert second_int.description == ""
         assert second_int.default_value == 0
-        assert len(second_int.hints) == 1
+        assert len(second_int.constraints) == 1
         second_int_constraint = second_int._constraints[0]
         assert isinstance(second_int_constraint, IntervalConstraint)
         assert second_int_constraint._lower_bound == 0
@@ -1299,7 +1307,7 @@ class TestParameterGroupListFromYaml:
         assert third_int.name == "Third integer"
         assert third_int.description == ""
         assert third_int.default_value == 0
-        assert len(third_int.hints) == 1
+        assert len(third_int.constraints) == 1
         third_int_constraint = third_int._constraints[0]
         assert isinstance(third_int_constraint, IntervalConstraint)
         assert third_int_constraint._lower_bound == 0
@@ -1314,20 +1322,20 @@ class TestParameterGroupListFromYaml:
             == "A parameter with four values."
         )
         assert bool_float_file_enum.flag == "-4"
-        assert len(bool_float_file_enum.hints) == 0
+        assert len(bool_float_file_enum.constraints) == 0
         assert len(bool_float_file_enum.parameters) == 4
         bool_child = bool_float_file_enum.parameters[0]
         assert isinstance(bool_child, BoolParameter)
         assert bool_child.name == "The bool"
         assert bool_child.description == ""
         assert bool_child.default_value
-        assert len(bool_child.hints) == 0
+        assert len(bool_child.constraints) == 0
         float_child = bool_float_file_enum.parameters[1]
         assert isinstance(float_child, FloatParameter)
         assert float_child.name == "The float"
         assert float_child.description == ""
         assert float_child.default_value == approx(1.0)
-        assert len(float_child.hints) == 1
+        assert len(float_child.constraints) == 1
         float_child_constraint = float_child._constraints[0]
         assert isinstance(float_child_constraint, IntervalConstraint)
         assert float_child_constraint._lower_bound == approx(0.0)
@@ -1342,14 +1350,14 @@ class TestParameterGroupListFromYaml:
         assert file_child.accepted_formats is None
         assert file_child.expected_formats == [".ms", ".vcf"]
         assert not file_child.multiple
-        assert len(file_child.hints) == 0
+        assert len(file_child.constraints) == 0
         enum_child = bool_float_file_enum.parameters[3]
         assert isinstance(enum_child, EnumParameter)
         assert enum_child.name == "The enum"
         assert enum_child.description == "Choose one."
         assert enum_child.default_value == 1
         assert enum_child.options == ["Option 0", "Option 1", "Option 2"]
-        assert len(enum_child.hints) == 0
+        assert len(enum_child.constraints) == 0
 
         # Nested
         nested_group = parameter_list.parameter_groups[8]
@@ -1364,7 +1372,7 @@ class TestParameterGroupListFromYaml:
             == "An optional parameter with two values."
         )
         assert opt_multi.default_value
-        assert len(opt_multi.hints) == 0
+        assert len(opt_multi.constraints) == 0
         multi_child = opt_multi.parameter
         assert isinstance(multi_child, MultiParameter)
         assert multi_child.name == ""
@@ -1372,14 +1380,14 @@ class TestParameterGroupListFromYaml:
             multi_child.description
             == "The inner, multi-value parameter."
         )
-        assert len(multi_child.hints) == 0
+        assert len(multi_child.constraints) == 0
         assert len(multi_child.parameters) == 2
         float_grandchild = multi_child.parameters[0]
         assert isinstance(float_grandchild, FloatParameter)
         assert float_grandchild.name == "A float"
         assert float_grandchild.description == ""
         assert float_grandchild.default_value == approx(0.99)
-        assert len(float_grandchild.hints) == 1
+        assert len(float_grandchild.constraints) == 1
         float_grandchild_constraint = float_grandchild._constraints[0]
         assert isinstance(float_grandchild_constraint, IntervalConstraint)
         assert float_grandchild_constraint._lower_bound == approx(0)
@@ -1391,7 +1399,7 @@ class TestParameterGroupListFromYaml:
         assert str_grandchild.name == "A string"
         assert str_grandchild.description == "Type anything."
         assert str_grandchild.default_value == ""
-        assert len(str_grandchild.hints) == 0
+        assert len(str_grandchild.constraints) == 0
 
         multi_opt = nested_group.parameters[1]
         assert isinstance(multi_opt, MultiParameter)
@@ -1401,28 +1409,28 @@ class TestParameterGroupListFromYaml:
             == "A multi parameter where some are optional."
         )
         assert multi_opt.flag == ""
-        assert len(multi_opt.hints) == 0
+        assert len(multi_opt.constraints) == 0
         assert len(multi_opt.parameters) == 3
         first_child = multi_opt.parameters[0]
         assert isinstance(first_child, OptionalParameter)
         assert first_child.name == ""
         assert first_child.description == ""
         assert not first_child.default_value
-        assert len(first_child.hints) == 0
+        assert len(first_child.constraints) == 0
         int_grandchild = first_child.parameter
         assert isinstance(int_grandchild, IntParameter)
         assert int_grandchild.name == ""
         assert int_grandchild.description == ""
         assert int_grandchild.flag == ""
         assert int_grandchild.default_value == 6
-        assert len(int_grandchild.hints) == 0
+        assert len(int_grandchild.constraints) == 0
         second_child = multi_opt.parameters[1]
         assert isinstance(second_child, FloatParameter)
         assert second_child.name == ""
         assert second_child.description == "This float is required."
         assert second_child.flag == ""
         assert second_child.default_value == approx(2.5)
-        assert len(second_child.hints) == 1
+        assert len(second_child.constraints) == 1
         second_child_constraint = second_child._constraints[0]
         assert isinstance(second_child_constraint, IntervalConstraint)
         assert second_child_constraint._lower_bound is None
@@ -1433,10 +1441,10 @@ class TestParameterGroupListFromYaml:
         assert third_child.name == "Another float?"
         assert third_child.description == ""
         assert third_child.default_value
-        assert len(third_child.hints) == 0
+        assert len(third_child.constraints) == 0
         float_grandchild = third_child.parameter # Reused variable
         assert isinstance(float_grandchild, FloatParameter)
         assert float_grandchild.name == "The second float"
         assert float_grandchild.description == ""
         assert float_grandchild.default_value == approx(100.8)
-        assert len(float_grandchild.hints) == 0
+        assert len(float_grandchild.constraints) == 0

@@ -1,8 +1,9 @@
 name: raisd-ai
 channels:
-  - bioconda
+  - pytorch
+  - defaults
   - conda-forge
-  - pkgs/main
+  - bioconda
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_gnu
@@ -17,7 +18,6 @@ dependencies:
   - async-timeout=4.0.3=py38h06a4308_0
   - attrs=24.2.0=pyh71513ae_0
   - bcftools=1.17=h3cc50cf_1
-  - binutils_impl_linux-64=2.45.1=bootstrap_h59bd682_2
   - blas=1.0=openblas
   - blinker=1.6.2=py38h06a4308_0
   - brotli=1.0.9=he6710b0_2
@@ -30,10 +30,8 @@ dependencies:
   - cffi=1.17.0=py38heb5c249_0
   - charset-normalizer=3.3.2=pyhd8ed1ab_0
   - click=8.1.7=py38h06a4308_0
-  - conda-gcc-specs=15.2.0=h53410ce_18
   - contourpy=1.0.5=py38hdb19cb5_0
   - cryptography=41.0.3=py38h130f0dd_0
-  - cudatoolkit=11.8.0=h6a678d5_0
   - cycler=0.11.0=pyhd3eb1b0_0
   - cyrus-sasl=2.1.28=h9c0eb46_1
   - dbus=1.13.18=hb2f20db_0
@@ -47,8 +45,6 @@ dependencies:
   - freetype=2.12.1=h4a9f257_0
   - frozenlist=1.4.0=py38h5eee18b_0
   - gast=0.5.3=pyhd3eb1b0_0
-  - gcc=15.2.0=h0dff253_18
-  - gcc_impl_linux-64=15.2.0=he420e7e_18
   - giflib=5.2.1=h5eee18b_3
   - glib=2.78.4=h6a678d5_0
   - glib-tools=2.78.4=h6a678d5_0
@@ -81,11 +77,10 @@ dependencies:
   - kastore=0.3.2=py38he82f83a_3
   - keras=2.8.0=py38h06a4308_0
   - keras-preprocessing=1.1.2=pyhd3eb1b0_0
-  - kernel-headers_linux-64=6.12.0=he073ed8_6
   - keyutils=1.6.1=h166bdaf_0
   - kiwisolver=1.4.4=py38h6a678d5_0
   - krb5=1.20.1=hf9c8cef_0
-  - ld_impl_linux-64=2.45.1=bootstrap_ha15bf96_2
+  - ld_impl_linux-64=2.40=hf3520f5_7
   - libblas=3.9.0=20_linux64_openblas
   - libcblas=3.9.0=20_linux64_openblas
   - libclang=14.0.6=default_hc6dbbc7_1
@@ -96,14 +91,13 @@ dependencies:
   - libedit=3.1.20191231=he28a2e2_2
   - libev=4.33=hd590300_2
   - libffi=3.4.2=h7f98852_5
-  - libgcc=15.2.0=he0feb66_18
-  - libgcc-devel_linux-64=15.2.0=hcc6f6b0_118
-  - libgcc-ng=15.2.0=h69a702a_18
+  - libgcc=14.1.0=h77fa898_1
+  - libgcc-ng=14.1.0=h69a702a_1
   - libgfortran=14.1.0=h69a702a_1
   - libgfortran-ng=14.1.0=h69a702a_1
   - libgfortran5=14.1.0=hc5f4f2c_1
   - libglib=2.78.4=hdc74915_0
-  - libgomp=15.2.0=he0feb66_18
+  - libgomp=14.1.0=h77fa898_1
   - libiconv=1.16=h5eee18b_3
   - liblapack=3.9.0=20_linux64_openblas
   - libllvm14=14.0.6=hecde1de_4
@@ -113,12 +107,10 @@ dependencies:
   - libpng=1.6.39=h5eee18b_0
   - libpq=12.15=h37d81fd_1
   - libprotobuf=3.20.3=he621ea3_0
-  - libsanitizer=15.2.0=h90f66d4_18
   - libsqlite=3.46.0=hde9e2c9_0
   - libssh2=1.10.0=h37d81fd_2
-  - libstdcxx=15.2.0=h934c35e_18
-  - libstdcxx-devel_linux-64=15.2.0=hd446a21_118
-  - libstdcxx-ng=15.2.0=hdf11a46_18
+  - libstdcxx=14.1.0=hc0a3c3a_1
+  - libstdcxx-ng=14.1.0=h4852527_1
   - libtiff=4.2.0=hecacb30_2
   - libuuid=2.38.1=h0b41bf4_0
   - libwebp-base=1.3.2=h5eee18b_0
@@ -127,7 +119,6 @@ dependencies:
   - libxkbcommon=1.0.1=hfa300c1_0
   - libxml2=2.9.14=h74e7548_0
   - libzlib=1.2.13=h4ab18f5_6
-  - make=4.4.1=hb9d3cd8_2
   - markdown=3.4.1=py38h06a4308_0
   - markupsafe=2.1.3=py38h5eee18b_0
   - matplotlib=3.7.1=py38h06a4308_1
@@ -176,7 +167,7 @@ dependencies:
   - python-flatbuffers=24.3.25=py38h06a4308_0
   - python-tzdata=2024.1=pyhd8ed1ab_0
   - python_abi=3.8=2_cp38
-  - pytorch=2.0.1=cpu_py38hab5cca8_0
+  - pytorch=2.0.1
   - pytz=2024.1=pyhd8ed1ab_0
   - pyyaml=6.0.1=py38h5eee18b_0
   - qt-main=5.15.2=h5b8104b_9
@@ -199,7 +190,6 @@ dependencies:
   - stdpopsim=0.2.0=pyhd8ed1ab_0
   - svgwrite=1.4.3=pyhd8ed1ab_0
   - sympy=1.12=py38h06a4308_0
-  - sysroot_linux-64=2.39=hc4b9eeb_6
   - tensorboard=2.8.0=py38h06a4308_0
   - tensorboard-data-server=0.6.1=py38h52d8a92_0
   - tensorboard-plugin-wit=1.8.1=py38h06a4308_0
@@ -209,12 +199,12 @@ dependencies:
   - termcolor=2.1.0=py38h06a4308_0
   - tk=8.6.13=noxft_h4845f30_101
   - tomli=2.0.1=py38h06a4308_0
-  - torchvision=0.15.2=cuda118py38h196c800_0
+  - torchvision=0.15.2
+  - cpuonly
   - tornado=6.4.1=py38h5eee18b_0
   - tskit=0.5.6=py38he82f83a_2
   - typing-extensions=4.11.0=py38h06a4308_0
   - typing_extensions=4.11.0=py38h06a4308_0
-  - tzdata=2025c=hc9c84f9_1
   - unicodedata2=15.1.0=py38h5eee18b_0
   - urllib3=2.2.2=pyhd8ed1ab_1
   - werkzeug=3.0.3=py38h06a4308_0

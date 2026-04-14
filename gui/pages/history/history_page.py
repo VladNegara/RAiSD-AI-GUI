@@ -4,16 +4,22 @@ from PySide6.QtWidgets import (
     QSplitter,
     QStackedWidget,
     QScrollArea,
-    QPushButton
+    QPushButton,
+    QSizePolicy,
 )
-from PySide6.QtCore import Slot, Qt, Signal
+from PySide6.QtCore import (
+    Slot, 
+    Qt, 
+    Signal,
+    QTimer,
+)
 
 from ..page import Page
 from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.model.history_record import HistoryRecord
 from gui.components.navigation_buttons_holder import NavigationButtonsHolder
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     VBoxLayout,
 )
@@ -40,6 +46,9 @@ class HistoryPage(Page):
         self._selected : HistoryRecord | None = None
         self._setup_ui()
         self._history_list.setObjectName("history_list")
+        timer = QTimer(self)
+        timer.timeout.connect(self.update_history_time)
+        timer.start(60000)
 
     def _setup_ui(self):
         # Main layout with a splitter
@@ -78,8 +87,9 @@ class HistoryPage(Page):
         self.results_widget = ResultsWidget(self._run_record)
         results_scroll = QScrollArea()
         results_scroll.setObjectName("history_results_scroll")
-        results_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        results_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        results_scroll.setVerticalScrollBarPolicy(
+            results_scroll.verticalScrollBarPolicy().ScrollBarAlwaysOff
+        )
         results_scroll.setWidgetResizable(True)
         results_scroll.setWidget(self.results_widget)
         results_layout.addWidget(results_scroll, 1)
@@ -91,11 +101,32 @@ class HistoryPage(Page):
         self._right_panel.addWidget(self.results_panel)
         self.results_panel.hide()
 
+        self.error_panel = QWidget()
+        self.error_panel_layout = VBoxLayout(
+            self.error_panel,
+            left=constants.GAP_SMALL,
+            top=constants.GAP_SMALL,
+            right=constants.GAP_SMALL,
+            bottom=constants.GAP_SMALL,
+            spacing=constants.GAP_SMALL,
+        )
+
+        self.error_label = QLabel(
+            "An error occurred while loading the run from history. " \
+            "The old run may be corrupted or " \
+            "incompatible with the current version of the application.")
+        self.error_label.setWordWrap(True)
+        self.error_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.error_panel_layout.addWidget(self.error_label)
+
+        self._right_panel.addWidget(self.error_panel)
+        self.error_panel.hide()
+
         # Give the list 1/3 and the detail panel 2/3 of the width
         splitter.setSizes([200, 400])
 
     def _setup_navigation_buttons(self) -> NavigationButtonsHolder:
-        self.edit_button = QPushButton("Edit")
+        self.edit_button = QPushButton("Reuse")
         self.edit_button.clicked.connect(lambda : self.reuse_run_clicked.emit(self._selected))
         return NavigationButtonsHolder(right_button=self.edit_button)
 
@@ -138,6 +169,7 @@ class HistoryPage(Page):
         else:
             self.selected = history_record
 
+    @Slot()
     def update_history_time(self) -> None:
         """
         Update the time labels of the history record widgets
@@ -152,8 +184,15 @@ class HistoryPage(Page):
     def selected(self, value : HistoryRecord | None) -> None:
         self._selected = value
         if value:
-            self._run_record.populate(value)
-            self.results_widget.show_results()
-            self.results_panel.show()
+            try:
+                self._run_record.populate(value)
+                self.error_panel.hide()
+                self.results_widget.show_results()
+                self.results_panel.show()
+            except Exception as e:
+                self._run_record.reset()
+                self.error_panel.show()
+                self.results_panel.hide()
+                print(f"Error occurred while populating run record: {e}")
         else:
             self.results_panel.hide()

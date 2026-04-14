@@ -32,7 +32,7 @@ from gui.components.label import (
     InfoLabel,
     WarningLabel,
 )
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     ResizableStackedWidget,
     StylableWidget,
@@ -118,10 +118,16 @@ class FileConsumerNodeWidget(StylableWidget):
             spacing=constants.GAP_TINY,
         )
 
-        if self._file_consumer_node.label:
-            heading = QLabel(self._file_consumer_node.label)
+        if self._file_consumer_node.name:
+            heading = QLabel(self._file_consumer_node.name)
             layout.addWidget(heading)
             heading.setObjectName("heading")
+
+        if self._file_consumer_node.description:
+            description = QLabel(self._file_consumer_node.description)
+            description.setWordWrap(True)
+            layout.addWidget(description)
+            description.setObjectName("description")
 
         self._buttons: list[QRadioButton] = []
         self._file_producer_widgets: list[FileProducerNodeWidget] = []
@@ -142,12 +148,6 @@ class FileConsumerNodeWidget(StylableWidget):
             # present the user with a choice through radio buttons.
             button_widget = QWidget()
             button_layout = VBoxLayout(button_widget)
-
-            button_heading = QLabel(
-                "Select how you want to provide this input file or directory:"
-            )
-            button_heading.setWordWrap(True)
-            button_layout.addWidget(button_heading)
 
             for i, producer in enumerate(self._file_consumer_node.producers):
                 producer_widget = FileProducerNodeWidget.from_file_producer(
@@ -228,9 +228,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
             self._common_parent_directory_node.overwrite_parameter,
             editable=True,
         ).build_form_row()
-        self._overwrite_parameter_row.setVisible(
-            self._common_parent_directory_node.overwrite,
-        )
         layout.addWidget(self._overwrite_parameter_row)
 
         self.file_consumer_widgets : list[FileConsumerNodeWidget]= []
@@ -247,9 +244,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
         self._overwrite_warning_label.setVisible(
             self._common_parent_directory_node.overwrite,
         )
-        self._overwrite_parameter_row.setVisible(
-            self._common_parent_directory_node.overwrite,
-        )
         self._common_parent_directory_node.overwrite_parameter.value = False
 
         for file_consumer_widget in self.file_consumer_widgets:
@@ -262,7 +256,6 @@ class CommonParentDirectoryNodeWidget(FileProducerNodeWidget):
     @Slot(bool)
     def _overwrite_changed(self, new_overwrite: bool) -> None:
         self._overwrite_warning_label.setVisible(new_overwrite)
-        self._overwrite_parameter_row.setVisible(new_overwrite)
 
 
 class FilePickerNodeWidget(FileProducerNodeWidget):
@@ -289,54 +282,6 @@ class FilePickerNodeWidget(FileProducerNodeWidget):
         )
 
         self._is_directory = isinstance(self._file_picker.produces, Directory)
-        # TODO: make this code cleaner and more reusable.
-        match self._file_picker.produces:
-            case SingleFile(formats=[single_format]):
-                heading_text = f"Select a {single_format} file."
-            case SingleFile(formats=[first_format, *other_formats]):
-                # TODO: preserve the order of the formats, maybe.
-                heading_text = (
-                    f"Select a {", ".join(other_formats)} "
-                    + f"or {first_format} file."
-                )
-            case Directory(
-                contents=[
-                    SingleFile(
-                        formats=[single_format]
-                    )
-                ]
-            ):
-                heading_text = (
-                    "Select a directory containing " 
-                    + f"{single_format} files."
-                )
-            case Directory(
-                contents=[
-                    Directory(
-                        contents=[
-                            SingleFile(
-                                formats=[first_format]
-                            )
-                        ]
-                    ),
-                    Directory(
-                        contents=[
-                            SingleFile(
-                                formats=[second_format]
-                            )
-                        ]
-                    )
-                ]
-            ) if first_format == second_format:
-                heading_text = (
-                    "Select a directory with two subdirectories, each "
-                    + f"containing {first_format} files."
-                )
-            case _:
-                heading_text = "Select a file."
-        heading = QLabel(heading_text)
-        heading.setWordWrap(True)
-        layout.addWidget(heading)
 
         self.button = QPushButton("Browse")
         self.button.setObjectName("file_selector_button")
@@ -391,8 +336,6 @@ class OperationNodeWidget(FileProducerNodeWidget):
     necessary input files are displayed side by side below.
     """
 
-    output_label_text = "The output of the operation will be stored at: "
-
     def __init__(self, operation_node: OperationNode):
         """
         Initialize an `OperationNodeWidget` object.
@@ -409,10 +352,19 @@ class OperationNodeWidget(FileProducerNodeWidget):
             spacing=constants.GAP_TINY,
         )
 
+        name_info = QWidget()
+        name_info_layout = HBoxLayout(
+            name_info,
+            spacing=constants.GAP_TINY,
+        )
         name = QLabel(operation_node.name)
         name.setObjectName("heading")
         name.setWordWrap(True)
-        layout.addWidget(name)
+        name.setAlignment(Qt.AlignmentFlag.AlignTop)
+        name_info_layout.addWidget(name)
+        self._info_label = InfoLabel(self.info_label_text)
+        name_info_layout.addWidget(self._info_label)
+        layout.addWidget(name_info)
 
         description = QLabel(operation_node.description)
         description.setWordWrap(True)
@@ -433,11 +385,6 @@ class OperationNodeWidget(FileProducerNodeWidget):
                 parameter_rows_layout.addWidget(parameter_row)
             layout.addWidget(parameter_rows_widget)
 
-        self._output_info_label = InfoLabel(
-            self.output_label_text + self._operation_node.file
-        )
-        layout.addWidget(self._output_info_label)
-
         self._overwrite_warning_label = WarningLabel(
             "You are about to overwrite existing data!"
         )
@@ -450,43 +397,6 @@ class OperationNodeWidget(FileProducerNodeWidget):
             self._operation_node.overwrite_parameter,
             editable=True,
         ).build_form_row()
-        self._overwrite_parameter_row.setVisible(
-            self._operation_node.overwrite,
-        )
-        layout.addWidget(self._overwrite_parameter_row)
-
-        self._overwrite_warning_label = WarningLabel(
-            "You are about to overwrite existing data!"
-        )
-        self._overwrite_warning_label.setVisible(
-            self._operation_node.overwrite,
-        )
-        layout.addWidget(self._overwrite_warning_label)
-
-        self._overwrite_parameter_row = ParameterWidget.from_parameter(
-            self._operation_node.overwrite_parameter,
-            editable=True,
-        ).build_form_row()
-        self._overwrite_parameter_row.setVisible(
-            self._operation_node.overwrite,
-        )
-        layout.addWidget(self._overwrite_parameter_row)
-
-        self._overwrite_warning_label = WarningLabel(
-            "You are about to overwrite existing data!"
-        )
-        self._overwrite_warning_label.setVisible(
-            self._operation_node.overwrite,
-        )
-        layout.addWidget(self._overwrite_warning_label)
-
-        self._overwrite_parameter_row = ParameterWidget.from_parameter(
-            self._operation_node.overwrite_parameter,
-            editable=True,
-        ).build_form_row()
-        self._overwrite_parameter_row.setVisible(
-            self._operation_node.overwrite,
-        )
         layout.addWidget(self._overwrite_parameter_row)
 
         self.file_consumer_widgets: list[FileConsumerNodeWidget] = []
@@ -506,17 +416,13 @@ class OperationNodeWidget(FileProducerNodeWidget):
                 )
             layout.addWidget(input_files_widget)
 
-        self._operation_node.file_changed.connect(self._file_changed)
+        self._operation_node.file_changed.connect(self._refresh_info_label)
         self._operation_node.overwrite_changed.connect(self._overwrite_changed)
+        self._operation_node.run_id_changed.connect(self._refresh_info_label)
 
     def refresh(self) -> None:
-        self._output_info_label.text = (
-            self.output_label_text + self._operation_node.file
-        )
+        self._refresh_info_label()
         self._overwrite_warning_label.setVisible(
-            self._operation_node.overwrite,
-        )
-        self._overwrite_parameter_row.setVisible(
             self._operation_node.overwrite,
         )
         self._operation_node.overwrite_parameter.value = False
@@ -531,14 +437,21 @@ class OperationNodeWidget(FileProducerNodeWidget):
             + "directory."
         )
 
-    @Slot(str)
-    def _file_changed(self, new_file: str) -> None:
-        self._output_info_label.text = self.output_label_text + new_file
+    @property
+    def info_label_text(self) -> str:
+        return (
+            "The following run ID will be given to RAiSD-AI: "
+            + f"{self._operation_node.run_id}\nThe output of the operation "
+            + f"will be stored at: {self._operation_node.file}"
+        )
+
+    @Slot()
+    def _refresh_info_label(self) -> None:
+        self._info_label.text = self.info_label_text
 
     @Slot(bool)
     def _overwrite_changed(self, new_overwrite: bool) -> None:
         self._overwrite_warning_label.setVisible(new_overwrite)
-        self._overwrite_parameter_row.setVisible(new_overwrite)
 
 
 class OperationTreeWidget(StylableWidget):

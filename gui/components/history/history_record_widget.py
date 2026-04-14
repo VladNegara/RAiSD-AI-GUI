@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QGridLayout, QLabel
 
 from gui.model.settings import app_settings
 from gui.model.history_record import HistoryRecord
-from gui.widgets import (
+from gui.components import (
     StylableWidget,
 )
 

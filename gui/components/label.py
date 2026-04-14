@@ -10,7 +10,7 @@ from PySide6.QtWidgets import(
     QStyle,
 )
 
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     StylableWidget,
 )
@@ -46,11 +46,11 @@ class IconLabel(StylableWidget):
         super().__init__()
         layout = HBoxLayout(
             self,
-            left=constants.GAP_SMALL,
+            left=constants.GAP_TINY,
             top=constants.GAP_TINY,
             right=constants.GAP_TINY,
             bottom=constants.GAP_TINY,
-            spacing=constants.GAP_SMALL,
+            spacing=constants.GAP_TINY,
         )
 
         self._icon_label = QLabel()

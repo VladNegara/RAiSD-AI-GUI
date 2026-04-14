@@ -210,9 +210,12 @@ void RSDResults_load (RSDResults_t * RSDResults, RSDCommandLine_t * RSDCommandLi
 		
 	assert(RSDCommandLine!=NULL);
 	
-	char reportPath[STRING_SIZE], rline[STRING_SIZE]; 	
+	char reportPath[STRING_SIZE], rline[STRING_SIZE], runNameSanitized[STRING_SIZE/2], tstring[STRING_SIZE]; 
+	
+	sanitizeString(RSDCommandLine->runName, runNameSanitized, STRING_SIZE/2);	
+	snprintf(reportPath, STRING_SIZE, "tempOutputFolder-%s-rsdai/PredResults.txt", runNameSanitized);		
 
-	strncpy(reportPath, "tempOutputFolder/PredResults.txt", STRING_SIZE);
+
 	
 	FILE * fp = fopen(reportPath, "r");
 	assert(fp!=NULL);
@@ -241,9 +244,10 @@ void RSDResults_load (RSDResults_t * RSDResults, RSDCommandLine_t * RSDCommandLi
     		RSDGridPoint_calcCompositeScore (RSDGridPoint, gridPointDataIndex); // stores in nnPositiveClass1
 	}
 	
-	fclose(fp);	
+	fclose(fp);
 	
-	exec_command ("rm -r tempOutputFolder");
+	snprintf(tstring, STRING_SIZE, "rm -r tempOutputFolder-%s-rsdai", runNameSanitized);
+	exec_command (tstring);
 }
 
 void RSDResults_load_2x2 (RSDResults_t * RSDResults, RSDCommandLine_t * RSDCommandLine)
@@ -253,12 +257,13 @@ void RSDResults_load_2x2 (RSDResults_t * RSDResults, RSDCommandLine_t * RSDComma
 		
 	assert(RSDCommandLine!=NULL);
 	
-	char reportPath[STRING_SIZE], rline[STRING_SIZE];
+	char reportPath[STRING_SIZE], rline[STRING_SIZE], runNameSanitized[STRING_SIZE/2], tstring[STRING_SIZE];
 	char * imgProb[CLA_SWEEPNETRECOMB]; 
 	
 	int i=-1, setIndex=-1, gridPointIndex=-1, gridPointDataIndex=-1;
 
-	strncpy(reportPath, "tempOutputFolder/PredResults.txt", STRING_SIZE);
+	sanitizeString(RSDCommandLine->runName, runNameSanitized, STRING_SIZE/2);	
+	snprintf(reportPath, STRING_SIZE, "tempOutputFolder-%s-rsdai/PredResults.txt", runNameSanitized);
 	
 	FILE * fp = fopen(reportPath, "r");
 	assert(fp!=NULL);
@@ -291,7 +296,8 @@ void RSDResults_load_2x2 (RSDResults_t * RSDResults, RSDCommandLine_t * RSDComma
 	
 	fclose(fp);	
 	
-	exec_command ("rm -r tempOutputFolder");
+	snprintf(tstring, STRING_SIZE, "rm -r tempOutputFolder-%s-rsdai", runNameSanitized);
+	exec_command (tstring);
 }
 
 void RSDResults_resetMaxScores (RSDResults_t * RSDResults)

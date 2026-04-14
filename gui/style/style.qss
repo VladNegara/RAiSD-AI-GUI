@@ -58,10 +58,12 @@ QPushButton#settings_button:pressed {
 
 /* SHARED — VIEW BACKGROUNDS */
 
+QDialog#settings_dialog,
 QWidget#page,
 QWidget#run_tab,
 QScrollArea#history_results_scroll,
-QWidget#history_list_container{
+QWidget#history_list_container,
+QWidget#settings_inner{
     background-color: $purplish-background;
 }
 
@@ -83,14 +85,15 @@ QScrollArea#results_scroll,
 QWidget#results_widget,
 QWidget#operation_node,
 QWidget#operation_tree,
+QScrollArea#settings_scroll,
 QWidget#tree_stacked_widget{
     background: transparent;
 }
 
 QScrollArea#parameter_form_scroll QScrollBar,
-QScrollArea#results_scroll QScrollBar,
+QScrollArea#results_scroll,
 QWidget#commands_view QScrollBar,
-QScrollArea#history_results_scroll QScrollBar{
+QScrollArea#history_results_scroll{
     width: 0px;
     height: 0px;
 }
@@ -103,9 +106,10 @@ QWidget#settings_item_widget QPushButton,
 QPushButton#reset_button,
 QPushButton#file_button,
 QPushButton#file_selector_button,
-QPushButton#toggle_all_button{
+QPushButton#toggle_all_button,
+QPushButton#file_browser_button{
     padding: 5px 15px;
-    background-color: $primary-purple;
+    background-color: $button-purple;
     color: $primary-dark;
     border-radius: 5px;
     font-weight: 500;
@@ -116,7 +120,8 @@ QWidget#settings_item_widget QPushButton:hover,
 QPushButton#reset_button:hover,
 QPushButton#file_button:hover,
 QPushButton#file_selector_button:hover,
-QPushButton#toggle_all_button:hover{
+QPushButton#toggle_all_button:hover,
+QPushButton#file_browser_button:hover{
     background-color: $button-hover;
 }
 
@@ -125,7 +130,8 @@ QWidget#settings_item_widget QPushButton:pressed,
 QPushButton#reset_button:pressed,
 QPushButton#file_button:pressed,
 QPushButton#file_selector_button:pressed,
-QPushButton#toggle_all_button:pressed{
+QPushButton#toggle_all_button:pressed,
+QPushButton#file_browser_button:pressed{
     background-color: $button-pressed;
 }
 
@@ -145,11 +151,11 @@ QScrollArea#tree_scroll{
 
 /* STEP BUTTON BAR */
 
-QWidget#step_button_bar {
+QWidget#tab_bar {
     background-color: white;
 }
 
-QWidget#step_button_bar QPushButton {
+QWidget#tab_label {
     padding: 10px 20px;
     background-color: white;
     color: $border-gray;
@@ -157,29 +163,21 @@ QWidget#step_button_bar QPushButton {
     border-radius: 10px;
 }
 
-QWidget#step_button_bar QPushButton[step_role="active"] {
+QWidget#tab_label[step_role="active"] {
     background-color: $accent-orange;
     color: white;
 }
 
-QWidget#step_button_bar QPushButton[step_role="past_step"] {
+QWidget#tab_label[step_role="past_step"] {
     background-color: $primary-purple;
     color: white;
-}
-
-QWidget#step_button_bar QPushButton[step_role="past_step"]:hover {
-    background-color: $button-hover;
-}
-
-QWidget#step_button_bar QPushButton[step_role="past_step"]:pressed {
-    background-color: $button-pressed;
 }
 
 /* NAVIGATION BUTTONS */
 
 QWidget#navigation_buttons_holder QPushButton {
     padding: 10px 40px;
-    background-color: $primary-purple;
+    background-color: $button-purple;
     color: $primary-dark;
     border: 1px solid $border-gray;
     border-radius: 5px;
@@ -234,15 +232,15 @@ QWidget#label_body{
     font-weight: 300;
 }
 
-QLabel#parameter_hint {
+QLabel#constraint {
     font-size: $font-size - 3px;
 }
 
-QLabel#parameter_hint[valid="true"] {
+QLabel#constraint[valid="true"] {
     color: $valid;
 }
 
-QLabel#parameter_hint[valid="false"] {
+QLabel#constraint[valid="false"] {
     color: $invalid;
 }
 
@@ -335,6 +333,7 @@ QWidget#process_indicator{
 QWidget#process_indicator[indicator_state="pending"] {
     qproperty-fillColor: $purplish-background;
     qproperty-borderColor: $primary-purple;
+    qproperty-textColor: $primary-purple;
 }
 
 QWidget#process_indicator[indicator_state="running"] {
@@ -360,6 +359,7 @@ QWidget#process_indicator[indicator_state="stopped"] {
 QWidget#execution_output,
 QWidget#error_output{
     font-size: $font-size - 4px;
+    font-family: monospace;
 }
 /* OP SELECTION */
 QWidget#file_consumer_node {
@@ -376,7 +376,7 @@ QRadioButton{
     color: $primary-dark;
 }
 
-QRadioButton:unchecked:pressed{
+QRadioButton:unchecked:hover{
     color: $button-pressed;
 }
 

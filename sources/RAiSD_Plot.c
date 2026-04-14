@@ -68,15 +68,21 @@ void RSDPlot_printRscriptVersion (RSDCommandLine_t * RSDCommandLine, FILE * fpOu
 
 	fprintf(fpOut, " Rscript version     :\t");
 
-	FILE * fp;
+	FILE * fp=NULL;
 	fp = fopen("RscriptVersion.txt", "r");
+	if(fp!=NULL)
+	{
+		int ret = remove("RscriptVersion.txt");
+		assert(ret==0);
+		fp=NULL;
+	}
 	assert(fp==NULL);
 	
 #ifdef _C1
-	int ret = system("Rscript --version > /dev/null 2>RscriptVersion.txt");
+	int ret = system("Rscript --version > RscriptVersion.txt 2>>RscriptVersion.txt");
 	assert(ret!=-1);	
 #else
-	fp = popen("Rscript --version > /dev/null 2>RscriptVersion.txt", "r");
+	fp = popen("Rscript --version > RscriptVersion.txt 2>>RscriptVersion.txt", "r");
 	assert(fp!=NULL);
 
 	int ret = pclose(fp);

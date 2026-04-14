@@ -1,11 +1,12 @@
 from PySide6.QtCore import (
     Signal,
     Slot,
+    Qt,
 )
 from PySide6.QtWidgets import (
     QWidget,
     QStackedLayout,
-    QPushButton,
+    QLabel,
 )
 
 from ..page import Page
@@ -20,10 +21,11 @@ from ..run import (
 from gui.model.run_record import RunRecord
 from gui.model.history_record import HistoryRecord
 from gui.execution.command_executor import CommandExecutor
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     VBoxLayout,
 )
+from gui.components.run import RunEndStatus
 from gui.style import constants
 
 
@@ -33,7 +35,7 @@ class RunPage(Page):
     """
     start_run = Signal()
     run_started = Signal(int)  # number of processes
-    run_ended = Signal(bool)  # if run was successful
+    run_ended = Signal(RunEndStatus)
     run_saved = Signal(HistoryRecord)
 
     def __init__(self, run_record: RunRecord, command_executor: CommandExecutor):
@@ -51,23 +53,23 @@ class RunPage(Page):
         """
         Set up the general run page.
 
-        Includes the step button bar and the stacked step widget.
+        Includes the tab bar and the stacked step widget.
         """
         layout = VBoxLayout(self)
 
         # Step button bar
-        step_button_bar = QWidget()
-        step_button_bar.setObjectName("step_button_bar")
-        step_button_bar_layout = HBoxLayout(
-            step_button_bar,
+        tab_bar = QWidget()
+        tab_bar.setObjectName("tab_bar")
+        tab_bar_layout = HBoxLayout(
+            tab_bar,
             left=constants.GAP_SMALL,
             top=constants.GAP_SMALL,
             right=constants.GAP_SMALL,
             bottom=constants.GAP_SMALL,
             spacing=constants.GAP_TINY,
         )
-        layout.addWidget(step_button_bar)
-        self._setup_step_button_bar(step_button_bar_layout)
+        layout.addWidget(tab_bar)
+        self._setup_tab_bar(tab_bar_layout)
 
         # Step stacked widget
         stacked_step_widget = QWidget()
@@ -82,39 +84,39 @@ class RunPage(Page):
         layout.addWidget(stacked_step_widget, 1)
         self._setup_stacked_step_widget(self.stacked_step_widget_layout)
 
-        self.button_tab_pairs: dict[QPushButton, RunPageTab] = {
-            self.operation_selection_button: self.operation_tab,
-            self.parameter_input_button: self.parameter_tab,
-            self.parameter_confirmation_button: self.confirmation_tab,
-            self.execution_view_button: self.view_tab,
-            self.results_button: self.results_tab,
+        self.label_to_tab: dict[QLabel, RunPageTab] = {
+            self.operation_selection_label: self.operation_tab,
+            self.parameter_input_label: self.parameter_tab,
+            self.parameter_confirmation_label: self.confirmation_tab,
+            self.execution_view_label: self.view_tab,
+            self.results_label: self.results_tab,
         }
 
         self._set_active_tab(self.operation_tab)
 
-    def _setup_step_button_bar(self, layout: HBoxLayout):
+    def _setup_tab_bar(self, layout: HBoxLayout):
         """
-        Setup the step button bar.
+        Set up the tab bar.
         """
-        self.operation_selection_button = QPushButton("Operation Selection")
-        self.operation_selection_button.clicked.connect(self._switch_to_operation_tab)
-        layout.addWidget(self.operation_selection_button)
+        self.operation_selection_label = QLabel("Operation Selection", alignment=Qt.AlignmentFlag.AlignCenter)
+        self.operation_selection_label.setObjectName("tab_label")
+        layout.addWidget(self.operation_selection_label)
 
-        self.parameter_input_button = QPushButton("Parameter Input")
-        self.parameter_input_button.clicked.connect(self._switch_to_parameter_tab)
-        layout.addWidget(self.parameter_input_button)
+        self.parameter_input_label = QLabel("Parameter Input", alignment=Qt.AlignmentFlag.AlignCenter)
+        self.parameter_input_label.setObjectName("tab_label")
+        layout.addWidget(self.parameter_input_label)
 
-        self.parameter_confirmation_button = QPushButton("Parameter Confirmation")
-        self.parameter_confirmation_button.clicked.connect(self._switch_to_confirmation_tab)
-        layout.addWidget(self.parameter_confirmation_button)
+        self.parameter_confirmation_label = QLabel("Parameter Confirmation", alignment=Qt.AlignmentFlag.AlignCenter)
+        self.parameter_confirmation_label.setObjectName("tab_label")
+        layout.addWidget(self.parameter_confirmation_label)
 
-        self.execution_view_button = QPushButton("Run")
-        self.execution_view_button.clicked.connect(self._switch_to_view_tab)
-        layout.addWidget(self.execution_view_button)
+        self.execution_view_label = QLabel("Run", alignment=Qt.AlignmentFlag.AlignCenter)
+        self.execution_view_label.setObjectName("tab_label")
+        layout.addWidget(self.execution_view_label)
 
-        self.results_button = QPushButton("Results")
-        self.results_button.clicked.connect(self._switch_to_results_tab)
-        layout.addWidget(self.results_button)
+        self.results_label = QLabel("Results", alignment=Qt.AlignmentFlag.AlignCenter)
+        self.results_label.setObjectName("tab_label")
+        layout.addWidget(self.results_label)
 
     def _setup_stacked_step_widget(self, layout: QStackedLayout):
         """
@@ -149,6 +151,7 @@ class RunPage(Page):
 
         # Results tab
         self.results_tab = ResultsTab(run_record=self._run_record)
+        self.results_tab.navigate_back.connect(self._switch_to_view_tab)
         self.results_tab.new_run_button.clicked.connect(self._new_run)
         self.results_tab.edit_run_button.clicked.connect(self._switch_to_operation_tab)
         self.run_ended.connect(self.results_tab.run_ended)
@@ -159,20 +162,18 @@ class RunPage(Page):
         Update the active tab. 
         Both the button styles and the displayed tab are updated.
         """
-        for i, (button, tab) in enumerate(self.button_tab_pairs.items()):
+        for i, (label, tab) in enumerate(self.label_to_tab.items()):
             if tab == active_tab:
                 role = "active"
                 tab.refresh()
                 self.stacked_step_widget_layout.setCurrentWidget(tab)
-            elif i < list(self.button_tab_pairs.values()).index(active_tab):
+            elif i < list(self.label_to_tab.values()).index(active_tab):
                 role = "past_step"
-                button.setEnabled(True)
             else:
                 role = "default"
-                button.setEnabled(False)
-            button.setProperty("step_role", role)
-            button.style().unpolish(button) # Required to apply styling dynamically
-            button.style().polish(button)
+            label.setProperty("step_role", role)
+            label.style().unpolish(label) # Required to apply styling dynamically
+            label.style().polish(label)
 
     # ---------- step button bar switch methods ----------
     @Slot()
@@ -200,13 +201,13 @@ class RunPage(Page):
     def _handle_run_start(self) -> None:
         self._switch_to_view_tab()
 
-    @Slot()
-    def _handle_run_end(self, run_successful: bool) -> None:
-        if run_successful:
+    @Slot(RunEndStatus)
+    def _handle_run_end(self, run_end_status: RunEndStatus) -> None:
+        if run_end_status == RunEndStatus.SUCCESS:
             history_record = self._run_record.to_history_record() 
             history_record.save_to_history()     
             self.run_saved.emit(history_record)
-            self._switch_to_results_tab()
+        self._switch_to_results_tab()
 
     @Slot()
     def _new_run(self) -> None:
@@ -219,7 +220,7 @@ class RunPage(Page):
     @Slot()
     def reset_page(self) -> None:
         self._run_record.reset()
-        for tab in self.button_tab_pairs.values():
+        for tab in self.label_to_tab.values():
             tab.reset()
         self._set_active_tab(self.operation_tab)
 

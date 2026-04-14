@@ -10,7 +10,10 @@ from PySide6.QtCore import (
     Slot,
 )
 
-from gui.model.dependency import Dependency
+from gui.model.parameter.condition import (
+    AndCondition,
+    Condition,
+)
 from .constraint import Constraint, IntervalConstraint
 
 T = TypeVar("T")
@@ -20,12 +23,17 @@ class Parameter(QObject, Generic[T]):
     """
     A base class for parameters to be filled in using the GUI.
 
-    The class inherits from `ABC` to make it abstract, from `QObject`
-    to use the signal mechanism and from `Generic` to add type hints
-    based on the type of value that the parameter stores.
+    The class inherits from `QObject` to use the signal mechanism and
+    from `Generic` to add type hints based on the type of value that
+    the parameter stores.
+
+    By default, a parameter is always enabled. Use the `add_condition`
+    method to add a condition that governs the parameter's enabled
+    state. If multiple conditions are added, the parameter is only
+    enabled when all of the conditions are true.
     """
 
-    class EnabledCondition(Dependency.Condition):
+    class EnabledCondition(Condition):
         """
         A condition that tracks whether a parameter is enabled.
         """
@@ -66,22 +74,10 @@ class Parameter(QObject, Generic[T]):
         ) -> None:
             self.value = new_enabled == self._target_value
 
-    class EnabledEffect(Dependency.Effect):
-        def __init__(
-                self,
-                parameter: "Parameter[Any]",
-                parent: QObject | None = None,
-        ) -> None:
-            super().__init__(parent=parent)
-            self._parameter = parameter
-
-        def condition_changed(self, new_value: bool) -> None:
-            self._parameter.enabled = new_value
-
     value_changed: Signal
+    value_reset = Signal()
     valid_changed = Signal(bool)
-    constraints_valid_changed = Signal(list)
-    hint_added = Signal(str)
+    constraint_added = Signal(Constraint)
     enabled_changed = Signal(bool)
 
     def __init__(
@@ -92,7 +88,6 @@ class Parameter(QObject, Generic[T]):
             operations: set[str],
             default_value: T,
             constraints: list[Constraint[T]] | None = None,
-            enabled: bool = True,
     ) -> None:
         """
         Initialize a `Parameter` object.
@@ -116,9 +111,12 @@ class Parameter(QObject, Generic[T]):
         self.operations = operations
         self.default_value = default_value
         self._value = default_value
-        self._constraints = constraints or []
-        self._hidden_constraints = []
-        self._enabled = enabled
+        self._condition = AndCondition()
+        self._condition.changed.connect(self.enabled_changed)
+        self._constraints: list[Constraint] = []
+        self._hidden_constraints: list[Constraint] = []
+        for constraint in constraints or []:
+            self.add_constraint(constraint)
 
     @property
     def value(self) -> T:
@@ -134,30 +132,40 @@ class Parameter(QObject, Generic[T]):
     def value(self, new_value: T) -> None:
         old_value = self._value
         old_valid = self.valid
-        old_constraints_valid = self.constraints_valid
 
         self._value = new_value
+        for constraint in self._constraints:
+            constraint.value = self.value
+        for constraint in self._hidden_constraints:
+            constraint.value = self.value
 
         if self.value != old_value:
             self.value_changed.emit(self.value, self.valid)
         if self.valid != old_valid:
             self.valid_changed.emit(self.valid)
-        if self.constraints_valid != old_constraints_valid:
-            self.constraints_valid_changed.emit(self.constraints_valid)
+
+    def add_condition(
+            self,
+            condition: Condition,
+    ) -> None:
+        """
+        Add a condition that determines this parameter's enabled state.
+
+        :param condition: the condition to add
+        :type condition: Condition
+        """
+        self._condition.add_condition(condition)
 
     @property
     def enabled(self) -> bool:
         """
         Whether the parameter is enabled.
 
-        Setting this property emits the `enabled_changed` signal.
+        The value of this property is determined solely by the
+        conditions which have been added to the parameter using the
+        `add_condition` method.
         """
-        return self._enabled
-
-    @enabled.setter
-    def enabled(self, new_enabled: bool) -> None:
-        self._enabled = new_enabled
-        self.enabled_changed.emit(self._enabled)
+        return self._condition.value
 
     def reset_value(self) -> None:
         """
@@ -167,6 +175,7 @@ class Parameter(QObject, Generic[T]):
         applicable.
         """
         self.value = self.default_value
+        self.value_reset.emit()
 
     def add_constraint(
             self,
@@ -177,8 +186,8 @@ class Parameter(QObject, Generic[T]):
         Add a new constraint to the parameter.
 
         If `hidden` is `True`, the constraint will not be exposed
-        through the `constraints_valid` and `hints` properties, but
-        will nonetheless be checked for validity.
+        through the `constraint` property, but will nonetheless be
+        checked for validity.
 
         The `valid_changed` signal is emitted if the newly added
         constraint makes the parameter's value invalid.
@@ -192,38 +201,25 @@ class Parameter(QObject, Generic[T]):
         :type hidden: bool
         """
         old_valid = self.valid
-        old_constraints_valid = self.constraints_valid
 
         if not hidden:
             self._constraints.append(constraint)
-            self.hint_added.emit(constraint.hint)
+            self.constraint_added.emit(constraint)
         else:
             self._hidden_constraints.append(constraint)
+        constraint.value = self.value
+
+        constraint.valid_changed.connect(self._emit_valid_changed)
+        constraint.enabled_changed.connect(self._emit_valid_changed)
 
         if self.valid != old_valid:
             self.valid_changed.emit(self.valid)
-        if self.constraints_valid != old_constraints_valid:
-            self.constraints_valid_changed.emit(self.constraints_valid)
 
     def to_dict(self) -> str | dict:
         return self.value
 
     def populate(self, value: dict | str) -> None:
         self.value = value
-
-    @property
-    def constraints_valid(self) -> list[bool]:
-        """
-        Whether each (non-hidden) constraint of the parameter is
-        satisfied by the current value.
-
-        :return: Description
-        :rtype: list[bool]
-        """
-        return [
-            constraint.valid(self.value)
-            for constraint in self._constraints
-        ]
 
     @property
     def valid(self) -> bool:
@@ -233,22 +229,25 @@ class Parameter(QObject, Generic[T]):
         if not self.enabled:
             return True
         return (
-            all(self.constraints_valid)
+            all(
+                constraint.valid or not constraint.enabled
+                for constraint in self._constraints
+            )
             and all(
-                constraint.valid(self.value)
+                constraint.valid or not constraint.enabled
                 for constraint in self._hidden_constraints
             )
         )
 
     @property
-    def hints(self) -> list[str]:
+    def constraints(self) -> list[Constraint]:
         """
-        The hint for each of this parameter's (non-hidden) constraints.
+        This parameter's (non-hidden) constraints.
 
-        :return: the list of hints
+        :return: the constraints
         :rtype: list[str]
         """
-        return [constraint.hint for constraint in self._constraints]
+        return self._constraints
 
     def in_cli(self, operation: str) -> bool:
         """
@@ -310,6 +309,10 @@ class Parameter(QObject, Generic[T]):
             value=value,
         )
 
+    @Slot()
+    def _emit_valid_changed(self) -> None:
+        self.valid_changed.emit(self.valid)
+
 
 class OptionalParameter(Parameter[bool]):
     """
@@ -322,7 +325,7 @@ class OptionalParameter(Parameter[bool]):
     parameter.
     """
 
-    class Condition(Dependency.Condition):
+    class Condition(Condition):
         """
         A condition that tracks whether an optional parameter is used.
         """
@@ -380,9 +383,24 @@ class OptionalParameter(Parameter[bool]):
         )
         self._parameter = parameter
 
-        self._parameter.enabled = self.value
-
-        self.value_changed.connect(self._value_changed)
+        # The inner parameter can only be enabled if the optional
+        # parameter is enabled and its value is set.
+        condition = AndCondition(
+            conditions=[
+                Parameter.EnabledCondition(
+                    parameter=self,
+                    target_value=True,
+                    parent=self,
+                ),
+                self.__class__.Condition(
+                    parameter=self,
+                    target_value=True,
+                    parent=self,
+                ),
+            ],
+            parent=self,
+        )
+        self._parameter.add_condition(condition)
 
     @property
     def parameter(self) -> Parameter[Any]:
@@ -425,10 +443,6 @@ class OptionalParameter(Parameter[bool]):
             return self.parameter.to_cli(operation)
         return ""
 
-    @Slot(bool, bool)
-    def _value_changed(self, new_value, _):
-        self.parameter.enabled = new_value
-
 
 class MultiParameter(Parameter[tuple[()]]):
     """
@@ -439,7 +453,9 @@ class MultiParameter(Parameter[tuple[()]]):
 
     def __init__(
             self,
-            name: str, description: str, flag: str,
+            name: str,
+            description: str,
+            flag: str,
             operations: set[str],
             parameters: list[Parameter[Any]],
     ) -> None:
@@ -448,12 +464,19 @@ class MultiParameter(Parameter[tuple[()]]):
             description,
             flag,
             operations,
-            ()
+            (),
         )
-
         self._parameters = parameters
 
-        self.enabled_changed.connect(self._enabled_changed)
+        # The inner parameters can only be enabled if the multi-value
+        # parameter is enabled.
+        condition = Parameter.EnabledCondition(
+            parameter=self,
+            target_value=True,
+            parent=self,
+        )
+        for parameter in self._parameters:
+            parameter.add_condition(condition)
 
     @property
     def parameters(self) -> list[Parameter[Any]]:
@@ -489,11 +512,6 @@ class MultiParameter(Parameter[tuple[()]]):
         nonempty_params = [p for p in cli_params if p]
         return f"{self.flag}{" ".join(nonempty_params)}"
 
-    @Slot(bool)
-    def _enabled_changed(self, new_enabled: bool) -> None:
-        for parameter in self.parameters:
-            parameter.enabled = new_enabled
-
 
 class CountedMultiParameter(MultiParameter):
     """
@@ -524,7 +542,7 @@ class BoolParameter(Parameter[bool]):
     The value of a boolean parameter is always valid.
     """
 
-    class Condition(Dependency.Condition):
+    class Condition(Condition):
         """
         A condition that tracks whether a bool parameter has a given
         value.
@@ -650,7 +668,7 @@ class EnumParameter(Parameter[int]):
     A parameter with enumerated values in the GUI.
     """
 
-    class Condition(Dependency.Condition):
+    class Condition(Condition):
         """
         A condition that tracks whether an enum parameter's value is in
         a given set of values.
@@ -702,7 +720,6 @@ class EnumParameter(Parameter[int]):
             options: list[tuple[str, str]],
             default_value: int,
             constraints: list[Constraint[int]] | None = None,
-            enabled: bool = True,
     ) -> None:
         """
         Initialize an `EnumParameter` object.
@@ -734,7 +751,6 @@ class EnumParameter(Parameter[int]):
             operations=operations,
             default_value=default_value,
             constraints=constraints,
-            enabled=enabled,
         )
         self._options = options
 
@@ -822,13 +838,14 @@ class StringParameter(Parameter[str]):
         )
 
 
-class StringPairListParameter(Parameter[list[tuple[str, str]]]):
+class StringTableParameter(Parameter[tuple[()]]):
     """
-    A parameter for entering any number of label-value pairs of strings.
+    A parameter for entering a table of strings.
     """
 
-    value_changed = Signal(list, bool)
-    pair_valid_changed = Signal(int, bool, bool)
+    value_changed = Signal(tuple[()], bool)
+    row_count_index_changed = Signal(int)
+    row_count_changed = Signal(int)
 
     def __init__(
             self,
@@ -836,79 +853,133 @@ class StringPairListParameter(Parameter[list[tuple[str, str]]]):
             description: str,
             flag: str,
             operations: set[str],
-            default_value: list[tuple[str, str]],
+            columns: list[tuple[str, str, list[Constraint[str]]]],
+            allowed_row_counts: list[int],
             separator: str,
-            left_pattern: Pattern | None = None,
-            right_pattern: Pattern | None = None,
-            min_count: int | None = None,
-            enabled: bool = True,
     ) -> None:
         super().__init__(
             name=name,
             description=description,
             flag=flag,
             operations=operations,
-            default_value=default_value,
-            enabled=enabled,
+            default_value=(),
         )
-        self._value = default_value.copy()
+
+        if not columns:
+            raise ValueError("Empty column list.")
+        self._column_names = [name for name, _, _ in columns]
+
+        if not allowed_row_counts:
+            raise ValueError("Empty list of allowed row counts.")
+        self._allowed_row_counts = list(allowed_row_counts)
+        self._allowed_row_counts.sort()
+        self._row_count_index = 0
+
+        max_allowed_row_count = max(allowed_row_counts)
+        self._parameters: list[list[StringParameter]] = []
+        for _ in range(max_allowed_row_count):
+            row = []
+            for _, default_value, constraints in columns:
+                parameter = StringParameter(
+                    name="",
+                    description="",
+                    flag="",
+                    operations=operations,
+                    default_value=default_value,
+                )
+                for constraint in constraints:
+                    parameter.add_constraint(constraint.copy())
+                parameter.value_changed.connect(self._inner_value_changed)
+                row.append(parameter)
+            self._parameters.append(row)
+
         self._separator = separator
-        self._left_pattern = left_pattern
-        self._right_pattern = right_pattern
-        self._min_count = min_count or 0
 
-    @property
-    def min_count(self) -> int:
-        return self._min_count
-
-    def add_pair(self, pair=("", "")) -> None:
-        self.value += [pair]
-        self.value_changed.emit(self.value, self.valid)
-
-    def pair_valid(self, index: int) -> tuple[bool, bool]:
-        left_valid = (
-            self._left_pattern is None
-            or self._left_pattern.fullmatch(self.value[index][0]) is not None
-        )
-        right_valid = (
-            self._right_pattern is None
-            or self._right_pattern.fullmatch(self.value[index][1]) is not None
-        )
-        return left_valid, right_valid
-
-    def set_pair(self, index: int, pair: tuple[str, str]) -> None:
-        self.value[index] = pair
-        self.value_changed.emit(self.value, self.valid)
-        self.pair_valid_changed.emit(index, *self.pair_valid(index))
-
-    def delete_pair(self, i: int) -> None:
-        self.value = self.value[:i] + self.value[i+1:]
+    @Slot()
+    def _inner_value_changed(self) -> None:
         self.value_changed.emit(self.value, self.valid)
 
     def reset_value(self) -> None:
-        self.value = self.default_value.copy()
-        self.value_changed.emit(self.value, self.valid)
+        super().reset_value()
+        for row in self.parameters:
+            for parameter in row:
+                parameter.reset_value()
+
+    def to_dict(self) -> str | dict:
+        result = {"parameters": []}
+        for row in self.parameters:
+            result_row: list[str] = []
+            for parameter in row:
+                result_row.append(parameter.to_dict())
+            result["parameters"].append(result_row)
+        return result
+
+    def populate(self, value: dict | str) -> None:
+        for row_index, row in enumerate(self.parameters):
+            for column_index, parameter in enumerate(row):
+                parameter.populate(
+                    value["parameters"][row_index][column_index]
+                )
+
+    @property
+    def allowed_row_counts(self) -> list[int]:
+        return self._allowed_row_counts
+
+    @property
+    def row_count_index(self) -> int:
+        return self._row_count_index
+
+    @row_count_index.setter
+    def row_count_index(self, new_row_count_index: int) -> None:
+        old_row_count_index = self.row_count_index
+        old_row_count = self.row_count
+
+        self._row_count_index = new_row_count_index
+
+        if self.row_count_index != old_row_count_index:
+            self.row_count_index_changed.emit(self.row_count_index)
+        if self.row_count != old_row_count:
+            self.row_count_changed.emit(self.row_count)
+
+    @property
+    def row_count(self) -> int:
+        return self.allowed_row_counts[self.row_count_index]
+
+    @property
+    def column_count(self) -> int:
+        return len(self._column_names)
+
+    @property
+    def column_names(self) -> list[str]:
+        return self._column_names
+
+    @property
+    def parameters(self) -> list[list[StringParameter]]:
+        return self._parameters
 
     @property
     def valid(self) -> bool:
-        if len(self.value) < self.min_count:
-            return False
+        if not self.enabled:
+            return True
         return all(
-            left_valid and right_valid for left_valid, right_valid in
-            [self.pair_valid(i) for i in range(len(self.value))]
+            parameter.valid
+            for row in self.parameters[:self.row_count]
+            for parameter in row
         )
 
     def _to_cli(
             self,
             operation: str | None = None,
-            value: list[tuple[str, str]] | None = None,
+            value: tuple[()] | None = None,
     ) -> str:
-        if value is None:
-            value = self.value
-        result = f"{self.flag}{len(value)}"
-        for left, right in value:
-            result += f" {left}{self._separator}{right}"
-        return result
+        pieces = [f"{self.flag}{self.row_count}"]
+        for row in self.parameters[:self.row_count]:
+            pieces.append(
+                self._separator.join(
+                    parameter.value for parameter in row
+                )
+            )
+        return " ".join(pieces)
 
 
 class FileParameter(Parameter[list[str]]):

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
 
 from .parameter_form_section import ParameterFormSection
 from gui.model.run_record import RunRecord
-from gui.widgets import VBoxLayout
+from gui.components import VBoxLayout
 from gui.style import constants
 
 
@@ -30,8 +30,6 @@ class ParameterForm(QWidget):
             self,
             spacing=constants.GAP_TINY,
         )
-        heading = QLabel("RAiSD-AI parameters")
-        layout.addWidget(heading)
 
         for parameter_group in self._run_record.parameter_groups:
             parameter_form_section = ParameterFormSection(parameter_group, editable=self._editable)

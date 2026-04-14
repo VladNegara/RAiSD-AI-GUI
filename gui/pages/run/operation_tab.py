@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 
 from .run_page_tab import RunPageTab
 from gui.model.run_record import RunRecord
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     ResizableStackedWidget,
     VBoxLayout,
@@ -100,7 +100,7 @@ class OperationTab(RunPageTab):
 
             layout = HBoxLayout(
                 self,
-                spacing=constants.GAP_TINY,
+                spacing=constants.GAP_MEDIUM,
             )
 
             button_widget = QWidget()
@@ -125,7 +125,7 @@ class OperationTab(RunPageTab):
             self.tree_selectors: list[tuple[QRadioButton, OperationTreeWidget]] = []
             flat_index = 0
             for mode_name, trees in self._run_record.categorized_operation_trees:
-                mode_label = QLabel(mode_name + " Operations")
+                mode_label = QLabel(mode_name)
                 mode_label.setObjectName("mode_label")
                 button_layout.addWidget(mode_label)
 

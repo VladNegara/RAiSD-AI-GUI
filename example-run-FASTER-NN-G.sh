@@ -46,7 +46,7 @@ if [ "$SCAN_DATASET" -eq 1 ]; then
 conda activate raisd-ai
 
 # Scan neutral dataset to obtain FPR thresholds at 0.05
-./RAiSD-AI -n FASTER-NN-G-PT-BINRAWPOS-SCAN-NEUTRAL -mdl RAiSD_Model.FASTER-NN-G-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_NEUTRAL -L 100000 -frm -G 100 -pci 1 1 -O -k 0.05 
+./RAiSD-AI -n FASTER-NN-G-PT-BINRAWPOS-SCAN-NEUTRAL -mdl RAiSD_Model.FASTER-NN-G-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_NEUTRAL -L 100000 -frm -G 100 -pcs 1 sweepTR -O -k 0.05 
 
 # Get thresholds
 fprThresholdMU=$(grep " mu " RAiSD_Info.FASTER-NN-G-PT-BINRAWPOS-SCAN-NEUTRAL | grep min | awk -F: '{print $2}' | awk '{print $1}')
@@ -55,7 +55,7 @@ fprThresholdPCL0=$(grep " sweepTR" RAiSD_Info.FASTER-NN-G-PT-BINRAWPOS-SCAN-NEUT
 echo $fprThresholdPCL0
 
 # Scan dataset
-./RAiSD-AI -n FASTER-NN-G-PT-BINRAWPOS-SCAN-SWEEP -mdl RAiSD_Model.FASTER-NN-G-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_SWEEP -L 100000 -frm -T 50000 -d 1000 -G 100 -pci 1 1 -O -l 2 mu=$fprThresholdMU pcl0=$fprThresholdPCL0 
+./RAiSD-AI -n FASTER-NN-G-PT-BINRAWPOS-SCAN-SWEEP -mdl RAiSD_Model.FASTER-NN-G-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_SWEEP -L 100000 -frm -T 50000 -d 1000 -G 100 -pcs 1 sweepTR -O -l 2 mu=$fprThresholdMU pcl0=$fprThresholdPCL0 
 
 conda deactivate
 fi

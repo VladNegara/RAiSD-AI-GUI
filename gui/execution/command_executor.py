@@ -14,6 +14,20 @@ from PySide6.QtCore import (
 from gui.model.run_record import RunRecord
 from gui.model.settings import app_settings
 
+def default_command_builder(parameters: str) -> str:
+        """
+        Builds a command using the given parameters.
+
+        :param parameters: the parameters to use
+        :type parameters: str
+        """
+        return (
+            f"{app_settings.environment_manager_name} run "
+            f"-n {app_settings.environment_name} "
+            f"{app_settings.executable_file_path.absoluteFilePath()} {parameters}"
+        )
+
+
 class CommandExecutor(QObject):
     """
     A class that manages the execution of shell commands in QProcesses.
@@ -39,7 +53,7 @@ class CommandExecutor(QObject):
         """
         super().__init__()
         self.run_record = run_record
-        self.command_builder = command_builder or self._default_command_builder
+        self.command_builder = command_builder or default_command_builder
 
         self._process = QProcess()
         self._process.started.connect(self._process_started)
@@ -50,19 +64,6 @@ class CommandExecutor(QObject):
         
         self._commands = []
         self._command_queue = queue.Queue()
-
-    def _default_command_builder(self, parameters: str) -> str:
-        """
-        Builds a command using the given parameters.
-
-        :param parameters: the parameters to use
-        :type parameters: str
-        """
-        return (
-            f"{app_settings.environment_manager_name} run "
-            f"-n {app_settings.environment_name} "
-            f"{app_settings.executable_file_path.absoluteFilePath()} {parameters}"
-        )
 
     @Slot(list)
     def start_execution(self, commands:list[str]=[]) -> None:

@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
     QStackedLayout,
-    QScrollArea,
     QPushButton,
+    QApplication,
 )
 
 from PySide6.QtGui import (
@@ -18,7 +18,7 @@ from gui.model.settings import app_settings
 from gui.model.run_record import RunRecord
 from gui.model.history_record import HistoryRecord
 from gui.execution.command_executor import CommandExecutor
-from gui.widgets import (
+from gui.components import (
     HBoxLayout,
     VBoxLayout,
 )
@@ -38,7 +38,6 @@ class MainWindow(QMainWindow):
         Initialize the main window.
         """
         super().__init__()
-        app_settings.initialize()
         app_settings.config_path_changed.connect(self._init_main_window)
         self._init_main_window()
 
@@ -46,6 +45,7 @@ class MainWindow(QMainWindow):
         run_record = RunRecord.from_yaml(app_settings.config_path.absoluteFilePath())
         self.run_record = run_record
         self.command_executor = CommandExecutor(run_record)
+        QApplication.processEvents() # Necessary for the splash screen to load
         self._setup_ui()
         self.run_page.run_saved.connect(self.history_page.add_completed_run)
 
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
             left=constants.GAP_TINY,
             top=constants.GAP_MEDIUM,
             right=constants.GAP_TINY,
-            bottom=constants.GAP_MEDIUM,
+            bottom=constants.GAP_TINY,
             spacing=constants.GAP_TINY,
         )
 
@@ -97,6 +97,8 @@ class MainWindow(QMainWindow):
         logo_widget.setObjectName("logo_widget")
         layout.addWidget(logo_widget)
 
+        layout.addSpacing(constants.GAP_TINY)
+
         # Run Button
         self.run_button = QPushButton()
         self.run_button.clicked.connect(lambda: self._set_active_view(self.run_button))
@@ -111,6 +113,8 @@ class MainWindow(QMainWindow):
         self.history_button.setFixedSize(40, 40)
         layout.addWidget(self.history_button)
 
+        layout.addStretch()
+
         # Settings Button
         self.settings_button = QPushButton()
         self.settings_button.clicked.connect(lambda: self._set_active_view(self.settings_button))
@@ -118,7 +122,6 @@ class MainWindow(QMainWindow):
         self.settings_button.setFixedSize(40, 40)
         layout.addWidget(self.settings_button)
 
-        layout.addStretch()
 
     def _setup_main_widget(self, layout: QStackedLayout):
         self.run_page = RunPage(self.run_record, self.command_executor)

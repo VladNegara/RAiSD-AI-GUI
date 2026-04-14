@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (
 )
 
 from gui.style import constants
-from gui.widgets import VBoxLayout
+from gui.components import VBoxLayout, StylableWidget
+from gui.components.settings.settings_item_widget import SettingsItemWidget
 
 
 class Settings(QObject):
@@ -29,65 +30,6 @@ class Settings(QObject):
     Use the `app_settings` singleton instance instead.
     """
 
-    class SetupDialog(QDialog):
-        """
-        A dialog for displaying and setting the application settings.
-        """
-
-        def __init__(
-                self, 
-                parent=None, 
-                ):
-            super().__init__(parent)
-            self.setWindowTitle("Complete setup")
-            self.setModal(True)
-            self.resize(400, 300)
-            
-            layout = VBoxLayout(self, spacing=constants.GAP_TINY)
-
-            # workspace
-            workspace_header = QLabel("Select workspace")
-            layout.addWidget(workspace_header)
-
-            self._file_browse = QPushButton('Browse')
-            self._file_browse.clicked.connect(lambda _, i=self._file_browse: self._open_file_dialog_folder(i))
-            layout.addWidget(self._file_browse)
-
-            self.buttonbox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-            self.buttonbox.setCenterButtons(True)
-            self.buttonbox.accepted.connect(self._close_clicked)
-            layout.addWidget(self.buttonbox)
-
-        @Slot()
-        def _close_clicked(self) -> None:
-            """
-            Close the dialog if a valid workspace path has been selected. 
-            """
-            if app_settings._workspace_path:
-                self.close()
-    
-        @Slot(QPushButton)
-        def _open_file_dialog_folder(self, button : QPushButton) -> None:
-            """
-            Helper function that opens the OS file picker. If `multiple`
-            is `True`, it uses `getOpenFileNames` to allow for multiple
-            file selection. Otherwise, it uses `getOpenFileName` to allow
-            only a single file.
-            """
-            new_path = QFileDialog.getExistingDirectory(
-                None,
-                "Select Directory",
-                "",
-                QFileDialog.Option.ShowDirsOnly
-            )
-            if not new_path:  # Check for empty string (canceled)
-                return  
-            try:
-                app_settings.workspace_path = QDir(new_path)
-                button.setText(new_path)
-            except Exception as e:
-                print(f"Error setting workspace: {e}")
-
     workspace_path_changed = Signal(QDir)
     executable_file_path_changed = Signal(QFileInfo)
     environment_manager_changed = Signal(int)
@@ -96,7 +38,7 @@ class Settings(QObject):
     settings_changed = Signal()
 
     settings_file_path = "gui/settings.yaml"
-    environment_managers = ["micromamba", "conda"]
+    environment_managers = ["conda", "micromamba"]
 
     def __init__(
             self,
@@ -116,15 +58,6 @@ class Settings(QObject):
         self._environment_manager = environment_manager
         self._environment_name = environment_name
         self._config_path = config_path
-    
-    def initialize(self) -> None:
-        """
-        Initialize a settings object by filling it.
-        """
-        self.from_yaml(self.settings_file_path)
-        if not self._workspace_path:
-            dialog = self.SetupDialog()
-            dialog.exec()
 
     def from_yaml(self, file_path: str) -> None:
         """
@@ -166,7 +99,7 @@ class Settings(QObject):
                 )
             self._executable_file_path = executable_file
         if not self._executable_file_path:
-            self._executable_file_path = QFileInfo("RAiSD-AI")
+            self._executable_file_path = QFileInfo("RAiSD-AI-ZLIB")
 
         # Environment manager
         if "environment_manager" in settings_obj:

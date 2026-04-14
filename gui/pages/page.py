@@ -1,4 +1,4 @@
-from gui.widgets import (
+from gui.components import (
     StylableWidget,
 )
 

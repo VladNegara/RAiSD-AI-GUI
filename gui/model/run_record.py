@@ -2,7 +2,6 @@ from re import compile
 from typing import Any, Iterator
 from yaml import load, Loader
 from datetime import datetime
-import json
 
 from PySide6.QtCore import (
     QObject,
@@ -35,12 +34,12 @@ from gui.model.parameter import (
     FloatParameter,
     EnumParameter,
     StringParameter,
-    StringPairListParameter,
+    StringTableParameter,
     FileParameter,
 )
-from gui.model.dependency import (
-    Dependency,
+from gui.model.parameter.condition import (
     AndCondition,
+    Condition,
     OrCondition,
 )
 
@@ -62,7 +61,6 @@ class RunRecord(QObject):
             run_id_parameter: StringParameter,
             categorized_operation_trees: list[tuple[str, list[OperationTree]]],
             parameter_groups: list[ParameterGroup] | None = None,
-            dependencies: list[Dependency] | None = None,
     ) -> None:
         """
         Initialize a `RunRecord` object.
@@ -81,7 +79,6 @@ class RunRecord(QObject):
             tree.valid_changed.connect(self._operation_tree_valid_changed)
         self._selected_operation_tree_index = 0
         self._parameter_groups = parameter_groups or []
-        self._dependencies = dependencies or []
         # Set using setter
         self.selected_operation_tree_index = 0
 
@@ -102,7 +99,7 @@ class RunRecord(QObject):
         """
 
         id_to_parameter: dict[str, Parameter[Any]] = {}
-        parameters = []
+        parameters: list[Parameter[Any]] = []
         parameter_to_constraint_objs: dict[Parameter[Any], list[dict]] = {}
         parameter_to_condition_objs: dict[Parameter[Any], list[dict]] = {}
 
@@ -143,6 +140,42 @@ class RunRecord(QObject):
                     raise ValueError(
                         f"Invalid file structure. Unknown file type {file_type}"
                     )
+
+        def parse_operation_input(obj: dict) -> Operation.Input:
+            if "name" not in obj:
+                raise ValueError("Missing name for operation input.")
+            name = obj["name"]
+            if not isinstance(name, str):
+                raise ValueError(
+                    f"Invalid input file name: {name}. Expected a string."
+                )
+
+            description = obj.get("description", "") or ""
+            if not isinstance(description, str):
+                raise ValueError(
+                    f"Invalid description for input file {name}: {description}"
+                    + ". Expected a string or null."
+                )
+
+            cli = obj.get("cli", "") or ""
+            if not isinstance(cli, str):
+                raise ValueError(
+                    f"Invalid CLI representation for input file {name}: {cli}."
+                    + " Expected a string or null."
+                )
+
+            if "file" not in obj:
+                raise ValueError(
+                    f"Missing file structure for input file {name}.")
+            file_obj = obj["file"]
+            file = parse_file_structure(file_obj)
+
+            return Operation.Input(
+                name=name,
+                description=description,
+                cli=cli,
+                file=file,
+            )
 
         def parse_path_fragment(obj: str | dict) -> Operation.PathFragment:
             if isinstance(obj, str):
@@ -231,23 +264,8 @@ class RunRecord(QObject):
                         f"Invalid item in input list: {requires_obj}. "
                         + "Expected object."
                     )
-                file_name = requires_obj.get("name", "")
-                if not isinstance(file_name, str):
-                    raise ValueError(
-                    f"Invalid file name: {file_name}. Expected string or null."
-                    )
-                file_cli = requires_obj.get("cli", "") or ""
-                if not isinstance(file_cli, str):
-                    raise ValueError(
-                        f"Invalid CLI representation for file {file_name}: "
-                        + f"{file_cli}. Expected string or null."
-                    )
-
-                if "file" not in requires_obj:
-                    raise ValueError("File missing.")
-                file_obj = requires_obj["file"]
-                file = parse_file_structure(file_obj)
-                requires.append((file_name, file_cli, file))
+                
+                requires.append(parse_operation_input(requires_obj))
 
             produces_obj = obj.get("output", "") or ""
             if not isinstance(produces_obj, dict):
@@ -300,7 +318,7 @@ class RunRecord(QObject):
                         operations={id},
                     )
                 )
-            
+
             return Operation(
                 id=id,
                 name=name,
@@ -509,44 +527,95 @@ class RunRecord(QObject):
                         parameter_operations,
                         default_value,
                     )
-                case "string pair list" | "string pairs":
-                    default_value_list = obj.get("default", []) or []
-                    if not isinstance(default_value_list, list):
+                case "string table":
+                    if "columns" not in obj:
                         raise ValueError(
-                            "Invalid default value for string pair list "
-                            + f"parameter {name}: {default_value_list}. "
-                            + "Expected a list or null."
+                            "Missing list of column descriptions for string "
+                            + f"table parameter {name}."
                         )
-                    default_value = []
-                    for pair in default_value_list:
-                        if not isinstance(pair, dict):
+                    columns_list = obj["columns"]
+                    if not isinstance(columns_list, list):
+                        raise ValueError(
+                            "Invalid list of column descriptions for string "
+                            + f"table parameter {name}."
+                        )
+                    columns: list[tuple[str, str, list[Constraint[str]]]] = []
+                    for column_obj in columns_list:
+                        if not isinstance(column_obj, dict):
                             raise ValueError(
-                                "Invalid value in default list for string pair"
-                                + f" list parameter {name}: {pair}. Expected "
+                                "Invalid column description for string table "
+                                + f"parameter {name}: {column_obj}. Expected "
                                 + "an object."
                             )
 
-                        left = pair.get("left", "") or ""
-                        if not isinstance(left, str):
+                        if "name" not in column_obj:
                             raise ValueError(
-                                "Invalid left value in default list for string"
-                                + f" pair list parameter {name}: {left}. "
+                                "Missing column name for string table "
+                                + f"parameter {name}."
+                            )
+                        column_name = column_obj["name"]
+                        if not isinstance(column_name, str):
+                            raise ValueError(
+                                "Invalid column name for string table "
+                                + f"parameter {name}: {column_name}. Expected "
+                                + "a string."
+                            )
+
+                        column_default = column_obj.get("default", "") or ""
+                        if not isinstance(column_default, str):
+                            raise ValueError(
+                                "Invalid column default value for string table"
+                                + f" parameter {name}: {column_default}. "
                                 + "Expected a string or null."
                             )
 
-                        right = pair.get("right", "") or ""
-                        if not isinstance(right, str):
+                        constraints_list = column_obj.get(
+                            "constraints", []
+                        ) or []
+                        if not isinstance(constraints_list, list):
                             raise ValueError(
-                                "Invalid right value in default list for "
-                                + f"string pair list parameter {name}: {right}"
-                                + ". Expected a string or null."
+                                "Invalid constraints list for column "
+                                + f"{column_name} of string table parameter "
+                                + f"{name}: {constraints_list}. Expected a "
+                                + "list or null."
                             )
+                        column_constraints: list[Constraint[str]] = []
+                        for constraint_obj in constraints_list:
+                            if not isinstance(constraint_obj, dict):
+                                raise ValueError(
+                                    "Invalid constraint for column "
+                                    + f"{column_name} of string table "
+                                    + f"parameter {name}: {constraint_obj}. "
+                                    + "Expected an object."
+                                )
+                            column_constraints.append(
+                                parse_constraint(constraint_obj)
+                            )
+                        columns.append(
+                            (
+                                column_name,
+                                column_default,
+                                column_constraints,
+                            ),
+                        )
 
-                        default_value.append((left, right))
+                    if "rows" not in obj:
+                        raise ValueError(
+                            "Missing allowed row counts for string table "
+                            + f"parameter {name}."
+                        )
+                    allowed_row_counts = obj["rows"]
+                    for count in allowed_row_counts:
+                        if not isinstance(count, int):
+                            raise ValueError(
+                                "Invalid allowed row count for string table "
+                                + f"parameter {name}: {count}. Expected an "
+                                + "integer."
+                            )
 
                     if "separator" not in obj:
                         raise ValueError(
-                            "Missing separator for string pair list parameter "
+                            "Missing separator for string table parameter "
                             + f"{name}."
                         )
                     separator = obj["separator"]
@@ -555,50 +624,15 @@ class RunRecord(QObject):
                             "Invalid separator for string pair list parameter "
                             + f"{name}: {separator}. Expected a string."
                         )
-
-                    left_pattern = obj.get("left_pattern", None)
-                    if isinstance(left_pattern, str):
-                        compiled_left_pattern = compile(left_pattern)
-                    elif left_pattern is None:
-                        compiled_left_pattern = None
-                    else:
-                        raise ValueError(
-                            "Invalid left-side pattern for string pair list "
-                            + f"parameter {name}: {left_pattern}. Expected a "
-                            + "string or null."
-                        )
-
-                    right_pattern = obj.get("right_pattern", None)
-                    if isinstance(right_pattern, str):
-                        compiled_right_pattern = compile(right_pattern)
-                    elif right_pattern is None:
-                        compiled_right_pattern = None
-                    else:
-                        raise ValueError(
-                            "Invalid right-side pattern for string pair list "
-                            + f"parameter {name}: {right_pattern}. Expected a "
-                            + "string or null."
-                        )
-
-
-                    min_count = obj.get("min", 0) or 0
-                    if not isinstance(min_count, int):
-                        raise ValueError(
-                            "Invalid minimum count for string pair list "
-                            + f"parameter {name}: {min_count}. Expected an int"
-                            + " or null."
-                        )
         
-                    parameter = StringPairListParameter(
+                    parameter = StringTableParameter(
                         name,
                         description,
                         flag,
                         operations,
-                        default_value,
+                        columns,
+                        allowed_row_counts,
                         separator,
-                        compiled_left_pattern,
-                        compiled_right_pattern,
-                        min_count,
                     )
                 case "file":
                     accepted_formats = obj.get("formats", None)
@@ -894,7 +928,7 @@ class RunRecord(QObject):
                 id_to_parameter[parameter_id] = parameter
             return ParameterGroup(name, parameters)
 
-        def parse_condition(obj: dict) -> Dependency.Condition:
+        def parse_condition(obj: dict) -> Condition:
             if "type" not in obj:
                 raise ValueError("Parameter condition has no type.")
             
@@ -914,7 +948,7 @@ class RunRecord(QObject):
                             + f"{conditions_list}. Expected a list."
                         )
 
-                    conditions: list[Dependency.Condition] = []
+                    conditions: list[Condition] = []
                     for condition_obj in conditions_list:
                         conditions.append(
                             parse_condition(condition_obj)
@@ -1164,27 +1198,16 @@ class RunRecord(QObject):
                     parse_constraint(constraint_obj),
                 )
 
-        for param in id_to_parameter.values():
-            conditions: list[Dependency.Condition] = []
-            for condition_obj in parameter_to_condition_objs[param]:
-                conditions.append(
-                    parse_condition(condition_obj)
-                )
+        for parameter in parameters:
+            for condition_obj in parameter_to_condition_objs[parameter]:
+                parameter.add_condition(parse_condition(condition_obj))
 
-            single_operation_conditions = []
-            for operation_id in param.operations:
-                single_operation_conditions.append(
+            operation_condition = OrCondition()
+            for operation_id in parameter.operations:
+                operation_condition.add_condition(
                     operation_conditions[operation_id]
                 )
-            conditions.append(
-                OrCondition(single_operation_conditions)
-            )
-
-            Dependency(
-                AndCondition(conditions),
-                Parameter.EnabledEffect(param),
-                result,
-            )
+            parameter.add_condition(operation_condition)
 
         return result
     

@@ -34,7 +34,11 @@ inline void *	rsd_realloc	(void * p, size_t size);
 FILE * 	skipLine 		(FILE * fp);
 int	matchChromInList 	(char * newChromName, char ** chromList, int chromListSize);
 char ** addChromToList 		(char * newChromName, char ** chromList, int * chromListSize);
-
+void 	sanitizeString		(const char *input, char *output, size_t maxlen);
+int 	isPositiveInteger 	(const char *str); 
+#ifdef _RSDAI
+int 	getPositiveClassIndex	(const char * modelPath, const char * classLabel);
+#endif 
 
 char POPCNT_U16_LUT [0x1u << 16];
 
@@ -1523,6 +1527,69 @@ int getValidNumberOf_FASTER_NN_G_Groups (int imageHeight, int groups)
 	
 	return 1;
 }
+
+int getPositiveClassIndex(const char * modelPath, const char * classLabel) 
+{
+	assert(modelPath!=NULL);
+	assert(classLabel!=NULL);
+	
+	char filePath[STRING_SIZE], tstring[STRING_SIZE];
+
+	if (modelPath[strlen(modelPath) - 1] == '/') 
+	{
+		snprintf(filePath, sizeof(filePath), "%sclassLabels.txt", modelPath);
+	} 
+	else
+	{
+		snprintf(filePath, sizeof(filePath), "%s/classLabels.txt", modelPath);
+	}
+    	
+	FILE * fp = fopen(filePath, "r");
+	
+	if(fp==NULL)
+	{
+		fprintf(stderr, "\nERROR: File %s with class labels not found!\n\n", filePath);
+		exit(1);
+	}
+    
+	int ret=-1, totalClasses=-1, i=-1, classIndex=-1; 
+	
+	ret = fscanf(fp, "%s %d", tstring, &totalClasses);
+	assert(ret==2);
+	
+	for(i=0;i<totalClasses;i++)
+	{
+		ret = fscanf(fp, "%s", tstring);
+		assert(ret==1);
+		
+		if(!strcmp(tstring, classLabel))
+		{
+			ret = fscanf(fp, "%s", tstring);
+			assert(ret==1);
+			
+			ret= sscanf(tstring, "(%d)", &classIndex);
+			assert(ret==1);
+			
+			assert(classIndex<totalClasses);			
+		}
+		else
+		{
+			ret = fscanf(fp, "%s", tstring);
+			assert(ret==1);
+		}
+	}
+	
+	fclose(fp);
+	fp=NULL;
+	
+	if(!(classIndex>=0 && classIndex<totalClasses))
+	{
+		fprintf(stderr, "\nERROR: Input argument \"%s\" (class label, -pcs) was not found in %s\n\n", classLabel, filePath);
+		exit(1);	
+	}
+	
+	return classIndex; 
+}
 #endif
 
 int getStringLengthInt (int prv, int in) 
@@ -1578,6 +1645,39 @@ int getStringLengthExp (int prv, double in)
 	int sLen = ((int)strlen(tstring))>prv?(int)strlen(tstring):prv;
 	return sLen;
 }
+
+void sanitizeString(const char *input, char *output, size_t maxlen)
+{
+	size_t j = 0;
+	for (size_t i = 0; input[i] != '\0' && j < maxlen - 1; i++)
+	{
+		char c = input[i];
+		
+		if (isalnum((unsigned char)c) || c == '_' || c == '-' || c == '.')
+		{
+			output[j++] = c;
+		}
+		else
+		{
+	    		// replace dangerous character with underscore
+	    		output[j++] = '_';
+		}
+	}
+	output[j] = '\0';
+}
+
+int isPositiveInteger (const char *str) 
+{
+	if (str == NULL || *str == '\0') 
+		return 0; // empty or NULL
+
+	for (int i = 0; str[i] != '\0'; i++) 
+		if (!isdigit((unsigned char)str[i])) 
+			return 0; 
+
+	return 1; 
+}
+
 
 #ifdef _RSDAI
 void printRAiSD (FILE * fpOut)

@@ -70,13 +70,13 @@ void RSDHelp (FILE * fp)
 	fprintf(fp, "\t[-T INTEGER]\n");
 	fprintf(fp, "\t[-d INTEGER]\n");
 	fprintf(fp, "\t[-k FLOAT]\n");
-	fprintf(fp, "\t[-l FLOAT]\n");
+	fprintf(fp, "\t[-l STRING STRING=FLOAT STRING=FLOAT ...]\n");
 
 	fprintf(fp, "\n\t-- FASTA-to-VCF CONVERSION \n\n");
 	fprintf(fp, "\t[-C STRING]\n");
 	fprintf(fp, "\t[-C2 STRING]\n");
 	fprintf(fp, "\t[-H STRING]\n");
-	fprintf(fp, "\t[-E STRING]\n");
+	fprintf(fp, "\t[-E]\n");
 	
 	fprintf(fp, "\n\t-- VCF-to-MS CONVERSION \n\n");
 	fprintf(fp, "\t[-Q INTEGER]\n");
@@ -119,6 +119,7 @@ void RSDHelp (FILE * fp)
 
 	fprintf(fp, "\n\t-- RAiSD-AI SWEEP SCAN (MODE: SWP-SCN) \n\n");
 	fprintf(fp, "\t -pci INTEGER INTEGER ...\n");
+	fprintf(fp, "\t -pcs INTEGER STRING ...\n");
 	
 	fprintf(fp, "\n\t-- RAiSD-AI ADDITIONAL PARAMETERS \n\n");
 	fprintf(fp, "\t[-frm]\n"); 
@@ -176,7 +177,7 @@ void RSDHelp (FILE * fp)
 \t\tto report the true positive rate. Syntax: \"-l Number_of_Thresholds label1=thres1 label2=thres2 ...\", where\n\t\tlabel in {var, sfs, ld, mu, pcl0, pcl1}. Example: \"-l 6 var=0.1 sfs=0.2 ld=0.3 mu=0.4 pcl0=0.5 pcl1=0.6\".\n\t\tLabels pcl0 and pcl1 refer to CNN positive classes.\n");
 
 	fprintf(fp, "\n\t-- FASTA-to-VCF CONVERSION \n\n");
-	fprintf(fp, "\t-C\tProvides the outgroup to be used for the ancestral states (REF field in VCF). The first ingroup sequence\n\t\tis used if the outgroup is not given or found.\n");
+	fprintf(fp, "\t-C\tProvides the outgroup to be used for the ancestral states (REF field in VCF). The first ingroup sequence\n\t\tis used if no outgroup is provided or found.\n");
 	fprintf(fp, "\t-C2\tProvides a second outgroup to be used for the ancestral states (REF field in VCF).\n");
 	fprintf(fp, "\t-H\tProvides the chromosome name (CHROM field in VCF) to overwrite default \"chrom\" string.\n");
 	fprintf(fp, "\t-E\tConverts input FASTA to VCF and terminates execution without further processing.\n");
@@ -185,7 +186,7 @@ void RSDHelp (FILE * fp)
 	fprintf(fp, "\t-Q\tConverts an input VCF to ms and provides the memory size (in MB) to be allocated for the conversion. Requires -L.\n");
 
 	fprintf(fp, "\n\t-- COMMON-OUTLIER ANALYSIS \n\n");
-	fprintf(fp, "\t-CO\tProvides the report name (and column indices for positions and scores) to be used for common-outlier analysis.\n\t\tTo perform a common-outlier analysis using RAiSD and SweeD, use -CO like this: \"-CO SweeD_Report.SweeD-Run-Name 1 2\".\n\t\tThe SweeD report must not contain a header. If you have already run RAiSD on your data and only want to perform a\n\t\tcommon-outlier analysis, use -CO like this: \"-CO SweeD_Report.SweeD-Run-Name 1 2 RAiSD_Report.RAiSD-Run-Name 1 X\",\n\t\twhere X is the index of the column you want to use depending on the RAiSD report.\n\t\tTo use the mu-statistic, set Y=2 if RAiSD was invoked with the default parameters, or set Y=7 if -R was explicitly\n\t\tprovided or implicitly activated through some other command-line parameter. Again, the RAiSD report must not contain\n\t\ta header.\n");
+	fprintf(fp, "\t-CO\tProvides the report name (and column indices for positions and scores) to be used for common-outlier analysis.\n\t\tTo perform a common-outlier analysis using RAiSD and SweeD, use -CO like this: \"-CO SweeD_Report.SweeD-Run-Name 1 2\".\n\t\tThe SweeD report must not contain a header. If you have already run RAiSD on your data and only want to perform a\n\t\tcommon-outlier analysis, use -CO like this: \"-CO SweeD_Report.SweeD-Run-Name 1 2 RAiSD_Report.RAiSD-Run-Name 1 X\",\n\t\twhere X is the index of the column you want to use depending on the RAiSD report.\n\t\tTo use the mu-statistic, set X=2 if RAiSD was invoked with the default parameters, or set X=7 if -R was explicitly\n\t\tprovided or implicitly activated through some other command-line parameter. Again, the RAiSD report must not contain\n\t\ta header.\n");
 	fprintf(fp, "\t-COT\tProvides the cut-off threshold for identifying top outliers per report (default: 0.05, i.e., top 5%%). \n");
 	fprintf(fp, "\t-COD\tProvides the maximum distance (in number of sites) between outlier points in the provided reports to identify\n\t\tmatching outlier positions reported by RAiSD and SweeD. Based on the accuracy of the implemented methods in SweeD\n\t\tand RAiSD, we typically set -COD to a value between 100 and 400 sites (default: 1, i.e., exact match).\n");
 
@@ -230,12 +231,13 @@ FASTER-NN-G:\t2-class model for selective sweeps and 4-class model for 2-factor 
 
 	
 	fprintf(fp, "\n\t-- RAiSD-AI INFERENCE (MODE: MDL-TST) \n\n");
-	fprintf(fp, "\t-mdl\tProvides a path to the directory where the trained CNN model is stored. This should be the RAiSD_Model.some-runID,\n\t\twhere some-runID is the run ID of some previous run in model generation mode (Training).\n");
+	fprintf(fp, "\t-mdl\tProvides a path to the directory where the trained CNN model is stored. This should be the RAiSD_Model.some-runID,\n\t\twhere some-runID is the run ID of some previous run in model generation mode (Training). Required in MDL-TST and SWP-SCN modes.\n");
 	fprintf(fp, "\t-I\tIn this mode (model test), -I provides the path to the directory where the test data is stored. This can be\n\t\tdirectory RAiSD_Images.some-runID, where some-runID is the run ID of some previous run in data generation mode.\n\t\tThis directory should contain one folder with test data for each class.\n");	
 	fprintf(fp, "\t-clp\tProvides the number of class tests followed by an equal number of pairings (using '=') between the class labels and\n\t\tthe corresponding folder names in the RAiSD_Images.some-runID directory (provided through -I).\n\t\tExample: \"-clp 2 label1=folderA label2=folderB\", where label1 and label2 are the label names, and folderA and folderB\n\t\tare in the directory specified via -I.\n");
 
 	fprintf(fp, "\n\t-- RAiSD-AI SWEEP SCAN (MODE: SWP-SCN) \n\n");
-	fprintf(fp, "\t-pci\tProvides the number of positive classes (1 for SweepNet/FAST-NN/FASTER-NN/FASTER-NN-G, 2 for FASTER-NN-G with -cl4) followed\n\t\tby the positive class indices. The class index can be found in parentheses after the class label in file\n\t\tRAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MDL-GEN run that generated the CNN model.\n\t\tExample: \"-pci 1 1\" for SweepNet/FAST-NN/FASTER-NN/FASTER-NN-G, \"-pci 2 1 3\" for FASTER-NN-G with -cl4.\n");
+	fprintf(fp, "\t-pci\tProvides the number of positive classes (1 for SweepNet/FAST-NN/FASTER-NN/FASTER-NN-G, 2 for FASTER-NN-G with -cl4) followed\n\t\tby the positive class indices. The class index can be found in parentheses after the class label in file\n\t\tRAiSD_Model.some-runID/classLabels.txt, where some-runID is the run ID of the MDL-GEN run that generated the CNN model.\n\t\tThis flag is only required when -pcs is not used. The -pci and -pcs flags are mutually exclusive.\n\t\tExample: \"-pci 1 1\" for SweepNet/FAST-NN/FASTER-NN/FASTER-NN-G, \"-pci 2 1 3\" for FASTER-NN-G with -cl4.\n");
+	fprintf(fp, "\t-pcs\tProvides the number of positive classes (1 for SweepNet/FAST-NN/FASTER-NN/FASTER-NN-G, 2 for FASTER-NN-G with -cl4) followed\n\t\tby the positive class labels. The class labels must exist in file RAiSD_Model.some-runID/classLabels.txt, where some-runID is\n\t\tthe run ID of the MDL-GEN run that generated the CNN model. The -mdl flag must precede -pcs in the command line.\n\t\tThis flag is only required when -pci is not used. \n\t\tExample: \"-pcs 1 sweepClass\" for SweepNet/FAST-NN/FASTER-NN/FASTER-NN-G, \"-pcs 2 sweepClass sweepHotspotClass\" for FASTER-NN-G with -cl4.\n");
 	
 	fprintf(fp, "\n\t-- RAiSD-AI ADDITIONAL PARAMETERS \n\n");
 	fprintf(fp, "\t-frm\tRemoves the directories RAiSD_Images.runID (IMG-GEN) and RAiSD_Grid.runID (SWP-SCN), if they already exist.\n\t\trunID is provided through -n.\n");
@@ -296,6 +298,9 @@ void RSDVersions(FILE * fp)
 	fprintf(fp, " %*d. RAiSD v%d.%d (Jul  1, 2024): RAiSD-AI release (data generation, CNN training and testing, and CNN-based scans)\n", strlen, releaseIndex++, majorIndex, minorIndex++);
 	fprintf(fp, " %*d. RAiSD v%d.%d (Nov 21, 2024): Added FASTER-NN, FASTER-NN-G, and -g parameter for SFS grouped pooling in FASTER-NN-G\n", strlen, releaseIndex++, majorIndex, minorIndex++);
 	fprintf(fp, " %*d. RAiSD v%d.%d (Jan 30, 2026): Code clean-up, added test datasets and example scripts for FASTER-NN and FASTER-NN-G\n", strlen, releaseIndex++, majorIndex, minorIndex++);
+	fprintf(fp, " %*d. RAiSD v%d.%d (Mar 24, 2026): Further code clean-up, fixed exit codes for errors\n", strlen, releaseIndex++, majorIndex, minorIndex++);
+	fprintf(fp, " %*d. RAiSD v%d.%d (Apr 8, 2026): Fixed sample size mismatch error messages for VCF and added cuda environment\n", strlen, releaseIndex++, majorIndex, minorIndex++);
+	fprintf(fp, " %*d. RAiSD v%d.%d (Apr 11, 2026): -pcs (same functionality as -pci) to facilitate pipelines that include MLD-GEN and SWP-SCN\n", strlen, releaseIndex++, majorIndex, minorIndex++);
 
 }
 
@@ -448,7 +453,9 @@ void RSDCommandLine_init(RSDCommandLine_t * RSDCommandLine)
 	
 	//Experimental
 	RSDCommandLine->fullFrame = 0;
-	RSDCommandLine->gridPointReductionMax = 0;	
+	RSDCommandLine->gridPointReductionMax = 0;
+	
+	RSDCommandLine->dev = 0;	
 #endif
 }
 
@@ -479,11 +486,14 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			flagCheck (argv, i, flagVector, 0);
 
 			if (i!=argc-1 && argv[i+1][0]!='-')
-				strcpy(RSDCommandLine->runName, argv[++i]);
+			{
+				//strcpy(RSDCommandLine->runName, argv[++i]);
+				sanitizeString(argv[++i], RSDCommandLine->runName, STRING_SIZE);
+			}
 			else
 			{
 				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
-				exit(1);	
+				exit(1);
 			}
 			
 #ifdef _RSDAI
@@ -1212,7 +1222,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 				double maxdistance = (double)atof(argv[++i]);
 				if(maxdistance<0.0)
 				{
-					fprintf(stderr, "\nERROR: Invalid maximum distance between common outliers (valid: 0.0>=0)\n\n");
+					fprintf(stderr, "\nERROR: Invalid maximum distance between common outliers (valid: >=0.0)\n\n");
 					exit(1);
 				}
 				RSDCommandLine->commonOutliersMaxDistance = maxdistance;
@@ -1581,7 +1591,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			continue;
 		}		
 		
-		if(!strcmp(argv[i], "-ihe")) 
+		/*if(!strcmp(argv[i], "-ihe")) 
 		{ 
 			flagCheck (argv, i, flagVector, 36);
 
@@ -1596,9 +1606,9 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			}
 
 			continue;
-		}
+		}*/
 		
-		if(!strcmp(argv[i], "-iwi")) 
+		/*if(!strcmp(argv[i], "-iwi")) 
 		{ 
 			flagCheck (argv, i, flagVector, 37);
 
@@ -1613,7 +1623,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			}
 
 			continue;
-		}
+		}*/
 		
 		if(!strcmp(argv[i], "-e")) 
 		{ 
@@ -1655,7 +1665,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			continue;
 		}*/		
 		
-		if(!strcmp(argv[i], "-rng")) 
+		/*if(!strcmp(argv[i], "-rng")) // this is implemented
 		{ 
 			flagCheck (argv, i, flagVector, 40);
 
@@ -1674,7 +1684,8 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			}
 
 			continue;
-		}
+		}*/
+		
 		if(!strcmp(argv[i], "-arc")) 
 		{ 
 			flagCheck (argv, i, flagVector, 41); // neural network architecture
@@ -1728,14 +1739,26 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 			continue;
 		}
 		
-		if(!strcmp(argv[i], "-pci")) 
+		if(!strcmp(argv[i], "-pcs")) 
 		{ 
-			flagCheck (argv, i, flagVector, 43);
+			if ((flagVector[POSITIVE_CLASS_FLAG_INDEX]))
+			{
+				fprintf(stderr, "\nERROR: Remove -pcs. This flag is only valid in SWP-SCN mode when -pci is not used!\n\n");
+				exit(1);
+			}
+				
+			flagCheck (argv, i, flagVector, 49);  
 
 			if (i!=argc-1 && argv[i+1][0]!='-')
 			{	
-				RSDCommandLine->numOfPositiveClasses = (int)atoi(argv[++i]);
-				
+				if(isPositiveInteger((const char *)argv[++i]))
+					RSDCommandLine->numOfPositiveClasses = (int)atoi(argv[i]);
+				else
+				{
+					fprintf(stderr, "\nERROR: Invalid argument \"%s\" (-pcs, expects the number of positive classes, i.e., \'1\' or \'2\')\n\n",argv[i]);
+					exit(1);
+				}
+											
 				if(!(RSDCommandLine->numOfPositiveClasses>=1 && RSDCommandLine->numOfPositiveClasses<=2))
 				{
 					fprintf(stderr, "\nERROR: Unsupported number of positive classes (%s)!\n\n",argv[i]);
@@ -1750,11 +1773,86 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 					{
 						if (i!=argc-1 && argv[i+1][0]!='-')
 						{
-							RSDCommandLine->positiveClassIndex[j] = (int)atoi(argv[++i]);
+							if (!(flagVector[MDL_PATH_FLAG_INDEX]))
+							{
+								fprintf(stderr, "\nERROR: Input parameter -mdl must precede -pcs in the command line!\n\n");
+								exit(1);	
+							}
+							else
+							{
+								int classIndex = getPositiveClassIndex((const char *) RSDCommandLine->modelPath, (const char *) argv[++i]);
+								 
+								if(classIndex!=-1)
+									RSDCommandLine->positiveClassIndex[j] = classIndex;
+								else
+								{
+									fprintf(stderr, "\nERROR: Input argument \"%s\" (-pcs) is not a valid class label of \"%s\"!\n\n",argv[i], RSDCommandLine->modelPath);
+									exit(1);
+								}								  
+							}														
 						}
 						else
 						{
-							fprintf(stderr, "\nERROR: Missing argument after %s (-pci)\n\n",argv[i]);
+							fprintf(stderr, "\nERROR: Missing argument after \'%s\' (-pcs)\n\n",argv[i]);
+							exit(1);						
+						}
+					}				
+				}
+			}	
+			else
+			{
+				fprintf(stderr, "\nERROR: Missing argument after %s\n\n",argv[i]);
+				exit(1);	
+			}
+
+			continue;
+		}		
+	
+		if(!strcmp(argv[i], "-pci")) 
+		{ 		
+			if ((flagVector[POSITIVE_CLASS_FLAG_STRING]))
+			{	
+				fprintf(stderr, "\nERROR: Remove -pci. This flag is only valid in SWP-SCN mode when -pcs is not used!\n\n");
+				exit(1);
+			}
+			
+			flagCheck (argv, i, flagVector, 43);
+
+			if (i!=argc-1 && argv[i+1][0]!='-')
+			{	
+				if(isPositiveInteger((const char *)argv[++i]))
+					RSDCommandLine->numOfPositiveClasses = (int)atoi(argv[i]);
+				else
+				{
+					fprintf(stderr, "\nERROR: Invalid argument \"%s\" (-pci, expects the number of positive classes, i.e., \'1\' or \'2\')\n\n",argv[i]);
+					exit(1);
+				}
+											
+				if(!(RSDCommandLine->numOfPositiveClasses>=1 && RSDCommandLine->numOfPositiveClasses<=2))
+				{
+					fprintf(stderr, "\nERROR: Unsupported number of positive classes (%s)!\n\n",argv[i]);
+					exit(1);
+				}
+				else
+				{
+					RSDCommandLine->positiveClassIndex = (int*)rsd_malloc(sizeof(int)*RSDCommandLine->numOfPositiveClasses);
+					assert(RSDCommandLine->positiveClassIndex!=NULL);
+					
+					for(j=0;j<RSDCommandLine->numOfPositiveClasses;j++)
+					{
+						if (i!=argc-1 && argv[i+1][0]!='-')
+						{
+							if(isPositiveInteger((const char *)argv[++i]))
+								RSDCommandLine->positiveClassIndex[j] = (int)atoi(argv[i]);
+							else
+							{
+								fprintf(stderr, "\nERROR: Invalid argument \"%s\" (-pci, expects a positive class index, i.e., >= 0)\n\n",argv[i]);
+								exit(1);
+							}							
+						}
+						else
+						{
+							fprintf(stderr, "\nERROR: Missing argument after \'%s\' (-pci)\n\n",argv[i]);
 							exit(1);						
 						}
 					}				
@@ -1898,6 +1996,12 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 
 			continue;
 		}*/
+		
+		if(!strcmp(argv[i], "-dev")) // Prints Python cmds
+		{ 
+			RSDCommandLine->dev = 1;
+			continue;
+		}
 
 		fprintf(stderr, "\nERROR: Unrecognized input parameter %s\n\n",argv[i]);
 		exit(1);
@@ -2055,7 +2159,7 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 
 	if(flagVector[CLASS_PAIRINGS_4] && RSDCommandLine->opCode!=OP_TRAIN_CNN)
 	{
-		fprintf(stderr, "\nERROR: Remove -clp. It is only used in MDL-GEN mode!\n\n");
+		fprintf(stderr, "\nERROR: Remove -cl4. It is only used in MDL-GEN mode!\n\n");
 		exit(1);	
 	}
 	
@@ -2165,23 +2269,23 @@ void RSDCommandLine_load(RSDCommandLine_t * RSDCommandLine, int argc, char ** ar
 	
 	if(RSDCommandLine->opCode==OP_USE_CNN)
 	{
-		if(!(flagVector[POSITIVE_CLASS_FLAG_INDEX]) && !(flagVector[POSITIVE_CLASS_FLAG_INDEX2]))
+		if(!(flagVector[POSITIVE_CLASS_FLAG_INDEX]) && !(flagVector[POSITIVE_CLASS_FLAG_STRING]))
 		{
-			fprintf(stderr, "\nERROR: Missing input parameter -pci or -pci2 that is required when \"-op SWP-SCN\" is used!\n\n");
+			fprintf(stderr, "\nERROR: Missing input parameter -pci or -pcis that is required when \"-op SWP-SCN\" is used!\n\n");
 			exit(1);
 		}
 		
-		if((flagVector[POSITIVE_CLASS_FLAG_INDEX]) && (flagVector[POSITIVE_CLASS_FLAG_INDEX2]))
-		{
-			fprintf(stderr, "\nERROR: Use either -pci or -pci2 depending on the CNN architecture. Using both is not valid!\n\n");
-			exit(1);
-		}	
+		//if((flagVector[POSITIVE_CLASS_FLAG_INDEX]) && (flagVector[POSITIVE_CLASS_FLAG_STRING]))
+		//{
+		//	fprintf(stderr, "\nERROR: Use either -pci or -pcs!\n\n");
+		//	exit(1);
+		//}	
 	}
 	else
 	{
-		if(flagVector[POSITIVE_CLASS_FLAG_INDEX] || flagVector[POSITIVE_CLASS_FLAG_INDEX2])
+		if(flagVector[POSITIVE_CLASS_FLAG_INDEX] || flagVector[POSITIVE_CLASS_FLAG_STRING])
 		{
-			fprintf(stderr, "\nERROR: Remove -pci. The positive class index command-line flag is only used in SWP-SCN mode!\n\n");
+			fprintf(stderr, "\nERROR: Remove -pci and/or -pcs. The positive class command-line flag is only used in SWP-SCN mode!\n\n");
 			exit(1);		
 		}
 	}	

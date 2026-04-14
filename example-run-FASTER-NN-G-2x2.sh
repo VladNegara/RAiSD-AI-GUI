@@ -19,6 +19,15 @@ TEST_SWEEP=datasets/train/recombination_hotspot/ms_sweep_no_rechot.ms
 TEST_NEUTRAL_RECOMBINATION_HOTSPOT=datasets/train/recombination_hotspot/ms_neutral_rechotPos0.5.ms
 TEST_SWEEP_RECOMBINATION_HOTSPOT=datasets/train/recombination_hotspot/mbs_sweep_rechot_Pos0.5_overlap.ms
 
+# Unzip recombination_hotspot files first
+RECHOT_PATH=datasets/train/recombination_hotspot
+if [ "$GENERATE_TRAINING_DATA" -eq 1 ]; then
+for f in "$RECHOT_PATH"/*.zip; do
+  [ -e "$f" ] || continue
+  unzip "$f" -d "$RECHOT_PATH"
+done
+fi
+
 # Create training data
 if [ "$GENERATE_TRAINING_DATA" -eq 1 ]; then
 ./RAiSD-AI -n TrainingDataBINRAWPOS -I $TRAINING_NEUTRAL -L 100000 -its 50000 -op IMG-GEN -icl neutralTR -f -frm -bin -O 
@@ -54,7 +63,7 @@ if [ "$SCAN_DATASET" -eq 1 ]; then
 conda activate raisd-ai
 
 # Scan neutral dataset to obtain FPR thresholds at 0.05
-./RAiSD-AI -n FASTER-NN-G2x2-PT-BINRAWPOS-SCAN-NEUTRAL -mdl RAiSD_Model.FASTER-NN-G2x2-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_NEUTRAL -L 100000 -frm -G 100 -pci 2 1 3 -O -k 0.05 
+./RAiSD-AI -n FASTER-NN-G2x2-PT-BINRAWPOS-SCAN-NEUTRAL -mdl RAiSD_Model.FASTER-NN-G2x2-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_NEUTRAL -L 100000 -frm -G 100 -pcs 2 sweepTR sweepTRhotspot -O -k 0.05 
 
 # Get thresholds
 fprThresholdMU=$(grep " mu " RAiSD_Info.FASTER-NN-G2x2-PT-BINRAWPOS-SCAN-NEUTRAL | grep min | awk -F: '{print $2}' | awk '{print $1}')
@@ -65,10 +74,10 @@ fprThresholdPCL1=$(grep " selective-sweep " RAiSD_Info.FASTER-NN-G2x2-PT-BINRAWP
 echo $fprThresholdPCL1
 
 # Scan dataset with sweep, no rechotspot, report sweep stats
-./RAiSD-AI -n FASTER-NN-G2x2-PT-BINRAWPOS-SCAN-SWEEP -mdl RAiSD_Model.FASTER-NN-G2x2-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_SWEEP -L 100000 -frm -T 50000 -d 1000 -G 100 -pci 2 1 3 -O -l 3 mu=$fprThresholdMU pcl0=$fprThresholdPCL0 pcl1=$fprThresholdPCL1 
+./RAiSD-AI -n FASTER-NN-G2x2-PT-BINRAWPOS-SCAN-SWEEP -mdl RAiSD_Model.FASTER-NN-G2x2-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_SWEEP -L 100000 -frm -T 50000 -d 1000 -G 100 -pcs 2 sweepTR sweepTRhotspot -O -l 3 mu=$fprThresholdMU pcl0=$fprThresholdPCL0 pcl1=$fprThresholdPCL1 
 
 # Scan dataset with sweep, no rechotspot, report rechotspot stats
-./RAiSD-AI -n FASTER-NN-G2x2-PT-BINRAWPOS-SCAN-SWEEP -mdl RAiSD_Model.FASTER-NN-G2x2-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_SWEEP_RECOMBINATION_HOTSPOT -L 100000 -frm -T 50000 -d 1000 -G 100 -pci 2 1 3 -O -l 3 mu=$fprThresholdMU pcl0=$fprThresholdPCL0 pcl1=$fprThresholdPCL1 -b
+./RAiSD-AI -n FASTER-NN-G2x2-PT-BINRAWPOS-SCAN-SWEEP -mdl RAiSD_Model.FASTER-NN-G2x2-PT-BINRAWPOS -f -op SWP-SCN -I $TEST_SWEEP_RECOMBINATION_HOTSPOT -L 100000 -frm -T 50000 -d 1000 -G 100 -pcs 2 sweepTR sweepTRhotspot -O -l 3 mu=$fprThresholdMU pcl0=$fprThresholdPCL0 pcl1=$fprThresholdPCL1 -b
 
 conda deactivate
 fi

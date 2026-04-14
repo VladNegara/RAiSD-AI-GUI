@@ -10,13 +10,14 @@ The recommended way to construct operation trees is using the
 `OperationTree#build_trees` factory method.
 """
 
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
 
 from PySide6.QtCore import (
     QObject,
     Signal,
     Slot,
     QFileInfo,
+    QFileSystemWatcher,
     QDir,
 )
 
@@ -31,8 +32,8 @@ from gui.model.parameter import (
     BoolParameter,
     StringParameter,
 )
-from gui.model.dependency import (
-    Dependency,
+from gui.model.parameter.condition import (
+    Condition,
     OrCondition,
 )
 
@@ -42,8 +43,55 @@ class FileProducerNode(QObject):
     An abstract class for nodes that can produce a file.
     """
 
+    class OverwriteCondition(Condition):
+        """
+        A condition that tracks whether a file producer node's output
+        will overwrite existing files.
+        """
+
+        def __init__(
+                self,
+                file_producer_node: "FileProducerNode",
+                target_value: bool = True,
+                parent: QObject | None = None,
+        ) -> None:
+            """
+            Initialize a `FileProducerNode.OverwriteCondition` object.
+
+            :param file_producer_node: the node to track
+            :type file_producer_node: FileProducerNode
+
+            :param target_value: the target value
+            :type target_value: bool
+
+            :param parent: the parent of this `QObject`
+            :type parent: QObject | None
+            """
+            super().__init__(
+                value=file_producer_node.overwrite==target_value,
+                parent=parent,
+            )
+            self._file_producer_node = file_producer_node
+            self._target_value = target_value
+
+            self._file_producer_node.overwrite_changed.connect(
+                self._overwrite_changed,
+            )
+
+        @Slot(bool)
+        def _overwrite_changed(self, new_overwrite: bool):
+            self.value = new_overwrite==self._target_value
+
     file_changed = Signal(str)
+    overwrite_changed = Signal(bool)
     valid_changed = Signal(bool)
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._watcher = QFileSystemWatcher()
+        self.file_changed.connect(self._update_watcher_path)
+        self._watcher.fileChanged.connect(self._watched_file_changed)
+        self._watcher.directoryChanged.connect(self._watched_file_changed)
 
     @property
     def produces(self) -> FileStructure:
@@ -58,6 +106,14 @@ class FileProducerNode(QObject):
         The path to the file produced by this node, if available.
         """
         raise NotImplementedError()
+
+    @property
+    def overwrite(self) -> bool:
+        """
+        Whether the output of this node will overwrite an existing file
+        or directory.
+        """
+        return False
 
     @property
     def valid(self) -> bool:
@@ -91,14 +147,20 @@ class FileProducerNode(QObject):
 
     def reset(self) -> None:
         raise NotImplementedError()
+    
+    def get_operation_ids(self) -> list[str]:
+        raise NotImplementedError()
 
     def to_cli(
             self,
             run_id_parameter: StringParameter,
-            parameters: list[Parameter],
-    ) -> list[str]:
+            parameters: Sequence[Parameter[Any]],
+    ) -> Sequence[str]:
         """
         Get the terminal commands needed to produce the file.
+
+        :param run_id_paramter: the run ID parameter
+        :type run_id_parameter: StringParameter
 
         :param parameters: the parameters to use in the commands
         :type parameters: list[Parameter]
@@ -113,6 +175,25 @@ class FileProducerNode(QObject):
 
     def populate_from_dict(self, values: dict) -> None:
         raise NotImplementedError()
+
+    @Slot()
+    def _update_watcher_path(self) -> None:
+        # Remove the watched path, if any.
+        paths = self._watcher.files() + self._watcher.directories()
+        if paths:
+            self._watcher.removePaths(paths)
+
+        # Watch the closest existing ancestor of the output location.
+        file = self.file
+        added: bool = False
+        while file and not added:
+            added = self._watcher.addPath(file)
+            file = QFileInfo(file).dir().absolutePath()
+
+    @Slot()
+    def _watched_file_changed(self) -> None:
+        self._update_watcher_path()
+        self.overwrite_changed.emit(self.overwrite)
 
 
 class FileConsumerNode(QObject):
@@ -129,32 +210,26 @@ class FileConsumerNode(QObject):
 
     def __init__(
             self,
-            requires: FileStructure,
-            label: str,
-            cli: str,
-            enabled: bool = False
+            required_file: Operation.Input,
+            enabled: bool = False,
     ) -> None:
         """
         Initialize a `FileConsumerNode` object.
 
-        :param requires: the required file type
-        :type requires: FileStructure
-
-        :param label: what the required file represents, for the user
-        :type label: str
-
-        :param cli: the command-line option for this input file
-        :type cli: str
+        :param required_file: an object containing the details of the
+        required file
+        :type required_file: Operation.Input
 
         :param enabled: whether the node is initially enabled
         :type enabled: bool
         """
         super().__init__()
-        self._requires = requires
         self._producers = []
         self._selected_index = 0
-        self._label = label
-        self._cli = cli
+        self._name = required_file.name
+        self._description = required_file.description
+        self._cli = required_file.cli
+        self._requires = required_file.file
         self._enabled = enabled
 
     @property
@@ -175,19 +250,26 @@ class FileConsumerNode(QObject):
         producer.valid_changed.connect(self._producer_valid_changed)
 
     @property
-    def producers(self) -> list[FileProducerNode]:
+    def producers(self) -> Sequence[FileProducerNode]:
         """
-        The list of `FileProducerNode` children.
+        This node's `FileProducerNode` children.
         """
         return self._producers
 
     @property
-    def label(self) -> str:
+    def name(self) -> str | None:
         """
-        The label to display to the user, explaining what the required
-        input file represents.
+        The name of the required file to display to the user.
         """
-        return self._label
+        return self._name
+
+    @property
+    def description(self) -> str | None:
+        """
+        The description of the required file, explaining what it
+        represents for the operation that needs it.
+        """
+        return self._description
 
     @property
     def cli_parameter(self) -> str:
@@ -207,18 +289,28 @@ class FileConsumerNode(QObject):
 
     @selected_index.setter
     def selected_index(self, new_selected_index: int) -> None:
-        self.selected_producer.enabled = False
+        old_valid = self.valid
+
+        if self.selected_producer is not None:
+            self.selected_producer.enabled = False
+
         self._selected_index = new_selected_index
         self.selected_index_changed.emit(new_selected_index)
-        self.selected_producer.enabled = self.enabled
-        self.valid_changed.emit(self.valid)
+
+        if self.selected_producer is not None:
+            self.selected_producer.enabled = self.enabled
+
+        if self.valid != old_valid:
+            self.valid_changed.emit(self.valid)
 
     @property
-    def selected_producer(self) -> FileProducerNode:
+    def selected_producer(self) -> FileProducerNode | None:
         """
         The currently selected child node.
         """
-        return self.producers[self.selected_index]
+        if self.producers:
+            return self.producers[self.selected_index]
+        return None
 
     def _set_run_id(self, new_run_id: str):
         for producer in self.producers:
@@ -243,7 +335,8 @@ class FileConsumerNode(QObject):
     @enabled.setter
     def enabled(self, new_enabled: bool) -> None:
         self._enabled = new_enabled
-        self.selected_producer.enabled = self.enabled
+        if self.selected_producer is not None:
+            self.selected_producer.enabled = self.enabled
 
     @property
     def file(self) -> str | None:
@@ -251,6 +344,8 @@ class FileConsumerNode(QObject):
         The path to the file produced by the currently selected child 
         node, if available.
         """
+        if self.selected_producer is None:
+            return None
         return self.selected_producer.file
 
     @property
@@ -258,6 +353,8 @@ class FileConsumerNode(QObject):
         """
         Whether this node is in a valid state.
         """
+        if self.selected_producer is None:
+            return False
         return self.selected_producer.valid
     
     def reset(self) -> None:
@@ -265,13 +362,19 @@ class FileConsumerNode(QObject):
         for producer in self.producers:
             producer.reset()
 
+    def get_operation_ids(self) -> list[str]:
+        return self.selected_producer.get_operation_ids()
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
-            parameters: list[Parameter],
-    ) -> list[str]:
+            parameters: Sequence[Parameter],
+    ) -> Sequence[str]:
         """
         Get the terminal commands needed to produce the file.
+
+        :param run_id_paramter: the run ID parameter
+        :type run_id_parameter: StringParameter
 
         :param parameters: the parameters to use in the commands
         :type parameters: list[Parameter]
@@ -279,6 +382,8 @@ class FileConsumerNode(QObject):
         :return: the (possibly empty) list of commands
         :rtype: list[str]
         """
+        if self.selected_producer is None:
+            return []
         return self.selected_producer.to_cli(run_id_parameter, parameters)
 
     def to_dict(self) -> dict:
@@ -331,8 +436,6 @@ class CommonParentDirectoryNode(FileProducerNode):
     Implements `FileProducerNode`.
     """
 
-    overwrite_changed = Signal(bool)
-
     def __init__(
             self,
             produces: Directory,
@@ -358,9 +461,12 @@ class CommonParentDirectoryNode(FileProducerNode):
         self._file_consumers = []
         for file_structure in self._produces.contents:
             file_consumer = FileConsumerNode(
-                file_structure,
-                "",
-                "",
+                Operation.Input(
+                    name=None,
+                    description=None,
+                    cli="",
+                    file=file_structure,
+                )
             )
             self._file_consumers.append(file_consumer)
             file_consumer.valid_changed.connect(self._consumer_valid_changed)
@@ -374,6 +480,16 @@ class CommonParentDirectoryNode(FileProducerNode):
         self._overwrite_parameter = overwrite_parameter
 
         self._enabled = enabled
+
+        self._overwrite_parameter.add_condition(
+            FileProducerNode.OverwriteCondition(
+                file_producer_node=self,
+                target_value=True,
+                parent=self,
+            )
+        )
+
+        self._update_watcher_path()
 
     @property
     def produces(self) -> Directory:
@@ -390,9 +506,9 @@ class CommonParentDirectoryNode(FileProducerNode):
         return self._overwrite_parameter
 
     @property
-    def file_consumers(self) -> list[FileConsumerNode]:
+    def file_consumers(self) -> Sequence[FileConsumerNode]:
         """
-        The list of child `FileConsumerNode`s.
+        This node's child `FileConsumerNode`s.
         """
         return self._file_consumers
 
@@ -415,10 +531,6 @@ class CommonParentDirectoryNode(FileProducerNode):
 
     @property
     def overwrite(self) -> bool:
-        """
-        Whether the common parent directory of the output locations of
-        this node's children already exists, i.e. will be overwritten.
-        """
         file = self.file
         return file is not None and QFileInfo(file).exists()
 
@@ -486,13 +598,24 @@ class CommonParentDirectoryNode(FileProducerNode):
         for consumer in self.file_consumers:
             consumer.reset()
 
+    def get_operation_ids(self) -> list[str]:
+        operation_ids = []
+
+        for file_consumer in self.file_consumers:
+            operation_ids.extend(file_consumer.get_operation_ids())
+
+        return operation_ids
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
-            parameters: list[Parameter],
-    ) -> list[str]:
+            parameters: Sequence[Parameter],
+    ) -> Sequence[str]:
         """
         Get the terminal commands needed to produce the directory.
+
+        :param run_id_paramter: the run ID parameter
+        :type run_id_parameter: StringParameter
 
         :param parameters: the parameters to use in the commands
         :type parameters: list[Parameter]
@@ -502,13 +625,19 @@ class CommonParentDirectoryNode(FileProducerNode):
         """
         commands = []
         for i, consumer in enumerate(self.file_consumers):
-            child_commands = consumer.to_cli(run_id_parameter, parameters)
+            child_commands: Sequence[str] = consumer.to_cli(
+                run_id_parameter,
+                parameters,
+            )
 
             # If this is the first child, add the overwrite parameter
-            # to its command.
+            # to its last command.
             overwrite_parameter_cli = self.overwrite_parameter.to_cli()
             if i == 0 and child_commands and overwrite_parameter_cli:
-                child_commands[0] += f" {overwrite_parameter_cli}"
+                child_commands = [
+                    *child_commands[:-1],
+                    f"{child_commands[-1]} {overwrite_parameter_cli}",
+                ]
 
             commands.extend(child_commands)
         return commands
@@ -572,6 +701,8 @@ class FilePickerNode(FileProducerNode):
         self._file: str | None = None
         self._enabled = enabled
 
+        self._update_watcher_path()
+
     @property
     def produces(self) -> FileStructure:
         """
@@ -625,17 +756,24 @@ class FilePickerNode(FileProducerNode):
     def reset(self) -> None:
         self.file = None
 
+    def get_operation_ids(self) -> list[str]:
+        return []
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
-            parameters: list[Parameter],
-    ) -> list[str]:
+            parameters: Sequence[Parameter],
+    ) -> Sequence[str]:
         """
         Get the terminal commands needed to produce the file.
 
         Note: this method always returns an empty list.
 
+        :param run_id_paramter: the run ID parameter (ignored)
+        :type run_id_parameter: StringParameter
+
         :param parameters: the parameters to use in the commands
+        (ignored)
         :type parameters: list[Parameter]
 
         :return: the empty list of commands
@@ -669,12 +807,34 @@ class OperationNode(FileProducerNode):
     """
 
     class PathFragmentGenerator:
+        """
+        An abstract class for objects which generate part of a file
+        path.
+
+        This class's subclasses should be instantiated using the
+        `from_path_fragment` class method.
+        """
+
         @classmethod
         def from_path_fragment(
             cls,
             path_fragment: Operation.PathFragment,
             operation_node: "OperationNode",
         ) -> "OperationNode.PathFragmentGenerator":
+            """
+            Create the correct `OperationNode.PathFragmentGenerator`
+            for a given `Operation.PathFragment`.
+
+            :param path_fragment: the path fragment
+            :type path_fragment: Operation.PathFragment
+
+            :param operation_node: the operation node to reference, if
+            applicable for the path fragment type
+            :type operation_node: OperationNode
+
+            :return: the path fragment generator
+            :rtype: PathFragmentGenerator
+            """
             if isinstance(path_fragment, Operation.ConstPathFragment):
                 return OperationNode.ConstPathFragmentGenerator(
                     value=path_fragment.value,
@@ -695,13 +855,27 @@ class OperationNode(FileProducerNode):
 
         @property
         def value(self) -> str:
+            """
+            The path fragment generated by this generator.
+            """
             raise NotImplementedError()
 
     class ConstPathFragmentGenerator(PathFragmentGenerator):
+        """
+        A path fragment generator which always generates the same
+        string.
+        """
+
         def __init__(
                 self,
                 value: str,
         ) -> None:
+            """
+            Initialize a `ConstPathFragmentGenerator` object.
+
+            :param value: the constant string to generate
+            :type value: str
+            """
             self._value = value
 
         @property
@@ -709,10 +883,22 @@ class OperationNode(FileProducerNode):
             return self._value
 
     class RunIdPathFragmentGenerator(PathFragmentGenerator):
+        """
+        A path fragment generator which generates a given
+        `OperationNode`'s current run ID.
+        """
+
         def __init__(
                 self,
                 operation_node: "OperationNode",
         ) -> None:
+            """
+            Initialize a `RunIdPathFragmentGenerator` object.
+
+            :param operation_node: the operation node whose run ID to
+            reference
+            :type operation_node: OperationNode
+            """
             self._operation_node = operation_node
 
         @property
@@ -720,22 +906,41 @@ class OperationNode(FileProducerNode):
             return self._operation_node.run_id
 
     class SlashPathFragmentGenerator(PathFragmentGenerator):
+        """
+        A path fragment generator which always generates a directory
+        separator, i.e. a slash.
+        """
+
         @property
         def value(self) -> str:
             return "/"
 
     class ParameterValuePathFragmentGenerator(PathFragmentGenerator):
+        """
+        A path fragment generator which generates the value of a given
+        parameter.
+
+        The purpose of this class is to be able to include the image
+        class label in the output path of an IMG-GEN operation.
+        """
+
         def __init__(
                 self,
                 parameter: Parameter[Any],
         ) -> None:
+            """
+            Initialize a `ParameterValuePathFragmentGenerator` object.
+
+            :param parameter: the parameter whose value to reference
+            :type parameter: Parameter[Any]
+            """
             self._parameter = parameter
 
         @property
         def value(self) -> str:
             return str(self._parameter.value)
 
-    class EnabledCondition(Dependency.Condition):
+    class EnabledCondition(Condition):
         """
         A condition that tracks whether an operation node is enabled.
         """
@@ -750,7 +955,7 @@ class OperationNode(FileProducerNode):
             Initialize an `OperationNode.EnabledCondition` object.
 
             :param operation_node: the operation node to track
-            :type operation_node: "OperationNode"
+            :type operation_node: OperationNode
 
             :param target_value: the target value
             :type target_value: bool
@@ -771,7 +976,7 @@ class OperationNode(FileProducerNode):
         def _enabled_changed(self, new_enabled: bool):
             self.value = new_enabled==self._target_value
 
-    overwrite_changed = Signal(bool)
+    run_id_changed = Signal(str)
     enabled_changed = Signal(bool)
 
     def __init__(self,
@@ -787,6 +992,12 @@ class OperationNode(FileProducerNode):
         `FileConsumerNode` is initialized with its details. A
         `FilePickerNode` is added by default.
 
+        :param run_id: the initial run ID
+        :type run_id: str
+
+        :param base_directory_path: the initial base directory path for
+        constructing the output location
+
         :param operation: the operation this node represents
         :type operation: Operation
 
@@ -800,13 +1011,9 @@ class OperationNode(FileProducerNode):
         self._cli = operation.cli
         self._produces = operation.produces
         self._file_consumers = []
-        for file_name, cli, file_structure in operation.requires:
-            file_consumer = FileConsumerNode(
-                file_structure,
-                file_name,
-                cli,
-            )
-            file_picker = FilePickerNode(file_structure)
+        for operation_input in operation.requires:
+            file_consumer = FileConsumerNode(operation_input)
+            file_picker = FilePickerNode(operation_input.file)
             file_consumer.add_producer(file_picker)
             self._file_consumers.append(file_consumer)
             file_consumer.valid_changed.connect(self._consumer_valid_changed)
@@ -842,6 +1049,16 @@ class OperationNode(FileProducerNode):
         self._run_id = run_id
         self._base_directory_path = base_directory_path
         self._enabled = enabled
+
+        self._overwrite_parameter.add_condition(
+            FileProducerNode.OverwriteCondition(
+                file_producer_node=self,
+                target_value=True,
+                parent=self,
+            ),
+        )
+
+        self._update_watcher_path()
 
     @property
     def id(self) -> str:
@@ -879,16 +1096,16 @@ class OperationNode(FileProducerNode):
         return self._overwrite_parameter
 
     @property
-    def parameters(self) -> dict[str, Parameter[Any]]:
+    def parameters(self) -> Mapping[str, Parameter[Any]]:
         """
         The parameters of this node's operation.
         """
         return self._parameters
 
     @property
-    def file_consumers(self) -> list[FileConsumerNode]:
+    def file_consumers(self) -> Sequence[FileConsumerNode]:
         """
-        The list of `FileConsumerNode` children.
+        This node's `FileConsumerNode` children.
         """
         return self._file_consumers
 
@@ -896,6 +1113,9 @@ class OperationNode(FileProducerNode):
     def run_id(self) -> str:
         """
         The run ID stored in this node.
+
+        When this property is set, the node will append its operation ID
+        to the given value.
         """
         return self._run_id
 
@@ -903,6 +1123,7 @@ class OperationNode(FileProducerNode):
     def run_id(self, new_run_id: str) -> None:
         old_file = self.file
         old_overwrite = self.overwrite
+        old_run_id = self.run_id
 
         self._run_id = f"{new_run_id}_{self.id}"
         for file_consumer in self.file_consumers:
@@ -912,6 +1133,8 @@ class OperationNode(FileProducerNode):
             self.file_changed.emit(self.file)
         if self.overwrite != old_overwrite:
             self.overwrite_changed.emit(self.overwrite)
+        if self.run_id != old_run_id:
+            self.run_id_changed.emit(self.run_id)
 
     @property
     def base_directory_path(self) -> str:
@@ -957,10 +1180,6 @@ class OperationNode(FileProducerNode):
 
     @property
     def overwrite(self) -> bool:
-        """
-        Whether the output of this operation will overwrite an existing
-        file or directory.
-        """
         return QFileInfo(self.file).exists()
 
     @property
@@ -980,11 +1199,21 @@ class OperationNode(FileProducerNode):
         for parameter in self.parameters.values():
             parameter.reset_value()
 
+    def get_operation_ids(self) -> list[str]:
+        print(self.name)
+        operation_ids = []
+
+        for file_consumer in self.file_consumers:
+            operation_ids.extend(file_consumer.get_operation_ids())
+
+        operation_ids.append(self.name)
+        return operation_ids
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
-            parameters: list[Parameter],
-    ) -> list[str]:
+            parameters: Sequence[Parameter[Any]],
+    ) -> Sequence[str]:
         """
         Get the terminal commands needed to produce the operation's
         input files, then run the operation.
@@ -992,11 +1221,14 @@ class OperationNode(FileProducerNode):
         The command lists of each child node are concatenated, then this
         node's own command is appended to the list.
 
-        :param parameters: the parameters to use in the commands
-        :type parameters: list[Parameter]
+        :param run_id_paramter: the run ID parameter
+        :type run_id_parameter: StringParameter
 
-        :return: the list of commands
-        :rtype: list[str]
+        :param parameters: the parameters to use in the commands
+        :type parameters: Sequence[Parameter[Any]]
+
+        :return: the commands
+        :rtype: Sequence[str]
         """
         commands = []
         own_command_pieces = [self._cli]
@@ -1149,11 +1381,11 @@ class OperationTree(QObject):
     @classmethod
     def build_trees(
             cls,
-            operations: dict[str, Operation],
+            operations: Mapping[str, Operation],
             overwrite_parameter_builder: Callable[[], Parameter[Any]],
             run_id: str = "",
             base_directory_path: str = "",
-    ) -> tuple[list["OperationTree"], Mapping[str, Dependency.Condition]]:
+    ) -> tuple[list["OperationTree"], Mapping[str, OrCondition]]:
         """
         For each operation in a given list, create an operation tree
         with that operation as the root.
@@ -1191,10 +1423,10 @@ class OperationTree(QObject):
         :rtype: tuple[list[OperationTree], Mapping[str, Condition]]
         """
         trees: list[OperationTree] = []
-        # Initialize the dictionary from operation ID to list of
-        # conditions for operation nodes with that operation.
-        operation_id_to_conditions = {
-            operation_id: [] for operation_id in operations
+        # Initialize the dictionary from operation ID to disjunction
+        # condition for operation nodes with that operation.
+        operation_id_to_condition: Mapping[str, OrCondition] = {
+            operation_id: OrCondition() for operation_id in operations
         }
         for root_operation_id in operations:
             root_operation = operations[root_operation_id]
@@ -1204,10 +1436,10 @@ class OperationTree(QObject):
                 base_directory_path=base_directory_path,
             )
             # Create an EnabledCondition for the root node.
-            operation_id_to_conditions[root_operation_id].append(
+            operation_id_to_condition[root_operation_id].add_condition(
                 OperationNode.EnabledCondition(
                     root_node,
-                )
+                ),
             )
 
             # Create a queue of unexplored operation nodes for BFS.
@@ -1229,7 +1461,9 @@ class OperationTree(QObject):
                             file_consumer.add_producer(operation_node)
                             unexplored_nodes.append(operation_node)
                             # Create an EnabledCondition for the node.
-                            operation_id_to_conditions[candidate_id].append(
+                            operation_id_to_condition[
+                                candidate_id
+                            ].add_condition(
                                 OperationNode.EnabledCondition(
                                     operation_node,
                                 )
@@ -1274,44 +1508,49 @@ class OperationTree(QObject):
                                 break
                         # If an operation has been found for every file,
                         # add the node to the tree and extend the queue
-                        # and condition dictionary.
+                        # and conditions.
                         if operations_exist:
                             file_consumer.add_producer(common_parent_dir)
                             unexplored_nodes.extend(possible_unexplored)
-                            for operation_id in operations:
-                                operation_id_to_conditions[operation_id]\
-                                    .extend(possible_conditions[operation_id])
+                            for operation_id in possible_conditions:
+                                for cond in possible_conditions[operation_id]:
+                                    operation_id_to_condition[
+                                        operation_id
+                                    ].add_condition(cond)
 
             tree = OperationTree(root_node)
             trees.append(tree)
-
-        # For every operation, take the conditions on its corresponding
-        # nodes and wrap them in an OrCondition.
-        operation_id_to_condition = {
-            operation_id: OrCondition(
-                operation_id_to_conditions[operation_id]
-            )
-            for operation_id in operations
-        }
 
         return trees, operation_id_to_condition
 
     def reset(self) -> None:
         self.root.reset()
 
+    def get_operation_ids(self) -> list[str]:
+        """
+        Get the operation ids corresponding to the commands of `to_cli`.
+        """
+        return self.root.get_operation_ids()
+
     def to_cli(
             self,
             run_id_parameter: StringParameter,
-            parameters: list[Parameter],
-    ) -> list[str]:
+            parameters: Sequence[Parameter[Any]],
+    ) -> Sequence[str]:
         """
         Get the terminal commands generated by the tree's root node.
 
-        :param parameters: the parameters to use in the commands
-        :type parameters: list[Parameter]
+        The run ID parameter must be provided so that each operation
+        node can inject its own ID.
 
-        :return: the list of commands
-        :rtype: list[str]
+        :param run_id_paramter: the run ID parameter
+        :type run_id_parameter: StringParameter
+
+        :param parameters: the parameters to use in the commands
+        :type parameters: Sequence[Parameter[Any]]
+
+        :return: the commands
+        :rtype: Sequence[str]
         """
         return self.root.to_cli(run_id_parameter, parameters)
 

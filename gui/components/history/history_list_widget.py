@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 
 from .history_record_widget import HistoryRecordWidget
 from gui.model.history_record import HistoryRecord
-from gui.widgets import (
+from gui.components import (
     StylableWidget,
     VBoxLayout,
 )
@@ -39,8 +39,8 @@ class HistoryListWidget(StylableWidget):
         # The list of history widgets
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(
-            scroll_area.horizontalScrollBarPolicy().ScrollBarAlwaysOff
+        scroll_area.setVerticalScrollBarPolicy(
+            scroll_area.verticalScrollBarPolicy().ScrollBarAlwaysOff
         )
         layout.addWidget(scroll_area)
 

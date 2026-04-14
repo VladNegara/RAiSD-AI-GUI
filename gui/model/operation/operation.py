@@ -3,7 +3,7 @@ A module containing the `Operation` class.
 """
 
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Mapping, Sequence
 
 from .file_structure import FileStructure
 from gui.model.parameter import Parameter
@@ -17,6 +17,13 @@ class Operation():
     This class is used to hold intermediate information about operations
     between parsing and building the operation tree.
     """
+
+    @dataclass
+    class Input:
+        name: str | None
+        description: str | None
+        cli: str
+        file: FileStructure
 
     class PathFragment:
         pass
@@ -39,8 +46,8 @@ class Operation():
     name: str
     description: str
     cli: str
-    requires: list[tuple[str, str, FileStructure]]
+    requires: Sequence[Input]
     produces: FileStructure
-    output_path: list[PathFragment]
+    output_path: Sequence[PathFragment]
     overwrite_parameter_builder: Callable[[], Parameter[Any]]
-    parameter_builders: dict[str, Callable[[], Parameter[Any]]]
+    parameter_builders: Mapping[str, Callable[[], Parameter[Any]]]

@@ -3,7 +3,7 @@ from PySide6.QtCore import Signal, Slot
 
 from .parameter_widget import ParameterWidget
 from gui.model.parameter import ParameterGroup
-from gui.widgets import (
+from gui.components import (
     StylableWidget,
     VBoxLayout,
 )

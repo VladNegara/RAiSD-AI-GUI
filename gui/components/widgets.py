@@ -6,7 +6,9 @@ stylable and remove margins and spacing.
 """
 
 from PySide6.QtWidgets import (
+    QGridLayout,
     QHBoxLayout,
+    QLineEdit,
     QVBoxLayout,
     QWidget,
     QStyle,
@@ -16,10 +18,12 @@ from PySide6.QtGui import (
     QPainter,
 )
 
+from gui.style import constants
+
 
 class StylableWidget(QWidget):
     """
-    A base class for `QWidgets` that will be targeted by an object name
+    A base class for `QWidget`s that will be targeted by an object name
     selector in QSS.
 
     `QWidget` subclasses that use the `setObjectName` should instead
@@ -38,6 +42,70 @@ class StylableWidget(QWidget):
             painter,
             self,
         )
+
+
+class LineEdit(QLineEdit):
+    """
+    A wrapper around `QLineEdit` with fixed width.
+    """
+
+    def __init__(
+            self,
+            parent: QWidget,
+            *,
+            width: int | None = None
+    ) -> None:
+        super().__init__(parent)
+        if width is None:
+            width = constants.LINE_EDIT_WIDTH
+        self.setFixedWidth(width)
+
+
+class GridLayout(QGridLayout):
+    """
+    A wrapper around `QGridLayout` with no margins or spacing.
+    """
+
+    def __init__(
+            self,
+            parent: QWidget,
+            *,
+            left: int = 0,
+            top: int = 0,
+            right: int = 0,
+            bottom: int = 0,
+            horizontal_spacing: int = 0,
+            vertical_spacing: int = 0,
+    ) -> None:
+        """
+        Initialize a `GridLayout` object.
+
+        :param parent: the parent widget of this layout
+        :type parent: QWidget
+
+        :param left: the left margin
+        :type left: int
+
+        :param top: the top margin
+        :type top: int
+
+        :param right: the right margin
+        :type right: int
+
+        :param bottom: the bottom margin
+        :type bottom: int
+
+        :param horizontal_spacing: the horizontal spacing between
+        children
+        :type horizontal_spacing: int
+
+        :param vertical_spacing: the vertical spacing between children
+        :type vertical_spacing: int
+        """
+        super().__init__(parent)
+        self.setContentsMargins(left, top, right, bottom)
+        self.setHorizontalSpacing(horizontal_spacing)
+        self.setVerticalSpacing(vertical_spacing)
 
 
 class HBoxLayout(QHBoxLayout):

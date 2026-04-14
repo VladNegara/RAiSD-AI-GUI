@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QLabel,
     QCheckBox,
-    QLineEdit,
     QPushButton,
     QComboBox,
     QFileDialog,
@@ -36,15 +35,24 @@ from gui.model.parameter import (
     FloatParameter,
     EnumParameter,
     StringParameter,
-    StringPairListParameter,
+    StringTableParameter,
     FileParameter,
+    Constraint,
 )
 from gui.components.utils import set_bool_property
-from gui.widgets import (
+from gui.components.parameter import ConstraintWidget
+from gui.components import (
+    GridLayout,
     HBoxLayout,
+    LineEdit,
+    StylableWidget,
     VBoxLayout,
 )
 from gui.style import constants
+
+
+class ParameterRow(StylableWidget):
+    pass
 
 
 class ParameterWidget(QWidget):
@@ -57,11 +65,6 @@ class ParameterWidget(QWidget):
     `ParameterWidget` objects should not be created directly, but
     through the `from_parameter` factory method.
     """
-
-    class HintLabel(QLabel):
-        def __init__(self, text: str) -> None:
-            super().__init__(text=text)
-            self.setObjectName("parameter_hint")
 
     class ResetButton(QPushButton):
         """
@@ -86,7 +89,12 @@ class ParameterWidget(QWidget):
         def _clicked(self) -> None:
             self._parameter.reset_value()
 
-    def __init__(self, parameter: Parameter[Any], editable: bool):
+    def __init__(
+            self,
+            parameter: Parameter[Any],
+            editable: bool,
+            include_reset_button: bool = True,
+    ):
         """
         Initialize a `ParameterWidget` object.
 
@@ -98,23 +106,38 @@ class ParameterWidget(QWidget):
         self._editable = editable
         self._touched = False #variable for activating show_validity
         self._parameter.enabled_changed.connect(self._on_enabled_changed)
-        self._layout = VBoxLayout(self)
+        grid_layout = GridLayout(
+            self,
+            horizontal_spacing=constants.GAP_SMALL,
+            vertical_spacing=constants.GAP_TINY,
+        )
 
-        hints_widget = QWidget()
-        self._hints_layout = VBoxLayout(hints_widget)
-        self._hint_labels = []
-        for hint in self._parameter.hints:
-            hint_label = self.__class__.HintLabel(hint)
-            self._hints_layout.addWidget(hint_label)
-            self._hint_labels.append(hint_label)
-        self._layout.addWidget(hints_widget)
+        main_widget = QWidget()
+        # The layout where the parameter-specific widgets will be added
+        self._layout = VBoxLayout(main_widget)
+        self._layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(
+            main_widget, 0, 0,
+            alignment=Qt.AlignmentFlag.AlignVCenter,
+        )
+
+        if self._editable and include_reset_button:
+            reset_button = self.__class__.ResetButton(self._parameter)
+            grid_layout.addWidget(
+                reset_button, 0, 1,
+                alignment=Qt.AlignmentFlag.AlignVCenter,
+            )
+
+        constraints_widget = QWidget()
+        self._constraints_layout = VBoxLayout(constraints_widget)
+        self._constraint_widgets: list[ConstraintWidget] = []
+        for constraint in self._parameter.constraints:
+            self.add_constraint_widget(constraint)
+        grid_layout.addWidget(constraints_widget, 1, 0)
 
         # `show_validity` is not annotated as a Slot.
         self._parameter.value_changed.connect(self.show_validity)
-        self._parameter.hint_added.connect(self._hint_added)
-        self._parameter.constraints_valid_changed.connect(
-            self._constraints_valid_changed,
-        )
+        self._parameter.constraint_added.connect(self.add_constraint_widget)
 
     @Slot(bool)
     def _on_enabled_changed(self, enabled: bool) -> None:
@@ -140,14 +163,6 @@ class ParameterWidget(QWidget):
             else:
                 set_bool_property(widget, "valid", None)
 
-        constraints_valid = self._parameter.constraints_valid
-        for i, constraint_valid in enumerate(constraints_valid):
-            hint_label = self._hint_labels[i]
-            if show:
-                set_bool_property(hint_label, "valid", constraint_valid)
-            else:
-                set_bool_property(hint_label, "valid", None)
-
     @property
     def touched(self) -> bool:
         """
@@ -161,6 +176,8 @@ class ParameterWidget(QWidget):
     @touched.setter
     def touched(self, new_touched: bool) -> None:
         self._touched = new_touched
+        for constraint_widget in self._constraint_widgets:
+            constraint_widget.touched = self.touched
         self.show_validity()
 
     @property
@@ -212,8 +229,8 @@ class ParameterWidget(QWidget):
             return StringParameterWidget(parameter, editable)
         if isinstance(parameter, FileParameter):
             return FileParameterWidget(parameter, editable)
-        if isinstance(parameter, StringPairListParameter):
-            return StringPairListParameterWidget(parameter, editable)
+        if isinstance(parameter, StringTableParameter):
+            return StringTableParameterWidget(parameter, editable)
         raise NotImplementedError(f"ParameterWidget#from_parameter not implemented for {type(parameter)}!")
 
     def build_form_row(self) -> QWidget:
@@ -263,23 +280,16 @@ class ParameterWidget(QWidget):
 
         layout.addWidget(self)
 
-        if self._editable:
-            reset_button = ParameterWidget.ResetButton(self.parameter)
-            layout.addWidget(reset_button)
-
         return row
 
-    @Slot(str)
-    def _hint_added(self, new_hint: str) -> None:
-        hint_label = self.__class__.HintLabel(new_hint)
-        self._hints_layout.addWidget(hint_label)
-        self._hint_labels.append(hint_label)
-
-    @Slot()
-    def _constraints_valid_changed(
-            self,
-    ) -> None:
-        self.show_validity()
+    @Slot(Constraint)
+    def add_constraint_widget(self, new_constraint: Constraint) -> None:
+        new_constraint_widget = ConstraintWidget(new_constraint)
+        self._constraints_layout.addWidget(
+            new_constraint_widget,
+            alignment=Qt.AlignmentFlag.AlignRight,
+        )
+        self._constraint_widgets.append(new_constraint_widget)
 
 
 class OptionalParameterWidget(ParameterWidget):
@@ -471,7 +481,7 @@ class IntParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        self._line_edit = QLineEdit()
+        self._line_edit = LineEdit(self)
         self._line_edit.setText(str(parameter.value))
         # Allow an arbitrary length integer.
         regex = QRegularExpression(R"^(-)?[0-9]*$")
@@ -481,15 +491,24 @@ class IntParameterWidget(ParameterWidget):
         self._layout.insertWidget(0, self._line_edit)
 
         self._line_edit.textChanged.connect(self._text_changed)
+        self._line_edit.editingFinished.connect(self._editing_finished)
         parameter.value_changed.connect(self._parameter_value_changed)
+        parameter.value_reset.connect(self._parameter_value_reset)
 
-    @Slot(str)
+    @Slot()
     def _text_changed(self) -> None:
-        self.touched = True
+        try:
+            self.parameter.value = int(self._line_edit.text())
+            self.touched = True
+        except:
+            self.touched = False
+
+    @Slot()
+    def _editing_finished(self) -> None:
         try:
             self.parameter.value = int(self._line_edit.text())
         except:
-            pass
+            self.parameter.reset_value()
 
     @Slot(int, bool)
     def _parameter_value_changed(self, new_value: int, valid: bool) -> None:
@@ -501,6 +520,10 @@ class IntParameterWidget(ParameterWidget):
             values_differ = True
         if values_differ:
             self._line_edit.setText(str(new_value))
+
+    @Slot()
+    def _parameter_value_reset(self) -> None:
+        self._line_edit.setText(str(self._parameter.value))
 
     @property
     def validity_widgets(self) -> list[QWidget]:
@@ -524,7 +547,7 @@ class FloatParameterWidget(ParameterWidget):
         """
         super().__init__(parameter, editable)
 
-        self._line_edit = QLineEdit()
+        self._line_edit = LineEdit(self)
         self._line_edit.setText(str(parameter.value))
         # Allow an arbitrary length integer, optionally followed by a
         # decimal point and an arbitrary length fractional part.
@@ -537,15 +560,24 @@ class FloatParameterWidget(ParameterWidget):
         self._layout.insertWidget(0, self._line_edit)
 
         self._line_edit.textChanged.connect(self._text_changed)
+        self._line_edit.editingFinished.connect(self._editing_finished)
         parameter.value_changed.connect(self._parameter_value_changed)
+        parameter.value_reset.connect(self._parameter_value_reset)
 
-    @Slot(str)
+    @Slot()
     def _text_changed(self) -> None:
-        self.touched = True
+        try:
+            self.parameter.value = float(self._line_edit.text())
+            self.touched = True
+        except:
+            self.touched = False
+
+    @Slot()
+    def _editing_finished(self) -> None:
         try:
             self.parameter.value = float(self._line_edit.text())
         except:
-            pass
+            self.parameter.reset_value()
 
     @Slot(float, bool)
     def _parameter_value_changed(self, new_value: float, valid: bool) -> None:
@@ -556,6 +588,10 @@ class FloatParameterWidget(ParameterWidget):
            values_differ = True
         if values_differ:
             self._line_edit.setText(str(new_value))
+
+    @Slot()
+    def _parameter_value_reset(self) -> None:
+        self._line_edit.setText(str(self._parameter.value))
 
     @property
     def validity_widgets(self) -> list[QWidget]:
@@ -602,7 +638,12 @@ class StringParameterWidget(ParameterWidget):
     A widget to edit a string parameter.
     """
 
-    def __init__(self, parameter: StringParameter, editable: bool) -> None:
+    def __init__(
+            self,
+            parameter: StringParameter,
+            editable: bool,
+            include_reset_button: bool = True,
+    ) -> None:
         """
         Initialize a `StringParameterWidget` object.
 
@@ -615,9 +656,9 @@ class StringParameterWidget(ParameterWidget):
         :param editable: whether the widget is editable
         :type editable: bool
         """
-        super().__init__(parameter, editable)
+        super().__init__(parameter, editable, include_reset_button)
 
-        self._line_edit = QLineEdit()
+        self._line_edit = LineEdit(self)
         self._line_edit.setText(parameter.value)
         self._line_edit.setReadOnly(not self._editable)
         self._layout.insertWidget(0, self._line_edit)
@@ -639,189 +680,95 @@ class StringParameterWidget(ParameterWidget):
         return [self._line_edit]
 
 
-class StringPairListParameterWidget(ParameterWidget):
-    class Row(QWidget):
-        values_edited = Signal(str, str)
-        delete_button_clicked = Signal()
-
-        def __init__(
-                self,
-                editable: bool,
-                values: tuple[str, str] = ("", ""),
-                delete_button_visible: bool = True,
-        ) -> None:
-            super().__init__()
-            self._editable = editable
-
-            layout = HBoxLayout(self)
-
-            self._left_line_edit = QLineEdit()
-            self._left_line_edit.setText(values[0])
-            self._left_line_edit.setReadOnly(not self._editable)
-            self._left_line_edit.editingFinished.connect(
-                self._editing_finished,
-            )
-            layout.addWidget(self._left_line_edit)
-
-            self._right_line_edit = QLineEdit()
-            self._right_line_edit.setText(values[1])
-            self._right_line_edit.setReadOnly(not self._editable)
-            self._right_line_edit.editingFinished.connect(
-                self._editing_finished,
-            )
-            layout.addWidget(self._right_line_edit)
-
-            self._delete_button = QPushButton("Delete row")
-            self._delete_button.clicked.connect(self.delete_button_clicked)
-            self._delete_button.setVisible(
-                delete_button_visible and self._editable
-            )
-            layout.addWidget(self._delete_button)
-
-        @property
-        def left_line_edit(self) -> QLineEdit:
-            return self._left_line_edit
-
-        @property
-        def right_line_edit(self) -> QLineEdit:
-            return self._right_line_edit
-
-        @property
-        def values(self) -> tuple[str, str]:
-            return (
-                self._left_line_edit.text(),
-                self._right_line_edit.text(),
-            )
-
-        @values.setter
-        def values(self, new_values: tuple[str, str]) -> None:
-            self._left_line_edit.setText(new_values[0])
-            self._right_line_edit.setText(new_values[1])
-
-        @property
-        def delete_button_visible(self) -> bool:
-            return self._delete_button.isVisible()
-
-        @delete_button_visible.setter
-        def delete_button_visible(self, new_visible: bool) -> None:
-            self._delete_button.setVisible(new_visible and self._editable)
-
-        @Slot()
-        def _editing_finished(self) -> None:
-            self.values_edited.emit(*self.values)
-
+class StringTableParameterWidget(ParameterWidget):
     def __init__(
             self,
-            parameter: StringPairListParameter,
+            parameter: StringTableParameter,
             editable: bool = True,
     ) -> None:
         super().__init__(
             parameter=parameter,
             editable=editable,
         )
+        self._parameter: StringTableParameter
 
-        self.rows: list[StringPairListParameterWidget.Row] = []
-        row_widget = QWidget()
-        self.row_layout = VBoxLayout(row_widget)
-        self._parameter: StringPairListParameter
-        delete_button_visible = (
-            len(self._parameter.value) > self._parameter.min_count
+        row_count_selection_widget = QWidget()
+        row_count_selection_layout = HBoxLayout(
+            row_count_selection_widget,
+            spacing=constants.GAP_TINY,
         )
-        for i, pair in enumerate(self._parameter.value):
-            row = self.__class__.Row(self._editable, pair)
-            row.delete_button_visible = delete_button_visible
-            row.values_edited.connect(
-                lambda l, r, i=i: self._row_values_edited(i, l, r)
-            )
-            row.delete_button_clicked.connect(
-                lambda i=i: self._delete_button_clicked(i)
-            )
-            self.rows.append(row)
-            self.row_layout.addWidget(row)
-        self._layout.insertWidget(0, row_widget)
+        self._layout.addWidget(row_count_selection_widget)
 
-        if self._editable:
-            add_pair_button = QPushButton("Add another row")
-            add_pair_button.clicked.connect(self._add_clicked)
-            self._layout.insertWidget(1, add_pair_button)
+        row_count_selection_layout.addStretch()
 
-        self._parameter.value_changed.connect(
-            self._parameter_value_changed,
+        row_count_label = QLabel("Number of rows:")
+        row_count_selection_layout.addWidget(row_count_label)
+
+        self._row_count_combo_box = QComboBox()
+        self._row_count_combo_box.addItems(
+            [str(count) for count in parameter.allowed_row_counts]
         )
-        self._parameter.pair_valid_changed.connect(
-            self._pair_valid_changed,
+        self._row_count_combo_box.setCurrentIndex(parameter.row_count_index)
+        self._row_count_combo_box.setEnabled(editable)
+        row_count_selection_layout.addWidget(self._row_count_combo_box)
+        self._row_count_combo_box.currentIndexChanged.connect(
+            self._combo_box_index_changed,
         )
 
-    @Slot()
-    def _add_clicked(self) -> None:
-        self._parameter.add_pair()
-
-    @Slot()
-    def _parameter_value_changed(
-            self,
-            new_value: list[tuple[str, str]],
-            new_valid: bool,
-    ) -> None:
-        current_count = len(self.rows)
-        new_count = len(new_value)
-
-        delete_button_visible = (
-            new_count > self._parameter.min_count
+        self._parameter_widgets: list[list[StringParameterWidget]] = []
+        grid_widget = QWidget()
+        grid_layout = GridLayout(
+            grid_widget,
+            horizontal_spacing=constants.GAP_SMALL,
+            vertical_spacing=constants.GAP_TINY,
         )
-
-        for i in range(min(current_count, new_count)):
-            self.rows[i].values = new_value[i]
-            self.rows[i].delete_button_visible = delete_button_visible
-
-        if new_count < current_count:
-            for i in range(new_count, current_count):
-                row = self.rows[i]
-                row.values_edited.disconnect()
-                row.delete_button_clicked.disconnect()
-                self.row_layout.removeWidget(row)
-                row.destroy()
-            self.rows = self.rows[:new_count]
-        if new_count > current_count:
-            for i in range(current_count, new_count):
-                new_row = self.__class__.Row(
-                    self._editable,
-                    new_value[i],
+        for column_index, column_name in enumerate(parameter._column_names):
+            column_header = QLabel(column_name)
+            grid_layout.addWidget(column_header, 0, column_index)
+        for row_index, parameter_row in enumerate(parameter.parameters):
+            widget_row: list[StringParameterWidget] = []
+            for column_index, string_parameter in enumerate(parameter_row):
+                parameter_widget = StringParameterWidget(
+                    string_parameter,
+                    editable=editable,
+                    include_reset_button=False,
                 )
-                new_row.delete_button_visible = delete_button_visible
-                new_row.values_edited.connect(
-                    lambda l, r, i=i: self._row_values_edited(i, l, r)
+                parameter_widget.setVisible(row_index < parameter.row_count)
+                widget_row.append(parameter_widget)
+                grid_layout.addWidget(
+                    parameter_widget,
+                    row_index + 1,
+                    column_index,
                 )
-                new_row.delete_button_clicked.connect(
-                    lambda i=i: self._delete_button_clicked(i)
-                )
-                self.rows.append(new_row)
-                self.row_layout.addWidget(new_row)
+            self._parameter_widgets.append(widget_row)
 
-    @Slot(int, bool, bool)
-    def _pair_valid_changed(
-        self,
-        index: int,
-        new_left_valid: bool, 
-        new_right_valid: bool,
-    ) -> None:
-        set_bool_property(
-            self.rows[index].left_line_edit,
-            "valid",
-            new_left_valid,
-        )
-        set_bool_property(
-            self.rows[index].right_line_edit,
-            "valid",
-            new_right_valid,
-        )
+        self._layout.addWidget(grid_widget)
 
-    @Slot(int, str, str)
-    def _row_values_edited(self, index: int, left: str, right: str) -> None:
-        self._parameter.set_pair(index, (left, right))
+        parameter.row_count_index_changed.connect(
+            self._row_count_index_changed,
+        )
+        parameter.row_count_changed.connect(self._row_count_changed)
+
+    @ParameterWidget.touched.setter
+    def touched(self, new_touched: bool) -> None:
+        ParameterWidget.touched.__set__(self, new_touched)
+        for widget_row in self._parameter_widgets:
+            for parameter_widget in widget_row:
+                parameter_widget.touched = self.touched
 
     @Slot(int)
-    def _delete_button_clicked(self, index: int) -> None:
-        self._parameter.delete_pair(index)
+    def _combo_box_index_changed(self, new_index: int) -> None:
+        self._parameter.row_count_index = new_index
+
+    Slot(int)
+    def _row_count_index_changed(self, new_index: int) -> None:
+        self._row_count_combo_box.setCurrentIndex(new_index)
+
+    @Slot(int)
+    def _row_count_changed(self, new_count: int) -> None:
+        for row_index, widget_row in enumerate(self._parameter_widgets):
+            for widget in widget_row:
+                widget.setVisible(row_index < new_count)
 
 
 class FileParameterWidget(ParameterWidget):

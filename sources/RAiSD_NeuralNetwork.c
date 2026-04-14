@@ -467,27 +467,43 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 		exit(1);
 	}
 	assert(fp!=NULL);
-	fclose(fp);		
+	fclose(fp);	
+	
+	char 	filenameClassNumErr[STRING_SIZE/4], 
+		filenameClassNumErr2[STRING_SIZE/4], 
+		filenameClassNumCnt[STRING_SIZE/4], 
+		filenameClassLbl[STRING_SIZE/4], 
+		command[STRING_SIZE*2], 
+		runNameSanitized [STRING_SIZE/8];
+
+	sanitizeString(RSDCommandLine->runName, runNameSanitized, STRING_SIZE/8);
+	
+	snprintf(filenameClassNumErr, STRING_SIZE/4, "%s-%s-%s", "checkClassNumErr", runNameSanitized, "rsdai.txt");
+	snprintf(filenameClassNumErr2, STRING_SIZE/4, "%s-%s-%s", "checkClassNumErr2", runNameSanitized, "rsdai.txt");
+	snprintf(filenameClassNumCnt, STRING_SIZE/4, "%s-%s-%s", "checkClassNumCnt", runNameSanitized, "rsdai.txt");
+	snprintf(filenameClassLbl, STRING_SIZE/4, "%s-%s-%s", "checkClassLbl", runNameSanitized, "rsdai.txt");	 	
 	
 	if(RSDCommandLine->opCode==OP_TRAIN_CNN || RSDCommandLine->opCode==OP_TEST_CNN)
 	{	
-		exec_command("rm checkClassNumErr.txt 1>>/dev/null 2>>/dev/null");
-		exec_command("rm checkClassNumErr2.txt 1>>/dev/null 2>>/dev/null");
-		exec_command("rm checkClassNumCnt.txt 1>>/dev/null 2>>/dev/null");		
-		
-		strncpy(tstring, "find ", STRING_SIZE);
-		strcat(tstring, RSDCommandLine->inputFileName);
-		strcat(tstring, " -mindepth 1 -maxdepth 1 -type d 1> checkClassLbl.txt 2>>checkClassNumErr.txt");	
+		snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumErr);
+		exec_command(command);
 
-		exec_command(tstring);			
-	
-		strncpy(tstring, "find ", STRING_SIZE);
-		strcat(tstring, RSDCommandLine->inputFileName);
-		strcat(tstring, " -mindepth 1 -maxdepth 1 -type d 2>>checkClassNumErr.txt | wc -l 1>checkClassNumCnt.txt 2>>checkClassNumErr2.txt");	
+		snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumErr2);
+		exec_command(command);
 
-		exec_command(tstring);	
+		snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumCnt);
+		exec_command(command);
 		
-		fp = fopen("checkClassNumErr.txt", "r");
+		snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassLbl);
+		exec_command(command);		
+		
+		snprintf(command, STRING_SIZE*2, "find %s -mindepth 1 -maxdepth 1 -type d 1> %s 2>>%s", RSDCommandLine->inputFileName, filenameClassLbl, filenameClassNumErr);
+		exec_command(command);	
+		
+		snprintf(command, STRING_SIZE*2, "find %s -mindepth 1 -maxdepth 1 -type d 2>>%s | wc -l 1>%s 2>>%s", RSDCommandLine->inputFileName, filenameClassNumErr, filenameClassNumCnt, filenameClassNumErr2);
+		exec_command(command);		
+		
+		fp = fopen(filenameClassNumErr, "r");
 		assert(fp!=NULL);
 		
 		ret=fscanf(fp, "%s", tstring);
@@ -498,10 +514,17 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 			fprintf(fpOut, "\nERROR: Directory %s not found!\n\n",RSDCommandLine->inputFileName);		
 			fprintf(stderr, "\nERROR: Directory %s not found!\n\n",RSDCommandLine->inputFileName);
 			
-			exec_command("rm checkClassNumErr.txt 1>>/dev/null 2>>/dev/null");
-			exec_command("rm checkClassNumErr2.txt 1>>/dev/null 2>>/dev/null");
-			exec_command("rm checkClassNumCnt.txt 1>>/dev/null 2>>/dev/null");
-			exec_command("rm checkClassLbl.txt 1>>/dev/null 2>>/dev/null");			
+			snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumErr);
+			exec_command(command);
+
+			snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumErr2);
+			exec_command(command);
+
+			snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumCnt);
+			exec_command(command);
+			
+			snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassLbl);
+			exec_command(command);		
 
 			fclose(fp);			
 			exit(1);
@@ -510,7 +533,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 		{
 			fclose(fp);
 			
-			fp = fopen("checkClassNumCnt.txt", "r");
+			fp = fopen(filenameClassNumCnt, "r");
 			assert(fp!=NULL);
 			
 			int classes=-1;
@@ -530,10 +553,17 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 														RSDCommandLine->networkArchitecture,
 														numOfClasses_NN_architecture(RSDCommandLine->networkArchitecture, RSDCommandLine->classification2x2En));
 				
-				exec_command("rm checkClassNumErr.txt 1>>/dev/null 2>>/dev/null");
-				exec_command("rm checkClassNumErr2.txt 1>>/dev/null 2>>/dev/null");
-				exec_command("rm checkClassNumCnt.txt 1>>/dev/null 2>>/dev/null");
-				exec_command("rm checkClassLbl.txt 1>>/dev/null 2>>/dev/null");	
+				snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumErr);
+				exec_command(command);
+
+				snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumErr2);
+				exec_command(command);
+
+				snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumCnt);
+				exec_command(command);
+				
+				snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassLbl);
+				exec_command(command);
 				
 				fclose(fp);			
 				exit(1);
@@ -544,7 +574,7 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 				
 				if(RSDCommandLine->opCode==OP_TRAIN_CNN)
 				{				
-					fp = fopen("checkClassLbl.txt", "r");
+					fp = fopen(filenameClassLbl, "r");
 					assert(fp!=NULL);
 					
 					int i=-1;
@@ -564,10 +594,17 @@ void RSDNeuralNetwork_init (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 					fclose(fp);
 				}
 					
-				exec_command("rm checkClassNumErr.txt 1>>/dev/null 2>>/dev/null");
-				exec_command("rm checkClassNumErr2.txt 1>>/dev/null 2>>/dev/null");
-				exec_command("rm checkClassNumCnt.txt 1>>/dev/null 2>>/dev/null");
-				exec_command("rm checkClassLbl.txt 1>>/dev/null 2>>/dev/null");			
+				snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumErr);
+				exec_command(command);
+
+				snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumErr2);
+				exec_command(command);
+
+				snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassNumCnt);
+				exec_command(command);
+				
+				snprintf(command, STRING_SIZE, "rm %s 1>>/dev/null 2>>/dev/null", filenameClassLbl);
+				exec_command(command);			
 			}
 		}
 	}
@@ -828,8 +865,8 @@ void RSDNeuralNetwork_train (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLi
 		for(int i=0;i<RSDNeuralNetwork->classSize;i++)		
 			fprintf(fpClasses, "%s (%d)\n", RSDCommandLine->classPathList[i], i);
 			
-		fprintf(fpImgDim, "%s\n", RSDNeuralNetwork->cl4_1x_label);
-		fprintf(fpImgDim, "%s\n", RSDNeuralNetwork->cl4_x1_label);	
+		fprintf(fpClasses, "%s\n", RSDNeuralNetwork->cl4_1x_label);
+		fprintf(fpClasses, "%s\n", RSDNeuralNetwork->cl4_x1_label);	
 			
 		fprintf(fpClasses, "***DO_NOT_REMOVE_OR_EDIT_THIS_FILE***\n");
 		
@@ -882,7 +919,7 @@ void RSDNeuralNetwork_createRunCommand (RSDNeuralNetwork_t * RSDNeuralNetwork, R
 	RSDNeuralNetwork_modelCheck (RSDNeuralNetwork, RSDCommandLine);
 	dir_exists_check (inputPath);
 	
-	char tstring[STRING_SIZE];	
+	char tstring[STRING_SIZE], runNameSanitized[STRING_SIZE/2], tstringF[STRING_SIZE];	
 	
 	strncpy(runCommand, "python3 ", STRING_SIZE);	
 	strcat(runCommand, RSDNeuralNetwork->pyPath);
@@ -951,14 +988,19 @@ void RSDNeuralNetwork_createRunCommand (RSDNeuralNetwork_t * RSDNeuralNetwork, R
 	
 	strcat(runCommand, " -w ");
 	sprintf(tstring, "%d", RSDNeuralNetwork->imageWidth);
-	strcat(runCommand, tstring);
+	strcat(runCommand, tstring);	
 	
-	strcat(runCommand, " -o ");
-	strcat(runCommand, "tempOutputFolder");
+	sanitizeString(RSDCommandLine->runName, runNameSanitized, STRING_SIZE/2);	
+	snprintf(tstringF, STRING_SIZE, " -o tempOutputFolder-%s-rsdai", runNameSanitized);	
+	strcat(runCommand, tstringF);
 
 	strcat(runCommand, " 2>/dev/null");
 	
-	//printf("\nruncommand %s\n", runCommand);	
+	if(RSDCommandLine->dev)
+	{
+		printf("\nruncommand %s\n", runCommand);
+		fflush(stdout);	
+	}	
 }
 
 void RSDNeutralNetwork_run (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLine_t * RSDCommandLine, void * RSDGrid, FILE * fpOut)
@@ -1080,7 +1122,7 @@ void RSDNeuralNetwork_test (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 	fprintf(fpOut, "\n");
 	fprintf(stdout, "\n");
 	
-	char tstring[STRING_SIZE], testCommand[STRING_SIZE];
+	char tstring[STRING_SIZE], testCommand[STRING_SIZE], tstringF[STRING_SIZE], runNameSanitized[STRING_SIZE/2];
 	int i=-1, j=-1, k=-1;	
 	
 	if(RSDCommandLine->numberOfClasses!=RSDNeuralNetwork->classSize)
@@ -1165,15 +1207,19 @@ void RSDNeuralNetwork_test (RSDNeuralNetwork_t * RSDNeuralNetwork, RSDCommandLin
 		exec_command (testCommand);
 		
 		for(j=0;j<RSDCommandLine->numberOfClasses;j++)
-			predictionGrid[i*RSDCommandLine->numberOfClasses+j]=0;		
+			predictionGrid[i*RSDCommandLine->numberOfClasses+j]=0;
+			
 		
-		FILE * fp = fopen("tempOutputFolder/PredResults.txt", "r");
+		sanitizeString(RSDCommandLine->runName, runNameSanitized, STRING_SIZE/2);	
+		snprintf(tstringF, STRING_SIZE, "tempOutputFolder-%s-rsdai/PredResults.txt", runNameSanitized);	
+		FILE * fp = fopen(tstringF, "r");
 		assert(fp!=NULL);
 		
 		RSDNeuralNetwork_readPredictionFile (RSDNeuralNetwork, fp, i, RSDCommandLine->numberOfClasses, predictionGrid); 		
 		fclose(fp);
 
-		exec_command ("rm -r tempOutputFolder");
+		snprintf(tstringF, STRING_SIZE, "rm -r tempOutputFolder-%s-rsdai", runNameSanitized);
+		exec_command (tstringF);
 	}
 	
 	int samplesStrLen = 2;
@@ -1306,22 +1352,8 @@ void RSDNeuralNetwork_printPackageDependency (char * dependency, FILE * fpOut)
 	char tstring[STRING_SIZE];	
 	strncpy(tstring, "pip3 show ", STRING_SIZE);
 	strcat(tstring, dependency);
-	strcat(tstring, ">PackageVersionREMOVE.txt");
-	
-	FILE * fp;
-	
-#ifdef _C1
-	int ret = system(tstring);
-	assert(ret!=-1);	
-#else
-	fp = popen(tstring);
-	assert(fp!=NULL);
 
-	int ret = pclose(fp);
-	assert(ret!=-1);	
-#endif
-
-	fp = fopen("PackageVersionREMOVE.txt", "r");
+	FILE * fp = popen(tstring, "r");
 	assert(fp!=NULL);
 	
 	int rcnt = fscanf(fp, "%s", tstring);
@@ -1342,13 +1374,33 @@ void RSDNeuralNetwork_printPackageDependency (char * dependency, FILE * fpOut)
 	fprintf(fpOut, " %s\n", tstring); // version
 	fprintf(stdout, " %s\n", tstring); // version
 	
-	fclose(fp);
-
-	ret = remove("PackageVersionREMOVE.txt");
-	assert(ret==0);	
+	int c=0;
+	while ((c = fgetc(fp)) != EOF);
+	
+	pclose(fp);
 	
 	fflush(fpOut);
 	fflush(stdout);	
+}
+
+void randomPermutation(const char *iString, char *oString) 
+{
+	assert(iString!=NULL);
+	assert(oString!=NULL);
+	
+	size_t len = strlen(iString);
+
+	/* copy input into output */
+	strcpy(oString, iString);
+
+	for (size_t i = len - 1; i > 0; i--) 
+	{
+		size_t j = rand() % (i + 1);
+
+		char tmp = oString[i];
+		oString[i] = oString[j];
+		oString[j] = tmp;
+	}
 }
 
 void RSDNeuralNetwork_printPythonVersion (FILE * fpOut)
@@ -1358,20 +1410,8 @@ void RSDNeuralNetwork_printPythonVersion (FILE * fpOut)
 	fprintf(fpOut, " Python\t\t     :\t");
 	fprintf(stdout, " Python\t\t     :\t");
 
-	FILE * fp;
+	FILE *fp = popen("python3 --version", "r");
 	
-#ifdef _C1
-	int ret = system("python3 --version >PythonVersion.txt");
-	assert(ret!=-1);	
-#else
-	fp = popen("python3 --version >PythonVersion.txt", "r");
-	assert(fp!=NULL);
-
-	int ret = pclose(fp);
-	assert(ret!=-1);	
-#endif
-
-	fp = fopen("PythonVersion.txt", "r");
 	assert(fp!=NULL);
 	
 	char tchar = (char)fgetc(fp);	
@@ -1384,11 +1424,8 @@ void RSDNeuralNetwork_printPythonVersion (FILE * fpOut)
 		tchar = (char)fgetc(fp);
 	}
 
-	fclose(fp);
-	
-	ret = remove("PythonVersion.txt");
-	assert(ret==0);	
-	
+	pclose(fp);
+		
 	fflush(fpOut);
 	fflush(stdout);
 }

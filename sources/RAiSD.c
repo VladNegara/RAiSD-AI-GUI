@@ -273,21 +273,22 @@ int main (int argc, char ** argv)
 
 			setDone = RSDDataset_getFirstSNP(RSDDataset, RSDPatternPool, RSDChunk, RSDCommandLine, RSDCommandLine->regionLength, RSDCommandLine->maf, RAiSD_Info_FP);
 #if _RSDAI
-			if(RSDCommandLine->opCode==OP_USE_CNN && RSDNeuralNetwork->imageHeight!=RSDDataset->numberOfSamples)
+
+			if(RSDCommandLine->opCode==OP_USE_CNN && RSDNeuralNetwork->imageHeight!=RSDDataset->setSamples)
 			{
 				if(RSDNeuralNetwork->dataFormat==1 && RSDNeuralNetwork->dataType==1 && warningMsgEn==1)
 				{
 					warningMsgEn = 0;
 					
-					fprintf(RAiSD_Info_FP, "\nWARNING: Mismatch between the sample size (%d) and the trained model (height %d)! Classification accuracy might be negatively affected! \n\n", RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);		
-					fprintf(stderr, "\nWARNING: Mismatch between the sample size (%d) and the trained model (height %d)! Classification accuracy might be negatively affected!\n\n", RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);
+					fprintf(RAiSD_Info_FP, "\nWARNING: Mismatch between the sample size (%d) and the trained model (height %d)! Classification accuracy might be negatively affected! \n\n", (int)RSDDataset->setSamples, RSDNeuralNetwork->imageHeight);		
+					fprintf(stderr, "\nWARNING: Mismatch between the sample size (%d) and the trained model (height %d)! Classification accuracy might be negatively affected!\n\n", (int)RSDDataset->setSamples, RSDNeuralNetwork->imageHeight);
 				}
 				else
 				{
 					if(!(RSDNeuralNetwork->dataFormat==1 && RSDNeuralNetwork->dataType==1))
 					{
-						fprintf(RAiSD_Info_FP, "\nERROR: Set %s sample size (%d) is incompatible with the trained model (expected %d)!\n\n",RSDDataset->setID, RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);		
-						fprintf(stderr, "\nERROR: Set %s sample size (%d) is incompatible with the trained model (expected %d)!\n\n",RSDDataset->setID, RSDDataset->numberOfSamples, RSDNeuralNetwork->imageHeight);
+						fprintf(RAiSD_Info_FP, "\nERROR: Set %s sample size (%d) is incompatible with the trained model (expected %d)!\n\n",RSDDataset->setID, (int)RSDDataset->setSamples, RSDNeuralNetwork->imageHeight);		
+						fprintf(stderr, "\nERROR: Set %s sample size (%d) is incompatible with the trained model (expected %d)!\n\n",RSDDataset->setID, (int)RSDDataset->setSamples, RSDNeuralNetwork->imageHeight);
 		
 						exit(1);
 					}
