@@ -175,26 +175,6 @@ class HistoryRecord():
             "parameters": self.parameters,
             "time_completed": self.time_completed
         }
-    
-    # TODO this could be moved to parameter
-    @classmethod
-    def parameter_to_value(cls, parameter: Parameter) -> str | dict:
-        """
-        Makes the dictionary or string that is stored as the value of each 
-        parameter. Uses recursion for MultiParameter and OptionalParameter
-        """
-        if type(parameter) is MultiParameter: 
-            parameters = {}
-            for param in parameter.parameters:
-                parameters[param.name] = cls.parameter_to_value(param)
-            return parameters
-        if type(parameter) is OptionalParameter:
-            value = {}
-            value["enabled"] = parameter.value
-            value[parameter.parameter.name] = cls.parameter_to_value(parameter.parameter)
-            return value
-        else:
-            return parameter.value
 
     @property
     def name(self) -> str:
