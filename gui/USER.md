@@ -2,7 +2,7 @@
 
 ## RAiSD-AI
 
-The RAiSD-AI-GUI relies on the RAiSD-AI tool to perform its computations. For more information about RAiSD-AI, please refer to the general [README.md](../README.md). It contains detailed information about the tool, its capabilities, and how it works.
+The RAiSD-AI GUI relies on the RAiSD-AI tool to perform its computations. For more information about RAiSD-AI, please refer to the general [README.md](/README.md). It contains detailed information about the tool, its capabilities, and how it works.
 
 ## The RAiSD-AI GUI
 
