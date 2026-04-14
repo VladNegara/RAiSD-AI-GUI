@@ -37,6 +37,11 @@ class Settings(QObject):
     settings_file_path = "gui/settings.yaml"
     environment_managers = ["micromamba", "conda"]
 
+    default_executable_file_path = QFileInfo("RAiSD-AI-ZLIB")
+    default_environment_manager = 0
+    default_environment_name = "raisd-ai"
+    default_config_path = QFileInfo("gui/config.yaml")
+
     def __init__(
             self,
             workspace_path: QDir | None = None,
@@ -96,7 +101,7 @@ class Settings(QObject):
                 )
             self._executable_file_path = executable_file
         if not self._executable_file_path:
-            self._executable_file_path = QFileInfo("RAiSD-AI-ZLIB")
+            self.executable_file_path = self.default_executable_file_path
 
         # Environment manager
         if "environment_manager" in settings_obj:
@@ -114,7 +119,7 @@ class Settings(QObject):
                 )
             self._environment_manager = self.environment_managers.index(environment_manager)
         if self._environment_manager is None:
-            self._environment_manager = 0
+            self.environment_manager = self.default_environment_manager
 
         # Environment name
         if "environment_name" in settings_obj:
@@ -126,7 +131,7 @@ class Settings(QObject):
                 )
             self._environment_name = environment_name
         if not self._environment_name:
-            self._environment_name = "raisd-ai"
+            self.environment_name = self.default_environment_name
 
         # Config file
         if "config_file" in settings_obj:
@@ -144,7 +149,7 @@ class Settings(QObject):
                 )
             self._config_path = config_file
         if not self._config_path:
-            self._config_path = QFileInfo("gui/config.yaml")
+            self.config_path = self.default_config_path
 
         
     @property

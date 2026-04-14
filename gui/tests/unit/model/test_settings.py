@@ -1,4 +1,5 @@
 import pytest
+import yaml
 
 from PySide6.QtCore import (
     QDir,
@@ -14,8 +15,19 @@ class TestSettings:
     def setup(self):
         pass
 
+    @pytest.fixture()
+    def correct_settings_obj(self) -> dict:
+        settings_obj = {
+            "config_file" : "/home/raisd/config.yml",
+            "environment_manager" : "raise",
+            "environment_name" : "utwente",
+            "executable" : "/home/raisd/raisdai",
+            "workspace" : "/home/raisd/workspace"
+        }
+        return settings_obj
+
     def test_init_values(self):
-        """Test Settings."""
+        """Test initialisation with values."""
         # Arrange
         workspace_path = QDir("/home/raisd")
         executable_file_path = QFileInfo("/home/raisd/raisdai")
@@ -40,16 +52,3 @@ class TestSettings:
         assert settings.environment_manager_name == environment_manger_name
         assert settings.environment_name == environment_name
         assert settings.config_path == config_path
-
-    def test_yaml_file_not_found(self, mocker):
-        # Arrange
-        load_mock = mocker.patch("load")
-        load_mock.return_value = FileNotFoundError
-        settings = Settings()
-
-        # Act
-        settings.from_yaml ("")
-
-        # Assert
-        assert settings.workspace_path == None
-        #TODO: finish
