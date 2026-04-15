@@ -123,7 +123,6 @@ class TestHistoryRecord:
         # Assert
         assert history_records == []
             
-
     def test_from_history_file_single_record(self, mocker):
         # Arrange
         dict = f"""{{"hi": {{"name": "{self.name}", 
@@ -146,6 +145,48 @@ class TestHistoryRecord:
         # Assert
         assert len(history_records) is 1
         record = history_records[0]
+        assert isinstance(record, HistoryRecord)
+        assert record.name == self.name
+        assert record.commands == self.commands
+        assert record.operations == self.operations
+        assert record.parameters == self.parameters
+        assert record.time_completed == self.time_completed
+
+    def test_from_history_file_multiple_records(self, mocker):
+        # Arrange
+        dict = f"""{{"hi": {{"name": "{self.name}", 
+            "commands": ["{self.command1}","{self.command2}"], 
+            "operations": {{"index": {self.index}, 
+            "trees": {self.trees}}}, 
+            "parameters": {self.parameters},
+            "time_completed": "{str(self.time_completed)}"}},
+            "hello": {{"name": "{self.name}", 
+            "commands": ["{self.command1}","{self.command2}"], 
+            "operations": {{"index": {self.index}, 
+            "trees": {self.trees}}}, 
+            "parameters": {self.parameters},
+            "time_completed": "{str(self.time_completed)}"}}}}"""
+        mocked_history_file = mocker.mock_open(read_data=f"{dict}")
+        mocker.patch("builtins.open", mocked_history_file)
+        mocker.patch.object(
+            type(history_record.app_settings), 
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir.current())
+        
+        # Act
+        history_records = HistoryRecord.from_history_file()
+
+        # Assert
+        assert len(history_records) is 2
+        record = history_records[0]
+        assert isinstance(record, HistoryRecord)
+        assert record.name == self.name
+        assert record.commands == self.commands
+        assert record.operations == self.operations
+        assert record.parameters == self.parameters
+        assert record.time_completed == self.time_completed
+        record = history_records[1]
         assert isinstance(record, HistoryRecord)
         assert record.name == self.name
         assert record.commands == self.commands
