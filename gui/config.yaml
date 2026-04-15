@@ -32,18 +32,23 @@ modes:
                 - .vcf
                 - .fasta
         output:
-          type: file
-          formats: 
-            - .txt
-        overwrite_parameter:
-          name: Overwrite RAiSD report
-          description: You might overwrite an existing RAiSD report. Are you sure?
-          cli: "-f"
-          type: bool
-          default: false
-        path:
-          - RAiSD_Info.
-          - type: run id
+          path:
+            - RAiSD_Report.
+            - type: run id
+          file:
+            type: single
+            formats: 
+              - .txt
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite RAiSD report
+            description: You might overwrite an existing RAiSD report. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
   - name: RAiSD-AI
     operations:
       IMG-GEN:
@@ -62,17 +67,31 @@ modes:
                 - .vcf
                 - .fasta
         output:
-          type: directory
-          contents:
-            - type: single
-              formats:
-                - .png
-        overwrite_parameter:
-          name: Overwrite prepared data
-          description: You might overwrite existing data in the output folder. Are you sure?
-          cli: "-f"
-          type: bool
-          default: false
+          path:
+            - RAiSD_Images.
+            - type: run id
+            - type: slash
+            - type: parameter
+              id: -icl
+          file:
+            type: directory
+            contents:
+              - type: single
+                formats:
+                  - .png
+        overwrite:
+          path:
+          - RAiSD_Info.
+          - type: run id
+          - .
+          - type: parameter
+            id: -icl
+          parameter:
+            name: Overwrite prepared data
+            description: You might overwrite existing data in the output folder. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
         parameters:
           "-icl":
             name: Image class label
@@ -94,12 +113,6 @@ modes:
               - type: interval
                 min: 1
               # max: < region_length
-        path:
-          - RAiSD_Info.
-          - type: run id
-          - .
-          - type: parameter
-            id: -icl
       MDL-GEN:
         name: Model training
         description: Train a sweep detection CNN model.
@@ -122,20 +135,25 @@ modes:
                       formats:
                         - .png
         output:
-          type: directory
-          contents:
-            - type: single
-              formats:
-                - .pt
-        overwrite_parameter:
-          name: Overwrite model
-          description: You might overwrite existing data in the output folder. Are you sure?
-          cli: "-f"
-          type: bool
-          default: false
-        path:
-          - RAiSD_Info.
-          - type: run id
+          path:
+            - RAiSD_Model.
+            - type: run id
+          file:
+            type: directory
+            contents:
+              - type: single
+                formats:
+                  - .pt
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite model
+            description: You might overwrite existing data in the output folder. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
       MDL-TST:
         name: Model testing
         description: Evaluate a sweep detection CNN model on a test dataset.
@@ -166,19 +184,24 @@ modes:
                     - type: single
                       formats:
                         - .png
-        output: 
-          type: single
-          formats:
-            - .txt
-        overwrite_parameter:
-          name: Overwrite results
-          description: You might overwrite existing data in the output folder. Are you sure?
-          cli: "-f"
-          type: bool
-          default: false
-        path:
-          - RAiSD_Info.
-          - type: run id
+        output:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .txt
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite results
+            description: You might overwrite existing data in the output folder. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
       SWP-SCN:
         name: Model sweep scan
         description: Use a CNN model to scan for selective sweeps.
@@ -204,18 +227,23 @@ modes:
                 - .vcf
                 - .fasta
         output:
-          type: single
-          formats:
-            - .txt
-        overwrite_parameter:
-          name: Overwrite report
-          description: You might overwrite an existing RAiSD report. Are you sure?
-          cli: "-f -frm"
-          type: bool
-          default: false
-        path:
-          - RAiSD_Info.
-          - type: run id
+          path:
+            - RAiSD_Info.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .txt
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite report
+            description: You might overwrite an existing RAiSD report. Are you sure?
+            cli: "-f -frm"
+            type: bool
+            default: false
   - name: Common outlier analysis
     operations:
       CO:
@@ -224,18 +252,23 @@ modes:
         cli: ""
         input: []
         output:
-          type: single
-          formats:
-            - .co-report
-        overwrite_parameter:
-          name: Overwrite existing results?
-          description: You might overwrite existing output data. Are you sure?
-          cli: "-f"
-          type: bool
-          default: false
-        path:
-          - RAiSD_Info.
-          - type: run id
+          path:
+            - RAiSD_Info.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .co-report
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite existing results?
+            description: You might overwrite existing output data. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
   - name: File conversion
     operations:
       FASTA-VCF:
@@ -251,18 +284,23 @@ modes:
               formats:
                 - .fasta
         output:
-          type: single
-          formats:
-            - .vcf
-        overwrite_parameter:
-          name: Overwrite existing data?
-          description: You might overwrite existing output data. Are you sure?
-          cli: "-f"
-          type: bool
-          default: false
-        path:
-          - RAiSD_Info.
-          - type: run id
+          path:
+            - RAiSD_Info.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .vcf
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite existing data?
+            description: You might overwrite existing output data. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
       VCF-MS:
         name: VCF to ms
         description: Convert a VCF file to ms.
@@ -276,18 +314,23 @@ modes:
               formats:
                 - .vcf
         output:
-          type: single
-          formats:
-            - .ms
-        overwrite_parameter:
-          name: Overwrite existing data?
-          description: You might overwrite existing output data. Are you sure?
-          cli: "-f"
-          type: bool
-          default: false
-        path:
-          - RAiSD_Info.
-          - type: run id
+          path:
+            - RAiSD_Info.
+            - type: run id
+          file:
+            type: single
+            formats:
+              - .ms
+        overwrite:
+          path:
+            - RAiSD_Info.
+            - type: run id
+          parameter:
+            name: Overwrite existing data?
+            description: You might overwrite existing output data. Are you sure?
+            cli: "-f"
+            type: bool
+            default: false
 parameter_groups:
   - name: SNP and sample handling
     operations:
