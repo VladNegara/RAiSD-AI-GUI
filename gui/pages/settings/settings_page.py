@@ -216,7 +216,7 @@ class SettingsPage(Page):
             """Copyright April 2026 by <b>Nikolaos Alachiotis</b>, <b>Loes Baart de la Faille</b>, <b>Steef Broeder</b>, 
             <b>Taylan Kıncır</b>, <b>Alphan Mete</b>, <b>Vlad Negară</b> and <b>Giulia Tălău</b>.<br>
             
-            <br>This program is free software; you may redistribute it and/or modify its under the terms of the 
+            <br>This program is free software, you may redistribute it and/or modify its under the terms of the 
             GNU General Public License version 2.0 as published by the Free Software Foundation. <br>
 
             <br>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
