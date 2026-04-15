@@ -178,6 +178,9 @@ class HistoryRecord():
                     print("Corrupted history file will be overwritten")
                     history = {}
                     f.truncate(0)
+                if not isinstance(history, dict):
+                    print("History file has incorrect format.")
+                    history = {}
                 history[f"{self.time_completed}-{self.name}"] = self.to_dict()
                 f.seek(0)
                 json.dump(history, f, indent=4, default=str)
