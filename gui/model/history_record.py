@@ -40,24 +40,26 @@ class HistoryRecord():
                 data = json.load(f)
                 if not isinstance(data, dict):
                     raise ValueError(
-                        f"Incorrect format in .history.json: {data}"
+                        f"Incorrect format in .history.json: {data}. "
                         + "Expected dict."
                     )
                 for key in data.keys():
                     if not isinstance(data[key], dict):
                         raise ValueError(
-                            f"Incorrect format in .history.json for {key}: {data[key]}"
+                            f"Incorrect format in .history.json for {key}: {data[key]}. "
                             + "Expected dict."
                         )
                     try:
                         history_records.append(cls.from_dict(data[key]))
-                    except ValueError:
+                    except ValueError as e:
                         print(f"Error parsing {key}")
+                        print(e)
                 return history_records
         except FileNotFoundError:
             print("No history file found in this workspace")
             return []
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            print(e)
             print("History file not parseable. Might be empty or formatted incorrectly")
             return []
         
