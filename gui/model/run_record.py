@@ -267,35 +267,79 @@ class RunRecord(QObject):
                 
                 requires.append(parse_operation_input(requires_obj))
 
-            produces_obj = obj.get("output", "") or ""
-            if not isinstance(produces_obj, dict):
+            # Output path and file structure
+            if "output" not in obj:
                 raise ValueError(
-                    f"Invalid output for operation: {produces_obj}."
-                    + "Expected object."
+                    f"Missing output object for operation {name}."
                 )
-            produces = parse_file_structure(produces_obj)
+            output_obj = obj["output"]
+            if not isinstance(output_obj, dict):
+                raise ValueError(
+                    f"Invalid output object for operation {name}: {output_obj}"
+                    + ". Expected an object."
+                )
 
-            if "path" not in obj:
+            if "path" not in output_obj:
                 raise ValueError(
                     f"No output path provided for operation {name}."
                 )
-            path_fragments_list = obj["path"]
-            if not isinstance(path_fragments_list, list):
+            output_path_fragments_list = output_obj["path"]
+            if not isinstance(output_path_fragments_list, list):
                 raise ValueError(
                     f"Invalid output path for operation {name}: "
-                    + f"{path_fragments_list}. Expected a list."
+                    + f"{output_path_fragments_list}. Expected a list."
                 )
-            path_fragments: list[Operation.PathFragment] = []
-            for path_fragment_obj in path_fragments_list:
-                path_fragments.append(
+            output_path_fragments: list[Operation.PathFragment] = []
+            for path_fragment_obj in output_path_fragments_list:
+                output_path_fragments.append(
                     parse_path_fragment(path_fragment_obj),
                 )
 
-            if "overwrite_parameter" not in obj:
+            if "file" not in output_obj:
+                raise ValueError(
+                    f"Missing output file structure for operation {name}."
+                )
+            produces_obj = output_obj["file"]
+            if not isinstance(produces_obj, dict):
+                raise ValueError(
+                    f"Invalid output file structure for operation {name}: "
+                    + f"{produces_obj}. Expected an object."
+                )
+            produces = parse_file_structure(produces_obj)
+
+            # Overwrite path and parameter
+            if "overwrite" not in obj:
+                raise ValueError(
+                    f"Missing overwrite object for operation {name}."
+                )
+            overwrite_obj = obj["overwrite"]
+            if not isinstance(overwrite_obj, dict):
+                raise ValueError(
+                    f"Invalid overwrite object for operation {name}: "
+                    + f"{overwrite_obj}. Expected an object."
+                )
+
+            if "path" not in overwrite_obj:
+                raise ValueError(
+                    f"No overwrite path provided for operation {name}."
+                )
+            overwrite_path_fragments_list = overwrite_obj["path"]
+            if not isinstance(overwrite_path_fragments_list, list):
+                raise ValueError(
+                    f"Invalid output path for operation {name}: "
+                    + f"{overwrite_path_fragments_list}. Expected a list."
+                )
+            overwrite_path_fragments: list[Operation.PathFragment] = []
+            for path_fragment_obj in overwrite_path_fragments_list:
+                overwrite_path_fragments.append(
+                    parse_path_fragment(path_fragment_obj),
+                )
+
+            if "parameter" not in overwrite_obj:
                 raise ValueError(
                     f"Missing overwrite parameter for operation {name}."
                 )
-            overwrite_parameter_obj = obj["overwrite_parameter"]
+            overwrite_parameter_obj = overwrite_obj["parameter"]
             overwrite_parameter_builder = (
                 lambda: parse_parameter(
                     obj=overwrite_parameter_obj,
@@ -326,7 +370,8 @@ class RunRecord(QObject):
                 cli=cli,
                 requires=requires,
                 produces=produces,
-                output_path=path_fragments,
+                output_path=output_path_fragments,
+                overwrite_path=overwrite_path_fragments,
                 overwrite_parameter_builder=overwrite_parameter_builder,
                 parameter_builders=parameter_builders,
             )
