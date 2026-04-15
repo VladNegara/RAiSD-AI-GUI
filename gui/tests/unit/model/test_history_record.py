@@ -24,7 +24,8 @@ class TestHistoryRecord:
             "index": self.index,
             "trees": self.trees
         }
-        self.parameters = {}
+        self.parameter = 1
+        self.parameters = {"param": self.parameter}
         self.time_completed = datetime.now()
 
         self.history_record = HistoryRecord(
@@ -141,7 +142,7 @@ class TestHistoryRecord:
             "commands": ["{self.command1}","{self.command2}"], 
             "operations": {{"index": {self.index}, 
             "trees": {self.trees}}}, 
-            "parameters": {self.parameters},
+            "parameters": {{"param": {self.parameter}}},
             "time_completed": "{str(self.time_completed)}"}}}}"""
         mocked_history_file = mocker.mock_open(read_data=f"{dict}")
         mocker.patch("builtins.open", mocked_history_file)
@@ -172,13 +173,13 @@ class TestHistoryRecord:
             "commands": ["{self.command1}","{self.command2}"], 
             "operations": {{"index": {self.index}, 
             "trees": {self.trees}}}, 
-            "parameters": {self.parameters},
+            "parameters": {{"param": {self.parameter}}},
             "time_completed": "{str(self.time_completed)}"}},
             "hello": {{"name": "{self.name}", 
             "commands": ["{self.command1}","{self.command2}"], 
             "operations": {{"index": {self.index}, 
             "trees": {self.trees}}}, 
-            "parameters": {self.parameters},
+            "parameters": {{"param": {self.parameter}}},
             "time_completed": "{str(self.time_completed)}"}}}}"""
         mocked_history_file = mocker.mock_open(read_data=f"{dict}")
         mocker.patch("builtins.open", mocked_history_file)
