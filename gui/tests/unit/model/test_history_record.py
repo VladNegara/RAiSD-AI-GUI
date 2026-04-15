@@ -458,13 +458,56 @@ class TestHistoryRecord:
             assert isinstance(history, dict)
             assert len(history.keys()) == 1
             
-            for key in history.keys():
-                record = history[key]
-                assert record["name"] == self.name
-                assert record["commands"] == self.commands
-                assert record["operations"] == self.operations
-                assert record["parameters"] == self.parameters
-                assert record["time_completed"] == str(self.time_completed)
+            record = history[f"{str(self.time_completed)}-{self.name}"]
+            assert record["name"] == self.name
+            assert record["commands"] == self.commands
+            assert record["operations"] == self.operations
+            assert record["parameters"] == self.parameters
+            assert record["time_completed"] == str(self.time_completed)
+
+    def test_save_to_history_multiple_records(self,tmp_path, mocker):
+        # Arrange
+        mocker.patch.object(
+            type(history_record.app_settings), 
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir(str(tmp_path)))
+
+        history_file = tmp_path / ".history.json"
+        history_file.write_text("{}")
+
+        now = datetime.now()
+        new_history_record = HistoryRecord(
+            name="test",
+            commands=["command", "and one more"],
+            operations={"index": 2, "trees":[{}]},
+            parameters={},
+            time_completed=now
+        )
+        
+        # Act
+        new_history_record.save_to_history()
+        self.history_record.save_to_history()
+
+        # Assert
+        with open(QDir(str(tmp_path)).absoluteFilePath(".history.json")) as f:
+            history = json.load(f)
+            assert isinstance(history, dict)
+            assert len(history.keys()) == 2
+
+            record = history[f"{str(now)}-test"]
+            assert record["name"] == "test"
+            assert record["commands"] == ["command", "and one more"]
+            assert record["operations"] == {"index": 2, "trees":[{}]}
+            assert record["parameters"] == {}
+            assert record["time_completed"] == str(now)
+
+            record = history[f"{str(self.time_completed)}-{self.name}"]
+            assert record["name"] == self.name
+            assert record["commands"] == self.commands
+            assert record["operations"] == self.operations
+            assert record["parameters"] == self.parameters
+            assert record["time_completed"] == str(self.time_completed)
 
     def test_to_dict(self):
         # Act
