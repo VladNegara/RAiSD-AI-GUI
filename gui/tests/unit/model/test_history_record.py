@@ -44,6 +44,7 @@ class TestHistoryRecord:
         assert self.history_record.time_completed == self.time_completed
 
     def test_from_history_file_not_found(self, mocker):
+        """Test that a nonexisting history file is handled correctly."""
         # Arrange
         dict = ""
         temp_dir = tempfile.TemporaryDirectory()
@@ -61,6 +62,7 @@ class TestHistoryRecord:
         assert history_records == []
     
     def test_from_history_file_emtpy(self, mocker):
+        """Test that an empty history file is handled correctly."""
         # Arrange
         dict = ""
         mocked_history_file = mocker.mock_open(read_data=f"{dict}")
@@ -78,6 +80,7 @@ class TestHistoryRecord:
         assert history_records == []
 
     def test_from_history_file_incorrect_format(self, mocker):
+        """Test that a history file with an incorrect format is handled correctly."""
         # Arrange
         dict = f"""[]"""
         mocked_history_file = mocker.mock_open(read_data=f"{dict}")
@@ -89,10 +92,13 @@ class TestHistoryRecord:
             return_value=QDir.current())
         
         # Assert
-        with pytest.raises(ValueError, match=r"Incorrect format in .history.json: \[\]. Expected dict."):
+        with pytest.raises(ValueError, 
+            match=r"Incorrect format in .history.json: \[\]. Expected dict."):
             history_records = HistoryRecord.from_history_file()
 
     def test_from_history_file_incorrect_keys(self, mocker):
+        """Test that a history file containing a wrongly formatted run is handled
+        correctly."""
         # Arrange
         dict = f"""{{"hi": []}}"""
         mocked_history_file = mocker.mock_open(read_data=f"{dict}")
@@ -104,10 +110,13 @@ class TestHistoryRecord:
             return_value=QDir.current())
         
         # Assert
-        with pytest.raises(ValueError, match=r"Incorrect format in .history.json for hi: \[\]. Expected dict."):
+        with pytest.raises(ValueError, 
+            match=r"Incorrect format in .history.json for hi: \[\]. Expected dict."):
             history_records = HistoryRecord.from_history_file()
     
     def test_from_history_file_incorrect_value(self, mocker):
+        """Test that a history file containing a wrongly formatted run is handled
+        correctly."""
         # Arrange
         dict = f"""{{"hi": {{}}}}"""
         mocked_history_file = mocker.mock_open(read_data=f"{dict}")
@@ -125,6 +134,8 @@ class TestHistoryRecord:
         assert history_records == []
             
     def test_from_history_file_single_record(self, mocker):
+        """Test that a history file containing a single completed run is parsed
+        correctly."""
         # Arrange
         dict = f"""{{"hi": {{"name": "{self.name}", 
             "commands": ["{self.command1}","{self.command2}"], 
@@ -154,6 +165,8 @@ class TestHistoryRecord:
         assert record.time_completed == self.time_completed
 
     def test_from_history_file_multiple_records(self, mocker):
+        """"Test that a history file containing multiple records is parsed 
+        correctly."""
         # Arrange
         dict = f"""{{"hi": {{"name": "{self.name}", 
             "commands": ["{self.command1}","{self.command2}"], 
@@ -298,6 +311,8 @@ class TestHistoryRecord:
             HistoryRecord.from_dict(dict_correct)
 
     def test_from_dict_parameters(self):
+        """Test that the parameters attribute is collected correctly from a 
+        dictionary."""
         # Arrange
         dict_wrong_format = {"name": self.name, "commands": self.commands, 
                         "operations": self.operations, "parameters": 6}
@@ -312,6 +327,8 @@ class TestHistoryRecord:
             HistoryRecord.from_dict(dict_correct)
 
     def test_from_dict_time_completed(self):
+        """Test that the time_completed attribute is collected correctly
+        from a dictionary."""
         # Arrange
         dict_missing = {"name": self.name, "commands": self.commands, 
                         "operations": self.operations, 
@@ -338,6 +355,8 @@ class TestHistoryRecord:
         assert isinstance(history_record, HistoryRecord)
 
     def test_from_dict_values(self):
+        """Test that a complete HistoryRecord is correctly collected from a 
+        dictionary."""
         # Arrange
         dict = {
             "name": self.name, 
@@ -357,88 +376,8 @@ class TestHistoryRecord:
         assert history_record.parameters == self.history_record.parameters
         assert history_record.time_completed == self.history_record.time_completed    
 
-    def test_save_to_history_no_file(self,tmp_path, mocker):
-        # Arrange
-        mocker.patch.object(
-            type(history_record.app_settings), 
-            "workspace_path",
-            new_callable=PropertyMock,
-            return_value=QDir(str(tmp_path)))
-        
-        # Act
-        self.history_record.save_to_history()
-
-        # Assert
-        with open(QDir(str(tmp_path)).absoluteFilePath(".history.json")) as f:
-            history = json.load(f)
-            assert isinstance(history, dict)
-            assert len(history.keys()) == 1
-            
-            for key in history.keys():
-                record = history[key]
-                assert record["name"] == self.name
-                assert record["commands"] == self.commands
-                assert record["operations"] == self.operations
-                assert record["parameters"] == self.parameters
-                assert record["time_completed"] == str(self.time_completed)
-
-    def test_save_to_history_empty_file(self,tmp_path, mocker):
-        # Arrange
-        mocker.patch.object(
-            type(history_record.app_settings), 
-            "workspace_path",
-            new_callable=PropertyMock,
-            return_value=QDir(str(tmp_path)))
-
-        history_file = tmp_path / ".history.json"
-        history_file.write_text("")
-        
-        # Act
-        self.history_record.save_to_history()
-
-        # Assert
-        with open(QDir(str(tmp_path)).absoluteFilePath(".history.json")) as f:
-            history = json.load(f)
-            assert isinstance(history, dict)
-            assert len(history.keys()) == 1
-            
-            for key in history.keys():
-                record = history[key]
-                assert record["name"] == self.name
-                assert record["commands"] == self.commands
-                assert record["operations"] == self.operations
-                assert record["parameters"] == self.parameters
-                assert record["time_completed"] == str(self.time_completed)
-    
-    def test_save_to_history_wrong_format_file(self,tmp_path, mocker):
-        # Arrange
-        mocker.patch.object(
-            type(history_record.app_settings), 
-            "workspace_path",
-            new_callable=PropertyMock,
-            return_value=QDir(str(tmp_path)))
-
-        history_file = tmp_path / ".history.json"
-        history_file.write_text("[]")
-        
-        # Act
-        self.history_record.save_to_history()
-
-        # Assert
-        with open(QDir(str(tmp_path)).absoluteFilePath(".history.json")) as f:
-            history = json.load(f)
-            assert isinstance(history, dict)
-            assert len(history.keys()) == 1
-            
-            for key in history.keys():
-                record = history[key]
-                assert record["name"] == self.name
-                assert record["commands"] == self.commands
-                assert record["operations"] == self.operations
-                assert record["parameters"] == self.parameters
-                assert record["time_completed"] == str(self.time_completed)
-    
     def test_save_to_history_one_record(self,tmp_path, mocker):
+        """Test that a record is correctly saved to history."""
         # Arrange
         mocker.patch.object(
             type(history_record.app_settings), 
@@ -466,6 +405,7 @@ class TestHistoryRecord:
             assert record["time_completed"] == str(self.time_completed)
 
     def test_save_to_history_multiple_records(self,tmp_path, mocker):
+        """Test that multiple records are correctly saved to history."""
         # Arrange
         mocker.patch.object(
             type(history_record.app_settings), 
@@ -508,6 +448,93 @@ class TestHistoryRecord:
             assert record["operations"] == self.operations
             assert record["parameters"] == self.parameters
             assert record["time_completed"] == str(self.time_completed)
+    
+    def test_save_to_history_no_file(self,tmp_path, mocker):
+        """Test that a record is correctly saved to history even if no history 
+        file exists."""
+        # Arrange
+        mocker.patch.object(
+            type(history_record.app_settings), 
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir(str(tmp_path)))
+        
+        # Act
+        self.history_record.save_to_history()
+
+        # Assert
+        with open(QDir(str(tmp_path)).absoluteFilePath(".history.json")) as f:
+            history = json.load(f)
+            assert isinstance(history, dict)
+            assert len(history.keys()) == 1
+            
+            for key in history.keys():
+                record = history[key]
+                assert record["name"] == self.name
+                assert record["commands"] == self.commands
+                assert record["operations"] == self.operations
+                assert record["parameters"] == self.parameters
+                assert record["time_completed"] == str(self.time_completed)
+
+    def test_save_to_history_empty_file(self,tmp_path, mocker):
+        """Test that a record is correctly saved to history even if the history
+        file is empty."""
+        # Arrange
+        mocker.patch.object(
+            type(history_record.app_settings), 
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir(str(tmp_path)))
+
+        history_file = tmp_path / ".history.json"
+        history_file.write_text("")
+        
+        # Act
+        self.history_record.save_to_history()
+
+        # Assert
+        with open(QDir(str(tmp_path)).absoluteFilePath(".history.json")) as f:
+            history = json.load(f)
+            assert isinstance(history, dict)
+            assert len(history.keys()) == 1
+            
+            for key in history.keys():
+                record = history[key]
+                assert record["name"] == self.name
+                assert record["commands"] == self.commands
+                assert record["operations"] == self.operations
+                assert record["parameters"] == self.parameters
+                assert record["time_completed"] == str(self.time_completed)
+    
+    def test_save_to_history_wrong_format_file(self,tmp_path, mocker):
+        """Test that a record is correctly saved to history even if the file 
+        has the wrong format."""
+        # Arrange
+        mocker.patch.object(
+            type(history_record.app_settings), 
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir(str(tmp_path)))
+
+        history_file = tmp_path / ".history.json"
+        history_file.write_text("[]")
+        
+        # Act
+        self.history_record.save_to_history()
+
+        # Assert
+        with open(QDir(str(tmp_path)).absoluteFilePath(".history.json")) as f:
+            history = json.load(f)
+            assert isinstance(history, dict)
+            assert len(history.keys()) == 1
+            
+            for key in history.keys():
+                record = history[key]
+                assert record["name"] == self.name
+                assert record["commands"] == self.commands
+                assert record["operations"] == self.operations
+                assert record["parameters"] == self.parameters
+                assert record["time_completed"] == str(self.time_completed)
 
     def test_to_dict(self):
         # Act
