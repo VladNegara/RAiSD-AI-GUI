@@ -1,5 +1,6 @@
 import pytest
 import tempfile
+import json
 from unittest.mock import PropertyMock
 from datetime import datetime
 from PySide6.QtCore import QDir
@@ -194,7 +195,6 @@ class TestHistoryRecord:
         assert record.parameters == self.parameters
         assert record.time_completed == self.time_completed
         
-
     def test_from_dict_name(self):
         """Test that the name attribute is collected correctly from a dict."""
         # Arrange
@@ -357,14 +357,33 @@ class TestHistoryRecord:
         assert history_record.parameters == self.history_record.parameters
         assert history_record.time_completed == self.history_record.time_completed    
 
-    def test_save_to_history(self, mocker):
-        # arrange
-        # Mock the process to return Running state, and make terminate/waitForFinished fail
-        # mocker.patch("json.dump", lambda x: print("yeeees"))
-        # app_settings = mocker.Mock()
-        # app_settings.workspace_path = "workspace"
-        # self.history_record.save_to_history()
-        pytest.skip()
+    def test_save_to_history_one_record(self,tmp_path, mocker):
+        # Arrange
+        mocker.patch.object(
+            type(history_record.app_settings), 
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir(str(tmp_path)))
+
+        history_file = tmp_path / ".history.json"
+        history_file.write_text("{}")
+        
+        # Act
+        self.history_record.save_to_history()
+
+        # Assert
+        with open(QDir(str(tmp_path)).absoluteFilePath(".history.json")) as f:
+            history = json.load(f)
+            assert isinstance(history, dict)
+            assert len(history.keys()) == 1
+            
+            for key in history.keys():
+                record = history[key]
+                assert record["name"] == self.name
+                assert record["commands"] == self.commands
+                assert record["operations"] == self.operations
+                assert record["parameters"] == self.parameters
+                assert record["time_completed"] == self.time_completed
 
     def test_to_dict(self):
         # Act
