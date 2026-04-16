@@ -217,7 +217,8 @@ class SettingsPage(Page):
             <b>Taylan Kıncır</b>, <b>Alphan Mete</b>, <b>Vlad Negară</b> and <b>Giulia Tălău</b>.<br>
             
             <br>This program is free software, you may redistribute it and/or modify it under the terms of the 
-            GNU General Public License version 2.0 as published by the Free Software Foundation. <br>
+             GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or 
+            (at your option) any later version.<br>
 
             <br>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
             even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
