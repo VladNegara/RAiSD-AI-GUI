@@ -1260,11 +1260,6 @@ class RunRecord(QObject):
         for parameter_group in self.parameter_groups:
             for parameter in parameter_group:
                     parameter.reset_value()
-                    if isinstance(parameter, MultiParameter):
-                        for parameter in parameter.parameters:
-                            parameter.reset_value()
-                    if isinstance(parameter, OptionalParameter):
-                        parameter.parameter.reset_value()
 
     @property
     def run_id_parameter(self) -> StringParameter:

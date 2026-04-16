@@ -432,6 +432,10 @@ class OptionalParameter(Parameter[bool]):
                     value[self.parameter.name]
                 )
 
+    def reset_value(self) -> None:
+        self.parameter.reset_value()
+        super().reset_value()
+
     def _to_cli(
             self,
             operation: str | None = None,
