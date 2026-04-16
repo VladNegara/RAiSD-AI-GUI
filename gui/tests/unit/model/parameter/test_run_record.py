@@ -11,7 +11,6 @@ from gui.model.parameter import (
     IntervalConstraint,
     MaxLengthConstraint,
     RegexConstraint,
-    ParameterGroup,
     OptionalParameter,
     MultiParameter,
     BoolParameter,
@@ -25,96 +24,72 @@ from gui.model.parameter import (
 # TODO: make the tests more comprehensive and use mocking
 # TODO: CHANGE FROM PARAMETERGROUPLIST TO RUN RECORD
 
-class TestParameterGroupList:
+class TestRunRecord:
     """Tests for ParameterGroupList class."""
 
     @fixture(autouse=True)
-    def set_parameter_group_list(self):
-        self.run_id_parameter = StringParameter (
-            name="Run ID",
-            description="Fill in a name to identify your run.",
-            flag="-n",
-            operations={"IMG-GEN", "MDL-GEN"},
-            default_value="my_run",
-        )
+    def set_parameter_group_list(self, mocker):
+        self.run_id_parameter = mocker.Mock()
+        self.run_id_parameter.valid = True
+        self.run_id_parameter.value = "hi"
+        self.run_id_parameter.to_cli = mocker.Mock(return_value="-n hi")
+
+        self.parameter1 = mocker.Mock()
+        self.parameter1.name = "param"
+        self.parameter1.valid = True
+        self.parameter1.operations = {'IMG-GEN'}
+        self.parameter1.to_cli = mocker.Mock(return_value="-I asdfohds")
+        self.parameters = [self.parameter1]
+
+        self.parameter_group1 = mocker.Mock()
+        self.parameter_group1.name = 'img'
+        self.parameter_group1.parameters = []
+        self.parameter_group1.__iter__ = mocker.Mock(side_effect=lambda: iter(self.parameter_group1.parameters))
+
+        self.parameter_group2 = mocker.Mock()
+        self.parameter_group2.name = "mdl"
+        self.parameter_group2.parameters = [self.parameter1]
+        self.parameter_group2.__iter__ = mocker.Mock(side_effect=lambda: iter(self.parameter_group2.parameters))
+        
         self.parameter_groups = [
-            ParameterGroup(
-                name='img',
-                parameters=[]), 
-            ParameterGroup(
-                name='mdl',
-                parameters=[
-                    StringParameter(
-                        name='name',
-                        description='description',
-                        flag='-flag',
-                        operations={'IMG-GEN'},
-                        default_value='default',
-                        constraints=[
-                            RegexConstraint(
-                                pattern=re.compile(r"\b[a-z]+\b"),
-                                hint="Only lowercase letters.",
-                            ),
-                        ],
-                    ),
-                ],
-            ),
+            self.parameter_group1, 
+            self.parameter_group2
+            # ParameterGroup(
+            #     name='mdl',
+            #     parameters=[
+            #         StringParameter(
+            #             name='name',
+            #             description='description',
+            #             flag='-flag',
+            #             operations={'IMG-GEN'},
+            #             default_value='default',
+            #             constraints=[
+            #                 RegexConstraint(
+            #                     pattern=re.compile(r"\b[a-z]+\b"),
+            #                     hint="Only lowercase letters.",
+            #                 ),
+            #             ],
+            #         ),
+            #     ],
+            # ),
         ]
-        self.operations = {
-            "MDL-GEN": Operation(
-                id="mdl",
-                name="Model training",
-                description="Perform a model training.",
-                cli="-mdl",
-                requires=[
-                    Operation.Input(
-                        name="Input file",
-                        description="The input file.",
-                        cli="-I",
-                        file=SingleFile([".ms", ".txt"]),
-                    ),
-                ],
-                produces=SingleFile([".txt"]),
-                overwrite_parameter_builder=(
-                    lambda: BoolParameter(
-                        name="Overwrite output?",
-                        description="",
-                        flag="-overwrite",
-                        operations={"mdl"},
-                        default_value=False,
-                    )
-                ),
-                parameter_builders={},
-                output_path=[
-                    Operation.ConstPathFragment("Model."),
-                    Operation.RunIdPathFragment(),
-                ],
-            ),
-        }
-        self.overwrite_parameter_builder = (
-            lambda: BoolParameter(
-                name="Overwrite output directory",
-                description="Are you sure you want to overwrite?",
-                flag="-frm",
-                operations={"MDL-GEN"},
-                default_value=False,
-            )
-        )
-        self.operation_trees, _ = OperationTree.build_trees(
-            self.operations,
-            self.overwrite_parameter_builder,
-        )
+        
+        self.operation_tree_mdl_gen = mocker.Mock()
+        self.operation_tree_mdl_gen.to_cli = mocker.Mock(return_value=["cli1"])
+        # self.operation_tree_mdl_gen.valid_changed = Signal(bool)
+        self.operation_trees = [self.operation_tree_mdl_gen]
         self.categorized_operation_trees = [
-            ('Operations', self.operation_trees),
+            ("MDL-GEN", [self.operation_tree_mdl_gen])
         ]
-        self.parameter_group_list = RunRecord(
+        
+        self.run_record = RunRecord(
             run_id_parameter=self.run_id_parameter,
             categorized_operation_trees=self.categorized_operation_trees,
             parameter_groups=self.parameter_groups,
         )
     
     def test_init_values(self):
-        # arrange
+        # Arrange
         run_id_parameter = self.run_id_parameter
         list = self.parameter_group_list
         groups = self.parameter_groups
