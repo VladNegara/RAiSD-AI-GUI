@@ -100,6 +100,23 @@ class TestRunRecord:
         assert record.operation_trees == self.operation_trees
         assert record.parameter_groups == groups
         assert record.parameters == self.parameters
+
+    def test_to_history_record(self):
+        # Arrange
+        run_record = self.run_record
+
+        # Act
+        history_record = run_record.to_history_record()
+
+        # Assert
+        assert history_record.name == run_record.run_id_parameter.value
+        assert history_record.commands == run_record.to_cli()
+        assert history_record.operations["index"] == run_record.selected_operation_tree_index
+        assert history_record.operations["trees"] == [tree.to_dict() for tree in run_record.operation_trees]
+        assert len(history_record.parameters) == len(run_record.parameters)
+        for param in run_record.parameters:
+          assert param.name in history_record.parameters.keys()
+    
     def test_valid(self):
         list = self.parameter_group_list
         assert list.valid
