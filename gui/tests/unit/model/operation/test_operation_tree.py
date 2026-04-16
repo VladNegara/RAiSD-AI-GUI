@@ -12,6 +12,7 @@ from gui.model.operation import (
 from gui.model.operation import Operation
 from gui.model.operation.file_structure import SingleFile, Directory
 
+from gui.tests.utils.mock_signal import MockSignal
 
 class TestFileConsumerNode:
     """Tests for FileProducerNode class."""
@@ -147,14 +148,15 @@ class TestFileConsumerNode:
         # Arrange
         mock_valid_changed = mocker.Mock()
         file_consumer_node_file.valid_changed.connect(mock_valid_changed)
-        file_consumer_node_file.add_producer(file_producer_node)
 
-        file_producer_node.valid_changed = mock_signal
-
+        mock_signal = MockSignal(True)
+        file_producer_node.valid_changed.emit = mock_signal.emit
+        file_producer_node.valid_changed.connect = mock_signal.connect
         mocker.patch.object(file_producer_node, "valid", return_value = True)
     
+        file_consumer_node_file.add_producer(file_producer_node)
+
         # Act
-        file_producer_node.valid_changed.connect(lambda x: print("ASHTJ"))
         file_producer_node.valid_changed.emit(True)
 
         # Assert
