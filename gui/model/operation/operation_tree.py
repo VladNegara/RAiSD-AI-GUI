@@ -83,6 +83,7 @@ class FileProducerNode(QObject):
             self.value = new_overwrite==self._target_value
 
     file_changed = Signal(str)
+    watched_files_changed = Signal(list[str])
     overwrite_changed = Signal(bool)
     valid_changed = Signal(bool)
 
@@ -90,6 +91,7 @@ class FileProducerNode(QObject):
         super().__init__()
         self._watcher = QFileSystemWatcher()
         self.file_changed.connect(self._update_watcher_path)
+        self.watched_files_changed.connect(self._update_watcher_path)
         self._watcher.fileChanged.connect(self._watched_file_changed)
         self._watcher.directoryChanged.connect(self._watched_file_changed)
 
@@ -106,6 +108,13 @@ class FileProducerNode(QObject):
         The path to the file produced by this node, if available.
         """
         raise NotImplementedError()
+
+    @property
+    def watched_files(self) -> list[str]:
+        """
+        The paths to the file this node needs to watch for changes.
+        """
+        return []
 
     @property
     def overwrite(self) -> bool:
@@ -178,17 +187,17 @@ class FileProducerNode(QObject):
 
     @Slot()
     def _update_watcher_path(self) -> None:
-        # Remove the watched path, if any.
+        # Remove the watched paths, if any.
         paths = self._watcher.files() + self._watcher.directories()
         if paths:
             self._watcher.removePaths(paths)
 
-        # Watch the closest existing ancestor of the output location.
-        file = self.file
-        added: bool = False
-        while file and not added:
-            added = self._watcher.addPath(file)
-            file = QFileInfo(file).dir().absolutePath()
+        # Watch the closest existing ancestor of each watched file.
+        for file in self.watched_files:
+            added: bool = False
+            while file and not added:
+                added = self._watcher.addPath(file)
+                file = QFileInfo(file).dir().absolutePath()
 
     @Slot()
     def _watched_file_changed(self) -> None:
@@ -529,6 +538,13 @@ class CommonParentDirectoryNode(FileProducerNode):
         if len(parent_directory_paths) == 1:
             return list(parent_directory_paths)[0]
         return None
+
+    @property
+    def watched_files(self) -> list[str]:
+        file = self.file
+        if file:
+            return [file]
+        return []
 
     @property
     def overwrite(self) -> bool:
@@ -1047,6 +1063,15 @@ class OperationNode(FileProducerNode):
             )
             for path_fragment in operation.output_path
         ]
+
+        self._overwrite_path = [
+            OperationNode.PathFragmentGenerator.from_path_fragment(
+                path_fragment=path_fragment,
+                operation_node=self,
+            )
+            for path_fragment in operation.overwrite_path
+        ]
+
         self._run_id = run_id
         self._base_directory_path = base_directory_path
         self._enabled = enabled
@@ -1180,8 +1205,21 @@ class OperationNode(FileProducerNode):
         )
 
     @property
+    def overwrite_file(self) -> str:
+        """
+        The path to the file to check for an overwrite.
+        """
+        return QDir(self.base_directory_path).absoluteFilePath(
+            "".join(generator.value for generator in self._overwrite_path)
+        )
+
+    @property
+    def watched_files(self) -> list[str]:
+        return [self.overwrite_file]
+
+    @property
     def overwrite(self) -> bool:
-        return QFileInfo(self.file).exists()
+        return QFileInfo(self.overwrite_file).exists()
 
     @property
     def valid(self) -> bool:

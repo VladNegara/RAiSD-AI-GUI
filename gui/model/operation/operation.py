@@ -50,4 +50,5 @@ class Operation():
     produces: FileStructure
     output_path: Sequence[PathFragment]
     overwrite_parameter_builder: Callable[[], Parameter[Any]]
+    overwrite_path: Sequence[PathFragment]
     parameter_builders: Mapping[str, Callable[[], Parameter[Any]]]
