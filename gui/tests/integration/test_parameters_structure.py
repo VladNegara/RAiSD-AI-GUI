@@ -244,6 +244,21 @@ class TestParametersStructure:
         assert self.optional_parameter.parameter.value == 3
         int_reset_spy.assert_called_once()
 
+    def test_run_id_setter(self, mocker):
+        """Test that the RunRecord run_id setter also changes the underlyig
+        run_id_parameter, which in turn emits a signal."""
+        # Arrange
+        record = self.run_record
+        signal_spy = mocker.MagicMock()
+        self.run_id_parameter.value_changed.connect(signal_spy)
+
+        # Act
+        record.run_id = "new"
+
+        # Assert
+        assert record.run_id == "new"
+        assert record.run_id_parameter.value == "new"
+        signal_spy.assert_called_once_with("new", True)
 
     def test_parameters_getter(self):
         """Test if the parameters property of the RunRecord correctly combines
