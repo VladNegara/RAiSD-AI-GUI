@@ -2,12 +2,8 @@ from pytest import approx, fixture, raises
 from unittest.mock import PropertyMock
 import re
 
-from PySide6.QtCore import Signal, QObject, QDir
-from gui.model.operation import (
-    Operation, 
-    OperationTree,
-)
-from gui.model.operation.file_structure import SingleFile
+from PySide6.QtCore import QDir
+
 from gui.model.run_record import RunRecord
 import gui.model.run_record as rrecord
 from gui.model.parameter import (
@@ -24,8 +20,6 @@ from gui.model.parameter import (
     FileParameter,
 )
 
-# TODO: make the tests more comprehensive and use mocking
-# TODO: CHANGE FROM PARAMETERGROUPLIST TO RUN RECORD
 
 class TestRunRecord:
     """Tests for ParameterGroupList class."""
@@ -87,6 +81,7 @@ class TestRunRecord:
         )
     
     def test_init_values(self):
+        """Test that initialisation of a RunRecord sets its values correctly."""
         # Arrange
         run_id_parameter = self.run_id_parameter
         record = self.run_record
@@ -100,6 +95,7 @@ class TestRunRecord:
         assert record.parameters == self.parameters
 
     def test_to_history_record(self):
+        """Test that a RunRecord is made into a HistoryRecord correctly."""
         # Arrange
         run_record = self.run_record
 
@@ -116,6 +112,8 @@ class TestRunRecord:
           assert param.name in history_record.parameters.keys()
     
     def test_populate(self, mocker):
+        """Test that a RunRecord is populated correctly from the values of a 
+        HistoryRecord."""
         # Arrange
         history_record = mocker.Mock()
         history_record.name = "history"
@@ -139,6 +137,8 @@ class TestRunRecord:
         self.parameter1.populate.assert_called_once_with(2)
 
     def test_reset(self):
+        """Test that the reset() function of a RunRecord correctly resets
+        the contents of the RunRecord."""
         # Arrange
         run_record = self.run_record
         run_record.selected_operation_tree_index = 1
@@ -153,6 +153,8 @@ class TestRunRecord:
         self.parameter1.reset_value.assert_called_once()
     
     def test_run_id_setter(self, mocker):
+        """Test that the run_id setter correctly sets the value of the 
+        run_id_parameter."""
         # Arrange
         run_record = self.run_record
         print(run_record.run_id_parameter)                    
@@ -166,6 +168,8 @@ class TestRunRecord:
         assert run_record.run_id_parameter.value == "no"
     
     def test_valid(self):
+        """Test that the valid attribute of a RunRecord is correctly returned
+        dependent on its values."""
         record = self.run_record
         
         record.parameter_groups[0].valid = False # type: ignore
@@ -196,6 +200,8 @@ class TestRunRecord:
 
         
     def test_to_cli(self):
+        """Test that the to_cli of a RunRecord returns the correct command-line
+        representation based on its contents."""
         # Arrange
         record = self.run_record
 
