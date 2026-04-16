@@ -81,27 +81,15 @@ class TestIntParameter:
         param.reset_value()
         assert param.value == 0
 
-    def test_enabled(self, mocker):
-        """Test IntParameter's 'enabled' property."""
+    def test_enabled(self):
         # Arrange
         param = self.int_param
-        mocker.patch.object(
-            IntParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=False,
-        )
-        # Assert
+
+        # Act + Assert
+        param._condition.value = False
         assert not param.enabled
 
-        # Arrange
-        mocker.patch.object(
-            IntParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=True,
-        )
-        # Assert
+        param._condition.value = True
         assert param.enabled
 
     def test_enabled_signal(self, mocker):
@@ -283,27 +271,15 @@ class TestBoolParameter:
         param.reset_value()
         assert param.value is False
 
-    def test_enabled(self, mocker):
-        """Test BoolParameter's 'enabled' property."""
+    def test_enabled(self):
         # Arrange
         param = self.bool_param
-        mocker.patch.object(
-            BoolParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=False,
-        )
-        # Assert
+
+        # Act + Assert
+        param._condition.value = False
         assert not param.enabled
 
-        # Arrange
-        mocker.patch.object(
-            BoolParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=True,
-        )
-        # Assert
+        param._condition.value = True
         assert param.enabled
 
     def test_enabled_signal(self, mocker):
@@ -473,27 +449,15 @@ class TestFloatParameter:
         param.reset_value()
         assert param.value == 0.0
 
-    def test_enabled(self, mocker):
-        """Test FloatParameter's 'enabled' property."""
+    def test_enabled(self):
         # Arrange
         param = self.float_param
-        mocker.patch.object(
-            FloatParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=False,
-        )
-        # Assert
+
+        # Act + Assert
+        param._condition.value = False
         assert not param.enabled
 
-        # Arrange
-        mocker.patch.object(
-            FloatParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=True,
-        )
-        # Assert
+        param._condition.value = True
         assert param.enabled
 
     def test_enabled_signal(self, mocker):
@@ -706,27 +670,15 @@ class TestStringParameter:
         param.reset_value()
         assert param.value == "default"
 
-    def test_enabled(self, mocker):
-        """Test StringParameter's 'enabled' property."""
+    def test_enabled(self):
         # Arrange
         param = self.string_param
-        mocker.patch.object(
-            StringParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=False,
-        )
-        # Assert
+
+        # Act + Assert
+        param._condition.value = False
         assert not param.enabled
 
-        # Arrange
-        mocker.patch.object(
-            StringParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=True,
-        )
-        # Assert
+        param._condition.value = True
         assert param.enabled
 
     def test_enabled_signal(self, mocker):
@@ -937,27 +889,15 @@ class TestEnumParameter:
             "ignore allele pairs with N",
         ]
 
-    def test_enabled(self, mocker):
-        """Test EnumParameter's 'enabled' property."""
+    def test_enabled(self):
         # Arrange
         param = self.enum_param
-        mocker.patch.object(
-            EnumParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=False,
-        )
-        # Assert
+
+        # Act + Assert
+        param._condition.value = False
         assert not param.enabled
 
-        # Arrange
-        mocker.patch.object(
-            EnumParameter,
-            "enabled",
-            new_callable=mocker.PropertyMock,
-            return_value=True,
-        )
-        # Assert
+        param._condition.value = True
         assert param.enabled
 
     def test_enabled_signal(self, mocker):
@@ -1059,4 +999,241 @@ class TestEnumParameter:
         assert "testenum" in result
         assert "discard SNP" in result
 
+class TestFileParameter:
+    """Unit tests for FileParameter class."""
+
+    @fixture(autouse=True)
+    def set_file_param(self, tmp_path, mocker):
+        self.valid_file = tmp_path / "sample.vcf"
+        self.valid_file.write_text("data")
+        self.second_valid_file = tmp_path / "test.vcf"
+        self.second_valid_file.write_text("data")
+        self.invalid_file = tmp_path / "sample.txt"
+        self.invalid_file.write_text("data")
+
+        self.file_param = FileParameter(
+            name="testfile",
+            description="Test file parameter",
+            flag="-testfile ",
+            operations={"IMG-GEN", "MDL-GEN"},
+            accepted_formats=[".vcf"],
+            strict=True,
+            multiple=True,
+            default_value=[str(self.valid_file)],
+        )
+
+        self.mock_condition = mocker.MagicMock(spec=Condition)
+        self.mock_condition.value = True
+        self.file_param.add_condition(self.mock_condition)
+
+    def test_init_values(self):
+        """Test FileParameter initialization with default value."""
+        param = self.file_param
+        assert param.name == "testfile"
+        assert param.description == "Test file parameter"
+        assert param.flag == "-testfile "
+        assert param.operations == {"IMG-GEN", "MDL-GEN"}
+        assert param.accepted_formats == [".vcf"]
+        assert param.strict
+        assert param.multiple
+        assert param.value == [str(self.valid_file)]
+
+    def test_set_value(self):
+        """Test setting FileParameter value."""
+        param = self.file_param
+        param.value = [str(self.second_valid_file)]
+        assert param.value == [str(self.second_valid_file)]
+
+    def test_reset_value(self):
+        """Test resetting FileParameter value to default."""
+        param = self.file_param
+        param.value = [str(self.second_valid_file)]
+        param.reset_value()
+        assert param.value == [str(self.valid_file)]
+
+    def test_enabled(self):
+        # Arrange
+        param = self.file_param
+
+        # Act + Assert
+        param._condition.value = False
+        assert not param.enabled
+
+        param._condition.value = True
+        assert param.enabled
+
+    def test_enabled_signal(self, mocker):
+        """
+        Test that the 'enabled_changed' signal of 'FileParameter' is
+        emitted when its internal condition reports a change to True.
+        """
+        # Arrange
+        param = self.file_param
+        slot = mocker.MagicMock()
+        param.enabled_changed.connect(slot)
+
+        # Act
+        param._condition.changed.emit(True)
+
+        # Assert
+        slot.assert_called_once_with(True)
+
+    def test_disabled_signal(self, mocker):
+        """
+        Test that the 'enabled_changed' signal of 'FileParameter' is
+        emitted when its internal condition reports a change to False.
+        """
+        # Arrange
+        param = self.file_param
+        slot = mocker.MagicMock()
+        param.enabled_changed.connect(slot)
+
+        # Act
+        param._condition.changed.emit(False)
+
+        # Assert
+        slot.assert_called_once_with(False)
+        
+    def test_value_changed_signal_emitted(self, mocker):
+        """value_changed fires on value change."""
+        # Arrange
+        param = self.file_param
+        slot = mocker.MagicMock()
+        param.value_changed.connect(slot)
+        new_value = [str(self.second_valid_file)]
+
+        # Act
+        param.value = new_value
+
+        # Assert
+        slot.assert_called_once_with(new_value, True)
+
+    def test_valid_with_accepted_format(self):
+        """Valid when file exists and has an accepted extension."""
+        param = self.file_param
+        param.value = [str(self.valid_file)]
+        assert param.valid
+
+    def test_invalid_with_rejected_format(self):
+        """Invalid when file exists but extension is not accepted."""
+        param = self.file_param
+        param.value = [str(self.invalid_file)]
+        assert not param.valid
+
+    def test_invalid_when_empty(self):
+        """Invalid when no file is selected."""
+        param = self.file_param
+        param.value = []
+        assert not param.valid
+
+    def test_multiple_false_rejects_two_files(self):
+        """Two files should be invalid when multiple=False."""
+        # Arrange: a new parameter with multiple=False
+        param = FileParameter(
+            name="testfile",
+            description="Test file parameter",
+            flag="-testfile",
+            operations={"IMG-GEN", "MDL-GEN"},
+            accepted_formats=[".vcf"],
+            strict=True,
+            multiple=False,
+            default_value=[str(self.valid_file)],
+        )
+
+        # Act
+        param.value = [str(self.valid_file), str(self.second_valid_file)]
+
+        # Assert
+        assert not param.valid
+
+    def test_multiple_true_accepts_two_files(self):
+        """Two valid files should be valid when multiple=True."""
+        param = self.file_param
+        param.value = [str(self.valid_file), str(self.second_valid_file)]
+        assert param.valid
+
+    def test_valid_when_parameter_disabled(self, mocker):
+        """A disabled parameter is always valid, even with an invalid file."""
+        # Arrange
+        param = self.file_param
+        param.value = [str(self.invalid_file)]
+        mocker.patch.object(
+            FileParameter,
+            "enabled",
+            new_callable=mocker.PropertyMock,
+            return_value=False,
+        )
+
+        # Assert
+        assert param.valid
+
+    def test_file_extensions_property(self):
+        """'file_extensions' returns the suffix of each selected file."""
+        param = self.file_param
+        param.value = [str(self.valid_file), str(self.invalid_file)]
+        assert param.file_extensions == [".vcf", ".txt"]
+
+    def test_matches_expected_when_not_strict(self, tmp_path, mocker):
+        """'matches_expected' returns whether files hit the expected format (non-strict)."""
+        # Arrange: non-strict parameter with an expected format
+        vcf_file = tmp_path / "ok.vcf"
+        vcf_file.write_text("data")
+        txt_file = tmp_path / "not_ok.txt"
+        txt_file.write_text("data")
+
+        param = FileParameter(
+            name="testfile",
+            description="Test file parameter",
+            flag="-testfile ",
+            operations={"IMG-GEN", "MDL-GEN"},
+            accepted_formats=[".vcf"],
+            strict=False,
+            multiple=True,
+        )
+
+        # Act + Assert: matching format
+        param.value = [str(vcf_file)]
+        assert param.matches_expected
+
+        # Act + Assert: non-matching format
+        param.value = [str(txt_file)]
+        assert not param.matches_expected
+
+    def test_to_cli(self):
+        """to_cli gives one '{flag}{path}' per selected file."""
+        param = self.file_param
+        param.value = [str(self.valid_file)]
+        assert param.to_cli("IMG-GEN") == f"-testfile {self.valid_file}"
+
+    def test_to_cli_multiple_files(self):
+        """to_cli repeats the flag for each file when multiple files are selected."""
+        param = self.file_param
+        param.value = [str(self.valid_file), str(self.second_valid_file)]
+        expected = f"-testfile {self.valid_file} -testfile {self.second_valid_file}"
+        assert param.to_cli("IMG-GEN") == expected
+
+    def test_to_cli_when_disabled(self, mocker):
+        """to_cli returns empty string when the parameter is disabled."""
+        # Arrange
+        param = self.file_param
+        mocker.patch.object(
+            FileParameter,
+            "enabled",
+            new_callable=mocker.PropertyMock,
+            return_value=False,
+        )
+
+        # Assert
+        assert param.to_cli("IMG-GEN") == ""
+
+    def test_to_cli_when_operation_not_in_operations(self):
+        """to_cli returns empty string when the operation is not in the parameter's operations."""
+        param = self.file_param
+        assert param.to_cli("SWP-SCN") == ""
+
+    def test_str(self):
+        """__str__ includes name and value."""
+        result = str(self.file_param)
+        assert "testfile" in result
+        assert str(self.valid_file) in result
 
