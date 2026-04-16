@@ -29,7 +29,7 @@ from gui.model.parameter import (
     Parameter
 )
 
-class TestParameterStructures:
+class TestParametersStructure:
     """Tests the structures in which parameters are held. This includes the 
     RunRecord, Parameter and ParameterGroup."""
 
