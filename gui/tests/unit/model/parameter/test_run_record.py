@@ -29,19 +29,24 @@ class TestRunRecord:
 
     @fixture(autouse=True)
     def set_run_record(self, mocker):
+        # Run id parameter
         self.run_id_parameter = mocker.Mock()
         self.run_id_parameter.valid = True
         self.run_id_parameter.value = "hi"
         self.run_id_parameter.to_cli = mocker.Mock(return_value="-n hi")
+        self.run_id_parameter.reset_value = mocker.MagicMock()
 
+        # Parameter 1
         self.parameter1 = mocker.Mock()
         self.parameter1.name = "param"
         self.parameter1.valid = True
         self.parameter1.operations = {'IMG-GEN'}
         self.parameter1.populate = mocker.MagicMock()
         self.parameter1.to_cli = mocker.Mock(return_value="-I asdfohds")
+        self.parameter1.reset_value = mocker.MagicMock()
         self.parameters = [self.parameter1]
 
+        # Parameter groups
         self.parameter_group1 = mocker.Mock()
         self.parameter_group1.name = 'img'
         self.parameter_group1.parameters = []
@@ -57,6 +62,7 @@ class TestRunRecord:
             self.parameter_group2
         ]
         
+        # Operation trees
         self.operation_tree_mdl_gen = mocker.Mock()
         self.operation_tree_mdl_gen.to_cli = mocker.Mock(return_value=["cli1"])
         self.operation_tree_mdl_gen.populate_from_dict = mocker.MagicMock()
@@ -70,6 +76,7 @@ class TestRunRecord:
             ("MDL-TST", [self.operation_tree_mdl_tst])
         ]
         
+        # Run record
         self.run_record = RunRecord(
             run_id_parameter=self.run_id_parameter,
             categorized_operation_trees=self.categorized_operation_trees,
@@ -128,6 +135,20 @@ class TestRunRecord:
         self.operation_tree_mdl_tst.populate_from_dict.assert_called_once_with("blo")
         self.parameter1.populate.assert_called_once_with(2)
 
+    def test_reset(self):
+        # Arrange
+        run_record = self.run_record
+        run_record.selected_operation_tree_index = 1
+        assert run_record.selected_operation_tree_index == 1
+
+        # Act
+        run_record.reset()
+
+        # Assert
+        assert run_record.selected_operation_tree_index == 0
+        self.run_id_parameter.reset_value.assert_called_once()
+        self.parameter1.reset_value.assert_called_once()
+    
     def test_valid(self):
         list = self.parameter_group_list
         assert list.valid
