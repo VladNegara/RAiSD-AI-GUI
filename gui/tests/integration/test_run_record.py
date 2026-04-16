@@ -1,5 +1,6 @@
 from pytest import approx, fixture, raises
 from unittest.mock import PropertyMock
+from gui.tests.utils.mock_signal import MockSignal
 import re
 
 from collections.abc import Sequence
@@ -207,6 +208,42 @@ class TestParameterStructures:
 
         self.file_parameter.reset_value()
 
+    def test_reset(self, mocker):
+        """Test that the parameters are reset correctly when the RunRecord is
+        reset, and the correct signals are emitted."""
+        # Arrange
+        record = self.run_record
+        self.run_id_parameter.value = "new"
+        run_id_reset_spy = mocker.MagicMock()
+        self.run_id_parameter.value_reset.connect(run_id_reset_spy)
+
+        self.enum_parameter.value = 1
+        enum_reset_spy = mocker.MagicMock()
+        self.enum_parameter.value_reset.connect(enum_reset_spy)
+
+        self.optional_parameter.value = True
+        self.optional_parameter.parameter.value = 5
+        optional_reset_spy = mocker.MagicMock()
+        int_reset_spy = mocker.MagicMock()
+        self.optional_parameter.value_reset.connect(optional_reset_spy)
+        self.optional_parameter.parameter.value_reset.connect(int_reset_spy)
+
+        # Act
+        record.reset()
+
+        # Assert
+        assert self.run_id_parameter.value == "default"
+        run_id_reset_spy.assert_called_once()
+
+        assert self.enum_parameter.value == 0
+        enum_reset_spy.assert_called_once()
+
+        assert self.optional_parameter.value == False
+        optional_reset_spy.assert_called_once()
+
+        assert self.optional_parameter.parameter.value == 3
+        int_reset_spy.assert_called_once()
+
 
     def test_parameters_getter(self):
         """Test if the parameters property of the RunRecord correctly combines
@@ -236,7 +273,7 @@ class TestParameterStructures:
             run_id_parameter=self.run_id_parameter,
             parameters=record.parameters,
         )
-        
+
         instruction = instructions[0]
         assert "-I" in instruction
         assert "-f" in instruction
