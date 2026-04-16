@@ -39,7 +39,7 @@ class TestParameterStructures:
             name='name',
             description='description',
             flag='-f ',
-            operations={'IMG-GEN'},
+            operations={'MDL-GEN'},
             default_value='default',
             constraints=[
                 RegexConstraint(
@@ -51,7 +51,7 @@ class TestParameterStructures:
         self.enum_parameter = EnumParameter (
             name="Run ID",
             description="Fill in a name to identify your run.",
-            flag="-n",
+            flag="-n ",
             operations={"IMG-GEN", "MDL-GEN"},
             options=[("name1", "1"),("name2","2")],
             default_value=0,
@@ -113,7 +113,7 @@ class TestParameterStructures:
         # Operations
         self.operations = {
             "MDL-GEN": Operation(
-                id="mdl",
+                id="MDL-GEN",
                 name="Model training",
                 description="Perform a model training.",
                 cli="-mdl",
@@ -121,7 +121,7 @@ class TestParameterStructures:
                     Operation.Input(
                         name="Input file",
                         description="The input file.",
-                        cli="-I",
+                        cli="-I ",
                         file=SingleFile([".ms", ".txt"]),
                     ),
                 ],
@@ -224,15 +224,37 @@ class TestParameterStructures:
             assert parameter in record_parameters
         
     def test_to_cli(self):
-        # arrange
-        list = self.run_record
+        # Arrange
+        record = self.run_record
 
-        # act
-        instructions = list.to_cli()
+        # Act
+        instructions = record.to_cli()
 
-        # assert
+        # Assert
         assert len(instructions) == 1
-        assert instructions == list.selected_operation_tree.to_cli(
+        assert instructions == record.selected_operation_tree.to_cli(
             run_id_parameter=self.run_id_parameter,
-            parameters=list.parameters,
+            parameters=record.parameters,
         )
+        
+        instruction = instructions[0]
+        assert "-I" in instruction
+        assert "-f" in instruction
+        assert "-n" in instruction
+
+        # Act
+        self.optional_parameter.value = True
+        instructions = record.to_cli()
+
+        # Assert
+        assert len(instructions) == 1
+        assert instructions == record.selected_operation_tree.to_cli(
+            run_id_parameter=self.run_id_parameter,
+            parameters=record.parameters,
+        )
+
+        instruction = instructions[0]
+        assert "-I" in instruction
+        assert "-f" in instruction
+        assert "-n" in instruction
+        assert "-i" in instruction
