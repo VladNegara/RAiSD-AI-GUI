@@ -198,6 +198,25 @@ class TestRunRecord:
         # Assert
         assert path == dir.absoluteFilePath("hi")
 
+    def test_run_id_parameter_value_changed(self, mocker):
+        # Arrange
+        record = self.run_record
+        valid_changed_spy = mocker.MagicMock()
+        record.run_id_valid_changed.connect(valid_changed_spy)
+        mocker.patch.object(
+            type(rrecord.app_settings),
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir()
+        )
+
+        # Act
+        record.run_id_parameter.value_changed.emit("new", False)
+
+        # Assert
+        valid_changed_spy.assert_called_once()
+        assert record.run_id == "new"
+
         
     def test_to_cli(self):
         """Test that the to_cli of a RunRecord returns the correct command-line
