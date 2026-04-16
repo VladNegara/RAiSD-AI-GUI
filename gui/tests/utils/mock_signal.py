@@ -33,4 +33,3 @@ class MockSignal:
                 slot.emit(*args)
             elif isinstance(slot, Callable):
                 slot(*args)
-        self.slots.clear()
