@@ -1,6 +1,8 @@
 from pytest import approx, fixture, raises
 import re
 
+from collections.abc import Sequence
+
 from gui.model.operation import (
     Operation, 
     OperationTree,
@@ -20,34 +22,32 @@ from gui.model.parameter import (
     EnumParameter,
     StringParameter,
     FileParameter,
+    Parameter
 )
 
-# TODO: make the tests more comprehensive and use mocking
-# TODO: CHANGE FROM PARAMETERGROUPLIST TO RUN RECORD
-
-class TestParameterGroupList:
-    """Tests for ParameterGroupList class."""
+class TestParameterStructures:
+    """Tests the structures in which parameters are held. This includes the 
+    RunRecord, Parameter and ParameterGroup."""
 
     @fixture(autouse=True)
-    def set_parameter_group_list(self):
+    def set_run_record(self):
         self.run_id_parameter = StringParameter (
             name="Run ID",
             description="Fill in a name to identify your run.",
             flag="-n",
             operations={"IMG-GEN", "MDL-GEN"},
             default_value="my_run",
+            constraints=[
+                  RegexConstraint(
+                      pattern=re.compile(r"[^!]"),
+                      hint="No exclamation marks!",
+                  ),
+              ],
         )
-        self.parameter_groups = [
-            ParameterGroup(
-                name='img',
-                parameters=[]), 
-            ParameterGroup(
-                name='mdl',
-                parameters=[
-                    StringParameter(
+        self.string_parameter = StringParameter(
                         name='name',
                         description='description',
-                        flag='-flag',
+                        flag='-f ',
                         operations={'IMG-GEN'},
                         default_value='default',
                         constraints=[
@@ -56,8 +56,39 @@ class TestParameterGroupList:
                                 hint="Only lowercase letters.",
                             ),
                         ],
-                    ),
-                ],
+                    )
+        self.optional_parameter = OptionalParameter(
+                        name='optional',
+                        description='This is optional',
+                        operations={'MDL-GEN'},
+                        default_value=False,
+                        parameter=IntParameter(
+                          name='int',
+                          description='description',
+                          flag='-i ',
+                          operations={'MDL-GEN'},
+                          default_value=3,
+                          constraints=[
+                              IntervalConstraint(
+                                  lower_bound=2,
+                                  lower_bound_inclusive=False,
+                                  upper_bound=7,
+                                  upper_bound_inclusive=False,
+                              ),
+                          ],
+                      )
+                    )
+        self.parameters: Sequence[Parameter] = [
+                    self.string_parameter,
+                    self.optional_parameter
+                ]
+        self.parameter_groups = [
+            ParameterGroup(
+                name='img',
+                parameters=[]), 
+            ParameterGroup(
+                name='mdl',
+                parameters=self.parameters # type: ignore
             ),
         ]
         self.operations = {
@@ -75,6 +106,10 @@ class TestParameterGroupList:
                     ),
                 ],
                 produces=SingleFile([".txt"]),
+                output_path=[
+                    Operation.ConstPathFragment("Model."),
+                    Operation.RunIdPathFragment(),
+                ],
                 overwrite_parameter_builder=(
                     lambda: BoolParameter(
                         name="Overwrite output?",
@@ -85,10 +120,10 @@ class TestParameterGroupList:
                     )
                 ),
                 parameter_builders={},
-                output_path=[
+                overwrite_path=[
                     Operation.ConstPathFragment("Model."),
                     Operation.RunIdPathFragment(),
-                ],
+                ]
             ),
         }
         self.overwrite_parameter_builder = (
@@ -107,7 +142,7 @@ class TestParameterGroupList:
         self.categorized_operation_trees = [
             ('Operations', self.operation_trees),
         ]
-        self.parameter_group_list = RunRecord(
+        self.run_record = RunRecord(
             run_id_parameter=self.run_id_parameter,
             categorized_operation_trees=self.categorized_operation_trees,
             parameter_groups=self.parameter_groups,
