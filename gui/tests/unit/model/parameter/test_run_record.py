@@ -1,12 +1,15 @@
 from pytest import approx, fixture, raises
+from unittest.mock import PropertyMock
 import re
 
+from PySide6.QtCore import Signal, QObject, QDir
 from gui.model.operation import (
     Operation, 
     OperationTree,
 )
 from gui.model.operation.file_structure import SingleFile
 from gui.model.run_record import RunRecord
+import gui.model.run_record as rrecord
 from gui.model.parameter import (
     IntervalConstraint,
     MaxLengthConstraint,
@@ -172,19 +175,38 @@ class TestRunRecord:
         record.run_id_parameter.valid = False # type: ignore
         assert not record.run_id_valid
         assert not record.valid
+
+    def test_base_directory_path(self, mocker, tmp_path):
+        """Test that the base directory path of the run record is returned 
+        correctly."""
+        # Arrange
+        dir = QDir(str(tmp_path))
+        mocker.patch.object(
+            type(rrecord.app_settings),
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=dir
+        )
+
+        # Act
+        path = self.run_record.base_directory_path
+
+        # Assert
+        assert path == dir.absoluteFilePath("hi")
+
         
     def test_to_cli(self):
-        # arrange
-        list = self.parameter_group_list
+        # Arrange
+        record = self.run_record
 
-        # act
-        instructions = list.to_cli()
+        # Act
+        instructions = record.to_cli()
 
-        # assert
+        # Assert
         assert len(instructions) == 1
-        assert instructions == list.selected_operation_tree.to_cli(
+        assert instructions == record.selected_operation_tree.to_cli(
             run_id_parameter=self.run_id_parameter,
-            parameters=list.parameters,
+            parameters=record.parameters,
         )
 
 
