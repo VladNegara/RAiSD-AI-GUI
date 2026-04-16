@@ -22,6 +22,15 @@ class TestFileConsumerNode:
         file = SingleFile([])
         operation_input_file =  Operation.Input(name, description, cli, file)
         return operation_input_file
+    
+    @pytest.fixture()
+    def operation_input_directory(self) -> Operation.Input:
+        name = "Directoryname"
+        description = "This is a directory."
+        cli = "-d "
+        file = Directory([])
+        operation_input_directory =  Operation.Input(name, description, cli, file)
+        return operation_input_directory
 
     def test_init_values_file(self, operation_input_file):
         """Test FileConsumerNode initialization with a file."""
@@ -44,6 +53,26 @@ class TestFileConsumerNode:
         assert file_consumer_node._requires == required_file.file
         assert file_consumer_node._enabled == enabled
 
+    def test_init_values_directory(self, operation_input_directory):
+        """Test FileConsumerNode initialization with a directory."""
+        # Arrange
+        required_file: Operation.Input = operation_input_directory
+        enabled = True
+
+        # Act
+        file_consumer_node = FileConsumerNode(
+            required_file=required_file,
+            enabled=enabled,
+        )
+
+        # Assert
+        assert file_consumer_node.producers == []
+        assert file_consumer_node.selected_index == 0
+        assert file_consumer_node._name == required_file.name
+        assert file_consumer_node._description == required_file.description
+        assert file_consumer_node._cli == required_file.cli
+        assert file_consumer_node._requires == required_file.file
+        assert file_consumer_node._enabled == enabled
 
 class TestCommonParentDirectoryNode:
     """Tests for CommonParentDirectoryNode class."""
