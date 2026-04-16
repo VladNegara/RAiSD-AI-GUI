@@ -38,6 +38,7 @@ class TestRunRecord:
         self.parameter1.name = "param"
         self.parameter1.valid = True
         self.parameter1.operations = {'IMG-GEN'}
+        self.parameter1.populate = mocker.MagicMock()
         self.parameter1.to_cli = mocker.Mock(return_value="-I asdfohds")
         self.parameters = [self.parameter1]
 
@@ -54,24 +55,6 @@ class TestRunRecord:
         self.parameter_groups = [
             self.parameter_group1, 
             self.parameter_group2
-            # ParameterGroup(
-            #     name='mdl',
-            #     parameters=[
-            #         StringParameter(
-            #             name='name',
-            #             description='description',
-            #             flag='-flag',
-            #             operations={'IMG-GEN'},
-            #             default_value='default',
-            #             constraints=[
-            #                 RegexConstraint(
-            #                     pattern=re.compile(r"\b[a-z]+\b"),
-            #                     hint="Only lowercase letters.",
-            #                 ),
-            #             ],
-            #         ),
-            #     ],
-            # ),
         ]
         
         self.operation_tree_mdl_gen = mocker.Mock()
@@ -130,7 +113,7 @@ class TestRunRecord:
             "index": 1,
             "trees": ["bla", "blo"]
         }
-        history_record.parameters = {}
+        history_record.parameters = {"param": 2}
         run_record = self.run_record
 
         # Act
@@ -141,8 +124,9 @@ class TestRunRecord:
         assert run_record.run_id_parameter.value == "history"
         assert run_record.selected_operation_tree_index == 1
         assert run_record.selected_operation_tree == self.operation_trees[1]
-        self.operation_tree_mdl_gen.populate_from_dict.assert_called_once()
-        self.operation_tree_mdl_tst.populate_from_dict.assert_called_once()
+        self.operation_tree_mdl_gen.populate_from_dict.assert_called_once_with("bla")
+        self.operation_tree_mdl_tst.populate_from_dict.assert_called_once_with("blo")
+        self.parameter1.populate.assert_called_once_with(2)
 
     def test_valid(self):
         list = self.parameter_group_list
