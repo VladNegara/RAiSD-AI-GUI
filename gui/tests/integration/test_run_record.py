@@ -1,4 +1,5 @@
 from pytest import approx, fixture, raises
+from unittest.mock import PropertyMock
 import re
 
 from collections.abc import Sequence
@@ -7,8 +8,12 @@ from gui.model.operation import (
     Operation, 
     OperationTree,
 )
+
+from PySide6.QtCore import QDir
+
 from gui.model.operation.file_structure import SingleFile
 from gui.model.run_record import RunRecord
+import gui.model.run_record as rrecord
 from gui.model.parameter import (
     IntervalConstraint,
     RegexConstraint,
@@ -28,7 +33,7 @@ class TestParameterStructures:
     RunRecord, Parameter and ParameterGroup."""
 
     @fixture(autouse=True)
-    def set_run_record(self):
+    def set_run_record(self, mocker):
         # Parameters
         self.run_id_parameter = StringParameter(
             name='name',
@@ -165,6 +170,14 @@ class TestParameterStructures:
             parameter_groups=self.parameter_groups,
         )
 
+        # Mock workspace else it will lead to errors
+        mocker.patch.object(
+            type(rrecord.app_settings),
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir.current()
+        )
+
     def test_valid_based_on_params(self, tmp_path):
         """Test whether the validity of parameters is passed along from 
         Parameter to ParameterGroup to RunRecord correctly."""
@@ -188,6 +201,7 @@ class TestParameterStructures:
         self.run_id_parameter.reset_value()
 
         self.optional_parameter.parameter.value = 0
+        self.optional_parameter.value = True
         assert not record.valid
         self.optional_parameter.parameter.reset_value()
 
@@ -197,10 +211,21 @@ class TestParameterStructures:
     def test_parameters_getter(self):
         """Test if the parameters property of the RunRecord correctly combines
         the parameters from the parameter groups."""
+        # Arrange
+        record = self.run_record
+        parameters = list(self.parameters_group1) + list(self.parameters_group2)
+
+        # Act
+        record_parameters = record.parameters
+
+        # Assert
+        assert len(record_parameters) == len(parameters)
+        for parameter in parameters:
+            assert parameter in record_parameters
         
     def test_to_cli(self):
         # arrange
-        list = self.parameter_group_list
+        list = self.run_record
 
         # act
         instructions = list.to_cli()
