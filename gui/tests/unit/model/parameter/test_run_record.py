@@ -149,11 +149,29 @@ class TestRunRecord:
         self.run_id_parameter.reset_value.assert_called_once()
         self.parameter1.reset_value.assert_called_once()
     
+    def test_run_id_setter(self, mocker):
+        # Arrange
+        run_record = self.run_record
+        print(run_record.run_id_parameter)                    
+
+        # Change to same name
+        run_record.run_id = "hi"
+        assert run_record.run_id_parameter.value == "hi"
+
+        # Change to different name
+        run_record.run_id = "no"
+        assert run_record.run_id_parameter.value == "no"
+    
     def test_valid(self):
-        list = self.parameter_group_list
-        assert list.valid
-        list.parameter_groups[1].parameters[0].value = "invalid value"
-        assert not list.valid
+        record = self.run_record
+        
+        record.parameter_groups[0].valid = False # type: ignore
+        assert not record.valid
+        record.parameter_groups[0].valid = True # type: ignore
+        assert record.valid
+        record.run_id_parameter.valid = False # type: ignore
+        assert not record.run_id_valid
+        assert not record.valid
         
     def test_to_cli(self):
         # arrange
