@@ -32,6 +32,9 @@ class TestRunRecord:
         self.run_id_parameter.value = "hi"
         self.run_id_parameter.to_cli = mocker.Mock(return_value="-n hi")
         self.run_id_parameter.reset_value = mocker.MagicMock()
+        mock_signal = MockSignal()
+        self.run_id_parameter.value_changed.emit = mock_signal.emit
+        self.run_id_parameter.value_changed.connect = mock_signal.connect
 
         # Parameter 1
         self.parameter1 = mocker.Mock()
@@ -63,6 +66,10 @@ class TestRunRecord:
         self.operation_tree_mdl_gen = mocker.Mock()
         self.operation_tree_mdl_gen.to_cli = mocker.Mock(return_value=["cli1"])
         self.operation_tree_mdl_gen.populate_from_dict = mocker.MagicMock()
+        tree_signal = MockSignal()
+        self.operation_tree_mdl_gen.valid_changed.emit = tree_signal.emit
+        self.operation_tree_mdl_gen.valid_changed.connect = tree_signal.connect
+        
         self.operation_tree_mdl_tst = mocker.Mock()
         self.operation_tree_mdl_tst.to_cli = mocker.Mock(return_value=["cli2"])
         self.operation_tree_mdl_tst.populate_from_dict = mocker.MagicMock()
@@ -216,8 +223,25 @@ class TestRunRecord:
         # Assert
         valid_changed_spy.assert_called_once()
         assert record.run_id == "new"
-
         
+    def test_operations_valid_changed(self, mocker):
+        # Arrange
+        record = self.run_record
+        valid_changed_spy = mocker.MagicMock()
+        record.operations_valid_changed.connect(valid_changed_spy)
+        mocker.patch.object(
+            type(rrecord.app_settings),
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir()
+        )
+
+        # Act
+        self.operation_tree_mdl_gen.valid_changed.emit(False)
+
+        # Assert
+        valid_changed_spy.assert_called_once()
+
     def test_to_cli(self):
         """Test that the to_cli of a RunRecord returns the correct command-line
         representation based on its contents."""
