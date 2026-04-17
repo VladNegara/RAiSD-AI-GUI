@@ -64,7 +64,7 @@ The following commands can be used to download and compile the source code. Cond
 ```bash
 mkdir RAiSD-AI-GUI
 cd RAiSD-AI-GUI
-wget https://github.com/VladNegara/RAiSD-AI-GUI/archive/refs/heads/master.zip
+wget https://github.com/RAiSD-AI-GUI-Project-Team/RAiSD-AI-GUI/archive/refs/heads/master.zip
 unzip master.zip
 cd RAiSD-AI-GUI-master
 conda create -f "environment-raisd-ai.yml"
@@ -75,13 +75,13 @@ conda activate raisd-ai
 Command to directly copy to terminal:
 
 ```bash
-mkdir RAiSD-AI-GUI; cd RAiSD-AI-GUI; wget https://github.com/VladNegara/RAiSD-AI-GUI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-GUI-master; conda create -f "environment-raisd-ai.yml"; conda activate raisd-ai; ./compile-RAiSD-AI-ZLIB.sh
+mkdir RAiSD-AI-GUI; cd RAiSD-AI-GUI; wget https://github.com/RAiSD-AI-GUI-Project-Team/RAiSD-AI-GUI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-GUI-master; conda create -f "environment-raisd-ai.yml"; conda activate raisd-ai; ./compile-RAiSD-AI-ZLIB.sh
 ```
 
 If you use micromamba instead of conda, use:
 
 ```bash
-mkdir RAiSD-AI-GUI; cd RAiSD-AI-GUI; wget https://github.com/VladNegara/RAiSD-AI-GUI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-GUI-master; micromamba create -f "environment-raisd-ai.yml" --channel-priority flexible; micromamba activate raisd-ai; ./compile-RAiSD-AI-ZLIB.sh
+mkdir RAiSD-AI-GUI; cd RAiSD-AI-GUI; wget https://github.com/RAiSD-AI-GUI-Project-Team/RAiSD-AI-GUI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-GUI-master; micromamba create -f "environment-raisd-ai.yml" --channel-priority flexible; micromamba activate raisd-ai; ./compile-RAiSD-AI-ZLIB.sh
 ```
 
 The executable is placed in the path bin/release. A link to the executable is placed in the installation folder, i.e., RAiSD-AI-master. 

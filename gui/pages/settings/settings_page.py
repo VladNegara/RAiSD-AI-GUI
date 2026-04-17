@@ -125,7 +125,7 @@ class SettingsPage(Page):
         info_container_layout.addWidget(raisd_ai_label)
 
         raisd_ai_gui_label = QLabel(
-            """<a href='https://github.com/VladNegara/RAiSD-AI-GUI'>RAiSD-AI 
+            """<a href='https://github.com/RAiSD-AI-GUI-Project-Team/RAiSD-AI-GUI'>RAiSD-AI 
             GUI</a> developed by <b>Loes Baart de la Faille</b>, <b>Steef 
             Broeder</b>, <b>Taylan Kıncır</b>, <b>Alphan Mete</b>, <b>Vlad 
             Negară</b> and <b>Giulia Tălău</b>."""
@@ -186,7 +186,7 @@ class SettingsPage(Page):
 
         contact_text_label = QLabel(
             "You can request support or report a bug by opening an issue "
-            "on Github via <a href='https://github.com/VladNegara/RAiSD-AI-GUI/issues/new'>this link</a> or by "
+            "on Github via <a href='https://github.com/RAiSD-AI-GUI-Project-Team/RAiSD-AI-GUI/issues/new'>this link</a> or by "
             "contacting RAiSD-AI developers Nikolaos Alachiotis ("
             "<a href='mailto:n.alachiotis@gmail.com'>n.alachiotis@gmail.com</a>) "
             "and Pavlos Pavlidis (<a href='mailto:pavlidisp@gmail.com'>pavlidisp@gmail.com</a>)."
