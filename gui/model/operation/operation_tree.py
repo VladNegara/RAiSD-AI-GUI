@@ -372,6 +372,8 @@ class FileConsumerNode(QObject):
             producer.reset()
 
     def get_operation_ids(self) -> list[str]:
+        if self.selected_producer is None:
+            return []
         return self.selected_producer.get_operation_ids()
 
     def to_cli(
@@ -422,7 +424,10 @@ class FileConsumerNode(QObject):
                 + f"{file_producer_values_list}. Expected a list."
             )
         if len(file_producer_values_list) != len(self.producers):
-            raise ValueError("Mismatch in 'file_producers' length.")
+            raise ValueError("Mismatch in 'file_producers' length: " \
+                f"{len(file_producer_values_list)} in dict vs " \
+                f"{len(self.producers)} in node."
+            )
         for i, file_producer_values in enumerate(file_producer_values_list):
             if not isinstance(file_producer_values, dict):
                 raise ValueError(
@@ -593,7 +598,7 @@ class CommonParentDirectoryNode(FileProducerNode):
         return self._enabled
 
     @enabled.setter
-    def enabled(self, new_enabled) -> None:
+    def enabled(self, new_enabled: bool) -> None:
         self._enabled = new_enabled
         for file_consumer in self.file_consumers:
             file_consumer.enabled = self.enabled
@@ -677,17 +682,19 @@ class CommonParentDirectoryNode(FileProducerNode):
         file_consumer_values_list = values["file_consumers"]
         if not isinstance(file_consumer_values_list, list):
             raise ValueError(
-                f"Wrong 'file_consumers': {file_consumer_values_list}. "
+                f"Invalid 'file_consumers' in dict: {file_consumer_values_list}. "
                 + "Expected a list."
             )
         if len(file_consumer_values_list) != len(self.file_consumers):
             raise ValueError(
-                "Mismatched length of 'file_consumers'."
+                "Mismatch in 'file_consumers' length: " \
+                f"{len(file_consumer_values_list)} in dict vs " \
+                f"{len(self.file_consumers)} in node."
             )
         for i, file_consumer_values in enumerate(file_consumer_values_list):
             if not isinstance(file_consumer_values, dict):
                 raise ValueError(
-                    f"Wrong item in 'file_consumers': {file_consumer_values}. "
+                    f"Invalid item in 'file_consumers': {file_consumer_values}. "
                     + "Expected a dict."
                 )
             self.file_consumers[i].populate_from_dict(file_consumer_values)
@@ -810,11 +817,11 @@ class FilePickerNode(FileProducerNode):
 
     def populate_from_dict(self, values: dict) -> None:
         if "file_path" not in values:
-            raise ValueError("Missing file path in dict.")
+            raise ValueError("Missing 'file_path' key in dict.")
         file_path = values["file_path"]
         if file_path is not None and not isinstance(file_path, str):
             raise ValueError(
-                f"Invalid file path in dict: {file_path}. Expected a string "
+                f"Invalid 'file_path' in dict: {file_path}. Expected a string "
                 + "or null."
             )
         self.file = file_path
@@ -1043,8 +1050,8 @@ class OperationNode(FileProducerNode):
         overwrite_parameter = operation.overwrite_parameter_builder()
         if not isinstance(overwrite_parameter, BoolParameter):
             raise ValueError(
-                f"Invalid overwrite parameter for operation {self._name}: "
-                + f"{overwrite_parameter}. Expected a bool parameter."
+                f"Invalid overwrite parameter for operation '{self._name}': "
+                + f"{overwrite_parameter}. Expected a BoolParameter Instance."
             )
         # Assigned in a roundabout way for type checker purposes.
         self._overwrite_parameter = overwrite_parameter
