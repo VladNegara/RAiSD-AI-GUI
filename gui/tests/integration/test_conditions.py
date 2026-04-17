@@ -11,6 +11,7 @@ from gui.model.operation import (
     OperationTree,
     FilePickerNode,
     OperationNode,
+    OrCondition,
 )
 
 from PySide6.QtCore import QDir
@@ -115,7 +116,7 @@ class TestConditions:
                 default_value=False,
             )
         )
-        self.trees, _ = OperationTree.build_trees(
+        self.trees, self.conditions = OperationTree.build_trees(
             self.operations,
             self.overwrite_parameter_builder,
         )
@@ -127,6 +128,18 @@ class TestConditions:
         for tree in self.trees:
             print(tree.to_dict())
     
+    @fixture()
+    def set_operation_conditions(self,operation_trees, parameter_groups):
+        for parameter in list(self.parameters_group1) + list(self.parameters_group2):
+            conditions = []
+            for operation_id in parameter.operations:
+                conditions.append(self.conditions[operation_id])
+            if len(conditions) > 1:
+                condition = OrCondition(conditions)
+            else: 
+                condition = conditions[0]
+            parameter.add_condition(condition)    
+
     @fixture()
     def parameter_groups(self):
          # Parameters
@@ -254,3 +267,38 @@ class TestConditions:
 
         assert not self.optional_parameter.enabled  
         assert not self.optional_parameter.parameter.enabled
+
+    def test_enabled_condition(self, parameter_groups):
+        """Test an enabled condition"""
+        # Arrange
+        skip()
+
+    def test_operation_conditions(self, set_operation_conditions, run_record):
+        """Test that selecting different operations correctly enables and
+        disables parameters."""
+        # Arrange
+        record = self.record
+
+        # Assert
+        assert self.enum_parameter.enabled
+        assert not self.optional_parameter.enabled
+        assert self.file_parameter.enabled
+        assert self.multi_parameter.enabled
+
+        # Act
+        record.selected_operation_tree_index = 1
+
+        # Assert
+        assert self.enum_parameter.enabled
+        assert self.optional_parameter.enabled
+        assert not self.file_parameter.enabled
+        assert not self.multi_parameter.enabled
+
+        # Act
+        record.operation_trees[1].root.file_consumers[0].selected_index = 1
+
+        # Assert
+        assert self.enum_parameter.enabled
+        assert self.optional_parameter.enabled
+        assert self.file_parameter.enabled
+        assert self.multi_parameter.enabled
