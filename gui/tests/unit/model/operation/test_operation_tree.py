@@ -957,6 +957,10 @@ class TestCommonParentDirectoryNode:
             def file(self):
                 return str(self._directory / self._name)
 
+            @property
+            def valid(self):
+                return True
+
             def _get_run_id(self):
                 return self._directory.name
 
@@ -1037,6 +1041,10 @@ class TestCommonParentDirectoryNode:
             @property
             def file(self):
                 return str(self._directory / self._name)
+
+            @property
+            def valid(self):
+                return True
 
             def _get_base_directory_path(self):
                 return str(self._directory)
