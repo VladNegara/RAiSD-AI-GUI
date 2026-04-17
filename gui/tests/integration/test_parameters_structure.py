@@ -1,6 +1,5 @@
-from pytest import approx, fixture, raises
+from pytest import fixture
 from unittest.mock import PropertyMock
-from gui.tests.utils.mock_signal import MockSignal
 import re
 
 from collections.abc import Sequence
