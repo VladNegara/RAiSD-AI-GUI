@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
 
 from ..page import Page
 from gui.model.settings import app_settings
+from gui.pages.settings import set_settings
 from gui.components.settings.settings_item_widget import SettingsItemWidget
 from gui.components import (
     VBoxLayout,
@@ -70,21 +71,21 @@ class SettingsPage(Page):
         workspace_widget = SettingsItemWidget("Workspace", app_settings.workspace_path.absolutePath())
         app_settings.workspace_path_changed.connect(
             lambda p : workspace_widget._update_label(p.absolutePath()))
-        workspace_widget.button_clicked.connect(app_settings.set_workspace_folder)
+        workspace_widget.button_clicked.connect(set_settings.set_workspace_folder)
         container_layout.addWidget(workspace_widget)
 
         # Executable
         executable_widget = SettingsItemWidget("Executable", app_settings.executable_file_path.absoluteFilePath())
         app_settings.executable_file_path_changed.connect(
             lambda p : executable_widget._update_label(p.absoluteFilePath()))
-        executable_widget.button_clicked.connect(app_settings.set_executable_path)
+        executable_widget.button_clicked.connect(set_settings.set_executable_path)
         container_layout.addWidget(executable_widget)
 
         # Environment manager
         environment_manager_widget = SettingsItemWidget("Environment manager", app_settings.environment_manager_name)
         app_settings.environment_manager_changed.connect(
             lambda _ : environment_manager_widget._update_label(app_settings.environment_manager_name))
-        environment_manager_widget.button_clicked.connect(app_settings.set_environment_manager)
+        environment_manager_widget.button_clicked.connect(set_settings.set_environment_manager)
         container_layout.addWidget(environment_manager_widget)
 
         # Environment name
@@ -92,7 +93,7 @@ class SettingsPage(Page):
         app_settings.environment_name_changed.connect(
             lambda _ : environment_name_widget._update_label(app_settings.environment_name)
         )
-        environment_name_widget.button_clicked.connect(app_settings.set_environment_name)
+        environment_name_widget.button_clicked.connect(set_settings.set_environment_name)
         container_layout.addWidget(environment_name_widget)
 
         layout.addWidget(container_widget)
