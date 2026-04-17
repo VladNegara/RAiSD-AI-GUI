@@ -1423,7 +1423,6 @@ class RunRecord(QObject):
         new_run_id: str,
         new_valid: bool,
     ) -> None:
-        self.run_id = new_run_id
         self.run_id_valid_changed.emit(self.run_id_valid)
         for operation_tree in self.operation_trees:
             operation_tree.run_id = new_run_id
