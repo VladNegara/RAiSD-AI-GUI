@@ -1,6 +1,7 @@
 from pytest import approx, fixture, raises, skip
 from unittest.mock import PropertyMock
 from gui.tests.utils.mock_signal import MockSignal
+import posixpath
 import re
 
 from collections.abc import Sequence
@@ -342,6 +343,8 @@ class TestOperationTreeStructures:
         # Act
         dict1 = trees[0].to_dict()
         dict2 = trees[1].to_dict()
+        print(dict1)
+        print(dict2)
 
         # Assert
         assert "file_consumers" in dict1
@@ -364,7 +367,50 @@ class TestOperationTreeStructures:
         assert len(consumer["file_producers"]) == 2
         producer = consumer["file_producers"][1]
         assert "file_consumers" in producer
-
     
+    def test_populate_from_dict(self, operation_trees):
+        # Arrange
+        trees = self.trees
+        dict1 = {
+            'file_consumers': [
+                {'selected': 0, 
+                 'file_producers': [
+                     {'file_path': posixpath.abspath('tmp/pytest-of-loes/pytest-21/test_tree_to_dict0/file')}
+                     ]
+                }
+            ], 
+            'parameters': {}}
+        dict2 = {
+            'file_consumers': [
+                {
+                    'selected': 1, 
+                    'file_producers': [
+                        {
+                            'file_path': None
+                        }, {
+                            'file_consumers': [
+                                {
+                                    'selected': 0, 
+                                    'file_producers': [
+                                        {
+                                            'file_path': None
+                                        }
+                                    ]
+                                }
+                            ],
+                            'parameters': {}
+                        }
+                    ]
+                }
+                ], 
+            'parameters': {}}
+
+        # Act
+        trees[0].populate_from_dict(dict1)
+        trees[1].populate_from_dict(dict2)
+
+        # Arrange
+        assert trees[0].root.file_consumers[0].producers[0].file
+        assert trees[1].root.file_consumers[0].selected_index == 1
 
 
