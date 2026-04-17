@@ -213,7 +213,17 @@ class SettingsPage(Page):
         )
 
         license_text_label = QLabel(
-            """Placeholder"""
+            """Copyright April 2026 by <b>Nikolaos Alachiotis</b>, <b>Loes Baart de la Faille</b>, <b>Steef Broeder</b>, 
+            <b>Taylan Kıncır</b>, <b>Alphan Mete</b>, <b>Vlad Negară</b> and <b>Giulia Tălău</b>.<br>
+            
+            <br>This program is free software, you may redistribute it and/or modify it under the terms of the 
+             GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or 
+            (at your option) any later version.<br>
+
+            <br>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
+            even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
+            <a href='https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html'>GNU General Public License</a>   
+            for more details."""
         )
         license_text_label.setWordWrap(True)
         license_text_label.setOpenExternalLinks(True)
