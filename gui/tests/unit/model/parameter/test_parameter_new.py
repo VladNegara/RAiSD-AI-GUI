@@ -14,24 +14,34 @@ from gui.model.parameter import (
 )
 from gui.model.parameter.constraint import Constraint
 from gui.model.parameter.condition import Condition
+from gui.tests.utils.mock_signal import MockSignal
 
+
+def _patched_add_constraint(self, constraint, hidden=False):
+    """
+    Replacement for Parameter.add_constraint that uses MockSignal
+    instead of the real constraint_added signal, avoiding C++ segfaults
+    when the constraint is a MagicMock.
+    """
+    _mock_constraint_added = MockSignal()
+    old_valid = self.valid
+    if not hidden:
+        self._constraints.append(constraint)
+        _mock_constraint_added.emit(constraint)
+    else:
+        self._hidden_constraints.append(constraint)
+    constraint.value = self.value
+    constraint.valid_changed.connect(self._emit_valid_changed)
+    constraint.enabled_changed.connect(self._emit_valid_changed)
+    if self.valid != old_valid:
+        self.valid_changed.emit(self.valid)
 
 class TestIntParameter:
     """Unit tests for IntParameter class."""
 
     @fixture(autouse=True)
     def set_int_param(self, mocker):
-        # The typed Signal(Constraint) emit is causing segfaults when the payload is a MagicMock
-        def fake_add_constraint(self, constraint, hidden=False):
-            if not hidden:
-                self._constraints.append(constraint)
-            else:
-                self._hidden_constraints.append(constraint)
-            constraint.value = self.value
-            constraint.valid_changed.connect(self._emit_valid_changed)
-            constraint.enabled_changed.connect(self._emit_valid_changed)
-
-        mocker.patch.object(IntParameter, "add_constraint", fake_add_constraint)
+        mocker.patch.object(IntParameter, "add_constraint", _patched_add_constraint)
 
         self.mock_constraint = mocker.MagicMock(spec=Constraint)
         self.mock_constraint.valid = True
@@ -1247,16 +1257,7 @@ class TestOptionalParameter:
 
     @fixture(autouse=True)
     def set_optional_param(self, mocker):
-        def fake_add_constraint(self, constraint, hidden=False):
-            if not hidden:
-                self._constraints.append(constraint)
-            else:
-                self._hidden_constraints.append(constraint)
-            constraint.value = self.value
-            constraint.valid_changed.connect(self._emit_valid_changed)
-            constraint.enabled_changed.connect(self._emit_valid_changed)
-
-        mocker.patch.object(IntParameter, "add_constraint", fake_add_constraint)
+        mocker.patch.object(IntParameter, "add_constraint", _patched_add_constraint)
 
         self.mock_constraint = mocker.MagicMock(spec=Constraint)
         self.mock_constraint.valid = True
@@ -1446,16 +1447,7 @@ class TestMultiParameter:
 
     @fixture(autouse=True)
     def set_multi_param(self, mocker):
-        def fake_add_constraint(self, constraint, hidden=False):
-            if not hidden:
-                self._constraints.append(constraint)
-            else:
-                self._hidden_constraints.append(constraint)
-            constraint.value = self.value
-            constraint.valid_changed.connect(self._emit_valid_changed)
-            constraint.enabled_changed.connect(self._emit_valid_changed)
-
-        mocker.patch.object(IntParameter, "add_constraint", fake_add_constraint)
+        mocker.patch.object(IntParameter, "add_constraint", _patched_add_constraint)
 
         self.mock_constraint = mocker.MagicMock(spec=Constraint)
         self.mock_constraint.valid = True
@@ -1643,16 +1635,7 @@ class TestCountedMultiParameter:
 
     @fixture(autouse=True)
     def set_counted_multi_param(self, mocker):
-        def fake_add_constraint(self, constraint, hidden=False):
-            if not hidden:
-                self._constraints.append(constraint)
-            else:
-                self._hidden_constraints.append(constraint)
-            constraint.value = self.value
-            constraint.valid_changed.connect(self._emit_valid_changed)
-            constraint.enabled_changed.connect(self._emit_valid_changed)
-
-        mocker.patch.object(IntParameter, "add_constraint", fake_add_constraint)
+        mocker.patch.object(IntParameter, "add_constraint", _patched_add_constraint)
 
         self.mock_constraint = mocker.MagicMock(spec=Constraint)
         self.mock_constraint.valid = True
