@@ -4,21 +4,25 @@ from gui.tests.utils.mock_signal import MockSignal
 
 from gui.model.parameter import ParameterGroup
 
-@fixture
-def mock_parameter():
-    """Fixture that returns a factory for creating mock parameters"""
-    def _make(enabled: bool = True, valid: bool = True, cli_output: str = "") -> MagicMock:
-        """ Create a mock Parameter with a MockSignal """
-        param = MagicMock()
-        param.enabled = enabled
-        param.valid = valid
-        param.to_cli = MagicMock(return_value=cli_output)
-        param.enabled_changed = MockSignal(bool)
-        return param
-    return _make
+
 
 class TestParameterGroupUnit:
     """Unit tests for ParameterGroup class."""
+
+    @fixture
+    def mock_parameter(self):
+        """Fixture that returns a factory for creating mock parameters"""
+
+        def _make(enabled: bool = True, valid: bool = True, cli_output: str = "") -> MagicMock:
+            """ Create a mock Parameter with a MockSignal """
+            param = MagicMock()
+            param.enabled = enabled
+            param.valid = valid
+            param.to_cli = MagicMock(return_value=cli_output)
+            param.enabled_changed = MockSignal(bool)
+            return param
+
+        return _make
 
     def test_init_name(self):
         """Test that the group stores its name."""
@@ -200,7 +204,7 @@ class TestParameterGroupUnit:
         group = ParameterGroup(name="g", parameters=[param1, param2])
 
         # act / assert
-        assert group.valid is True
+        assert group.valid
 
     def test_valid_one_invalid(self, mock_parameter):
         """Test validity of ParameterGroup when a single parameter is invalid."""
@@ -210,7 +214,7 @@ class TestParameterGroupUnit:
         group = ParameterGroup(name="g", parameters=[param1, param2])
 
         # act / assert
-        assert group.valid is False
+        assert not group.valid
 
     def test_valid_empty_group(self):
         """Test that an empty group is considered valid."""
@@ -218,7 +222,7 @@ class TestParameterGroupUnit:
         group = ParameterGroup(name="empty_group")
 
         # act / assert
-        assert group.valid is True
+        assert group.valid
 
     def test_to_cli_joins_nonempty_param_outputs(self, mock_parameter):
         """Test to_cli joins non-empty parameter CLI outputs with spaces."""
