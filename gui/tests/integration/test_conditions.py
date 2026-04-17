@@ -269,13 +269,35 @@ class TestConditions:
         assert not self.optional_parameter.enabled  
         assert not self.optional_parameter.parameter.enabled
 
+    def test_optional_parameter_condition(self, parameter_groups):
+        """Test an optional parameter condition."""
+        self.enum_parameter.add_condition(
+            condition=OptionalParameter.Condition(
+                parameter=self.optional_parameter,
+                target_value=False
+            )
+        )
+
+        # Assert
+        assert self.enum_parameter.enabled
+        assert not self.int_parameter.enabled
+        assert not self.optional_parameter.value
+
+        # Act
+        self.optional_parameter.value = True
+
+        # Assert
+        assert self.int_parameter.enabled
+        assert not self.enum_parameter.enabled
+        assert self.optional_parameter.value
+
     def test_enabled_condition(self, parameter_groups):
         """Test an enabled condition"""
         # Arrange
         self.enum_parameter.add_condition(
             condition=Parameter.EnabledCondition(
-                self.int_parameter,
-                False,
+                parameter=self.int_parameter,
+                target_value=False,
             )
         )
 
