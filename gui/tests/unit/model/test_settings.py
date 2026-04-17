@@ -12,13 +12,16 @@ class TestSettings:
     """Tests for Settings class."""
 
     @pytest.fixture()
-    def correct_settings_obj(self) -> dict:
+    def correct_settings_obj(self, tmp_path) -> dict:
+        (tmp_path / "raisdai").write_text("")
+        (tmp_path / "config.yml").write_text("")
+        (tmp_path / "workspace").mkdir()
         settings_obj = { # TODO: Mocking QDir exists works but not for QFileInfo.
-            "config_file" : "/",
+            "config_file" : f"{tmp_path}/config.yml",
             "environment_manager" : "conda",
             "environment_name" : "utwente",
-            "executable" : "/",
-            "workspace" : "/home/raisd/workspace"
+            "executable" : f"{tmp_path}/raisdai",
+            "workspace" : f"{tmp_path}/workspace"
         }
         return settings_obj
 
@@ -104,13 +107,13 @@ class TestSettings:
         # Assert
         assert (settings.workspace_path.absolutePath() == 
                 correct_settings_obj["workspace"])
-        assert (settings.executable_file_path.absolutePath() == 
+        assert (settings.executable_file_path.absoluteFilePath() == 
                 correct_settings_obj["executable"])
         assert (settings.environment_name == 
                 correct_settings_obj["environment_name"])
         assert (settings.environment_manager_name == 
                 correct_settings_obj["environment_manager"])
-        assert (settings.config_path.absolutePath() == 
+        assert (settings.config_path.absoluteFilePath() == 
                 correct_settings_obj["config_file"])
     
     def test_yaml_incorrect_workspace_value(self, mocker, correct_settings_obj):

@@ -36,12 +36,20 @@ def test_default_command_builder(mocker):
 
     # Apply mock
     mocker.patch.object(
-        type(app_settings), 
+        Settings, 
         'environment_manager_name', 
         environment_manager_name_mock
     )
-    type(app_settings).environment_name = environment_name_mock
-    type(app_settings).executable_file_path = executable_file_path_mock
+    mocker.patch.object(
+        Settings,
+        'environment_name',
+        environment_name_mock
+    )
+    mocker.patch.object(
+        Settings,
+        'executable_file_path',
+        executable_file_path_mock
+    )
 
     # Act
     command = default_command_builder(parameters=parameters)
