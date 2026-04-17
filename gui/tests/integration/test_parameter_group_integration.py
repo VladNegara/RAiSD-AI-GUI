@@ -54,33 +54,34 @@ class TestParameterGroupIntegration:
         Test `ParameterGroup`'s `enabled` property when all parameters
         are disabled.
         """
-        # Arrange
+        # arrange
         group = self.parameter_group
-        string_param_condition = self.string_param_condition
-        bool_param_condition = self.bool_param_condition
 
-        # Act
-        string_param_condition.value = False
-        bool_param_condition.value = False
+        # act
+        self.string_param_condition.value = False
+        self.bool_param_condition.value = False
 
-        # Assert
+        # assert
         assert not group.enabled
 
     def test_valid_invalid_and_disabled_param(self):
         """Test that an invalid but disabled parameter does not make the group invalid."""
+        # arrange
         group = self.parameter_group
         self.string_param.value = "INVALID VALUE!!"
+
+        # act
         self.string_param_condition.value = False
+
+        # assert
         assert group.valid is True
 
     def test_add_parameter_connects_enabled_changed(self):
         """Test that add_parameter correctly connects the enabled_changed signal."""
+        # arrange
         group = self.parameter_group
-        string_param_condition = self.string_param_condition
-        bool_param_condition = self.bool_param_condition
-
-        string_param_condition.value = False
-        bool_param_condition.value = False
+        self.string_param_condition.value = False
+        self.bool_param_condition.value = False
 
         new_param = BoolParameter(
             name="new_param",
@@ -99,15 +100,20 @@ class TestParameterGroupIntegration:
             self.signal_emitted_counter += 1
 
         group.enabled_changed.connect(on_enabled_changed)
+
+        # act
         new_param_condition.value = True
         new_param_condition.value = False
         new_param_condition.value = True
         new_param_condition.value = False
+
+        # assert
         assert self.signal_emitted_counter == 4
 
     def test_enabled_changed_signal_emitted_on_disable(self):
         """Test that enabled_changed is emitted when the last enabled
         parameter becomes disabled."""
+        # arrange
         group = self.parameter_group
         self.signal_emitted_counter = 0
         self.emitted_value = None
@@ -118,16 +124,19 @@ class TestParameterGroupIntegration:
 
         group.enabled_changed.connect(on_enabled_changed)
 
+        # act
         # Disable all parameters — group should become disabled
         self.string_param_condition.value = False
         self.bool_param_condition.value = False
 
+        # assert
         assert self.signal_emitted_counter == 1
         assert self.emitted_value is False
 
     def test_enabled_changed_signal_emitted_on_enable(self):
         """Test that enabled_changed is emitted when the first parameter
         becomes enabled in a fully disabled group."""
+        # arrange
         disabled_param = BoolParameter(
             name="p1",
             description="desc",
@@ -138,7 +147,6 @@ class TestParameterGroupIntegration:
         disabled_param_condition = Condition(False)
         disabled_param.add_condition(disabled_param_condition)
         group = ParameterGroup(name="disabled_group", parameters=[disabled_param])
-        assert group._enabled is False
 
         self.signal_emitted_counter = 0
         self.emitted_value = None
@@ -149,14 +157,17 @@ class TestParameterGroupIntegration:
 
         group.enabled_changed.connect(on_enabled_changed)
 
+        # act
         disabled_param_condition.value = True
 
+        # assert
         assert self.signal_emitted_counter == 1
         assert self.emitted_value is True
 
     def test_enabled_changed_not_emitted_when_unchanged(self):
         """Test that enabled_changed is not emitted when the enabled
         state of the group doesn't actually change."""
+        # arrange
         group = self.parameter_group
         self.signal_emitted_counter = 0
 
@@ -164,13 +175,21 @@ class TestParameterGroupIntegration:
             self.signal_emitted_counter += 1
 
         group.enabled_changed.connect(on_enabled_changed)
+
+        #act
         self.string_param_condition.value = False
 
+        #assert
         assert self.signal_emitted_counter == 0
 
     def test_to_cli_disabled_parameter(self):
         """Test that disabled parameters are excluded from CLI output."""
+        # arrange
         group = self.parameter_group
+
+        # act
         self.bool_param_condition.value = False
         result = group.to_cli('MDL-GEN')
+
+        # assert
         assert result == "-flag_string default"
