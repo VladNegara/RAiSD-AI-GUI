@@ -108,7 +108,7 @@ class ParameterGroup(QObject):
         return " ".join(nonempty_params)
 
     def __str__(self) -> str:
-        return f"{self.name}: {self.to_cli()}"
+        return f"ParameterGroup({self.name})"
 
     def __iter__(self) -> Iterator[Parameter[Any]]:
         return iter(self.parameters)
