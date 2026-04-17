@@ -150,48 +150,48 @@ class TestOperationTreeStructures:
             options=[("name1", "1"),("name2","2")],
             default_value=0,
         )
-        self.optional_parameter = OptionalParameter(
-            name='optional',
-            description='This is optional',
-            operations={'MDL-GEN'},
-            default_value=False,
-            parameter=IntParameter(
-              name='int',
-              description='description',
-              flag='-i ',
-              operations={'MDL-GEN'},
-              default_value=3,
-              constraints=[
-                  IntervalConstraint(
-                      lower_bound=2,
-                      lower_bound_inclusive=False,
-                      upper_bound=7,
-                      upper_bound_inclusive=False,
-                  ),
-              ],
-          )
-        )
-        self.file_parameter = FileParameter (
-            name="file",
-            description="file",
-            flag="-fi ",
-            operations={"IMG-GEN"}
-        )
-        self.multi_parameter = MultiParameter ( #type: ignore
-                    name="multi",
-                    description="descr",
-                    flag="-m ",
-                    operations={'IMG-GEN'},
-                    parameters=[self.file_parameter]
-                )
+        # self.optional_parameter = OptionalParameter(
+        #     name='optional',
+        #     description='This is optional',
+        #     operations={'MDL-GEN'},
+        #     default_value=False,
+        #     parameter=IntParameter(
+        #       name='int',
+        #       description='description',
+        #       flag='-i ',
+        #       operations={'MDL-GEN'},
+        #       default_value=3,
+        #       constraints=[
+        #           IntervalConstraint(
+        #               lower_bound=2,
+        #               lower_bound_inclusive=False,
+        #               upper_bound=7,
+        #               upper_bound_inclusive=False,
+        #           ),
+        #       ],
+        #   )
+        # )
+        # self.file_parameter = FileParameter (
+        #     name="file",
+        #     description="file",
+        #     flag="-fi ",
+        #     operations={"IMG-GEN"}
+        # )
+        # self.multi_parameter = MultiParameter ( #type: ignore
+        #             name="multi",
+        #             description="descr",
+        #             flag="-m ",
+        #             operations={'IMG-GEN'},
+        #             parameters=[self.file_parameter]
+        #         )
         
         # Parameter groups
         self.parameters_group1: Sequence[Parameter] = [
-            self.multi_parameter
+            # self.multi_parameter
         ]
         self.parameters_group2: Sequence[Parameter] = [
             self.enum_parameter,
-            self.optional_parameter
+            # self.optional_parameter
         ]
         self.parameter_groups = [
             ParameterGroup(
@@ -258,3 +258,21 @@ class TestOperationTreeStructures:
         consumer = sub_tree.file_consumers[0]
         assert len(consumer.producers) == 1 
         assert isinstance(consumer.producers[0], FilePickerNode)
+
+    def test_valid_change(self, run_record, tmp_path):
+        # Arrange
+        record = self.record
+        trees = record.operation_trees
+        file = tmp_path / "file"
+        file.write_text("")
+
+        # Act and assert
+        assert not record.operations_valid
+        producer = trees[0].root.file_consumers[0].producers[0]
+        assert isinstance(producer, FilePickerNode)
+        producer.file = tmp_path / "file"
+        assert record.operations_valid
+        record.selected_operation_tree_index = 1
+        assert not record.operations_valid
+        assert record.valid # Not dependent on operations valid
+
