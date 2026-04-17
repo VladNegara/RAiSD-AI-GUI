@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from PySide6.QtCore import (
@@ -7,10 +6,9 @@ from PySide6.QtCore import (
 
 
 @dataclass
-class FileStructure(ABC):
-    @abstractmethod
+class FileStructure():
     def matches(self, file_path: str) -> bool:
-        pass
+        raise NotImplementedError()
 
 
 @dataclass

@@ -1,252 +1,348 @@
 from pytest import fixture, raises
-import re
+from unittest.mock import MagicMock
+from gui.tests.utils.mock_signal import MockSignal
 
-from gui.model.parameter import (
-    Condition,
-    MaxLengthConstraint,
-    RegexConstraint,
-    ParameterGroup,
-    StringParameter,
-    BoolParameter,
-)
+from gui.model.parameter import ParameterGroup
 
-class TestParameterGroup:
-    """Tests for ParameterGroup class."""
 
-    @fixture(autouse=True)
-    def set_parameter_group(self):
-        self.string_param = StringParameter(
-            name="string_param",
-            description="string_param description",
-            flag="-flag_string ",
-            operations={'MDL-GEN'},
-            default_value="default",
-            constraints=[
-                MaxLengthConstraint(10),
-                RegexConstraint(
-                    pattern=re.compile(r"\b[a-z]+\b"),
-                    hint="Only lowercase letters."
-                ),
-            ],
-        )
 
-        self.string_param_condition = Condition(True)
-        self.string_param.add_condition(self.string_param_condition)
+class TestParameterGroupUnit:
+    """Unit tests for ParameterGroup class."""
 
-        self.bool_param = BoolParameter(
-            name="bool_param",
-            description="bool_param description",
-            flag="-flag_bool",
-            operations={'MDL-GEN'},
-            default_value=True,
-        )
+    @fixture
+    def mock_parameter(self):
+        """Fixture that returns a factory for creating mock parameters"""
 
-        self.bool_param_condition = Condition(True)
-        self.bool_param.add_condition(self.bool_param_condition)
+        def _make(enabled: bool = True, valid: bool = True, cli_output: str = "") -> MagicMock:
+            """ Create a mock Parameter with a MockSignal """
+            param = MagicMock()
+            param.enabled = enabled
+            param.valid = valid
+            param.to_cli = MagicMock(return_value=cli_output)
+            param.enabled_changed = MockSignal(bool)
+            return param
 
-        self.parameters = [self.string_param, self.bool_param]
-        self.parameter_group = ParameterGroup(
-            name="test_group",
-            parameters=self.parameters,
-        )
+        return _make
 
-    def test_init_values(self):
-        """Test ParameterGroup initialization with default value."""
-        group = self.parameter_group
-        assert group.name == "test_group"
-        assert group.parameters == self.parameters
-        assert group.enabled
+    def test_init_name(self):
+        """Test that the group stores its name."""
+        # arrange / act
+        group = ParameterGroup(name="g")
+
+        # assert
+        assert group.name == "g"
 
     def test_init_empty_parameters(self):
         """Test ParameterGroup initialization when the parameters list is empty."""
+        # arrange / act
         group = ParameterGroup(name="empty_group")
-        assert group.name == "empty_group"
+
+        # assert
         assert group.parameters == []
         assert not group.enabled
 
-    def test_all_disabled(self):
-        """
-        Test `ParameterGroup`'s `enabled` property when all parameters
-        are disabled.
-        """
-        # Arrange
-        group = self.parameter_group
-        string_param_condition = self.string_param_condition
-        bool_param_condition = self.bool_param_condition
+    def test_init_parameters_none_defaults_to_empty_list(self):
+        """Test that parameter group without parameters defaults to an empty list."""
+        # arrange / act
+        group = ParameterGroup(name="g")
 
-        # Act
-        string_param_condition.value = False
-        bool_param_condition.value = False
+        # assert
+        assert group.parameters == []
 
-        # Assert
-        assert not group.enabled
+    def test_init_enabled_true_when_param_is_enabled(self, mock_parameter):
+        """Test that a group initialised with at an enabled parameter reports enabled=True."""
+        # arrange
+        param = mock_parameter(enabled=True)
 
-    def test_add_parameter(self):
-        """Test adding parameter to an existing ParameterGroup."""
-        group = ParameterGroup(name="empty_group")
-        assert len(group.parameters) == 0
+        # act
+        group = ParameterGroup(name="g", parameters=[param])
 
-        new_param = BoolParameter(
-            name="new_param",
-            description="desc",
-            flag="-new",
-            operations={'IMG-GEN'},
-            default_value=False,
-        )
-        group.add_parameter(new_param)
+        # assert
+        assert group.enabled is True
 
+    def test_init_enabled_false_when_params_disabled(self, mock_parameter):
+        """Test that a group initialised with disabled parameter reports enabled=False."""
+        # arrange
+        param = mock_parameter(enabled=False)
+
+        # act
+        group = ParameterGroup(name="g", parameters=[param])
+
+        # assert
+        assert group.enabled is False
+
+    def test_init_connects_enabled_changed_for_each_param(self, mock_parameter):
+        """Test that __init__ connects to enabled_changed of every parameter."""
+        # arrange
+        param1 = mock_parameter()
+        param2 = mock_parameter()
+
+        # act
+        ParameterGroup(name="g", parameters=[param1, param2])
+
+        # assert
+        assert len(param1.enabled_changed.slots) == 1
+        assert len(param2.enabled_changed.slots) == 1
+
+    def test_enabled_false_when_all_params_become_disabled(self, mock_parameter):
+        """Test enabled becomes False when all parameters are disabled via signal."""
+        # arrange
+        param1 = mock_parameter(enabled=True)
+        param2 = mock_parameter(enabled=True)
+        group = ParameterGroup(name="g", parameters=[param1, param2])
+
+        # act
+        param1.enabled = False
+        param1.enabled_changed.emit(False)
+
+        # assert
+        assert group.enabled is True
+
+        # act
+        param2.enabled = False
+        param2.enabled_changed.emit(False)
+
+        # assert
+        assert group.enabled is False
+
+    def test_add_parameter_appends_to_list(self, mock_parameter):
+        """Test adding a parameter to an existing ParameterGroup actually adds the parameter to the group."""
+        # arrange
+        group = ParameterGroup(name="g")
+        param = mock_parameter()
+
+        # act
+        group.add_parameter(param)
+
+        # assert
         assert len(group.parameters) == 1
-        assert group.parameters[0] is new_param
+        assert group.parameters[0] is param
 
-    def test_add_parameter_connects_enabled_changed(self):
-        """Test that add_parameter correctly connects the enabled_changed signal."""
-        group = self.parameter_group
-        string_param_condition = self.string_param_condition
-        bool_param_condition = self.bool_param_condition
+    def test_add_parameter_connects_enabled_changed(self, mock_parameter):
+        """Test that add_parameter connects to the parameter's enabled_changed signal."""
+        # arrange
+        group = ParameterGroup(name="g")
+        param = mock_parameter()
 
-        string_param_condition.value = False
-        bool_param_condition.value = False
+        # act
+        group.add_parameter(param)
 
-        new_param = BoolParameter(
-            name="new_param",
-            description="desc",
-            flag="-new",
-            operations={'IMG-GEN'},
-            default_value=False,
-        )
-        new_param_condition = Condition(False)
-        new_param.add_condition(new_param_condition)
-        group.add_parameter(new_param)
+        # assert
+        assert len(param.enabled_changed.slots) == 1
 
-        self.signal_emitted_counter = 0
+    def test_add_enabled_param_to_disabled_group_enables_group(self, mock_parameter):
+        """Test that adding an enabled parameter to a disabled group updates the group's enabled state."""
+        # arrange
+        group = ParameterGroup(name="g")
+        param = mock_parameter(enabled=True)
 
-        def on_enabled_changed():
-            self.signal_emitted_counter += 1
+        # act
+        group.add_parameter(param)
 
-        group.enabled_changed.connect(on_enabled_changed)
-        new_param_condition.value = True
-        new_param_condition.value = False
-        new_param_condition.value = True
-        new_param_condition.value = False
-        assert self.signal_emitted_counter == 4
+        # assert
+        assert group.enabled is True
 
-    def test_valid_all_valid(self):
+    def test_add_disabled_param_to_disabled_group_stays_disabled(self, mock_parameter):
+        """Test that adding a disabled parameter to a disabled group leaves the group disabled."""
+        # arrange
+        group = ParameterGroup(name="g")
+        param = mock_parameter(enabled=False)
+
+        # act
+        group.add_parameter(param)
+
+        # assert
+        assert group.enabled is False
+
+    def test_add_disabled_param_to_enabled_group_stays_enabled(self, mock_parameter):
+        """Test that adding a disabled parameter to an already-enabled group leaves the group enabled."""
+        # arrange
+        param_old = mock_parameter(enabled=True)
+        group = ParameterGroup(name="g", parameters=[param_old])
+        param_new = mock_parameter(enabled=False)
+
+        # act
+        group.add_parameter(param_new)
+
+        # assert
+        assert group.enabled is True
+
+    def test_add_parameter_emits_enabled_changed_when_group_becomes_enabled(self, mock_parameter):
+        """Test that enabled_changed is emitted when adding an enabled param enables the group."""
+        # arrange
+        group = ParameterGroup(name="g")
+        emitted = []
+        group.enabled_changed.connect(lambda v: emitted.append(v))
+        param = mock_parameter(enabled=True)
+
+        # act
+        group.add_parameter(param)
+
+        # assert
+        assert emitted == [True]
+
+    def test_add_parameter_does_not_emit_enabled_changed_when_state_unchanged(self, mock_parameter):
+        """Test that enabled_changed is not emitted when add_parameter doesn't change enabled state."""
+        # arrange
+        param_old = mock_parameter(enabled=True)
+        group = ParameterGroup(name="g", parameters=[param_old])
+        emitted = []
+        group.enabled_changed.connect(lambda v: emitted.append(v))
+        param_new = mock_parameter(enabled=False)
+
+        # act
+        group.add_parameter(param_new)
+
+        # assert
+        assert emitted == []
+
+    def test_valid_all_valid(self, mock_parameter):
         """Test validity of ParameterGroup when all parameters are valid."""
-        group = self.parameter_group
-        assert group.valid is True
+        # arrange
+        param1 = mock_parameter(valid=True)
+        param2 = mock_parameter(valid=True)
+        group = ParameterGroup(name="g", parameters=[param1, param2])
 
-    def test_valid_one_invalid(self):
+        # act / assert
+        assert group.valid
+
+    def test_valid_one_invalid(self, mock_parameter):
         """Test validity of ParameterGroup when a single parameter is invalid."""
-        group = self.parameter_group
-        self.string_param.value = "INVALID VALUE!!"
-        assert group.valid is False
+        # arrange
+        param1 = mock_parameter(valid=True)
+        param2 = mock_parameter(valid=False)
+        group = ParameterGroup(name="g", parameters=[param1, param2])
 
-    def test_enabled_changed_signal_emitted_on_disable(self):
-        """Test that enabled_changed is emitted when the last enabled
-        parameter becomes disabled."""
-        group = self.parameter_group
-        self.signal_emitted_counter = 0
-        self.emitted_value = None
+        # act / assert
+        assert not group.valid
 
-        def on_enabled_changed(value):
-            self.signal_emitted_counter += 1
-            self.emitted_value = value
+    def test_valid_empty_group(self):
+        """Test that an empty group is considered valid."""
+        # arrange
+        group = ParameterGroup(name="empty_group")
 
-        group.enabled_changed.connect(on_enabled_changed)
+        # act / assert
+        assert group.valid
 
-        # Disable all parameters — group should become disabled
-        self.string_param_condition.value = False
-        self.bool_param_condition.value = False
+    def test_to_cli_joins_nonempty_param_outputs(self, mock_parameter):
+        """Test to_cli joins non-empty parameter CLI outputs with spaces."""
+        # arrange
+        param1 = mock_parameter(cli_output="-a val")
+        param2 = mock_parameter(cli_output="-b")
+        group = ParameterGroup(name="g", parameters=[param1, param2])
 
-        assert self.signal_emitted_counter == 1
-        assert self.emitted_value is False
+        # act
+        result = group.to_cli("OP")
 
-    def test_enabled_changed_signal_emitted_on_enable(self):
-        """Test that enabled_changed is emitted when the first parameter
-        becomes enabled in a fully disabled group."""
-        disabled_param = BoolParameter(
-            name="p1",
-            description="desc",
-            flag="-p1",
-            operations={'IMG-GEN'},
-            default_value=False,
-        )
-        disabled_param_condition = Condition(False)
-        disabled_param.add_condition(disabled_param_condition)
-        group = ParameterGroup(name="disabled_group", parameters=[disabled_param])
-        assert group._enabled is False
+        # assert
+        assert result == "-a val -b"
 
-        self.signal_emitted_counter = 0
-        self.emitted_value = None
+    def test_to_cli_skips_empty_param_outputs(self, mock_parameter):
+        """Test to_cli skips parameters that return an empty string."""
+        # arrange
+        param1 = mock_parameter(cli_output="-a")
+        param2 = mock_parameter(cli_output="")
+        group = ParameterGroup(name="g", parameters=[param1, param2])
 
-        def on_enabled_changed(value):
-            self.signal_emitted_counter += 1
-            self.emitted_value = value
+        # act
+        result = group.to_cli("OP")
 
-        group.enabled_changed.connect(on_enabled_changed)
+        # assert
+        assert result == "-a"
 
-        disabled_param_condition.value = True
+    def test_to_cli_passes_operation_to_each_param(self, mock_parameter):
+        """Test that to_cli forwards the operation string to every parameter."""
+        # arrange
+        param1 = mock_parameter(cli_output="-a")
+        param2 = mock_parameter(cli_output="-b")
+        group = ParameterGroup(name="g", parameters=[param1, param2])
 
-        assert self.signal_emitted_counter == 1
-        assert self.emitted_value is True
+        # act
+        group.to_cli("MDL-GEN")
 
-    def test_enabled_changed_not_emitted_when_unchanged(self):
-        """Test that enabled_changed is not emitted when the enabled
-        state of the group doesn't actually change."""
-        group = self.parameter_group
-        self.signal_emitted_counter = 0
-
-        def on_enabled_changed():
-            self.signal_emitted_counter += 1
-
-        group.enabled_changed.connect(on_enabled_changed)
-        self.string_param_condition.value = False
-
-        assert self.signal_emitted_counter == 0
-
-    def test_to_cli(self):
-        """Test to_cli."""
-        group = self.parameter_group
-        result = group.to_cli('MDL-GEN')
-        assert result == "-flag_string default -flag_bool"
-
-    def test_to_cli_irrelevant_operation(self):
-        """Test to_cli returns an empty string when parameters none of the parameters
-         match the operation."""
-        group = self.parameter_group
-        result = group.to_cli('SWP-SCN')
-        assert result == ""
-
-    def test_to_cli_mixed_operations(self):
-        """Test to_cli when only some parameters match the operation."""
-        param_a = BoolParameter(
-            name="a",
-            description="desc",
-            flag="-a",
-            operations={'IMG-GEN'},
-            default_value=True,
-        )
-        param_b = BoolParameter(
-            name="b",
-            description="desc",
-            flag="-b",
-            operations={'MDL-GEN'},
-            default_value=True,
-        )
-        group = ParameterGroup(name="mixed", parameters=[param_a, param_b])
-
-        assert group.to_cli('IMG-GEN') == "-a"
-        assert group.to_cli('MDL-GEN') == "-b"
-
-    def test_to_cli_disabled_parameter(self):
-        """Test that disabled parameters are excluded from CLI output."""
-        group = self.parameter_group
-        self.bool_param_condition.value = False
-        result = group.to_cli('MDL-GEN')
-        assert result == "-flag_string default"
+        # assert
+        param1.to_cli.assert_called_once_with("MDL-GEN")
+        param2.to_cli.assert_called_once_with("MDL-GEN")
 
     def test_to_cli_empty_group(self):
-        """Test to_cli returns an empty string when the parameters list is empty."""
+        """Test to_cli returns an empty string when the parameter list is empty."""
+        # arrange
         group = ParameterGroup(name="empty_group")
+
+        # act
         result = group.to_cli('MDL-GEN')
+
+        # assert
         assert result == ""
+
+    def test_to_cli_invalid_parameter(self, mock_parameter):
+        """Test that a parameter group with valid parameter has the same CLI output
+         as a parameter group with the same parameter, but invalid."""
+        # arrange
+        param_valid = mock_parameter(valid=True, cli_output="-flag_string val")
+        group_valid = ParameterGroup(name="g", parameters=[param_valid])
+        param_invalid = mock_parameter(valid=False, cli_output="-flag_string val")
+        group_invalid = ParameterGroup(name="g", parameters=[param_invalid])
+
+        # act
+        result_valid = group_valid.to_cli("OP")
+        result_invalid = group_invalid.to_cli("OP")
+
+        # assert
+        assert result_valid == result_invalid
+
+    def test_iter(self, mock_parameter):
+        """Test that iterating over a ParameterGroup yields its parameters."""
+        # arrange
+        param1 = mock_parameter()
+        param2 = mock_parameter()
+        group = ParameterGroup(name="g", parameters=[param1, param2])
+
+        # act
+        result = list(group)
+
+        # assert
+        assert result == [param1, param2]
+
+    def test_iter_empty_group(self):
+        """Test that iterating over an empty ParameterGroup yields nothing."""
+        # arrange
+        group = ParameterGroup(name="empty_group")
+
+        # act
+        result = list(group)
+
+        # assert
+        assert result == []
+
+    def test_getitem(self, mock_parameter):
+        """Test index access on a ParameterGroup."""
+        # arrange
+        param1 = mock_parameter()
+        param2 = mock_parameter()
+        group = ParameterGroup(name="g", parameters=[param1, param2])
+
+        # act / assert
+        assert group[0] is param1
+        assert group[1] is param2
+
+    def test_getitem_out_of_range(self):
+        """Test that out-of-range index access raises IndexError."""
+        # arrange
+        group = ParameterGroup(name="g")
+
+        # act / assert
+        with raises(IndexError):
+            _ = group[0]
+
+    def test_str(self):
+        """Test __str__ includes the group name and CLI output."""
+        # arrange
+        group = ParameterGroup(name="my_group")
+
+        # act
+        result = str(group)
+
+        # assert
+        assert "my_group" in result
+

@@ -74,7 +74,9 @@ class CommandExecutor(QObject):
         :param commands: the list of commands to be executed
         :type command: list[str]
         """
-        if self._process.state() == QProcess.ProcessState.Starting or self._process.state() == QProcess.ProcessState.Running:
+        if (not self._command_queue.empty or
+            self._process.state() == QProcess.ProcessState.Starting or 
+            self._process.state() == QProcess.ProcessState.Running):
             raise Exception("Execution is still running")
         
         self.execution_started.emit(len(commands))

@@ -432,6 +432,10 @@ class OptionalParameter(Parameter[bool]):
                     value[self.parameter.name]
                 )
 
+    def reset_value(self) -> None:
+        self.parameter.reset_value()
+        super().reset_value()
+
     def _to_cli(
             self,
             operation: str | None = None,
@@ -843,7 +847,7 @@ class StringTableParameter(Parameter[tuple[()]]):
     A parameter for entering a table of strings.
     """
 
-    value_changed = Signal(tuple[()], bool)
+    value_changed = Signal(int, bool)
     row_count_index_changed = Signal(int)
     row_count_changed = Signal(int)
 
@@ -897,7 +901,7 @@ class StringTableParameter(Parameter[tuple[()]]):
 
     @Slot()
     def _inner_value_changed(self) -> None:
-        self.value_changed.emit(self.value, self.valid)
+        self.value_changed.emit(self.row_count_index, self.valid)
 
     def reset_value(self) -> None:
         super().reset_value()

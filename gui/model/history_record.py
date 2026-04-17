@@ -40,24 +40,26 @@ class HistoryRecord():
                 data = json.load(f)
                 if not isinstance(data, dict):
                     raise ValueError(
-                        f"Incorrect format in .history.json: {data}"
+                        f"Incorrect format in .history.json: {data}. "
                         + "Expected dict."
                     )
                 for key in data.keys():
                     if not isinstance(data[key], dict):
                         raise ValueError(
-                            f"Incorrect format in .history.json for {key}: {data[key]}"
+                            f"Incorrect format in .history.json for {key}: {data[key]}. "
                             + "Expected dict."
                         )
                     try:
                         history_records.append(cls.from_dict(data[key]))
-                    except ValueError:
+                    except ValueError as e:
                         print(f"Error parsing {key}")
+                        print(e)
                 return history_records
         except FileNotFoundError:
             print("No history file found in this workspace")
             return []
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            print(e)
             print("History file not parseable. Might be empty or formatted incorrectly")
             return []
         
@@ -70,6 +72,11 @@ class HistoryRecord():
         :param dictionary: the dictionary that contains the record data
         :type dictionary: dict
         """
+        if "name" not in dictionary:
+            raise ValueError(
+                f"Missing run name. Expected string."
+            )
+        
         name = dictionary.get("name")
         if not isinstance(name, str):
             raise ValueError(
@@ -77,6 +84,10 @@ class HistoryRecord():
                 + "Expected string."
             )
 
+        if "commands" not in dictionary:
+            raise ValueError(
+                f"Missing commands. Expected list."
+            )
         commands = dictionary.get("commands")
         if not isinstance(commands, list):
             raise ValueError(
@@ -87,49 +98,58 @@ class HistoryRecord():
         for command in commands:
             if not isinstance(command, str):
                 raise ValueError(
-                    f"Invalid command type: {command}"
+                    f"Invalid command type: {command}. "
                     + "Expected string."
                 )
+        
+        if "operations" not in dictionary:
+            raise ValueError("Missing operations. Expected dict.")
         
         operations = dictionary.get("operations")
         if not isinstance(operations, dict):
             raise ValueError(
-                f"Invalid operations type: {operations}"
+                f"Invalid operations type: {operations}. "
                 + "Expected dictionary."
             )
         
+        if "index" not in operations:
+            raise ValueError("Missing index in operations dictionary. Expected integer.")
         tree_index = operations.get("index")
         if not isinstance(tree_index, int):
             raise ValueError(
-                f"Invalid tree index: {tree_index}"
+                f"Invalid tree index: {tree_index}. "
                 + "Expected integer."
             )
 
+        if "trees" not in operations:
+            raise ValueError("Missing trees in operations dictionary. Expected list.")
         operations_list = operations.get("trees")
         if not isinstance(operations_list, list):
             raise ValueError(
-                f"Invalid operations type: {operations_list}"
+                f"Invalid operations type: {operations_list}. "
                 + "Expected list."
             )
         
         for operation in operations_list:
             if not isinstance(operation, dict):
                 raise ValueError(
-                    f"Invalid operation type: {operation}"
-                    + "Expected string."
+                    f"Invalid operation type: {operation}. "
+                    + "Expected dictionary."
                 )
-
+            
         parameters = dictionary.get("parameters")
         if not isinstance(parameters, dict):
             raise ValueError(
-                f"Invalid parameter object: {parameters}."
+                f"Invalid parameter object: {parameters}. "
                 + "Expected dictionary."
             )
 
+        if "time_completed" not in dictionary:
+            raise ValueError("Missing time_completed. Expected string.")
         time_completed = dictionary.get("time_completed")
         if not isinstance(time_completed, str):
             raise ValueError(
-                f"Invalid time_completed type: {time_completed}"
+                f"Invalid time_completed type: {time_completed}. "
                 + "Expected string."
             )
         time_completed = datetime.strptime(time_completed, "%Y-%m-%d %H:%M:%S.%f")
@@ -158,6 +178,9 @@ class HistoryRecord():
                     print("Corrupted history file will be overwritten")
                     history = {}
                     f.truncate(0)
+                if not isinstance(history, dict):
+                    print("History file has incorrect format.")
+                    history = {}
                 history[f"{self.time_completed}-{self.name}"] = self.to_dict()
                 f.seek(0)
                 json.dump(history, f, indent=4, default=str)
@@ -173,28 +196,8 @@ class HistoryRecord():
             "commands": self.commands,
             "operations": self.operations,
             "parameters": self.parameters,
-            "time_completed": self.time_completed
+            "time_completed": str(self.time_completed)
         }
-    
-    # TODO this could be moved to parameter
-    @classmethod
-    def parameter_to_value(cls, parameter: Parameter) -> str | dict:
-        """
-        Makes the dictionary or string that is stored as the value of each 
-        parameter. Uses recursion for MultiParameter and OptionalParameter
-        """
-        if type(parameter) is MultiParameter: 
-            parameters = {}
-            for param in parameter.parameters:
-                parameters[param.name] = cls.parameter_to_value(param)
-            return parameters
-        if type(parameter) is OptionalParameter:
-            value = {}
-            value["enabled"] = parameter.value
-            value[parameter.parameter.name] = cls.parameter_to_value(parameter.parameter)
-            return value
-        else:
-            return parameter.value
 
     @property
     def name(self) -> str:

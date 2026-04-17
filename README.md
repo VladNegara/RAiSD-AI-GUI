@@ -59,18 +59,30 @@ As of RAiSD version 2.0, the μ-statistic factors `μ_VAR` and `μ_SFS` are modi
 Download and Compile
 --------------------
 
-The following commands can be used to download and compile the source code. 
+The following commands can be used to download and compile the source code. Conda is used to install the required dependencies.
 
-    $ mkdir RAiSD-AI
-    $ cd RAiSD-AI
-    $ wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip
-    $ unzip master.zip
-    $ cd RAiSD-AI-master
-    $ ./compile-RAiSD-AI.sh
+```bash
+mkdir RAiSD-AI-GUI
+cd RAiSD-AI-GUI
+wget https://github.com/VladNegara/RAiSD-AI-GUI/archive/refs/heads/master.zip
+unzip master.zip
+cd RAiSD-AI-GUI-master
+conda create -f "environment-raisd-ai.yml"
+conda activate raisd-ai
+./compile-RAiSD-AI-ZLIB.sh
+```
 
 Command to directly copy to terminal:
 
-     mkdir RAiSD-AI; cd RAiSD-AI; wget https://github.com/alachins/RAiSD-AI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-master; ./compile-RAiSD-AI.sh
+```bash
+mkdir RAiSD-AI-GUI; cd RAiSD-AI-GUI; wget https://github.com/VladNegara/RAiSD-AI-GUI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-GUI-master; conda create -f "environment-raisd-ai.yml"; conda activate raisd-ai; ./compile-RAiSD-AI-ZLIB.sh
+```
+
+If you use micromamba instead of conda, use:
+
+```bash
+mkdir RAiSD-AI-GUI; cd RAiSD-AI-GUI; wget https://github.com/VladNegara/RAiSD-AI-GUI/archive/refs/heads/master.zip; unzip master.zip; cd RAiSD-AI-GUI-master; micromamba create -f "environment-raisd-ai.yml" --channel-priority flexible; micromamba activate raisd-ai; ./compile-RAiSD-AI-ZLIB.sh
+```
 
 The executable is placed in the path bin/release. A link to the executable is placed in the installation folder, i.e., RAiSD-AI-master. 
 

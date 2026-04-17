@@ -1305,11 +1305,6 @@ class RunRecord(QObject):
         for parameter_group in self.parameter_groups:
             for parameter in parameter_group:
                     parameter.reset_value()
-                    if isinstance(parameter, MultiParameter):
-                        for parameter in parameter.parameters:
-                            parameter.reset_value()
-                    if isinstance(parameter, OptionalParameter):
-                        parameter.parameter.reset_value()
 
     @property
     def run_id_parameter(self) -> StringParameter:
@@ -1423,7 +1418,6 @@ class RunRecord(QObject):
         new_run_id: str,
         new_valid: bool,
     ) -> None:
-        self.run_id = new_run_id
         self.run_id_valid_changed.emit(self.run_id_valid)
         for operation_tree in self.operation_trees:
             operation_tree.run_id = new_run_id

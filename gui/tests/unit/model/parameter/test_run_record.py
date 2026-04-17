@@ -1,17 +1,14 @@
-from pytest import approx, fixture, raises
-import re
+from pytest import approx, fixture
+from unittest.mock import PropertyMock
+from gui.tests.utils.mock_signal import MockSignal
+from PySide6.QtCore import QDir
 
-from gui.model.operation import (
-    Operation, 
-    OperationTree,
-)
-from gui.model.operation.file_structure import SingleFile
 from gui.model.run_record import RunRecord
+import gui.model.run_record as rrecord
 from gui.model.parameter import (
     IntervalConstraint,
     MaxLengthConstraint,
     RegexConstraint,
-    ParameterGroup,
     OptionalParameter,
     MultiParameter,
     BoolParameter,
@@ -22,670 +19,253 @@ from gui.model.parameter import (
     FileParameter,
 )
 
-# TODO: make the tests more comprehensive and use mocking
-# TODO: CHANGE FROM PARAMETERGROUPLIST TO RUN RECORD
 
-class TestParameterGroupList:
+class TestRunRecord:
     """Tests for ParameterGroupList class."""
 
     @fixture(autouse=True)
-    def set_parameter_group_list(self):
-        self.run_id_parameter = StringParameter (
-            name="Run ID",
-            description="Fill in a name to identify your run.",
-            flag="-n",
-            operations={"IMG-GEN", "MDL-GEN"},
-            default_value="my_run",
-        )
+    def set_run_record(self, mocker):
+        # Run id parameter
+        self.run_id_parameter = mocker.Mock()
+        self.run_id_parameter.valid = True
+        self.run_id_parameter.value = "hi"
+        self.run_id_parameter.to_cli = mocker.Mock(return_value="-n hi")
+        self.run_id_parameter.reset_value = mocker.MagicMock()
+        mock_signal = MockSignal()
+        self.run_id_parameter.value_changed.emit = mock_signal.emit
+        self.run_id_parameter.value_changed.connect = mock_signal.connect
+
+        # Parameter 1
+        self.parameter1 = mocker.Mock()
+        self.parameter1.name = "param"
+        self.parameter1.valid = True
+        self.parameter1.operations = {'IMG-GEN'}
+        self.parameter1.populate = mocker.MagicMock()
+        self.parameter1.to_cli = mocker.Mock(return_value="-I asdfohds")
+        self.parameter1.reset_value = mocker.MagicMock()
+        self.parameters = [self.parameter1]
+
+        # Parameter groups
+        self.parameter_group1 = mocker.Mock()
+        self.parameter_group1.name = 'img'
+        self.parameter_group1.parameters = []
+        self.parameter_group1.__iter__ = mocker.Mock(side_effect=lambda: iter(self.parameter_group1.parameters))
+
+        self.parameter_group2 = mocker.Mock()
+        self.parameter_group2.name = "mdl"
+        self.parameter_group2.parameters = [self.parameter1]
+        self.parameter_group2.__iter__ = mocker.Mock(side_effect=lambda: iter(self.parameter_group2.parameters))
+        
         self.parameter_groups = [
-            ParameterGroup(
-                name='img',
-                parameters=[]), 
-            ParameterGroup(
-                name='mdl',
-                parameters=[
-                    StringParameter(
-                        name='name',
-                        description='description',
-                        flag='-flag',
-                        operations={'IMG-GEN'},
-                        default_value='default',
-                        constraints=[
-                            RegexConstraint(
-                                pattern=re.compile(r"\b[a-z]+\b"),
-                                hint="Only lowercase letters.",
-                            ),
-                        ],
-                    ),
-                ],
-            ),
+            self.parameter_group1, 
+            self.parameter_group2
         ]
-        self.operations = {
-            "MDL-GEN": Operation(
-                id="mdl",
-                name="Model training",
-                description="Perform a model training.",
-                cli="-mdl",
-                requires=[
-                    Operation.Input(
-                        name="Input file",
-                        description="The input file.",
-                        cli="-I",
-                        file=SingleFile([".ms", ".txt"]),
-                    ),
-                ],
-                produces=SingleFile([".txt"]),
-                overwrite_parameter_builder=(
-                    lambda: BoolParameter(
-                        name="Overwrite output?",
-                        description="",
-                        flag="-overwrite",
-                        operations={"mdl"},
-                        default_value=False,
-                    )
-                ),
-                parameter_builders={},
-                output_path=[
-                    Operation.ConstPathFragment("Model."),
-                    Operation.RunIdPathFragment(),
-                ],
-            ),
-        }
-        self.overwrite_parameter_builder = (
-            lambda: BoolParameter(
-                name="Overwrite output directory",
-                description="Are you sure you want to overwrite?",
-                flag="-frm",
-                operations={"MDL-GEN"},
-                default_value=False,
-            )
-        )
-        self.operation_trees, _ = OperationTree.build_trees(
-            self.operations,
-            self.overwrite_parameter_builder,
-        )
+        
+        # Operation trees
+        self.operation_tree_mdl_gen = mocker.Mock()
+        self.operation_tree_mdl_gen.to_cli = mocker.Mock(return_value=["cli1"])
+        self.operation_tree_mdl_gen.populate_from_dict = mocker.MagicMock()
+        tree_signal = MockSignal()
+        self.operation_tree_mdl_gen.valid_changed.emit = tree_signal.emit
+        self.operation_tree_mdl_gen.valid_changed.connect = tree_signal.connect
+        
+        self.operation_tree_mdl_tst = mocker.Mock()
+        self.operation_tree_mdl_tst.to_cli = mocker.Mock(return_value=["cli2"])
+        self.operation_tree_mdl_tst.populate_from_dict = mocker.MagicMock()
+
+        self.operation_trees = [self.operation_tree_mdl_gen, self.operation_tree_mdl_tst]
         self.categorized_operation_trees = [
-            ('Operations', self.operation_trees),
+            ("MDL-GEN", [self.operation_tree_mdl_gen]),
+            ("MDL-TST", [self.operation_tree_mdl_tst])
         ]
-        self.parameter_group_list = RunRecord(
+        
+        # Run record
+        self.run_record = RunRecord(
             run_id_parameter=self.run_id_parameter,
             categorized_operation_trees=self.categorized_operation_trees,
             parameter_groups=self.parameter_groups,
         )
     
     def test_init_values(self):
-        # arrange
+        """Test that initialisation of a RunRecord sets its values correctly."""
+        # Arrange
         run_id_parameter = self.run_id_parameter
-        list = self.parameter_group_list
+        record = self.run_record
         groups = self.parameter_groups
 
-        # assert
-        assert list.run_id_parameter == run_id_parameter
-        assert list.categorized_operation_trees == self.categorized_operation_trees
-        assert list.operation_trees == self.operation_trees
-        assert list.parameter_groups == groups
+        # Assert
+        assert record.run_id_parameter == run_id_parameter
+        assert record.categorized_operation_trees == self.categorized_operation_trees
+        assert record.operation_trees == self.operation_trees
+        assert record.parameter_groups == groups
+        assert record.parameters == self.parameters
 
+    def test_to_history_record(self):
+        """Test that a RunRecord is made into a HistoryRecord correctly."""
+        # Arrange
+        run_record = self.run_record
+
+        # Act
+        history_record = run_record.to_history_record()
+
+        # Assert
+        assert history_record.name == run_record.run_id_parameter.value
+        assert history_record.commands == run_record.to_cli()
+        assert history_record.operations["index"] == run_record.selected_operation_tree_index
+        assert history_record.operations["trees"] == [tree.to_dict() for tree in run_record.operation_trees]
+        assert len(history_record.parameters) == len(run_record.parameters)
+        for param in run_record.parameters:
+          assert param.name in history_record.parameters.keys()
+    
+    def test_populate(self, mocker):
+        """Test that a RunRecord is populated correctly from the values of a 
+        HistoryRecord."""
+        # Arrange
+        history_record = mocker.Mock()
+        history_record.name = "history"
+        history_record.operations = {
+            "index": 1,
+            "trees": ["bla", "blo"]
+        }
+        history_record.parameters = {"param": 2}
+        run_record = self.run_record
+
+        # Act
+        run_record.populate(history_record)
+
+        # Assert
+        assert run_record.run_id == "history"
+        assert run_record.run_id_parameter.value == "history"
+        assert run_record.selected_operation_tree_index == 1
+        assert run_record.selected_operation_tree == self.operation_trees[1]
+        self.operation_tree_mdl_gen.populate_from_dict.assert_called_once_with("bla")
+        self.operation_tree_mdl_tst.populate_from_dict.assert_called_once_with("blo")
+        self.parameter1.populate.assert_called_once_with(2)
+
+    def test_reset(self):
+        """Test that the reset() function of a RunRecord correctly resets
+        the contents of the RunRecord."""
+        # Arrange
+        run_record = self.run_record
+        run_record.selected_operation_tree_index = 1
+        assert run_record.selected_operation_tree_index == 1
+
+        # Act
+        run_record.reset()
+
+        # Assert
+        assert run_record.selected_operation_tree_index == 0
+        self.run_id_parameter.reset_value.assert_called_once()
+        self.parameter1.reset_value.assert_called_once()
+    
+    def test_run_id_setter(self, mocker):
+        """Test that the run_id setter correctly sets the value of the 
+        run_id_parameter."""
+        # Arrange
+        run_record = self.run_record
+        print(run_record.run_id_parameter)                    
+
+        # Change to same name
+        run_record.run_id = "hi"
+        assert run_record.run_id_parameter.value == "hi"
+
+        # Change to different name
+        run_record.run_id = "no"
+        assert run_record.run_id_parameter.value == "no"
+    
     def test_valid(self):
-        list = self.parameter_group_list
-        assert list.valid
-        list.parameter_groups[1].parameters[0].value = "invalid value"
-        assert not list.valid
+        """Test that the valid attribute of a RunRecord is correctly returned
+        dependent on its values."""
+        record = self.run_record
         
+        record.parameter_groups[0].valid = False # type: ignore
+        assert not record.valid
+        record.parameter_groups[0].valid = True # type: ignore
+        assert record.valid
+        record.run_id_parameter.valid = False # type: ignore
+        assert not record.run_id_valid
+        assert not record.valid
+
+    def test_base_directory_path(self, mocker, tmp_path):
+        """Test that the base directory path of the run record is returned 
+        correctly."""
+        # Arrange
+        dir = QDir(str(tmp_path))
+        mocker.patch.object(
+            type(rrecord.app_settings),
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=dir
+        )
+
+        # Act
+        path = self.run_record.base_directory_path
+
+        # Assert
+        assert path == dir.absoluteFilePath("hi")
+
+    def test_run_id_parameter_value_changed(self, mocker):
+        # Arrange
+        record = self.run_record
+        valid_changed_spy = mocker.MagicMock()
+        record.run_id_valid_changed.connect(valid_changed_spy)
+        mocker.patch.object(
+            type(rrecord.app_settings),
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir()
+        )
+
+        # Act
+        record.run_id_parameter.value_changed.emit("new", False)
+
+        # Assert
+        valid_changed_spy.assert_called_once()
+        
+    def test_operations_valid_changed(self, mocker):
+        # Arrange
+        record = self.run_record
+        valid_changed_spy = mocker.MagicMock()
+        record.operations_valid_changed.connect(valid_changed_spy)
+        mocker.patch.object(
+            type(rrecord.app_settings),
+            "workspace_path",
+            new_callable=PropertyMock,
+            return_value=QDir()
+        )
+
+        # Act
+        self.operation_tree_mdl_gen.valid_changed.emit(False)
+
+        # Assert
+        valid_changed_spy.assert_called_once()
+
     def test_to_cli(self):
-        # arrange
-        list = self.parameter_group_list
+        """Test that the to_cli of a RunRecord returns the correct command-line
+        representation based on its contents."""
+        # Arrange
+        record = self.run_record
 
-        # act
-        instructions = list.to_cli()
+        # Act
+        instructions = record.to_cli()
 
-        # assert
+        # Assert
         assert len(instructions) == 1
-        assert instructions == list.selected_operation_tree.to_cli(
+        assert instructions == record.selected_operation_tree.to_cli(
             run_id_parameter=self.run_id_parameter,
-            parameters=list.parameters,
+            parameters=record.parameters,
         )
 
 
 class TestParameterGroupListFromYaml:
     """Tests for the `ParameterGroupList#from_yaml` class method."""
 
-    def test_correct(self, mocker):
-        # TODO: test parsing of exclusive interval constraints
+    def test_correct(self):
         # arrange
-        mocker.patch(
-            "builtins.open",
-            mocker.mock_open(
-                read_data= """
-                run_id_parameter:
-                  type: str
-                  name: Run ID
-                  description: The ID of the run.
-                common_directory_overwrite_parameter:
-                  type: bool
-                  name: Overwrite common output directory
-                  description: Are you sure you want to remove existing files?
-                modes:
-                  - name: standard
-                    operations:
-                      first-op:
-                        name: First operation
-                        description: The first operation in the sequence.
-                        cli: -op 1
-                        overwrite_parameter:
-                          name: Overwrite output of operation 1?
-                          type: bool
-                          default: false
-                        input:
-                          - name: Input video
-                            cli: --mp4
-                            file:
-                              type: single
-                              formats:
-                                - .mp4
-                        output:
-                          type: directory
-                          contents:
-                            - type: single
-                              formats:
-                                - .jpg
-                        path:
-                          - Operation1.
-                          - type: run id
-                      second-op:
-                        name: Second operation
-                        description: The operation that comes after.
-                        cli: -op 2
-                        overwrite_parameter:
-                          name: Overwrite output of operation 2?
-                          type: bool
-                          default: false
-                        input:
-                          - name: Frames
-                            cli: -f
-                            file:
-                              type: folder
-                              contents:
-                                - type: single
-                                  formats:
-                                    - .jpg
-                        output:
-                          type: single
-                          formats:
-                            - .txt
-                        path:
-                          - Operation2.
-                          - type: run id
-                parameter_groups:
-                  - name: Boolean parameters
-                    operations:
-                      - first-op
-                      - second-op
-                    parameters:
-                      true-bool:
-                        name: True bool
-                        description: This boolean parameter is true by default.
-                        cli: --true-bool
-                        type: bool
-                        default: true
-                      false-bool:
-                        name: False bool
-                        description: A bool parameter that is false by default.
-                        cli: --false-bool
-                        type: bool
-                        default: false
-                  - name: Integer parameters
-                    operations:
-                      - first-op
-                      - second-op
-                    parameters:
-                      any-int-1:
-                        name: Unbounded int
-                        description: This integer can take any value.
-                        cli: --unbounded-int
-                        type: int
-                        default: 0
-                      any-int-2:
-                        name: Another unbounded int
-                        description: This time, the constraints are empty.
-                        cli: --int-unrestricted
-                        type: int
-                        default: 100
-                        constraints: []
-                      min-int-1:
-                        name: Lower-bounded int
-                        description: This integer must be at least 50.
-                        cli: -i50
-                        type: int
-                        default: 75
-                        constraints:
-                          - type: interval
-                            min: 50
-                      min-int-2:
-                        name: Another lower-bounded int
-                        description: Values 30+, upper bound is null.
-                        cli: -i30
-                        type: int
-                        min: 30
-                        max: null
-                        default: 1300
-                        constraints:
-                          - type: interval
-                            min: 30
-                            max: null
-                      max-int-1:
-                        name: Upper-bounded int
-                        description: This integer must be no more than 10.
-                        cli: -i10
-                        type: int
-                        default: -19
-                        constraints:
-                          - type: interval
-                            max: 10
-                      max-int-2:
-                        name: Another upper-bounded int
-                        description: No more than 15. Lower bound is null.
-                        cli: -i15
-                        type: int
-                        default: 15
-                        constraints:
-                          - type: interval
-                            min: null
-                            max: 15
-                      bounded-int-1:
-                        name: Bounded int
-                        description: This int is from 1 to 10.
-                        cli: -i1-10
-                        type: int
-                        default: 7
-                        constraints:
-                          - type: interval
-                            min: 1
-                            max: 10
-                  - name: Floating-point parameters
-                    operations:
-                      - first-op
-                      - second-op
-                    parameters:
-                      any-float-1:
-                        name: Unbounded float
-                        description: This float can take any value.
-                        cli: --unbounded-float
-                        type: float
-                        default: -3.14159
-                      any-float-2:
-                        name: Another unbounded float
-                        description: This time, the constraints are empty.
-                        cli: --float-unrestricted
-                        type: float
-                        default: 123.456
-                        constraints: []
-                      min-float-1:
-                        name: Lower-bounded float
-                        description: This float must be at least 1.5.
-                        cli: -f1.5
-                        type: float
-                        default: 1.9
-                        constraints:
-                          - type: interval
-                            min: 1.5
-                      min-float-2:
-                        name: Another lower-bounded float
-                        description: Values 3.1+, upper bound is null.
-                        cli: -f3.1
-                        type: float
-                        default: 1300
-                        constraints:
-                          - type: interval
-                            min: 3.1
-                            max: null
-                      max-float-1:
-                        name: Upper-bounded float
-                        description: This float must be no more than -190.45.
-                        cli: -f-190.45
-                        type: float
-                        default: -199
-                        constraints:
-                          - type: interval
-                            max: -190.45
-                      max-float-2:
-                        name: Another upper-bounded float
-                        description: No more than 13.13. Lower bound is null.
-                        cli: -f13.13
-                        type: float
-                        default: -23094.0
-                        constraints:
-                          - type: interval
-                            min: null
-                            max: 13.13
-                      bounded-float:
-                        name: Bounded float
-                        description: This float is between 0 and 1.
-                        cli: -f0-1
-                        type: float
-                        min: 0.0
-                        max: 1.0
-                        default: 0
-                        constraints:
-                          - type: interval
-                            min: 0.0
-                            max: 1.0
-                  - name: Enum parameters
-                    operations:
-                      - first-op
-                      - second-op
-                    parameters:
-                      cli-enum:
-                        name: Enum parameter
-                        description: Choose from a list of four values.
-                        cli: --enum
-                        type: enum
-                        options:
-                          - name: First option
-                            cli: one
-                          - name: Second option
-                            cli: two
-                          - name: Third option
-                            cli: three
-                          - name: Fourth option
-                            cli: four
-                        default: 2
-                      no-cli-enum:
-                        name: Dummy enum parameter
-                        description: This parameter will not be in the CLI.
-                        type: enum
-                        options:
-                            - name: Choose this...
-                            - name: ...or this!
-                            - name: Or even this.
-                  - name: String parameters
-                    operations:
-                      - first-op
-                      - second-op
-                    parameters:
-                      any-string:
-                        name: String
-                        description: Enter a string. Anything goes!
-                        cli: -s
-                        type: str
-                      max-len-str:
-                        name: Bounded string
-                        description: Type at most 4 characters.
-                        cli: --s-max4
-                        type: str
-                        constraints:
-                          - type: max length
-                            length: 4
-                      pattern-str:
-                        name: Pattern string
-                        description: This parameter must be only As and Bs.
-                        cli: --sAB
-                        type: str
-                        constraints:
-                          - type: regex
-                            pattern: (A|B)*
-                            hint: Any number of A or B.
-                      max-len-pattern-str:
-                        name: Bounded pattern string
-                        description: This parameter must be at most 10 digits.
-                        cli: --phone-number
-                        type: str
-                        constraints:
-                          - type: max length
-                            length: 10
-                          - type: regex
-                            pattern: '\\d*'
-                            hint: Only digits.
-                      default-str:
-                        name: Default value string
-                        description: This string already has a default value.
-                        cli: --default-str
-                        type: str
-                        default: Hello
-                        constraints:
-                          - type: max length
-                            length: 20
-                  - name: File parameters
-                    operations:
-                      - first-op
-                      - second-op
-                    parameters:
-                      any-file:
-                        name: Any file
-                        description: This allows one file of any type.
-                        cli: --any-file
-                        type: file
-                      any-files:
-                        name: Any files
-                        description: This allows many files of any type.
-                        cli: --any-files
-                        type: file
-                        multiple: true
-                      not-strict:
-                        name: Expected type file
-                        description: One file of any type, image expected.
-                        cli: --image
-                        type: file
-                        formats:
-                          - .png
-                          - .jpg
-                          - .jpeg
-                          - .gif
-                          - .webp
-                      not-strict-multiple:
-                        name: Expected type files
-                        description: Multiple files, videos expected.
-                        cli: --images
-                        type: file
-                        formats:
-                          - .mp4
-                          - .webm
-                        multiple: true
-                      strict:
-                        name: Specific type file
-                        description: One audio file.
-                        cli: --song
-                        type: file
-                        formats:
-                          - .mp3
-                          - .wav
-                        strict: true
-                      strict-multiple:
-                        name: Specific type files
-                        description: Multiple document files.
-                        cli: --docs
-                        type: file
-                        formats:
-                          - .doc
-                          - .docx
-                          - .odf
-                          - .pdf
-                        strict: true
-                        multiple: true
-                  - name: Optional parameters
-                    operations:
-                      - first-op
-                      - second-op
-                    parameters:
-                      opt-bool:
-                        name: Optional bool
-                        description: An optional bool parameter.
-                        type: optional
-                        parameter:
-                          name: Inner bool
-                          description: The inner parameter.
-                          cli: --opt-bool
-                          type: bool
-                          default: false
-                      opt-int:
-                        name: Optional int
-                        description: An optional int parameter, default true.
-                        type: optional
-                        default: true
-                        parameter:
-                          name: Inner int parameter
-                          description: null
-                          cli: --opt-int
-                          type: int
-                          default: 1
-                          constraints:
-                            - type: interval
-                              min: 1
-                      opt-float:
-                        name: Optional float
-                        description: An optional float parameter.
-                        type: optional
-                        default: false
-                        parameter:
-                          name: Inner float parameter
-                          type: float
-                          cli: --opt-float
-                          min: null
-                          max: null
-                          default: -1.1
-                      opt-enum:
-                        name: Optional enum
-                        description: An optional enum parameter.
-                        type: optional
-                        parameter:
-                          description: An inner enum parameter with no name.
-                          cli: --opt-enum
-                          type: enum
-                          options:
-                            - name: A
-                            - name: B
-                            - name: C
-                          default: 1
-                      opt-str:
-                        name: Optional string
-                        description: An optional string parameter.
-                        type: optional
-                        default: null
-                        parameter:
-                          name: null
-                          description: The string.
-                          cli: --opt-str
-                          type: str
-                          default: example
-                          constraints:
-                            - type: max length
-                              length: 20
-                      opt-file:
-                        name: Optional files
-                        description: An optional multi-file parameter.
-                        type: optional
-                        parameter:
-                          cli: --opt-files
-                          type: file
-                          multiple: true
-                  - name: Multi-value parameters
-                    operations:
-                      - first-op
-                      - second-op
-                    parameters:
-                      int-int-int:
-                        name: Three integers
-                        description: A parameter with three integer values.
-                        cli: -3i
-                        type: multi
-                        parameters:
-                          - name: First integer
-                            type: int
-                            default: 0
-                          - name: Second integer
-                            type: int
-                            default: 0
-                            constraints:
-                              - type: interval
-                                min: 0
-                                max: 10
-                          - name: Third integer
-                            type: int
-                            default: 0
-                            constraints:
-                              - type: interval
-                                min: 0
-                      bool-float-file-enum:
-                        name: Mixed parameter
-                        description: A parameter with four values.
-                        cli: "-4"
-                        type: multi
-                        parameters:
-                          - name: The bool
-                            type: bool
-                            default: true
-                          - name: The float
-                            description: null
-                            type: float
-                            default: 1.0
-                            constraints:
-                              - type: interval
-                                min: 0.0
-                          - name: The file
-                            type: file
-                            formats:
-                              - .ms
-                              - .vcf
-                          - name: The enum
-                            description: Choose one.
-                            type: enum
-                            default: 1
-                            options:
-                                - name: Option 0
-                                - name: Option 1
-                                - name: Option 2
-                  - name: Nested parameters
-                    operations:
-                      - first-op
-                    parameters:
-                      opt-multi:
-                        name: Optional multi-value
-                        description: An optional parameter with two values.
-                        type: optional
-                        default: true
-                        parameter:
-                          name: null
-                          description: The inner, multi-value parameter.
-                          type: multi
-                          parameters:
-                            - name: A float
-                              type: float
-                              default: 0.99
-                              constraints:
-                                - type: interval
-                                  min: 0.0
-                                  max: 1.0
-                            - name: A string
-                              description: Type anything.
-                              type: str
-                      multi-opt:
-                        name: Multiple optionals
-                        description: A multi parameter where some are optional.
-                        type: multi
-                        parameters:
-                          - type: optional
-                            default: false
-                            parameter:
-                              type: int
-                              default: 6
-                          - description: This float is required.
-                            type: float
-                            default: 2.5
-                            constraints:
-                              - type: interval
-                                max: 2.5
-                          - name: Another float?
-                            type: optional
-                            default: true
-                            parameter:
-                              name: The second float
-                              type: float
-                              default: 100.8
-            """
-            )
-        )
+        path = "gui/tests/unit/model/resources/correct.yaml"
 
         # act
-        parameter_list = RunRecord.from_yaml('path')
+        parameter_list = RunRecord.from_yaml(path)
 
         # assert
         assert len(parameter_list.operation_trees) == 2
