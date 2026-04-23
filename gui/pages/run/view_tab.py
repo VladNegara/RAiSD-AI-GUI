@@ -232,19 +232,21 @@ class ViewTab(RunPageTab):
         operation_ids = self._run_record.selected_operation_tree.get_operation_ids()
         number_of_indicators = len(self.run_indicators)
         size = 160 if self.output_widget.isHidden() else 80
-        for i, indicator in enumerate(self.run_indicators):
-            indicator.text = operation_ids[i]
-            indicator.state = IndicatorState.PENDING
-            indicator.set_indicator_size(size)
 
         for idx in range(max([number_of_indicators, number_of_processes])):
-            if idx < number_of_processes and idx < number_of_indicators:
-                self.run_indicators[idx].setVisible(True)
-            elif idx < number_of_processes and idx >= number_of_indicators:
+            if idx < number_of_indicators:
+                indicator = self.run_indicators[idx]
+                if idx < number_of_processes:
+                    indicator.text = operation_ids[idx]
+                    indicator.state = IndicatorState.PENDING
+                    indicator.set_indicator_size(size)
+                    indicator.setVisible(True)
+                elif idx >= number_of_processes:
+                    self.run_indicators[idx].setVisible(False)
+            else:
                 self.add_indicator_widget(idx, operation_ids[idx])
-                continue
-            elif idx >= number_of_processes and idx < number_of_indicators:
-                self.run_indicators[idx].setVisible(False)
+
+            
 
     def add_indicator_widget(self, index: int, text: str) -> None:
         """
